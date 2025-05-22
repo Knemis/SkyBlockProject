@@ -4,12 +4,26 @@ main: com.knemis.skyblock.skyblockcoreproject.SkyBlockProject
 api-version: '1.16'
 authors: [Knemis]
 description: KnemisSkyblockProject
-depend: # Eklentinizin çalışması için KESİNLİKLE GEREKLİ olan eklentiler
+depend:
   - WorldEdit
   - WorldGuard
 
 commands:
   island:
-    description: Temel Skyblock ada komutları.
-    usage: /<command> [create | ...] # Oyuncuya komutun nasıl kullanılacağını gösterir
-    aliases: [i, is] # Komut için alternatif isimler (isteğe bağlı)
+    description: Skyblock adanı yönet!
+    usage: |
+      /island create - Yeni ada oluştur
+      /island delete - Adanı sil
+      /island teleport - Adana ışınlan
+      /island invite <oyuncu> - Oyuncuyu adana davet et
+      /island visit <oyuncu> - Davet edildiğin adayı ziyaret et
+      /island visit on|off - Ziyaret iznini aç/kapat
+    aliases: [i, is]
+
+  islandinvite:
+    description: Bir oyuncuyu adana davet et
+    usage: /islandinvite <oyuncu>
+
+  islandvisit:
+    description: Bir adayı ziyaret et veya ziyaret ayarlarını düzenle
+    usage: /islandvisit <oyuncu> | /islandvisit on | /islandvisit off

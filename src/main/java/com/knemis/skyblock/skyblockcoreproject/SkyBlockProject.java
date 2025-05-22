@@ -71,6 +71,12 @@ public final class SkyBlockProject extends JavaPlugin {
 
         this.getCommand("island").setExecutor(new IslandCommand(this, islandManager));
 
+        // Yeni eklenen komutlar:
+        IslandInviteManager inviteManager = new IslandInviteManager();
+        this.getCommand("islandinvite").setExecutor(new IslandInviteCommand(inviteManager));
+        this.getCommand("islandvisit").setExecutor(new IslandVisitCommand(inviteManager, islandManager));
+
+
         getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi! Bir sonraki ada için X koordinatı başlangıcı: " + this.nextIslandX);
     }
 

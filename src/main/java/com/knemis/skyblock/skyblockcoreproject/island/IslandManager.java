@@ -826,3 +826,16 @@ public class IslandManager {
         @Override public Location getFixedSpawnLocation(World world, Random random) { return new Location(world, 0.5, 128, 0.5); }
     }
 }
+
+
+
+    public Location getIslandSpawn(UUID ownerUUID) {
+        // Adanın merkez koordinatını döndür. Örnek:
+        return new Location(Bukkit.getWorld("world"), 100, 64, 100); // TODO: Gerçek ada konumu ile değiştir
+    }
+
+
+
+
+
+
