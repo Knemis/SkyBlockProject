@@ -35,6 +35,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
     private final SkyBlockProject plugin;
     private final IslandManager islandManager;
+    // ... (diğer alanlar aynı) ...
     private final Map<UUID, Long> createCooldowns;
     private final long CREATE_COOLDOWN_SECONDS;
 
@@ -43,6 +44,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
     private final Map<UUID, Long> resetConfirmations;
     private final long RESET_CONFIRM_TIMEOUT_SECONDS = 30;
+
 
     public IslandCommand(SkyBlockProject plugin, IslandManager islandManager) {
         this.plugin = plugin;
@@ -53,6 +55,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         this.resetConfirmations = new HashMap<>();
     }
 
+    // ... (onCommand ve diğer handle metodları büyük ölçüde aynı kalacak, sadece handleWelcomeCommand'ı kontrol edelim) ...
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -119,7 +122,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             case "biome":
                 handleBiomeCommand(player, args);
                 break;
-            case "welcome":
+            case "welcome": // Bu case zaten vardı
                 handleWelcomeCommand(player, args);
                 break;
             default:
@@ -129,7 +132,6 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
         return true;
     }
-
     private void handleBiomeCommand(Player player, String[] args) {
         Island island = this.islandManager.getIsland(player); // plugin.getIslandManager() yerine this.islandManager
         if (island == null) {
@@ -183,7 +185,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.YELLOW + "/island home <isim>" + ChatColor.GRAY + " - Belirtilen evine git.");
         player.sendMessage(ChatColor.YELLOW + "/island home list" + ChatColor.GRAY + " - Evlerini listele.");
         player.sendMessage(ChatColor.YELLOW + "/island delhome <isim>" + ChatColor.GRAY + " - Belirtilen evini sil.");
-        player.sendMessage(ChatColor.YELLOW + "/island biome <set|get|list> [biyom]" + ChatColor.GRAY + " - Ada biyomunu yönet."); // EKLENDİ
+        player.sendMessage(ChatColor.YELLOW + "/island biome <set|get|list> [biyom]" + ChatColor.GRAY + " - Ada biyomunu yönet.");
+        player.sendMessage(ChatColor.YELLOW + "/island welcome <set|clear|view> [mesaj]" + ChatColor.GRAY + " - Ada karşılama mesajını yönet."); // EKLENDİ/GÜNCELLENDİ
         player.sendMessage(ChatColor.YELLOW + "/island flags" + ChatColor.GRAY + " - Ada bayraklarını yönet (ziyaretçiler için).");
         player.sendMessage(ChatColor.YELLOW + "/island info [oyuncu]" + ChatColor.GRAY + " - Kendi adanın veya başkasının adasının bilgilerini gör.");
         player.sendMessage(ChatColor.YELLOW + "/island settings name <yeni_isim>" + ChatColor.GRAY + " - Adanın ismini değiştir.");
@@ -641,7 +644,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
         Player player = (Player) sender;
         List<String> completions = new ArrayList<>();
-        List<String> subCommands = Arrays.asList("create", "go", "sethome", "home", "delhome", "delete", "reset", "flags", "info", "settings", "team", "visit", "help", "biome"); // "biome" eklendi
+        List<String> subCommands = Arrays.asList("create", "go", "sethome", "home", "delhome", "delete", "reset", "flags", "info", "settings", "team", "visit", "help", "biome", "welcome"); // "welcome" eklendi
 
         if (args.length == 1) {
             for (String sc : subCommands) {
@@ -652,13 +655,13 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             return completions;
         }
 
-        String subCmd = args[0].toLowerCase(); // args[0] her zaman var bu noktada
+        String subCmd = args[0].toLowerCase();
 
         if (args.length == 2) {
             if (subCmd.equals("home") || subCmd.equals("delhome") || subCmd.equals("sethome")) {
                 if (this.islandManager.playerHasIsland(player)) {
                     List<String> homes = new ArrayList<>(this.islandManager.getNamedHomesList(player));
-                    if (subCmd.equals("home")) homes.add("list");
+                    if (subCmd.equals("home")) homes.add("list"); // "list" eklendi
                     for (String home : homes) {
                         if (home.toLowerCase().startsWith(args[1].toLowerCase())) {
                             completions.add(home);
@@ -689,9 +692,16 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 if ("confirm".startsWith(args[1].toLowerCase())) {
                     completions.add("confirm");
                 }
-            } else if (subCmd.equals("biome")) { // Bu blok doğru yere taşındı
+            } else if (subCmd.equals("biome")) {
                 List<String> biomeActions = Arrays.asList("set", "get", "list");
                 for (String action : biomeActions) {
+                    if (action.startsWith(args[1].toLowerCase())) {
+                        completions.add(action);
+                    }
+                }
+            } else if (subCmd.equals("welcome")) { // welcome için tab tamamlama eklendi
+                List<String> welcomeActions = Arrays.asList("set", "clear", "view");
+                for (String action : welcomeActions) {
                     if (action.startsWith(args[1].toLowerCase())) {
                         completions.add(action);
                     }
@@ -700,8 +710,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         if (args.length == 3) {
-            // subCmd burada tekrar tanımlanmasına gerek yok, zaten yukarıda var.
-            String actionOrSetting = args[1].toLowerCase(); // args[1] her zaman var bu noktada
+            String actionOrSetting = args[1].toLowerCase();
 
             if (subCmd.equals("settings")) {
                 if (actionOrSetting.equals("visibility")) {
@@ -711,7 +720,6 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                     if ("on".startsWith(args[2].toLowerCase())) completions.add("on");
                     if ("off".startsWith(args[2].toLowerCase())) completions.add("off");
                 }
-                // "name" için args[2]'de özel bir tamamlama yok, serbest metin.
             } else if (subCmd.equals("team") && (actionOrSetting.equals("add") || actionOrSetting.equals("remove"))) {
                 Bukkit.getOnlinePlayers().forEach(p -> {
                     if (!p.equals(player) && p.getName().toLowerCase().startsWith(args[2].toLowerCase())) {
@@ -719,13 +727,13 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                     }
                 });
             } else if (subCmd.equals("biome") && actionOrSetting.equalsIgnoreCase("set")) {
-                // Kullanılabilir biyomları öner
-                Arrays.stream(Biome.values()) // Biome importu eklendikten sonra çalışacak
+                Arrays.stream(Biome.values())
                         .filter(b -> b != Biome.CUSTOM)
                         .map(Enum::name)
                         .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
                         .forEach(completions::add);
             }
+            // welcome set için args[2]'de özel bir tamamlama genellikle olmaz (serbest metin)
         }
         return completions;
     }

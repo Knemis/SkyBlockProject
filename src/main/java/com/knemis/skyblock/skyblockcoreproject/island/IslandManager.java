@@ -1,6 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
+import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager; // Gerekli olabilir
 
 // WorldEdit importları
 import com.sk89q.worldedit.EditSession;
@@ -283,7 +284,7 @@ public class IslandManager {
         }
     }
 
-    private RegionManager getWGRegionManager(World bukkitWorld) {
+    public RegionManager getWGRegionManager(World bukkitWorld) {
         if (bukkitWorld == null) {
             plugin.getLogger().severe("WorldGuard RegionManager alınırken dünya (bukkitWorld) null geldi!");
             return null;
@@ -403,8 +404,20 @@ public class IslandManager {
                         );
                         protectedRegion.getOwners().addPlayer(player.getUniqueId());
                         protectedRegion.setPriority(plugin.getConfig().getInt("island.region-priority", 10));
+
+
+                        IslandFlagManager flagManager = plugin.getIslandFlagManager();
+                        if (flagManager != null) {
+                            flagManager.applyDefaultFlagsToRegion(protectedRegion);
+                        } else {
+                            plugin.getLogger().severe("IslandFlagManager null! Varsayılan bayraklar uygulanamadı.");
+                            // Eski setInitialRegionFlags geçici olarak burada kalabilir veya hata mesajı verilebilir.
+                        }
+
+
+
                         plugin.getLogger().info("'" + regionId + "' için varsayılan ziyaretçi bayrakları ayarlanıyor...");
-                        setInitialRegionFlags(protectedRegion);
+
 
                         regionManager.addRegion(protectedRegion);
                         try {
@@ -452,25 +465,7 @@ public class IslandManager {
         }.runTask(plugin);
     }
 
-    private void setInitialRegionFlags(ProtectedRegion region) {
-        region.setFlag(Flags.BUILD, StateFlag.State.DENY);
-        region.setFlag(Flags.INTERACT, StateFlag.State.DENY);
-        region.setFlag(Flags.CHEST_ACCESS, StateFlag.State.DENY);
-        region.setFlag(Flags.USE, StateFlag.State.DENY);
-        region.setFlag(Flags.ITEM_DROP, StateFlag.State.DENY);
-        region.setFlag(Flags.ITEM_PICKUP, StateFlag.State.DENY);
-        region.setFlag(Flags.ENDERPEARL, StateFlag.State.DENY);
-        region.setFlag(Flags.TRAMPLE_BLOCKS, StateFlag.State.DENY);
-        region.setFlag(Flags.PVP, StateFlag.State.DENY);
-        region.setFlag(Flags.TNT, StateFlag.State.DENY);
-        region.setFlag(Flags.CREEPER_EXPLOSION, StateFlag.State.DENY);
-        region.setFlag(Flags.OTHER_EXPLOSION, StateFlag.State.DENY);
-        region.setFlag(Flags.LAVA_FLOW, StateFlag.State.DENY);
-        region.setFlag(Flags.WATER_FLOW, StateFlag.State.ALLOW);
-        region.setFlag(Flags.FIRE_SPREAD, StateFlag.State.DENY);
-        region.setFlag(Flags.MOB_SPAWNING, StateFlag.State.ALLOW);
-        region.setFlag(Flags.LEAF_DECAY, StateFlag.State.ALLOW);
-    }
+
 
     public boolean deleteIsland(Player player) {
         Island island = getIsland(player);
@@ -503,6 +498,7 @@ public class IslandManager {
             RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
                 String regionId = getRegionId(player.getUniqueId());
+                ProtectedRegion region = regionManager.getRegion(regionId);
                 if (regionManager.hasRegion(regionId)) {
                     regionManager.removeRegion(regionId);
                     try {
@@ -602,7 +598,16 @@ public class IslandManager {
                 if (region != null) {
                     plugin.getLogger().info("'" + regionId + "' için bayraklar sıfırlanıyor (reset)...");
                     region.getFlags().clear();
-                    setInitialRegionFlags(region);
+
+
+                    IslandFlagManager flagManager = plugin.getIslandFlagManager();
+                    if (flagManager != null) {
+                        flagManager.applyDefaultFlagsToRegion(region);
+                    } else {
+                        plugin.getLogger().severe("IslandFlagManager null! Varsayılan bayraklar uygulanamadı (reset).");
+                    }
+
+
                     try {
                         regionManager.saveChanges();
                         plugin.getLogger().info(player.getName() + " için WorldGuard bölge bayrakları varsayılana sıfırlandı (reset).");
@@ -843,55 +848,9 @@ public class IslandManager {
         player.sendMessage(ChatColor.GREEN + "'" + homeName + "' adlı evine ışınlandın!");
     }
 
-    public StateFlag.State getIslandFlagState(UUID playerUUID, StateFlag flag) {
-        ProtectedRegion region = getProtectedRegion(playerUUID);
-        if (region != null) {
-            return region.getFlag(flag);
-        }
-        plugin.getLogger().finer("getIslandFlagState: WorldGuard bölgesi bulunamadı: " + getRegionId(playerUUID));
-        return null;
-    }
 
-    public boolean setIslandFlagState(UUID playerUUID, StateFlag flag, StateFlag.State newState) {
-        Island island = getIslandByOwner(playerUUID);
-        if (island == null || island.getWorld() == null) {
-            plugin.getLogger().warning("setIslandFlagState: Bayrak ayarlanmak istenen oyuncunun adası veya ada dünyası bulunamadı: " + playerUUID);
-            return false;
-        }
 
-        ProtectedRegion region = getProtectedRegion(playerUUID);
-        if (region == null) {
-            plugin.getLogger().warning("setIslandFlagState: Bayrak ayarlanmak istenen WorldGuard bölgesi bulunamadı: " + getRegionId(playerUUID));
-            return false;
-        }
-        try {
-            region.setFlag(flag, newState);
 
-            World bukkitWorld = island.getWorld();
-            if (bukkitWorld == null) {
-                plugin.getLogger().severe("setIslandFlagState: Ada dünyası (island.getWorld()) null geldi.");
-                return false;
-            }
-
-            RegionManager regionManager = getWGRegionManager(bukkitWorld);
-            if (regionManager == null) {
-                plugin.getLogger().severe("setIslandFlagState: Bayrak ayarlanırken RegionManager alınamadı (Dünya: " + bukkitWorld.getName() + ")");
-                return false;
-            }
-            regionManager.saveChanges();
-            plugin.getLogger().info("Oyuncu " + playerUUID + " için '" + getRegionId(playerUUID) + "' bölgesinde '" + flag.getName() +
-                    "' bayrağı '" + (newState != null ? newState.name() : "VARSAYILAN (kaldırıldı)") + "' olarak ayarlandı.");
-            return true;
-        } catch (StorageException e) {
-            plugin.getLogger().severe("WorldGuard bölgesi '" + getRegionId(playerUUID) + "' kaydedilirken hata (bayrak ayarı): " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } catch (Exception e) {
-            plugin.getLogger().severe("setIslandFlagState sırasında beklenmedik hata: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
 
     public boolean setIslandName(Player player, String newName) {
         Island island = getIsland(player);
