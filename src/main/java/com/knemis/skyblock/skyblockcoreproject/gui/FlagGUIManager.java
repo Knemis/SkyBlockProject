@@ -98,6 +98,9 @@ public class FlagGUIManager {
     }
 
     public void openFlagsGUI(Player player) {
+        plugin.getLogger().info("[FlagGUIManager DEBUG] openFlagsGUI çağrıldı."); // EKLENDİ
+        plugin.getLogger().info("[FlagGUIManager DEBUG] flagLayout.size(): " + flagLayout.size()); // EKLENDİ
+
         Island island = islandManager.getIsland(player);
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Bayraklarını düzenleyebileceğin bir adan yok!");
