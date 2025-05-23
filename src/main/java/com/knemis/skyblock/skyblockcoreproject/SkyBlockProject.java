@@ -12,7 +12,9 @@ import com.sk89q.worldedit.bukkit.BukkitAdapter;
 
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
-
+import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManager;
+import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager; // EKLENDİ
+import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 
 import org.bukkit.World; // Bukkit World importu
 
@@ -27,6 +29,8 @@ public final class SkyBlockProject extends JavaPlugin {
     private final int islandSpacing = 300;
     private WorldGuard worldGuardInstance;
     private FlagGUIManager flagGUIManager; // YENİ
+    private IslandBiomeManager islandBiomeManager;
+    private IslandWelcomeManager islandWelcomeManager;
 
 
     @Override
@@ -64,11 +68,15 @@ public final class SkyBlockProject extends JavaPlugin {
         this.islandManager.loadSkyblockWorld(); // Skyblock dünyasını yükle/oluştur
         this.islandManager.loadIslands(); // Ada verilerini DÜNYA YÜKLENDİKTEN SONRA yükle
         this.flagGUIManager = new FlagGUIManager(this, this.islandManager); // YENİ: FlagGUIManager'ı başlat
+        this.islandBiomeManager = new IslandBiomeManager(this, this.islandManager); // EKLENDİ: IslandBiomeManager başlatılıyor
+        this.islandWelcomeManager = new IslandWelcomeManager(this, this.islandManager);
         getServer().getPluginManager().registerEvents(new FlagGUIListener(this, flagGUIManager, islandManager), this);
+        getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandManager, this.islandWelcomeManager), this); // Listener'ı kaydet
         getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi!");
         // Komutları kaydet
         IslandCommand islandCommandExecutor = new IslandCommand(this, islandManager); // Komut yöneticisini değişkene ata
-
+        getCommand("island").setExecutor(islandCommandExecutor); // IslandCommand constructor'ı plugin ve islandManager alıyor.
+        getCommand("island").setTabCompleter(islandCommandExecutor);
         this.getCommand("island").setExecutor(new IslandCommand(this, islandManager));
 
         getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi! Bir sonraki ada için X koordinatı başlangıcı: " + this.nextIslandX);
@@ -149,6 +157,15 @@ public final class SkyBlockProject extends JavaPlugin {
         return flagGUIManager;
     }
 
+
+    // EKLENDİ: IslandBiomeManager için Getter
+    public IslandBiomeManager getIslandBiomeManager() {
+        return islandBiomeManager;
+    }
+    // EKLENDİ: IslandWelcomeManager için Getter
+    public IslandWelcomeManager getIslandWelcomeManager() {
+        return islandWelcomeManager;
+    }
 
     /**
      * IslandManager örneğine dışarıdan erişim sağlar.

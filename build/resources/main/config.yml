@@ -1,3 +1,7 @@
+island:
+  welcome-message:
+    max-length: 100
+
 skyblock-world-name: "skyblock_world"
 
 island-spawn-offset:

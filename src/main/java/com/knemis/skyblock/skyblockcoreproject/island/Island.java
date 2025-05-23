@@ -22,12 +22,14 @@ public class Island {
     private boolean isPublic; // Herkes ziyaret edebilir mi?
     private boolean boundariesEnforced; // Sınır kontrolü aktif mi?
 
+
     private Set<UUID> members; // Ada üyelerinin UUID'leri
     private Set<UUID> bannedPlayers; // Adadan yasaklanan oyuncuların UUID'leri (ziyaret edemezler)
     private Map<String, Location> namedHomes; // İsimlendirilmiş evler
+    private String welcomeMessage;
 
     private transient World world; // Ada dünyası (geçici, baseLocation'dan alınacak)
-
+    private String currentBiome;
     // Yeni ada oluşturulurken kullanılacak constructor
     public Island(UUID ownerUUID, Location baseLocation, String defaultIslandName) {
         this.ownerUUID = ownerUUID;
@@ -40,25 +42,36 @@ public class Island {
         this.members = new HashSet<>();
         this.bannedPlayers = new HashSet<>();
         this.namedHomes = new HashMap<>();
+        this.currentBiome = null;
+        this.welcomeMessage = null;
     }
 
     // Veri kaynağından (örn: islands.yml) yüklenirken kullanılacak constructor
     public Island(UUID ownerUUID, String islandName, Location baseLocation, long creationTimestamp,
                   boolean isPublic, boolean boundariesEnforced,
-                  Set<UUID> members, Set<UUID> bannedPlayers, Map<String, Location> namedHomes) {
+                  Set<UUID> members, Set<UUID> bannedPlayers, Map<String, Location> namedHomes,
+                  String currentBiome, String welcomeMessage) { // welcomeMessage parametresi EKLENDİ
         this.ownerUUID = ownerUUID;
         this.islandName = islandName;
         this.baseLocation = baseLocation;
-        this.world = baseLocation.getWorld();
+        if (this.baseLocation != null && this.baseLocation.getWorld() != null) { // getWorld() null kontrolü eklendi
+            this.world = this.baseLocation.getWorld();
+        }
         this.creationDate = Instant.ofEpochMilli(creationTimestamp);
         this.isPublic = isPublic;
         this.boundariesEnforced = boundariesEnforced;
         this.members = members != null ? members : new HashSet<>();
         this.bannedPlayers = bannedPlayers != null ? bannedPlayers : new HashSet<>();
         this.namedHomes = namedHomes != null ? namedHomes : new HashMap<>();
+        this.currentBiome = currentBiome; // Parametreden gelen değer atanıyor
+        this.welcomeMessage = welcomeMessage;
     }
 
+    // Getter ve Setter'lar (currentBiome için zaten vardı, doğru)
+
     // Getter ve Setter'lar
+
+
 
     public UUID getOwnerUUID() {
         return ownerUUID;
@@ -82,6 +95,7 @@ public class Island {
             this.world = baseLocation.getWorld();
         }
     }
+
 
     public World getWorld() {
         if (world == null && baseLocation != null) {
@@ -179,6 +193,22 @@ public class Island {
             return false; // Yasaklıysa ziyaret edemez
         }
         return isPublic; // Herkese açıksa ziyaret edebilir
+    }
+
+    public String getWelcomeMessage() { // EKLENDİ
+        return welcomeMessage;
+    }
+
+    public void setWelcomeMessage(String welcomeMessage) { // EKLENDİ
+        this.welcomeMessage = welcomeMessage;
+    }
+
+    public String getCurrentBiome() {
+        return currentBiome;
+    }
+
+    public void setCurrentBiome(String currentBiome) {
+        this.currentBiome = currentBiome;
     }
 
     // İleride eklenecek özellikler için yer tutucular:
