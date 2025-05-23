@@ -22,16 +22,18 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.flags.Flags;         // Standart bayrak sabitleri
-import com.sk89q.worldguard.protection.flags.StateFlag;    // ALLOW/DENY durumlu bayraklar
-import com.sk89q.worldguard.protection.managers.storage.StorageException; // regionManager.save() için
+import com.sk89q.worldguard.protection.flags.Flags;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.managers.storage.StorageException;
 
 // Bukkit importları
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.WorldCreator;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
@@ -44,10 +46,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class IslandManager {
 
@@ -57,13 +62,16 @@ public class IslandManager {
 
     private File islandsFile;
     private FileConfiguration islandsConfig;
-    private Map<UUID, Location> playerIslands;
-    private Map<UUID, Map<String, Location>> playerNamedHomes;
+
+    private Map<UUID, Island> islandsData; // Oyuncu UUID -> Island nesnesi
+
     private int maxHomesPerIsland;
+    private final String defaultIslandNamePrefix;
 
     public IslandManager(SkyBlockProject plugin) {
         this.plugin = plugin;
         this.schematicFile = new File(plugin.getDataFolder(), "island.schem");
+        this.defaultIslandNamePrefix = plugin.getConfig().getString("island.default-name-prefix", "Ada");
 
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
@@ -75,15 +83,10 @@ public class IslandManager {
         }
 
         this.islandsFile = new File(plugin.getDataFolder(), "islands.yml");
-        this.playerIslands = new HashMap<>();
-        this.playerNamedHomes = new HashMap<>();
+        this.islandsData = new HashMap<>();
         this.maxHomesPerIsland = plugin.getConfig().getInt("island.max-named-homes", 5);
-        // loadIslands() çağrısı SkyBlockProject.onEnable() içinden, loadSkyblockWorld() sonrası yapılacak.
     }
 
-    /**
-     * Skyblock adalarının bulunacağı dünyayı yükler veya oluşturur.
-     */
     public void loadSkyblockWorld() {
         String worldName = plugin.getConfig().getString("skyblock-world-name", "skyblock_world");
         this.skyblockWorld = Bukkit.getWorld(worldName);
@@ -103,9 +106,6 @@ public class IslandManager {
         }
     }
 
-    /**
-     * Kayıtlı adaları ve isimlendirilmiş evleri islands.yml dosyasından yükler.
-     */
     public void loadIslands() {
         if (!islandsFile.exists()) {
             try {
@@ -117,57 +117,157 @@ public class IslandManager {
             }
         }
         islandsConfig = YamlConfiguration.loadConfiguration(islandsFile);
-        playerIslands.clear();
-        playerNamedHomes.clear();
+        islandsData.clear();
 
         if (islandsConfig.isConfigurationSection("islands")) {
             for (String uuidString : islandsConfig.getConfigurationSection("islands").getKeys(false)) {
                 try {
-                    UUID playerUUID = UUID.fromString(uuidString);
-                    String worldName = islandsConfig.getString("islands." + uuidString + ".world");
-                    double x = islandsConfig.getDouble("islands." + uuidString + ".x");
-                    double y = islandsConfig.getDouble("islands." + uuidString + ".y");
-                    double z = islandsConfig.getDouble("islands." + uuidString + ".z");
+                    UUID ownerUUID = UUID.fromString(uuidString);
+                    String path = "islands." + uuidString + ".";
+
+                    String worldName = islandsConfig.getString(path + "baseLocation.world");
+                    double x = islandsConfig.getDouble(path + "baseLocation.x");
+                    double y = islandsConfig.getDouble(path + "baseLocation.y");
+                    double z = islandsConfig.getDouble(path + "baseLocation.z");
                     World islandWorld = Bukkit.getWorld(worldName);
 
-                    if (islandWorld != null) {
-                        playerIslands.put(playerUUID, new Location(islandWorld, x, y, z));
+                    if (islandWorld == null) {
+                        plugin.getLogger().warning("Ada yüklenirken dünya bulunamadı: " + worldName + " (Oyuncu: " + uuidString + "). Ada yüklenemedi.");
+                        continue;
+                    }
+                    Location baseLocation = new Location(islandWorld, x, y, z);
 
-                        Map<String, Location> homes = new HashMap<>();
-                        String homesPath = "islands." + uuidString + ".homes";
-                        if (islandsConfig.isConfigurationSection(homesPath)) {
-                            for (String homeName : islandsConfig.getConfigurationSection(homesPath).getKeys(false)) {
-                                String homeWorldName = islandsConfig.getString(homesPath + "." + homeName + ".world");
-                                World homeWorld = Bukkit.getWorld(homeWorldName);
-                                if (homeWorld != null && homeWorld.equals(islandWorld)) {
-                                    double homeX = islandsConfig.getDouble(homesPath + "." + homeName + ".x");
-                                    double homeY = islandsConfig.getDouble(homesPath + "." + homeName + ".y");
-                                    double homeZ = islandsConfig.getDouble(homesPath + "." + homeName + ".z");
-                                    float homeYaw = (float) islandsConfig.getDouble(homesPath + "." + homeName + ".yaw");
-                                    float homePitch = (float) islandsConfig.getDouble(homesPath + "." + homeName + ".pitch");
-                                    homes.put(homeName.toLowerCase(), new Location(homeWorld, homeX, homeY, homeZ, homeYaw, homePitch));
-                                } else {
-                                    plugin.getLogger().warning("'" + homeName + "' adlı ev yüklenirken dünya bulunamadı/eşleşmedi: " + (homeWorldName != null ? homeWorldName : "Bilinmeyen Dünya") + " (Oyuncu: " + uuidString + ")");
-                                }
+                    String islandName = islandsConfig.getString(path + "islandName", defaultIslandNamePrefix + "-" + Bukkit.getOfflinePlayer(ownerUUID).getName());
+                    long creationTimestamp = islandsConfig.getLong(path + "creationDate", System.currentTimeMillis());
+                    boolean isPublic = islandsConfig.getBoolean(path + "isPublic", false);
+                    boolean boundariesEnforced = islandsConfig.getBoolean(path + "boundariesEnforced", true);
+
+                    Set<UUID> members = new HashSet<>();
+                    List<String> memberUUIDStrings = islandsConfig.getStringList(path + "members");
+                    for (String memberUUIDString : memberUUIDStrings) {
+                        try {
+                            members.add(UUID.fromString(memberUUIDString));
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().warning("Geçersiz üye UUID formatı: " + memberUUIDString + " (Ada Sahibi: " + uuidString + ")");
+                        }
+                    }
+
+                    Set<UUID> bannedPlayers = new HashSet<>();
+                    List<String> bannedPlayerUUIDStrings = islandsConfig.getStringList(path + "bannedPlayers");
+                    for (String bannedUUIDString : bannedPlayerUUIDStrings) {
+                        try {
+                            bannedPlayers.add(UUID.fromString(bannedUUIDString));
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().warning("Geçersiz yasaklı oyuncu UUID formatı: " + bannedUUIDString + " (Ada Sahibi: " + uuidString + ")");
+                        }
+                    }
+
+                    Map<String, Location> namedHomes = new HashMap<>();
+                    ConfigurationSection homesSection = islandsConfig.getConfigurationSection(path + "homes");
+                    if (homesSection != null) {
+                        for (String homeNameKey : homesSection.getKeys(false)) {
+                            String homePath = path + "homes." + homeNameKey + ".";
+                            String homeWorldName = islandsConfig.getString(homePath + "world");
+                            World homeWorld = Bukkit.getWorld(homeWorldName);
+                            if (homeWorld != null && homeWorld.equals(islandWorld)) {
+                                double hx = islandsConfig.getDouble(homePath + "x");
+                                double hy = islandsConfig.getDouble(homePath + "y");
+                                double hz = islandsConfig.getDouble(homePath + "z");
+                                float hyaw = (float) islandsConfig.getDouble(homePath + "yaw");
+                                float hpitch = (float) islandsConfig.getDouble(homePath + "pitch");
+                                namedHomes.put(homeNameKey.toLowerCase(), new Location(homeWorld, hx, hy, hz, hyaw, hpitch));
+                            } else {
+                                plugin.getLogger().warning("'" + homeNameKey + "' adlı ev yüklenirken dünya bulunamadı/eşleşmedi: " +
+                                        (homeWorldName != null ? homeWorldName : "Bilinmeyen Dünya") + " (Oyuncu: " + uuidString + ")");
                             }
                         }
-                        if (!homes.isEmpty()) {
-                            playerNamedHomes.put(playerUUID, homes);
-                        }
-                    } else {
-                        plugin.getLogger().warning("Ana ada yüklenirken dünya bulunamadı: " + worldName + " (Oyuncu: " + uuidString + ")");
                     }
+
+                    Island island = new Island(ownerUUID, islandName, baseLocation, creationTimestamp, isPublic, boundariesEnforced, members, bannedPlayers, namedHomes);
+                    islandsData.put(ownerUUID, island);
+
                 } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Geçersiz UUID formatı islands.yml içinde: " + uuidString + " - " + e.getMessage());
+                    plugin.getLogger().warning("Geçersiz sahip UUID formatı islands.yml içinde: " + uuidString + " - " + e.getMessage());
+                } catch (Exception e) {
+                    plugin.getLogger().severe("Ada yüklenirken beklenmedik bir hata oluştu (Sahip: " + uuidString + "): " + e.getMessage());
+                    e.printStackTrace();
                 }
             }
         }
-        plugin.getLogger().info(playerIslands.size() + " ana ada ve " + playerNamedHomes.values().stream().mapToInt(Map::size).sum() + " toplam isimlendirilmiş ev konumu başarıyla yüklendi.");
+        plugin.getLogger().info(islandsData.size() + " ada verisi başarıyla yüklendi.");
     }
 
-    /**
-     * Verilen Bukkit dünyası için WorldGuard RegionManager'ını alır.
-     */
+    public void saveAllIslandData() {
+        if (islandsData.isEmpty()) {
+            if (islandsFile.exists() && islandsFile.length() > 0) {
+                try {
+                    islandsConfig.set("islands", null);
+                    islandsConfig.save(islandsFile);
+                    plugin.getLogger().info("Hiç ada verisi olmadığı için islands.yml temizlendi.");
+                } catch (IOException e) {
+                    plugin.getLogger().severe("islands.yml temizlenirken hata: " + e.getMessage());
+                }
+            }
+            return;
+        }
+        islandsConfig.set("islands", null); // Önce temizle
+
+        for (Island island : islandsData.values()) {
+            saveIslandData(island);
+        }
+        try {
+            islandsConfig.save(islandsFile);
+            plugin.getLogger().info(islandsData.size() + " ada verisi islands.yml dosyasına kaydedildi.");
+        } catch (IOException e) {
+            plugin.getLogger().severe("Tüm ada verileri islands.yml dosyasına kaydedilemedi: " + e.getMessage());
+        }
+    }
+
+    public void saveIslandData(Island island) {
+        if (island == null) return;
+
+        String uuidString = island.getOwnerUUID().toString();
+        String path = "islands." + uuidString + ".";
+
+        islandsConfig.set(path + "islandName", island.getIslandName());
+        islandsConfig.set(path + "creationDate", island.getCreationTimestamp());
+        islandsConfig.set(path + "isPublic", island.isPublic());
+        islandsConfig.set(path + "boundariesEnforced", island.areBoundariesEnforced());
+
+        Location baseLoc = island.getBaseLocation();
+        if (baseLoc != null && baseLoc.getWorld() != null) {
+            islandsConfig.set(path + "baseLocation.world", baseLoc.getWorld().getName());
+            islandsConfig.set(path + "baseLocation.x", baseLoc.getBlockX());
+            islandsConfig.set(path + "baseLocation.y", baseLoc.getBlockY());
+            islandsConfig.set(path + "baseLocation.z", baseLoc.getBlockZ());
+        } else {
+            plugin.getLogger().warning("Ada kaydedilirken temel konum veya dünya null geldi (Sahip: " + uuidString + "). Konum kaydedilemedi.");
+        }
+
+        List<String> memberUUIDStrings = island.getMembers().stream().map(UUID::toString).collect(Collectors.toList());
+        islandsConfig.set(path + "members", memberUUIDStrings);
+
+        List<String> bannedPlayerUUIDStrings = island.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.toList());
+        islandsConfig.set(path + "bannedPlayers", bannedPlayerUUIDStrings);
+
+        islandsConfig.set(path + "homes", null); // Önce eski evleri temizle
+        if (island.getNamedHomes() != null && !island.getNamedHomes().isEmpty()) {
+            for (Map.Entry<String, Location> homeEntry : island.getNamedHomes().entrySet()) {
+                String homeName = homeEntry.getKey(); // Bu zaten küçük harfle kaydedilmiş olmalı Island sınıfında
+                Location homeLoc = homeEntry.getValue();
+                String homePath = path + "homes." + homeName + ".";
+                if (homeLoc != null && homeLoc.getWorld() != null) {
+                    islandsConfig.set(homePath + "world", homeLoc.getWorld().getName());
+                    islandsConfig.set(homePath + "x", homeLoc.getX());
+                    islandsConfig.set(homePath + "y", homeLoc.getY());
+                    islandsConfig.set(homePath + "z", homeLoc.getZ());
+                    islandsConfig.set(homePath + "yaw", homeLoc.getYaw());
+                    islandsConfig.set(homePath + "pitch", homeLoc.getPitch());
+                }
+            }
+        }
+    }
+
     private RegionManager getWGRegionManager(World bukkitWorld) {
         if (bukkitWorld == null) {
             plugin.getLogger().severe("WorldGuard RegionManager alınırken dünya (bukkitWorld) null geldi!");
@@ -176,16 +276,47 @@ public class IslandManager {
         return plugin.getRegionManager(bukkitWorld);
     }
 
-    /**
-     * Oyuncunun WorldGuard bölgesi için benzersiz bir ID oluşturur.
-     */
     private String getRegionId(UUID playerUUID) {
         return "skyblock_island_" + playerUUID.toString();
     }
 
-    /**
-     * Oyuncu için yeni bir Skyblock adası oluşturur, şematiği yapıştırır ve WorldGuard bölgesini tanımlar.
-     */
+    public Island getIsland(Player player) {
+        return islandsData.get(player.getUniqueId());
+    }
+
+    public Island getIslandByOwner(UUID ownerUUID) {
+        return islandsData.get(ownerUUID);
+    }
+
+    public Island getIslandAt(Location location) {
+        if (location == null || location.getWorld() == null || !location.getWorld().equals(skyblockWorld)) {
+            return null;
+        }
+        for (Island island : islandsData.values()) {
+            try {
+                ProtectedRegion region = getProtectedRegion(island.getOwnerUUID());
+                if (region != null && region.contains(BlockVector3.at(location.getX(), location.getY(), location.getZ()))) {
+                    return island;
+                }
+            } catch (Exception e) {
+                plugin.getLogger().finer("getIslandAt içinde bölge kontrolü sırasında hata: " + e.getMessage());
+            }
+        }
+        return null;
+    }
+
+    public ProtectedRegion getProtectedRegion(UUID ownerUUID) {
+        Island island = getIslandByOwner(ownerUUID);
+        if (island == null || island.getBaseLocation() == null || island.getWorld() == null) {
+            return null;
+        }
+        RegionManager regionManager = getWGRegionManager(island.getWorld());
+        if (regionManager == null) {
+            return null;
+        }
+        return regionManager.getRegion(getRegionId(ownerUUID));
+    }
+
     public void createIsland(Player player) {
         if (playerHasIsland(player)) {
             player.sendMessage(ChatColor.RED + "Zaten bir adanız var!");
@@ -205,9 +336,7 @@ public class IslandManager {
         player.sendMessage(ChatColor.YELLOW + "Adanız oluşturuluyor... Bu işlem birkaç saniye sürebilir, lütfen bekleyin.");
 
         final int actualIslandX = plugin.getNextIslandXAndIncrement();
-        plugin.getLogger().info("[DEBUG] IslandManager - createIsland: Ada için kullanılacak X koordinatı: " + actualIslandX);
         final Location islandBaseLocation = new Location(this.skyblockWorld, actualIslandX, 100, 0);
-        plugin.getLogger().info("[DEBUG] IslandManager - createIsland: islandBaseLocation oluşturuldu: X=" + islandBaseLocation.getBlockX() + ", Y=" + islandBaseLocation.getBlockY() + ", Z=" + islandBaseLocation.getBlockZ());
 
         new BukkitRunnable() {
             @Override
@@ -221,7 +350,8 @@ public class IslandManager {
                     }
 
                     Clipboard clipboard;
-                    try (ClipboardReader reader = format.getReader(new FileInputStream(schematicFile))) {
+                    try (FileInputStream fis = new FileInputStream(schematicFile);
+                         ClipboardReader reader = format.getReader(fis)) {
                         clipboard = reader.read();
                     }
 
@@ -234,68 +364,40 @@ public class IslandManager {
                                 .build();
                         Operations.complete(operation);
                     }
+                    String newIslandName = defaultIslandNamePrefix + "-" + player.getName();
+                    Island newIsland = new Island(player.getUniqueId(), islandBaseLocation, newIslandName);
+                    islandsData.put(player.getUniqueId(), newIsland);
+                    saveIslandData(newIsland);
+                    try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Yeni ada kaydedilirken hata: " + e.getMessage());}
 
-                    registerNewIsland(player, islandBaseLocation);
-
-                    // --- WorldGuard Bölgesi Oluşturma ve Bayrak Ayarlama ---
                     RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
                     if (regionManager != null) {
                         String regionId = getRegionId(player.getUniqueId());
+                        CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
+
+                        if (regionManager.hasRegion(regionId)) {
+                            plugin.getLogger().info("Mevcut WorldGuard bölgesi '" + regionId + "' güncellenmek üzere siliniyor.");
+                            regionManager.removeRegion(regionId);
+                        }
+
+                        ProtectedCuboidRegion protectedRegion = new ProtectedCuboidRegion(
+                                regionId,
+                                islandTerritory.getMinimumPoint(),
+                                islandTerritory.getMaximumPoint()
+                        );
+                        protectedRegion.getOwners().addPlayer(player.getUniqueId());
+                        protectedRegion.setPriority(plugin.getConfig().getInt("island.region-priority", 10));
+                        plugin.getLogger().info("'" + regionId + "' için varsayılan ziyaretçi bayrakları ayarlanıyor...");
+                        setInitialRegionFlags(protectedRegion);
+
+                        regionManager.addRegion(protectedRegion);
                         try {
-                            CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
-
-                            if (regionManager.hasRegion(regionId)) {
-                                plugin.getLogger().info("Mevcut WorldGuard bölgesi '" + regionId + "' güncellenmek üzere siliniyor.");
-                                regionManager.removeRegion(regionId);
-                            }
-
-                            ProtectedCuboidRegion protectedRegion = new ProtectedCuboidRegion(
-                                    regionId,
-                                    islandTerritory.getMinimumPoint(),
-                                    islandTerritory.getMaximumPoint()
-                            );
-
-                            protectedRegion.getOwners().addPlayer(player.getUniqueId());
-                            protectedRegion.setPriority(10);
-
-                            // Varsayılan Bayraklar: Ziyaretçiler için DENY, Çevreseller için özel ayar
-                            // Etkileşim Bayrakları (Sahip bypass etmeli, ziyaretçiler için DENY)
-                            plugin.getLogger().info("'" + regionId + "' için varsayılan bayraklar ayarlanıyor...");
-                            protectedRegion.setFlag(Flags.BUILD, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.INTERACT, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.CHEST_ACCESS, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.USE, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.ITEM_DROP, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.ITEM_PICKUP, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.ENDERPEARL, StateFlag.State.DENY);
-
-                            protectedRegion.setFlag(Flags.TRAMPLE_BLOCKS, StateFlag.State.DENY);
-
-                            // Çevresel Bayraklar (Ada genelini etkiler, sahip dahil)
-                            protectedRegion.setFlag(Flags.PVP, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.TNT, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.CREEPER_EXPLOSION, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.LAVA_FLOW, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.WATER_FLOW, StateFlag.State.ALLOW);
-                            protectedRegion.setFlag(Flags.FIRE_SPREAD, StateFlag.State.DENY);
-                            protectedRegion.setFlag(Flags.MOB_SPAWNING, StateFlag.State.ALLOW);
-                            protectedRegion.setFlag(Flags.LEAF_DECAY, StateFlag.State.ALLOW);
-                            // Diğer çevresel bayraklar (örneğin, hayvanlara hasar) eklenebilir.
-                            // protectedRegion.setFlag(Flags.DAMAGE_ANIMALS, StateFlag.State.DENY);
-
-
-                            regionManager.addRegion(protectedRegion);
-                            try {
-                                regionManager.save(); // Değişiklikleri diske kaydet!
-                                plugin.getLogger().info(player.getName() + " için WorldGuard bölgesi (" + regionId + ") oluşturuldu ve varsayılan koruma bayrakları ayarlandı.");
-                            } catch (StorageException e) {
-                                plugin.getLogger().severe("WorldGuard bölgeleri oluşturulurken (kayıt) hata oluştu: " + e.getMessage());
-                                e.printStackTrace();
-                                player.sendMessage(ChatColor.RED + "Ada koruması kaydedilirken kritik bir hata oluştu.");
-                            }
-                        } catch (IOException e) {
-                            plugin.getLogger().severe("Ada için bölge sınırları hesaplanırken hata (WG): " + e.getMessage());
-                            player.sendMessage(ChatColor.RED + "Adanız oluşturuldu ancak koruma sınırları belirlenirken bir sorun oluştu.");
+                            regionManager.saveChanges();
+                            plugin.getLogger().info(player.getName() + " için WorldGuard bölgesi (" + regionId + ") oluşturuldu ve varsayılan koruma bayrakları ayarlandı.");
+                        } catch (StorageException e) {
+                            plugin.getLogger().severe("WorldGuard bölgeleri oluşturulurken (kayıt) hata: " + e.getMessage());
+                            e.printStackTrace();
+                            player.sendMessage(ChatColor.RED + "Ada koruması kaydedilirken kritik bir hata oluştu.");
                         }
                     } else {
                         plugin.getLogger().severe("Ada için WorldGuard RegionManager alınamadı! (" + islandBaseLocation.getWorld().getName() + ") Koruma oluşturulamadı.");
@@ -306,11 +408,20 @@ public class IslandManager {
                     double offsetY = plugin.getConfig().getDouble("island-spawn-offset.y", 1.5);
                     double offsetZ = plugin.getConfig().getDouble("island-spawn-offset.z", 0.5);
                     Location teleportLocation = islandBaseLocation.clone().add(offsetX, offsetY, offsetZ);
-                    player.teleport(teleportLocation);
-                    player.sendMessage(ChatColor.GREEN + "Adanız başarıyla oluşturuldu ve ışınlandınız!");
-                    plugin.getLogger().info(player.getName() + " için ada başarıyla oluşturuldu (Taban: X=" + islandBaseLocation.getBlockX() +
-                            ", Y=" + islandBaseLocation.getBlockY() + ", Z=" + islandBaseLocation.getBlockZ() +
-                            "), ışınlandı: " + teleportLocation);
+                    teleportLocation.setYaw(0f);
+                    teleportLocation.setPitch(0f);
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            if (teleportLocation.getChunk().isLoaded()) {
+                                player.teleport(teleportLocation);
+                                player.sendMessage(ChatColor.GREEN + "Adanız başarıyla oluşturuldu ve ışınlandınız!");
+                                plugin.getLogger().info(player.getName() + " için ada başarıyla oluşturuldu ve ışınlandı: " + teleportLocation);
+                                this.cancel();
+                            }
+                        }
+                    }.runTaskTimer(plugin, 0L, 1L);
+
 
                 } catch (IOException | WorldEditException e) {
                     plugin.getLogger().severe("Ada oluşturulurken bir WorldEdit/IO hatası oluştu: " + e.getMessage());
@@ -325,27 +436,51 @@ public class IslandManager {
         }.runTask(plugin);
     }
 
+    private void setInitialRegionFlags(ProtectedRegion region) {
+        region.setFlag(Flags.BUILD, StateFlag.State.DENY);
+        region.setFlag(Flags.INTERACT, StateFlag.State.DENY);
+        region.setFlag(Flags.CHEST_ACCESS, StateFlag.State.DENY);
+        region.setFlag(Flags.USE, StateFlag.State.DENY);
+        region.setFlag(Flags.ITEM_DROP, StateFlag.State.DENY);
+        region.setFlag(Flags.ITEM_PICKUP, StateFlag.State.DENY);
+        region.setFlag(Flags.ENDERPEARL, StateFlag.State.DENY);
+        region.setFlag(Flags.TRAMPLE_BLOCKS, StateFlag.State.DENY);
+        region.setFlag(Flags.PVP, StateFlag.State.DENY);
+        region.setFlag(Flags.TNT, StateFlag.State.DENY);
+        region.setFlag(Flags.CREEPER_EXPLOSION, StateFlag.State.DENY);
+        region.setFlag(Flags.OTHER_EXPLOSION, StateFlag.State.DENY);
+        region.setFlag(Flags.LAVA_FLOW, StateFlag.State.DENY);
+        region.setFlag(Flags.WATER_FLOW, StateFlag.State.ALLOW);
+        region.setFlag(Flags.FIRE_SPREAD, StateFlag.State.DENY);
+        region.setFlag(Flags.MOB_SPAWNING, StateFlag.State.ALLOW);
+        region.setFlag(Flags.LEAF_DECAY, StateFlag.State.ALLOW);
+    }
+
     public boolean deleteIsland(Player player) {
-        if (!playerHasIsland(player)) {
+        Island island = getIsland(player);
+        if (island == null) {
             player.sendMessage(ChatColor.RED + "Silebileceğin bir adan yok!");
             return false;
         }
-        Location islandBaseLocation = playerIslands.get(player.getUniqueId());
+        Location islandBaseLocation = island.getBaseLocation();
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(ChatColor.RED + "Adanın konumu veya dünyası bulunamadı.");
-            return false;
-        }
-        if (!schematicFile.exists()) {
-            player.sendMessage(ChatColor.RED + "Ada şematiği (boyutları belirlemek için) bulunamadı. Silme işlemi yapılamıyor.");
             return false;
         }
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi siliniyor...");
         try {
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
-            try (EditSession editSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(islandBaseLocation.getWorld()))) {
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
+            if (weWorld == null) {
+                plugin.getLogger().severe("Ada silinirken WorldEdit dünyası null geldi!");
+                player.sendMessage(ChatColor.RED + "Ada silinirken bir dünya hatası oluştu.");
+                return false;
+            }
+
+            try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
                 editSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
-                editSession.setBlocks(islandTerritory, BlockTypes.AIR.getDefaultState());
+                editSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), BlockTypes.AIR.getDefaultState());
             }
             plugin.getLogger().info(player.getName() + " adlı oyuncunun ada bölgesi (" + islandTerritory.toString() + ") başarıyla silindi (bloklar temizlendi).");
 
@@ -355,10 +490,10 @@ public class IslandManager {
                 if (regionManager.hasRegion(regionId)) {
                     regionManager.removeRegion(regionId);
                     try {
-                        regionManager.save(); // Değişiklikleri diske kaydet
+                        regionManager.saveChanges();
                         plugin.getLogger().info(player.getName() + " için " + regionId + " ID'li WorldGuard bölgesi silindi.");
                     } catch (StorageException e) {
-                        plugin.getLogger().severe("WorldGuard bölgeleri silinirken (kayıt) hata oluştu: " + e.getMessage());
+                        plugin.getLogger().severe("WorldGuard bölgeleri silinirken (kayıt) hata: " + e.getMessage());
                         e.printStackTrace();
                     }
                 } else {
@@ -369,6 +504,9 @@ public class IslandManager {
             }
 
             removeIslandDataFromStorage(player.getUniqueId());
+            try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada silindikten sonra islands.yml kaydedilirken hata: " + e.getMessage());}
+
+            player.sendMessage(ChatColor.GREEN + "Adanız başarıyla silindi.");
             return true;
 
         } catch (IOException | WorldEditException e) {
@@ -385,11 +523,12 @@ public class IslandManager {
     }
 
     public boolean resetIsland(Player player) {
-        if (!playerHasIsland(player)) {
+        Island island = getIsland(player);
+        if (island == null) {
             player.sendMessage(ChatColor.RED + "Sıfırlayabileceğin bir adan yok!");
             return false;
         }
-        Location islandBaseLocation = playerIslands.get(player.getUniqueId());
+        Location islandBaseLocation = island.getBaseLocation();
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(ChatColor.RED + "Adanın konumu veya dünyası bulunamadı. Bir sorun var!");
             return false;
@@ -401,15 +540,18 @@ public class IslandManager {
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.");
         try {
-            // 1. Mevcut Ada Alanını Temizle
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
+            if (weWorld == null) {
+                plugin.getLogger().severe("Ada sıfırlanırken WorldEdit dünyası null geldi!");
+                player.sendMessage(ChatColor.RED + "Ada sıfırlanırken bir dünya hatası oluştu.");
+                return false;
+            }
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
-            try (EditSession clearSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(islandBaseLocation.getWorld()))) {
+            try (EditSession clearSession = WorldEdit.getInstance().newEditSession(weWorld)) {
                 clearSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
-                clearSession.setBlocks(islandTerritory, BlockTypes.AIR.getDefaultState());
+                clearSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), BlockTypes.AIR.getDefaultState());
             }
             plugin.getLogger().info(player.getName() + " için ada bölgesi temizlendi (reset).");
-
-            // 2. Başlangıç Şematiğini Yeniden Yapıştır
             Clipboard clipboard;
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
             if (format == null) {
@@ -417,10 +559,11 @@ public class IslandManager {
                 player.sendMessage(ChatColor.RED + "Ada sıfırlanırken bir hata oluştu. (Şematik Formatı)");
                 return false;
             }
-            try (ClipboardReader reader = format.getReader(new FileInputStream(schematicFile))) {
+            try (FileInputStream fis = new FileInputStream(schematicFile);
+                 ClipboardReader reader = format.getReader(fis)) {
                 clipboard = reader.read();
             }
-            try (EditSession pasteSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(islandBaseLocation.getWorld()))) {
+            try (EditSession pasteSession = WorldEdit.getInstance().newEditSession(weWorld)) {
                 pasteSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(pasteSession)
@@ -430,39 +573,17 @@ public class IslandManager {
                 Operations.complete(operation);
             }
             plugin.getLogger().info(player.getName() + " için ada şematiği yeniden yapıştırıldı (reset).");
-
-            // 3. Oyuncunun tüm isimlendirilmiş evlerini sil
-            clearNamedHomesForPlayer(player.getUniqueId());
-
-            // 4. WorldGuard bölge bayraklarını varsayılana sıfırla
+            island.getNamedHomes().clear();
             RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
                 String regionId = getRegionId(player.getUniqueId());
                 ProtectedRegion region = regionManager.getRegion(regionId);
                 if (region != null) {
                     plugin.getLogger().info("'" + regionId + "' için bayraklar sıfırlanıyor (reset)...");
-                    // Etkileşim Bayrakları
-                    region.setFlag(Flags.BUILD, StateFlag.State.DENY);
-                    region.setFlag(Flags.INTERACT, StateFlag.State.DENY);
-                    region.setFlag(Flags.CHEST_ACCESS, StateFlag.State.DENY);
-                    region.setFlag(Flags.USE, StateFlag.State.DENY);
-                    region.setFlag(Flags.ITEM_DROP, StateFlag.State.DENY);
-                    region.setFlag(Flags.ITEM_PICKUP, StateFlag.State.DENY);
-                    region.setFlag(Flags.ENDERPEARL, StateFlag.State.DENY);
-
-                    region.setFlag(Flags.TRAMPLE_BLOCKS, StateFlag.State.DENY);
-                    // Çevresel Bayraklar
-                    region.setFlag(Flags.PVP, StateFlag.State.DENY);
-                    region.setFlag(Flags.TNT, StateFlag.State.DENY);
-                    region.setFlag(Flags.CREEPER_EXPLOSION, StateFlag.State.DENY);
-                    region.setFlag(Flags.LAVA_FLOW, StateFlag.State.DENY);
-                    region.setFlag(Flags.WATER_FLOW, StateFlag.State.ALLOW);
-                    region.setFlag(Flags.FIRE_SPREAD, StateFlag.State.DENY);
-                    region.setFlag(Flags.MOB_SPAWNING, StateFlag.State.ALLOW);
-                    region.setFlag(Flags.LEAF_DECAY, StateFlag.State.ALLOW);
-                    // Sahiplik aynı kalır.
+                    region.getFlags().clear();
+                    setInitialRegionFlags(region);
                     try {
-                        regionManager.save();
+                        regionManager.saveChanges();
                         plugin.getLogger().info(player.getName() + " için WorldGuard bölge bayrakları varsayılana sıfırlandı (reset).");
                     } catch (StorageException e) {
                         plugin.getLogger().severe("WorldGuard bölge bayrakları sıfırlanırken (kayıt) hata: " + e.getMessage());
@@ -471,8 +592,9 @@ public class IslandManager {
                     plugin.getLogger().warning(player.getName() + " için sıfırlanacak/güncellenecek WorldGuard bölgesi (" + regionId + ") bulunamadı.");
                 }
             }
+            saveIslandData(island);
+            try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada sıfırlandıktan sonra islands.yml kaydedilirken hata: " + e.getMessage());}
 
-            // 5. Oyuncuyu adasının varsayılan spawn noktasına ışınla
             teleportToIsland(player);
             player.sendMessage(ChatColor.GREEN + "Adanız başarıyla sıfırlandı!");
             return true;
@@ -491,46 +613,22 @@ public class IslandManager {
     }
 
     public void removeIslandDataFromStorage(UUID playerUUID) {
-        if (playerIslands.containsKey(playerUUID)) {
-            playerIslands.remove(playerUUID);
-        }
-        if (playerNamedHomes.containsKey(playerUUID)) {
-            playerNamedHomes.remove(playerUUID);
-        }
-        String playerPath = "islands." + playerUUID.toString();
-        if (islandsConfig.isConfigurationSection(playerPath)) {
-            islandsConfig.set(playerPath, null);
-            try {
-                islandsConfig.save(islandsFile);
-                plugin.getLogger().info(Bukkit.getOfflinePlayer(playerUUID).getName() + " adlı oyuncunun tüm ada verisi islands.yml dosyasından silindi.");
-            } catch (IOException e) {
-                plugin.getLogger().severe("islands.yml güncellenirken hata (ada silme): " + e.getMessage());
-            }
-        }
-    }
-
-    public void registerNewIsland(Player player, Location islandLocation) {
-        playerIslands.put(player.getUniqueId(), islandLocation);
-        String uuidString = player.getUniqueId().toString();
-        String basePath = "islands." + uuidString + ".";
-        islandsConfig.set(basePath + "world", islandLocation.getWorld().getName());
-        islandsConfig.set(basePath + "x", islandLocation.getBlockX());
-        islandsConfig.set(basePath + "y", islandLocation.getBlockY());
-        islandsConfig.set(basePath + "z", islandLocation.getBlockZ());
-        islandsConfig.createSection(basePath + "homes"); // Başlangıçta boş bir homes bölümü oluştur
-        try {
-            islandsConfig.save(islandsFile);
-            plugin.getLogger().info(player.getName() + " için ada bilgisi (boş homes ile) islands.yml dosyasına kaydedildi.");
-        } catch (IOException e) {
-            plugin.getLogger().severe(player.getName() + " için ada bilgisi islands.yml dosyasına kaydedilemedi: " + e.getMessage());
-        }
+        islandsData.remove(playerUUID);
+        islandsConfig.set("islands." + playerUUID.toString(), null);
+        plugin.getLogger().info(Bukkit.getOfflinePlayer(playerUUID).getName() + " adlı oyuncunun tüm ada verisi islands.yml dosyasından silinmek üzere işaretlendi.");
     }
 
     public boolean playerHasIsland(Player player) {
-        return playerIslands.containsKey(player.getUniqueId());
+        return islandsData.containsKey(player.getUniqueId());
+    }
+    public boolean playerHasIsland(UUID playerUUID) {
+        return islandsData.containsKey(playerUUID);
     }
 
     private CuboidRegion getPastedSchematicRegion(Location islandBaseLocation) throws IOException {
+        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
+            throw new IOException("Pasted schematic region için ada temel konumu veya dünyası null geldi.");
+        }
         if (!schematicFile.exists()) {
             throw new IOException("Ada şematiği bulunamadı: " + schematicFile.getPath());
         }
@@ -539,104 +637,102 @@ public class IslandManager {
         if (format == null) {
             throw new IOException("Ada şematiği formatı tanınamadı: " + schematicFile.getName());
         }
-        try (ClipboardReader reader = format.getReader(new FileInputStream(schematicFile))) {
+        try (FileInputStream fis = new FileInputStream(schematicFile);
+             ClipboardReader reader = format.getReader(fis)) {
             clipboard = reader.read();
         }
         BlockVector3 pasteOriginInSchematic = clipboard.getOrigin();
         BlockVector3 islandPastePoint = BlockVector3.at(islandBaseLocation.getBlockX(), islandBaseLocation.getBlockY(), islandBaseLocation.getBlockZ());
-        BlockVector3 clipboardMinRel = clipboard.getRegion().getMinimumPoint();
-        BlockVector3 clipboardMaxRel = clipboard.getRegion().getMaximumPoint();
-        BlockVector3 worldMinSchematic = islandPastePoint.add(clipboardMinRel.subtract(pasteOriginInSchematic));
-        BlockVector3 worldMaxSchematic = islandPastePoint.add(clipboardMaxRel.subtract(pasteOriginInSchematic));
+        BlockVector3 clipboardMinRel = clipboard.getRegion().getMinimumPoint().subtract(pasteOriginInSchematic);
+        BlockVector3 clipboardMaxRel = clipboard.getRegion().getMaximumPoint().subtract(pasteOriginInSchematic);
+
+        BlockVector3 worldMinSchematic = islandPastePoint.add(clipboardMinRel);
+        BlockVector3 worldMaxSchematic = islandPastePoint.add(clipboardMaxRel);
+
         com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
+        if (weWorld == null) {
+            throw new IOException("Pasted schematic region için WorldEdit dünyası null geldi.");
+        }
         return new CuboidRegion(weWorld, worldMinSchematic, worldMaxSchematic);
     }
 
-    private CuboidRegion getIslandTerritoryRegion(Location islandBaseLocation) throws IOException {
+    public CuboidRegion getIslandTerritoryRegion(Location islandBaseLocation) throws IOException {
+        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
+            throw new IOException("Island territory region için ada temel konumu veya dünyası null geldi.");
+        }
         CuboidRegion schematicRegion = getPastedSchematicRegion(islandBaseLocation);
-        int expansionRadius = plugin.getConfig().getInt("island.expansion-radius-horizontal", 50);
-        boolean allowBuildBelowBase = plugin.getConfig().getBoolean("island.allow-build-below-schematic-base", false);
-        int buildHeightAboveTop = plugin.getConfig().getInt("island.build-limit-above-schematic-top", 150);
 
-        int worldMinBuildHeight = 0;
-        int worldMaxBuildHeight = islandBaseLocation.getWorld().getMaxHeight() - 1;
+        int expansionRadiusHorizontal = plugin.getConfig().getInt("island.expansion-radius-horizontal", 50);
+        int expansionRadiusVerticalTop = plugin.getConfig().getInt("island.expansion-radius-vertical-top", 50);
+        int expansionRadiusVerticalBottom = plugin.getConfig().getInt("island.expansion-radius-vertical-bottom", 20);
+
+        int worldMinBuildHeight = 0; // Veya islandBaseLocation.getWorld().getMinHeight() (1.17+)
+        int worldMaxBuildHeight = islandBaseLocation.getWorld().getMaxHeight() -1;
 
         BlockVector3 schematicMin = schematicRegion.getMinimumPoint();
         BlockVector3 schematicMax = schematicRegion.getMaximumPoint();
 
-        int territoryMinX = schematicMin.getBlockX() - expansionRadius;
-        int territoryMaxX = schematicMax.getBlockX() + expansionRadius;
-        int territoryMinZ = schematicMin.getBlockZ() - expansionRadius;
-        int territoryMaxZ = schematicMax.getBlockZ() + expansionRadius;
-
-        int territoryMinY = allowBuildBelowBase ? worldMinBuildHeight : schematicMin.getBlockY();
-        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY() + buildHeightAboveTop);
+        int territoryMinX = schematicMin.getBlockX() - expansionRadiusHorizontal;
+        int territoryMaxX = schematicMax.getBlockX() + expansionRadiusHorizontal;
+        int territoryMinZ = schematicMin.getBlockZ() - expansionRadiusHorizontal;
+        int territoryMaxZ = schematicMax.getBlockZ() + expansionRadiusHorizontal;
+        int territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getBlockY() - expansionRadiusVerticalBottom);
+        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY() + expansionRadiusVerticalTop);
 
         if (territoryMinY > territoryMaxY) {
-            territoryMinY = schematicMin.getBlockY();
-            territoryMaxY = Math.max(territoryMinY, schematicMax.getBlockY());
-            plugin.getLogger().warning("Hesaplanan ada bölgesi Y sınırları geçersizdi (minY > maxY). Şematik Y sınırlarına geri dönüldü. Ada konumu: " + islandBaseLocation.toString());
+            plugin.getLogger().warning("Hesaplanan ada bölgesi Y sınırları geçersizdi (minY > maxY). Şematik Y sınırlarına geri dönülüyor. Ada: " + islandBaseLocation);
+            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getBlockY());
+            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY());
+            if (territoryMinY > territoryMaxY) {
+                territoryMaxY = territoryMinY;
+            }
         }
-
         return new CuboidRegion(schematicRegion.getWorld(),
                 BlockVector3.at(territoryMinX, territoryMinY, territoryMinZ),
                 BlockVector3.at(territoryMaxX, territoryMaxY, territoryMaxZ));
     }
 
     public boolean setNamedHome(Player player, String homeName, Location homeLocation) {
-        if (!playerHasIsland(player)) {
+        Island island = getIsland(player);
+        if (island == null) {
             player.sendMessage(ChatColor.RED + "Ev noktanı ayarlayabileceğin bir adan yok!");
             return false;
         }
-        Location islandBaseLocation = playerIslands.get(player.getUniqueId());
-        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
+        if (island.getBaseLocation() == null || island.getWorld() == null) {
             player.sendMessage(ChatColor.RED + "Bir hata oluştu: Ada temel konumu veya dünyası bulunamadı.");
             return false;
         }
-        if (!homeLocation.getWorld().equals(islandBaseLocation.getWorld())) {
+        if (homeLocation == null || homeLocation.getWorld() == null || !homeLocation.getWorld().equals(island.getWorld())) {
             player.sendMessage(ChatColor.RED + "Ev noktanı sadece kendi adanın dünyasında ayarlayabilirsin!");
             return false;
         }
 
         String homeNameLower = homeName.toLowerCase();
-        Map<String, Location> homes = playerNamedHomes.computeIfAbsent(player.getUniqueId(), k -> new HashMap<>());
+        Map<String, Location> homes = island.getNamedHomes();
 
         if (!homes.containsKey(homeNameLower) && homes.size() >= maxHomesPerIsland) {
             player.sendMessage(ChatColor.RED + "Maksimum ev sayısına (" + maxHomesPerIsland + ") ulaştın. Yeni bir ev ayarlamak için önce birini silmelisin.");
             return false;
         }
-        if (homeNameLower.length() < 2 || homeNameLower.length() > 16 || !homeNameLower.matches("^[a-zA-Z0-9_]+$")) {
+        String homeNamePattern = plugin.getConfig().getString("island.home-name-pattern", "^[a-zA-Z0-9_]{2,16}$");
+        if (!homeNameLower.matches(homeNamePattern)) {
             player.sendMessage(ChatColor.RED + "Ev adı 2-16 karakter uzunluğunda olmalı ve sadece harf, rakam veya alt çizgi içerebilir.");
             return false;
         }
 
         try {
-            CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
+            CuboidRegion islandTerritory = getIslandTerritoryRegion(island.getBaseLocation());
             if (!islandTerritory.contains(BlockVector3.at(homeLocation.getX(), homeLocation.getY(), homeLocation.getZ()))) {
                 player.sendMessage(ChatColor.RED + "Ev noktanı sadece adanın (genişletilmiş) sınırları içinde ayarlayabilirsin!");
                 return false;
             }
 
-            homes.put(homeNameLower, homeLocation.clone());
-            // playerNamedHomes.put(player.getUniqueId(), homes); // computeIfAbsent zaten map'i günceller
+            island.setNamedHome(homeNameLower, homeLocation.clone());
+            saveIslandData(island);
+            try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ev noktası kaydedilirken hata: " + e.getMessage());}
 
-            String uuidString = player.getUniqueId().toString();
-            String homePath = "islands." + uuidString + ".homes." + homeNameLower + ".";
-            islandsConfig.set(homePath + "world", homeLocation.getWorld().getName());
-            islandsConfig.set(homePath + "x", homeLocation.getX());
-            islandsConfig.set(homePath + "y", homeLocation.getY());
-            islandsConfig.set(homePath + "z", homeLocation.getZ());
-            islandsConfig.set(homePath + "yaw", homeLocation.getYaw());
-            islandsConfig.set(homePath + "pitch", homeLocation.getPitch());
-            try {
-                islandsConfig.save(islandsFile);
-                player.sendMessage(ChatColor.GREEN + "'" + homeName + "' adlı ev noktan ayarlandı!");
-                return true;
-            } catch (IOException e) {
-                plugin.getLogger().severe(player.getName() + " için '" + homeName + "' evi kaydedilemedi: " + e.getMessage());
-                player.sendMessage(ChatColor.RED + "Ev noktan kaydedilirken bir hata oluştu.");
-                return false;
-            }
+            player.sendMessage(ChatColor.GREEN + "'" + homeName + "' adlı ev noktan ayarlandı!");
+            return true;
         } catch (IOException e) {
             plugin.getLogger().severe("Ada sınırları hesaplanırken hata (setNamedHome): " + e.getMessage());
             player.sendMessage(ChatColor.RED + "Ev noktan ayarlanırken bir hata oluştu (sınırlar).");
@@ -645,55 +741,47 @@ public class IslandManager {
     }
 
     public boolean deleteNamedHome(Player player, String homeName) {
-        if (!playerHasIsland(player)) {
+        Island island = getIsland(player);
+        if (island == null) {
             player.sendMessage(ChatColor.RED + "Ev silebilmek için önce bir adanız olmalı!");
             return false;
         }
-        UUID playerUUID = player.getUniqueId();
         String homeNameLower = homeName.toLowerCase();
-        Map<String, Location> homes = playerNamedHomes.get(playerUUID);
-
-        if (homes == null || !homes.containsKey(homeNameLower)) {
+        if (!island.getNamedHomes().containsKey(homeNameLower)) {
             player.sendMessage(ChatColor.RED + "'" + homeName + "' adında bir ev noktanız bulunmuyor.");
             return false;
         }
-        homes.remove(homeNameLower);
-        if (homes.isEmpty()) {
-            playerNamedHomes.remove(playerUUID);
-        }
-        islandsConfig.set("islands." + playerUUID.toString() + ".homes." + homeNameLower, null);
-        try {
-            islandsConfig.save(islandsFile);
-            player.sendMessage(ChatColor.GREEN + "'" + homeName + "' adlı ev noktanız başarıyla silindi.");
-            plugin.getLogger().info(player.getName() + " oyuncusunun '" + homeNameLower + "' adlı evi silindi.");
-            return true;
-        } catch (IOException e) {
-            plugin.getLogger().severe(player.getName() + " için '" + homeNameLower + "' evi silinirken islands.yml kaydedilemedi: " + e.getMessage());
-            player.sendMessage(ChatColor.RED + "Ev noktanız silinirken bir dosya hatası oluştu.");
-            return false;
-        }
+
+        island.deleteNamedHome(homeNameLower);
+        saveIslandData(island);
+        try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ev noktası silinirken hata: " + e.getMessage());}
+
+        player.sendMessage(ChatColor.GREEN + "'" + homeName + "' adlı ev noktanız başarıyla silindi.");
+        plugin.getLogger().info(player.getName() + " oyuncusunun '" + homeNameLower + "' adlı evi silindi.");
+        return true;
     }
 
     public Location getNamedHomeLocation(Player player, String homeName) {
-        if (!playerHasIsland(player)) return null;
-        Map<String, Location> homes = playerNamedHomes.get(player.getUniqueId());
-        if (homes == null) return null;
-        return homes.get(homeName.toLowerCase());
+        Island island = getIsland(player);
+        if (island == null) return null;
+        return island.getNamedHome(homeName.toLowerCase());
     }
 
     public List<String> getNamedHomesList(Player player) {
-        if (!playerHasIsland(player) || !playerNamedHomes.containsKey(player.getUniqueId())) {
+        Island island = getIsland(player);
+        if (island == null) {
             return new ArrayList<>();
         }
-        return new ArrayList<>(playerNamedHomes.get(player.getUniqueId()).keySet());
+        return island.getHomeNames();
     }
 
-    public void teleportToIsland(Player player) { // Ana ada spawn
-        if (!playerHasIsland(player)) {
+    public void teleportToIsland(Player player) {
+        Island island = getIsland(player);
+        if (island == null) {
             player.sendMessage(ChatColor.RED + "Henüz bir adanız yok! Oluşturmak için /island create yazın.");
             return;
         }
-        Location islandBaseLocation = playerIslands.get(player.getUniqueId());
+        Location islandBaseLocation = island.getBaseLocation();
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(ChatColor.RED + "Adanızın konumu veya dünyası bulunamadı.");
             return;
@@ -704,16 +792,21 @@ public class IslandManager {
         Location teleportLocation = islandBaseLocation.clone().add(offsetX, offsetY, offsetZ);
         teleportLocation.setYaw(player.getLocation().getYaw());
         teleportLocation.setPitch(player.getLocation().getPitch());
+
+        if (teleportLocation.getChunk() != null && !teleportLocation.getChunk().isLoaded()) {
+            teleportLocation.getChunk().load();
+        }
         player.teleport(teleportLocation);
         player.sendMessage(ChatColor.GREEN + "Adanızın ana noktasına ışınlandınız!");
     }
 
     public void teleportToNamedHome(Player player, String homeName) {
-        if (!playerHasIsland(player)) {
+        Island island = getIsland(player);
+        if (island == null) {
             player.sendMessage(ChatColor.RED + "Önce bir ada oluşturmalısın!");
             return;
         }
-        Location homeLocation = getNamedHomeLocation(player, homeName);
+        Location homeLocation = island.getNamedHome(homeName.toLowerCase());
         if (homeLocation == null) {
             player.sendMessage(ChatColor.RED + "'" + homeName + "' adında bir ev noktan bulunmuyor. Evlerini listelemek için /island home list yaz.");
             return;
@@ -722,107 +815,218 @@ public class IslandManager {
             player.sendMessage(ChatColor.RED + "'" + homeName + "' adlı evinin bulunduğu dünya yüklenemedi!");
             return;
         }
+        if (homeLocation.getChunk() != null && !homeLocation.getChunk().isLoaded()) {
+            homeLocation.getChunk().load();
+        }
         player.teleport(homeLocation);
         player.sendMessage(ChatColor.GREEN + "'" + homeName + "' adlı evine ışınlandın!");
     }
 
-    public void clearNamedHomesForPlayer(UUID playerUUID) {
-        if (playerNamedHomes.containsKey(playerUUID)) {
-            playerNamedHomes.remove(playerUUID);
-            plugin.getLogger().info(Bukkit.getOfflinePlayer(playerUUID).getName() + " için tüm isimlendirilmiş evler hafızadan silindi (reset).");
-        }
-        String homesPath = "islands." + playerUUID.toString() + ".homes";
-        if (islandsConfig.isConfigurationSection(homesPath)) {
-            islandsConfig.set(homesPath, null);
-            try {
-                islandsConfig.save(islandsFile);
-                plugin.getLogger().info(Bukkit.getOfflinePlayer(playerUUID).getName() + " için tüm isimlendirilmiş evler islands.yml dosyasından silindi (reset).");
-            } catch (IOException e) {
-                plugin.getLogger().severe("islands.yml güncellenirken hata (named homes silme - reset): " + e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Belirtilen oyuncunun adasındaki belirli bir StateFlag'ın durumunu alır.
-     * @param playerUUID Oyuncunun UUID'si
-     * @param flag Durumu alınacak StateFlag (örn: Flags.BUILD)
-     * @return Bayrağın durumu (ALLOW, DENY) veya ayarlanmamışsa null.
-     */
     public StateFlag.State getIslandFlagState(UUID playerUUID, StateFlag flag) {
-        if (!playerIslands.containsKey(playerUUID)) {
-            return null; // Oyuncunun adası yok
-        }
-        Location islandBaseLocation = playerIslands.get(playerUUID);
-        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
-            plugin.getLogger().warning("getIslandFlagState: Ada konumu veya dünyası null. UUID: " + playerUUID);
-            return null;
-        }
-
-        RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
-        if (regionManager == null) {
-            plugin.getLogger().warning("getIslandFlagState: RegionManager null. Dünya: " + islandBaseLocation.getWorld().getName() + ", UUID: " + playerUUID);
-            return null;
-        }
-
-        String regionId = getRegionId(playerUUID);
-        ProtectedRegion region = regionManager.getRegion(regionId); // regionId kullanılmalıydı
+        ProtectedRegion region = getProtectedRegion(playerUUID);
         if (region != null) {
             return region.getFlag(flag);
-        } else {
-            plugin.getLogger().warning("getIslandFlagState: WorldGuard bölgesi bulunamadı: " + regionId);
         }
+        plugin.getLogger().finer("getIslandFlagState: WorldGuard bölgesi bulunamadı: " + getRegionId(playerUUID));
         return null;
     }
 
-    /**
-     * Belirtilen oyuncunun adasındaki belirli bir StateFlag'ın durumunu ayarlar.
-     * @param playerUUID Oyuncunun UUID'si.
-     * @param flag Durumu ayarlanacak StateFlag (örn: Flags.BUILD).
-     * @param newState Bayrağın yeni durumu (ALLOW, DENY) veya null (bayrağı temizlemek/varsayılana döndürmek için).
-     * @return İşlem başarılıysa true, değilse false.
-     */
     public boolean setIslandFlagState(UUID playerUUID, StateFlag flag, StateFlag.State newState) {
-        if (!playerIslands.containsKey(playerUUID)) {
-            plugin.getLogger().warning("setIslandFlagState: Bayrak ayarlanmaya çalışılan oyuncunun adası bulunamadı: " + playerUUID);
-            return false;
-        }
-        Location islandBaseLocation = playerIslands.get(playerUUID);
-        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
-            plugin.getLogger().severe("setIslandFlagState: Bayrak ayarlanırken ada konumu veya dünyası null geldi: " + playerUUID);
+        Island island = getIslandByOwner(playerUUID); // Düzeltme: Island nesnesini al
+        if (island == null || island.getWorld() == null) {
+            plugin.getLogger().warning("setIslandFlagState: Bayrak ayarlanmak istenen oyuncunun adası veya ada dünyası bulunamadı: " + playerUUID);
             return false;
         }
 
-        RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
-        if (regionManager == null) {
-            plugin.getLogger().severe("setIslandFlagState: Bayrak ayarlanırken RegionManager alınamadı (Dünya: " + islandBaseLocation.getWorld().getName() + ")");
+        ProtectedRegion region = getProtectedRegion(playerUUID);
+        if (region == null) {
+            plugin.getLogger().warning("setIslandFlagState: Bayrak ayarlanmak istenen WorldGuard bölgesi bulunamadı: " + getRegionId(playerUUID));
             return false;
         }
+        try {
+            region.setFlag(flag, newState);
 
-        String regionId = getRegionId(playerUUID);
-        ProtectedRegion region = regionManager.getRegion(regionId); // regionId kullanılmalıydı
-
-        if (region != null) {
-            try {
-                region.setFlag(flag, newState);
-                regionManager.save(); // Değişiklikleri kaydet
-                plugin.getLogger().info("Oyuncu " + playerUUID + " için '" + regionId + "' bölgesinde '" + flag.getName() +
-                        "' bayrağı '" + (newState != null ? newState.name() : "VARSAYILAN (kaldırıldı)") + "' olarak ayarlandı.");
-                return true;
-            } catch (StorageException e) {
-                plugin.getLogger().severe("WorldGuard bölgesi '" + regionId + "' kaydedilirken hata (bayrak ayarı): " + e.getMessage());
-                e.printStackTrace();
+            // Bölgenin dünyasını Island nesnesinden al
+            World bukkitWorld = island.getWorld();
+            if (bukkitWorld == null) { // Ekstra güvenlik kontrolü
+                plugin.getLogger().severe("setIslandFlagState: Ada dünyası (island.getWorld()) null geldi.");
                 return false;
             }
-        } else {
-            plugin.getLogger().warning("setIslandFlagState: Bayrak ayarlanmak istenen WorldGuard bölgesi bulunamadı: " + regionId);
+
+            RegionManager regionManager = getWGRegionManager(bukkitWorld);
+            if (regionManager == null) {
+                plugin.getLogger().severe("setIslandFlagState: Bayrak ayarlanırken RegionManager alınamadı (Dünya: " + bukkitWorld.getName() + ")");
+                return false;
+            }
+            regionManager.saveChanges();
+            plugin.getLogger().info("Oyuncu " + playerUUID + " için '" + getRegionId(playerUUID) + "' bölgesinde '" + flag.getName() +
+                    "' bayrağı '" + (newState != null ? newState.name() : "VARSAYILAN (kaldırıldı)") + "' olarak ayarlandı.");
+            return true;
+        } catch (StorageException e) {
+            plugin.getLogger().severe("WorldGuard bölgesi '" + getRegionId(playerUUID) + "' kaydedilirken hata (bayrak ayarı): " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        } catch (Exception e) {
+            plugin.getLogger().severe("setIslandFlagState sırasında beklenmedik hata: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
-    // Skyblock dünyası için boş bir dünya üreticisi
+    public boolean setIslandName(Player player, String newName) {
+        Island island = getIsland(player);
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "İsmini değiştirebileceğin bir adan yok!");
+            return false;
+        }
+        String namePattern = plugin.getConfig().getString("island.name.pattern", "^[a-zA-Z0-9_\\- ]{3,25}$");
+        int minLength = plugin.getConfig().getInt("island.name.min-length", 3);
+        int maxLength = plugin.getConfig().getInt("island.name.max-length", 25);
+
+        if (newName.length() < minLength || newName.length() > maxLength || !newName.matches(namePattern)) {
+            player.sendMessage(ChatColor.RED + "Ada adı " + minLength + "-" + maxLength + " karakter uzunluğunda olmalı ve sadece harf, rakam, boşluk, '_' veya '-' içerebilir.");
+            return false;
+        }
+        island.setIslandName(newName);
+        saveIslandData(island);
+        try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada ismi kaydedilirken hata: " + e.getMessage());}
+
+        player.sendMessage(ChatColor.GREEN + "Adanın yeni ismi '" + newName + "' olarak ayarlandı.");
+        return true;
+    }
+
+    public boolean setIslandPublic(Player player, boolean isPublic) {
+        Island island = getIsland(player);
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Görünürlüğünü ayarlayabileceğin bir adan yok!");
+            return false;
+        }
+        island.setPublic(isPublic);
+        saveIslandData(island);
+        try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada görünürlüğü kaydedilirken hata: " + e.getMessage());}
+
+        player.sendMessage(ChatColor.GREEN + "Adanın ziyaretçi durumu " + (isPublic ? ChatColor.AQUA + "HERKESE AÇIK" : ChatColor.GOLD + "ÖZEL (Sadece Üyeler)") + ChatColor.GREEN + " olarak ayarlandı.");
+        return true;
+    }
+
+    public boolean toggleIslandBoundaries(Player player) {
+        Island island = getIsland(player);
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Sınırlarını ayarlayabileceğin bir adan yok!");
+            return false;
+        }
+        island.setBoundariesEnforced(!island.areBoundariesEnforced());
+        saveIslandData(island);
+        try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada sınırları kaydedilirken hata: " + e.getMessage());}
+        player.sendMessage(ChatColor.GREEN + "Ada sınırları " + (island.areBoundariesEnforced() ? ChatColor.AQUA + "AKTİF" : ChatColor.GOLD + "PASİF") + ChatColor.GREEN + " olarak ayarlandı.");
+        return true;
+    }
+
+    public boolean addIslandMember(Player owner, OfflinePlayer targetPlayer) {
+        Island island = getIsland(owner);
+        if (island == null || island.getWorld() == null) { // Düzeltme: island.getWorld() null kontrolü
+            owner.sendMessage(ChatColor.RED + "Üye ekleyebileceğin bir adan veya ada dünyan yok!");
+            return false;
+        }
+        if (owner.getUniqueId().equals(targetPlayer.getUniqueId())) {
+            owner.sendMessage(ChatColor.RED + "Kendini üye olarak ekleyemezsin.");
+            return false;
+        }
+        if (island.isMember(targetPlayer.getUniqueId())) {
+            owner.sendMessage(ChatColor.RED + targetPlayer.getName() + " zaten adanın bir üyesi.");
+            return false;
+        }
+        int maxMembers = plugin.getConfig().getInt("island.max-members", 3);
+        if (island.getMembers().size() >= maxMembers) {
+            owner.sendMessage(ChatColor.RED + "Maksimum üye sayısına (" + maxMembers + ") ulaştınız.");
+            return false;
+        }
+
+        island.addMember(targetPlayer.getUniqueId());
+        ProtectedRegion region = getProtectedRegion(owner.getUniqueId());
+        if (region != null) {
+            region.getMembers().addPlayer(targetPlayer.getUniqueId());
+            // Bölgenin dünyasını Island nesnesinden al
+            World bukkitWorld = island.getWorld();
+            if (bukkitWorld != null) {
+                RegionManager regionManager = getWGRegionManager(bukkitWorld);
+                if (regionManager != null) {
+                    try {
+                        regionManager.saveChanges();
+                    } catch (StorageException e) {
+                        plugin.getLogger().severe("WG üyesi eklenirken bölge kaydedilemedi: " + e.getMessage());
+                    }
+                }
+            } else {
+                plugin.getLogger().warning("WG üyesi eklenirken Bukkit dünyası (adadan) alınamadı.");
+            }
+        } else {
+            plugin.getLogger().warning(owner.getName() + " adasına " + targetPlayer.getName() + " WG üyesi olarak eklenemedi (bölge bulunamadı).");
+        }
+
+        saveIslandData(island);
+        try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada üyesi kaydedilirken hata: " + e.getMessage());}
+
+        owner.sendMessage(ChatColor.GREEN + targetPlayer.getName() + " başarıyla adana üye olarak eklendi.");
+        if (targetPlayer.isOnline()) {
+            Player onlineTarget = targetPlayer.getPlayer();
+            if(onlineTarget != null) {
+                onlineTarget.sendMessage(ChatColor.GREEN + owner.getName() + " seni adasına üye olarak ekledi!");
+            }
+        }
+        return true;
+    }
+
+    public boolean removeIslandMember(Player owner, OfflinePlayer targetPlayer) {
+        Island island = getIsland(owner);
+        if (island == null || island.getWorld() == null) { // Düzeltme: island.getWorld() null kontrolü
+            owner.sendMessage(ChatColor.RED + "Üye çıkarabileceğin bir adan veya ada dünyan yok!");
+            return false;
+        }
+        if (!island.isMember(targetPlayer.getUniqueId())) {
+            owner.sendMessage(ChatColor.RED + targetPlayer.getName() + " adanın bir üyesi değil.");
+            return false;
+        }
+
+        island.removeMember(targetPlayer.getUniqueId());
+        ProtectedRegion region = getProtectedRegion(owner.getUniqueId());
+        if (region != null) {
+            region.getMembers().removePlayer(targetPlayer.getUniqueId());
+            // Bölgenin dünyasını Island nesnesinden al
+            World bukkitWorld = island.getWorld();
+            if (bukkitWorld != null) {
+                RegionManager regionManager = getWGRegionManager(bukkitWorld);
+                if (regionManager != null) {
+                    try {
+                        regionManager.saveChanges();
+                    } catch (StorageException e) {
+                        plugin.getLogger().severe("WG üyesi çıkarılırken bölge kaydedilemedi: " + e.getMessage());
+                    }
+                }
+            }
+        }
+
+        saveIslandData(island);
+        try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada üyesi silinirken hata: " + e.getMessage());}
+
+        owner.sendMessage(ChatColor.GREEN + targetPlayer.getName() + " adandan üye olarak çıkarıldı.");
+        if (targetPlayer.isOnline()) {
+            Player onlineTarget = targetPlayer.getPlayer();
+            if(onlineTarget != null) {
+                onlineTarget.sendMessage(ChatColor.RED + owner.getName() + " seni adasındaki üyelikten çıkardı!");
+            }
+        }
+        return true;
+    }
+
+    public List<OfflinePlayer> getIslandMembers(UUID ownerUUID) {
+        Island island = getIslandByOwner(ownerUUID);
+        if (island == null) return new ArrayList<>();
+        return island.getMembers().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toList());
+    }
+
     public static class EmptyWorldGenerator extends ChunkGenerator {
         @Override public ChunkData generateChunkData(World world, Random random, int x, int z, BiomeGrid biome) { return Bukkit.createChunkData(world); }
-        @Override public Location getFixedSpawnLocation(World world, Random random) { return new Location(world, 0.5, 128, 0.5); }
+        @Override public Location getFixedSpawnLocation(World world, Random random) { return new Location(world, 0.0, 128, 0.0); }
     }
 }
