@@ -3,12 +3,11 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
-// IslandManager import is not directly used here as IslandFlagManager handles the logic
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import org.bukkit.ChatColor;
+import org.bukkit.ChatColor; // Oyuncuya mesaj gönderirken hala kullanılabilir
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,27 +17,33 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
+// Adventure API importu gerekebilir eğer Component ile doğrudan işlem yapacaksak,
+// ama burada sadece equals için kullanıyoruz, FlagGUIManager'dan gelen Component ile.
+// import net.kyori.adventure.text.Component;
+
+
 public class FlagGUIListener implements Listener {
 
     private final SkyBlockProject plugin;
     private final FlagGUIManager flagGUIManager;
-    private final IslandFlagManager islandFlagManager; // Reference to the flag manager
+    private final IslandFlagManager islandFlagManager;
     private final NamespacedKey flagNameKey;
     private final FlagRegistry flagRegistry;
 
     public FlagGUIListener(SkyBlockProject plugin, FlagGUIManager flagGUIManager) {
         this.plugin = plugin;
         this.flagGUIManager = flagGUIManager;
-        // Obtain IslandFlagManager from the plugin (SkyBlockProject should provide a getter for the refactored manager)
         this.islandFlagManager = plugin.getIslandFlagManager();
-        this.flagNameKey = flagGUIManager.getFlagNameKey(); // Get the key from FlagGUIManager
+        this.flagNameKey = flagGUIManager.getFlagNameKey();
         this.flagRegistry = WorldGuard.getInstance().getFlagRegistry();
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
-        if (!event.getView().getTitle().equals(FlagGUIManager.GUI_TITLE)) return;
+
+        // DÜZELTME: getTitle() yerine title() kullanıldı ve GUI_TITLE_COMPONENT ile karşılaştırıldı.
+        if (!event.getView().title().equals(FlagGUIManager.GUI_TITLE_COMPONENT)) return;
 
         event.setCancelled(true);
         Player player = (Player) event.getWhoClicked();
@@ -67,21 +72,17 @@ public class FlagGUIListener implements Listener {
         }
         StateFlag stateFlag = (StateFlag) genericFlag;
 
-        // Get current state from IslandFlagManager
         StateFlag.State currentState = islandFlagManager.getIslandFlagState(player.getUniqueId(), stateFlag);
         StateFlag.State newState;
 
-        // Cycle through states: DEFAULT (null) -> ALLOW -> DENY -> DEFAULT (null)
-        if (currentState == null) { // If current is DEFAULT (null)
+        if (currentState == null) {
             newState = StateFlag.State.ALLOW;
         } else if (currentState == StateFlag.State.ALLOW) {
             newState = StateFlag.State.DENY;
         } else { // currentState == StateFlag.State.DENY
-            newState = null; // Set back to DEFAULT (null)
+            newState = null;
         }
 
-        // Set the new state using IslandFlagManager
-        // The 'changer' (player) is passed to check permissions within setIslandFlagState
         boolean success = islandFlagManager.setIslandFlagState(player, player.getUniqueId(), stateFlag, newState);
 
         if (success) {
@@ -98,12 +99,11 @@ public class FlagGUIListener implements Listener {
                 newStateString = "VARSAYILAN";
                 statusColor = ChatColor.GRAY;
             }
+            // Oyuncuya gönderilen mesajlar şimdilik ChatColor ile kalabilir veya Component'e çevrilebilir.
             player.sendMessage(ChatColor.GOLD + "'" + flagName + "' bayrağı " + statusColor + ChatColor.BOLD + newStateString + ChatColor.GOLD + " olarak ayarlandı.");
-            flagGUIManager.openFlagsGUI(player); // Reopen GUI to reflect changes
+            flagGUIManager.openFlagsGUI(player);
         } else {
-            // islandFlagManager.setIslandFlagState should have already sent an error message to the player.
-            // And logged the issue.
-            player.closeInventory(); // Optionally close inventory on error
+            player.closeInventory();
         }
     }
 }

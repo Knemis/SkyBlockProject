@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer; // For canPlayerVisit
+import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 
 import java.time.Instant;
@@ -17,45 +17,48 @@ public class Island {
 
     private final UUID ownerUUID;
     private String islandName;
-    private Location baseLocation;
+    private final Location baseLocation; // final yapıldı, setBaseLocation kaldırıldı
     private final Instant creationDate;
     private boolean isPublic;
     private boolean boundariesEnforced;
 
-    private Set<UUID> members;
-    private Set<UUID> bannedPlayers;
-    private Map<String, Location> namedHomes;
+    // Bu alanlar final yapıldı
+    private final Set<UUID> members;
+    // private final Set<UUID> bannedPlayers; // Kullanılmadığı için kaldırıldı
+    private final Map<String, Location> namedHomes;
+
     private String welcomeMessage;
     private String currentBiome;
 
-    private transient World world; // To be derived from baseLocation
+    private transient World world;
 
     // Constructor for creating a new island
     public Island(UUID ownerUUID, Location baseLocation, String defaultIslandName) {
         this.ownerUUID = ownerUUID;
-        this.baseLocation = baseLocation;
+        this.baseLocation = baseLocation; // final olduğu için burada atanmalı
         if (this.baseLocation != null) {
             this.world = this.baseLocation.getWorld();
         }
         this.islandName = defaultIslandName;
         this.creationDate = Instant.now();
-        this.isPublic = false; // Default to private
-        this.boundariesEnforced = true; // Default to boundaries enforced
+        this.isPublic = false;
+        this.boundariesEnforced = true;
         this.members = new HashSet<>();
-        this.bannedPlayers = new HashSet<>();
+        // this.bannedPlayers = new HashSet<>(); // Kaldırıldı
         this.namedHomes = new HashMap<>();
-        this.currentBiome = null; // Default biome (or could be set from schematic's actual biome)
-        this.welcomeMessage = null; // No welcome message by default
+        this.currentBiome = null;
+        this.welcomeMessage = null;
     }
 
-    // Constructor for loading an island from data source (e.g., YAML)
+    // Constructor for loading an island from data source
+    // bannedPlayers parametresi kaldırıldı
     public Island(UUID ownerUUID, String islandName, Location baseLocation, long creationTimestamp,
                   boolean isPublic, boolean boundariesEnforced,
-                  Set<UUID> members, Set<UUID> bannedPlayers, Map<String, Location> namedHomes,
+                  Set<UUID> members, /* Set<UUID> bannedPlayers, */ Map<String, Location> namedHomes,
                   String currentBiome, String welcomeMessage) {
         this.ownerUUID = ownerUUID;
         this.islandName = islandName;
-        this.baseLocation = baseLocation;
+        this.baseLocation = baseLocation; // final olduğu için burada atanmalı
         if (this.baseLocation != null && this.baseLocation.getWorld() != null) {
             this.world = this.baseLocation.getWorld();
         }
@@ -63,7 +66,7 @@ public class Island {
         this.isPublic = isPublic;
         this.boundariesEnforced = boundariesEnforced;
         this.members = (members != null) ? members : new HashSet<>();
-        this.bannedPlayers = (bannedPlayers != null) ? bannedPlayers : new HashSet<>();
+        // this.bannedPlayers = (bannedPlayers != null) ? bannedPlayers : new HashSet<>(); // Kaldırıldı
         this.namedHomes = (namedHomes != null) ? namedHomes : new HashMap<>();
         this.currentBiome = currentBiome;
         this.welcomeMessage = welcomeMessage;
@@ -85,14 +88,14 @@ public class Island {
         return baseLocation;
     }
 
-    public void setBaseLocation(Location baseLocation) {
-        this.baseLocation = baseLocation;
-        if (this.baseLocation != null) {
-            this.world = this.baseLocation.getWorld();
-        } else {
-            this.world = null;
-        }
-    }
+    // public void setBaseLocation(Location baseLocation) { // Kullanılmadığı için kaldırıldı
+    // this.baseLocation = baseLocation;
+    // if (this.baseLocation != null) {
+    // this.world = this.baseLocation.getWorld();
+    // } else {
+    // this.world = null;
+    // }
+    // }
 
     public World getWorld() {
         if (world == null && baseLocation != null) {
@@ -130,34 +133,39 @@ public class Island {
     }
 
     public boolean addMember(UUID memberUUID) {
-        if (memberUUID.equals(ownerUUID)) return false; // Owner cannot be a member of their own island
+        if (memberUUID == null || memberUUID.equals(ownerUUID)) return false;
         return members.add(memberUUID);
     }
 
     public boolean removeMember(UUID memberUUID) {
+        if (memberUUID == null) return false;
         return members.remove(memberUUID);
     }
 
     public boolean isMember(UUID playerUUID) {
+        if (playerUUID == null) return false;
         return members.contains(playerUUID);
     }
 
-    public Set<UUID> getBannedPlayers() {
-        return bannedPlayers;
-    }
+    // Kullanılmadığı için kaldırıldı
+    // public Set<UUID> getBannedPlayers() {
+    // return bannedPlayers;
+    // }
 
-    public boolean banPlayer(UUID playerUUID) {
-        if (playerUUID.equals(ownerUUID) || isMember(playerUUID)) return false; // Owner or members cannot be banned
-        return bannedPlayers.add(playerUUID);
-    }
+    // public boolean banPlayer(UUID playerUUID) {
+    // if (playerUUID == null || playerUUID.equals(ownerUUID) || isMember(playerUUID)) return false;
+    // return bannedPlayers.add(playerUUID);
+    // }
 
-    public boolean unbanPlayer(UUID playerUUID) {
-        return bannedPlayers.remove(playerUUID);
-    }
+    // public boolean unbanPlayer(UUID playerUUID) {
+    // if (playerUUID == null) return false;
+    // return bannedPlayers.remove(playerUUID);
+    // }
 
-    public boolean isBanned(UUID playerUUID) {
-        return bannedPlayers.contains(playerUUID);
-    }
+    // public boolean isBanned(UUID playerUUID) {
+    // if (playerUUID == null) return false;
+    // return bannedPlayers.contains(playerUUID);
+    // }
 
     public Map<String, Location> getNamedHomes() {
         return namedHomes;
@@ -168,13 +176,14 @@ public class Island {
         return namedHomes.get(homeName.toLowerCase());
     }
 
-    public boolean setNamedHome(String homeName, Location location) {
-        if (homeName == null || location == null) return false;
-        // Further validation (max homes, name pattern, location within island bounds)
-        // should be handled by a manager class (e.g., IslandTeleportManager or IslandSettingsManager)
-        // before calling this method.
+    // Dönüş tipi void olarak değiştirildi
+    public void setNamedHome(String homeName, Location location) {
+        if (homeName == null || homeName.trim().isEmpty() || location == null) {
+            // İsteğe bağlı: Hatalı giriş için bir log atılabilir veya exception fırlatılabilir.
+            // Şimdilik sessizce başarısız oluyor.
+            return;
+        }
         namedHomes.put(homeName.toLowerCase(), location.clone());
-        return true;
     }
 
     public boolean deleteNamedHome(String homeName) {
@@ -202,21 +211,17 @@ public class Island {
         this.currentBiome = currentBiome;
     }
 
-    /**
-     * Helper method to check if a player can visit (considering bans and privacy).
-     * @param player The player to check.
-     * @return True if the player can visit, false otherwise.
-     */
     public boolean canPlayerVisit(OfflinePlayer player) {
         if (player == null) return false;
         UUID playerUUID = player.getUniqueId();
 
         if (playerUUID.equals(ownerUUID) || isMember(playerUUID)) {
-            return true; // Owner and members can always visit
+            return true;
         }
-        if (isBanned(playerUUID)) {
-            return false; // Banned players cannot visit
-        }
-        return isPublic; // Otherwise, depends on public status
+        // bannedPlayers kaldırıldığı için isBanned kontrolü de kaldırıldı.
+        // if (isBanned(playerUUID)) {
+        // return false;
+        // }
+        return isPublic;
     }
 }
