@@ -34,11 +34,11 @@ public class IslandDataHandler {
     private final SkyBlockProject plugin;
     private final File islandsFile;
     private FileConfiguration islandsConfig;
-    private final Map<UUID, Island> islandsData; // Aktif ada verilerini tutar
+    private final Map<UUID, Island> islandsData;
     private final String defaultIslandNamePrefix;
     private World skyblockWorld;
 
-    private boolean dataChangedSinceLastSave = false; // Performans için değişiklik bayrağı
+    private boolean dataChangedSinceLastSave = false;
 
     public IslandDataHandler(SkyBlockProject plugin) {
         this.plugin = plugin;
@@ -46,15 +46,11 @@ public class IslandDataHandler {
         this.islandsData = new HashMap<>();
         this.defaultIslandNamePrefix = plugin.getConfig().getString("island.default-name-prefix", "Ada");
 
-        // Plugin veri klasörünün var olduğundan emin ol
         if (!plugin.getDataFolder().exists()) {
-            if (plugin.getDataFolder().mkdirs()) {
-                plugin.getLogger().info("Plugin veri klasörü oluşturuldu: " + plugin.getDataFolder().getPath());
-            } else {
+            if (!plugin.getDataFolder().mkdirs()) {
                 plugin.getLogger().severe("Plugin veri klasörü oluşturulamadı: " + plugin.getDataFolder().getPath());
             }
         }
-        // islands.yml dosyasını yükle veya oluştur
         this.islandsConfig = new YamlConfiguration();
         loadIslandsFile();
     }
@@ -62,18 +58,17 @@ public class IslandDataHandler {
     private void loadIslandsFile() {
         if (!islandsFile.exists()) {
             try {
-                // Dosyayı ilk kez oluşturuyorsak, boş bir "islands" bölümü ekleyebiliriz.
                 islandsConfig.createSection("islands");
                 islandsConfig.save(islandsFile);
                 plugin.getLogger().info(islandsFile.getName() + " oluşturuldu ve varsayılan yapıyla kaydedildi.");
-                dataChangedSinceLastSave = false; // Yeni dosya, kaydedilmiş sayılır
+                dataChangedSinceLastSave = false;
             } catch (IOException e) {
                 plugin.getLogger().log(Level.SEVERE, islandsFile.getName() + " oluşturulamadı veya kaydedilemedi!", e);
             }
         } else {
             try {
                 islandsConfig.load(islandsFile);
-                dataChangedSinceLastSave = false; // Dosyadan yüklendi, kaydedilmiş sayılır
+                dataChangedSinceLastSave = false;
                 plugin.getLogger().info(islandsFile.getName() + " başarıyla yüklendi.");
             } catch (FileNotFoundException e) {
                 plugin.getLogger().log(Level.SEVERE, islandsFile.getName() + " bulunamadı!", e);
@@ -116,8 +111,8 @@ public class IslandDataHandler {
         }
         if (this.islandsConfig == null) {
             plugin.getLogger().warning("Islands config null, yeniden yüklenmeye çalışılıyor.");
-            loadIslandsFile(); // Yeniden yüklemeyi dene
-            if (this.islandsConfig == null) { // Hala null ise çık
+            loadIslandsFile();
+            if (this.islandsConfig == null) {
                 plugin.getLogger().severe("Islands config yüklenemedi, ada verileri okunamıyor.");
                 return;
             }
@@ -127,8 +122,8 @@ public class IslandDataHandler {
         ConfigurationSection islandsSection = islandsConfig.getConfigurationSection("islands");
         if (islandsSection == null) {
             plugin.getLogger().info("Config dosyasında 'islands' bölümü bulunamadı veya boş. Hiçbir ada yüklenmedi.");
-            islandsConfig.createSection("islands"); // Eksikse oluştur
-            dataChangedSinceLastSave = true; // Config değişti
+            islandsConfig.createSection("islands");
+            dataChangedSinceLastSave = true;
             return;
         }
 
@@ -151,8 +146,7 @@ public class IslandDataHandler {
 
             World islandWorld = Bukkit.getWorld(worldName);
             if (islandWorld == null) {
-                // Eğer beklenen skyblock dünyası ise ve yüklenmişse onu kullan
-                if (worldName.equals(this.skyblockWorld.getName())) {
+                if (this.skyblockWorld != null && worldName.equals(this.skyblockWorld.getName())) { // skyblockWorld null kontrolü eklendi
                     islandWorld = this.skyblockWorld;
                 } else {
                     plugin.getLogger().warning("Ada (Sahip: " + uuidString + ") için dünya '" + worldName + "' bulunamadı. Bu ada atlanıyor.");
@@ -160,7 +154,6 @@ public class IslandDataHandler {
                 }
             }
 
-            // Diğer ada özelliklerini yükle... (önceki kodunuzdaki gibi)
             double x = islandsConfig.getDouble(path + "baseLocation.x");
             double y = islandsConfig.getDouble(path + "baseLocation.y");
             double z = islandsConfig.getDouble(path + "baseLocation.z");
@@ -170,8 +163,8 @@ public class IslandDataHandler {
             long creationTimestamp = islandsConfig.getLong(path + "creationDate", System.currentTimeMillis());
             boolean isPublic = islandsConfig.getBoolean(path + "isPublic", false);
             boolean boundariesEnforced = islandsConfig.getBoolean(path + "boundariesEnforced", true);
-            String currentBiome = islandsConfig.getString(path + "currentBiome", null); // Varsayılan null olabilir
-            String welcomeMessage = islandsConfig.getString(path + "welcomeMessage", ""); // Varsayılan boş string
+            String currentBiome = islandsConfig.getString(path + "currentBiome", null);
+            String welcomeMessage = islandsConfig.getString(path + "welcomeMessage", "");
 
             Set<UUID> members = new HashSet<>();
             islandsConfig.getStringList(path + "members").forEach(memberStr -> {
@@ -180,12 +173,13 @@ public class IslandDataHandler {
                 }
             });
 
-            Set<UUID> bannedPlayers = new HashSet<>();
-            islandsConfig.getStringList(path + "bannedPlayers").forEach(bannedStr -> {
-                try { bannedPlayers.add(UUID.fromString(bannedStr)); } catch (IllegalArgumentException e) {
-                    plugin.getLogger().warning("Ada (Sahip: " + uuidString + ") için geçersiz yasaklı oyuncu UUID'si: " + bannedStr);
-                }
-            });
+            // Set<UUID> bannedPlayers = new HashSet<>(); // bannedPlayers yüklemesi kaldırıldı
+            // List<String> bannedPlayerUUIDStrings = islandsConfig.getStringList(path + "bannedPlayers"); // kaldırıldı
+            // bannedPlayerUUIDStrings.forEach(bannedStr -> { // kaldırıldı
+            // try { bannedPlayers.add(UUID.fromString(bannedStr)); } catch (IllegalArgumentException ignored) { // kaldırıldı
+            // plugin.getLogger().warning("Geçersiz yasaklı oyuncu UUID'si (" + bannedStr + ") bulundu (Ada Sahibi: " + uuidString + ")."); // kaldırıldı
+            // } // kaldırıldı
+            // }); // kaldırıldı
 
             Map<String, Location> namedHomes = new HashMap<>();
             ConfigurationSection homesCfgSection = islandsConfig.getConfigurationSection(path + "homes");
@@ -193,7 +187,7 @@ public class IslandDataHandler {
                 for (String homeNameKey : homesCfgSection.getKeys(false)) {
                     String homePath = path + "homes." + homeNameKey + ".";
                     String homeWorldName = homesCfgSection.getString(homePath + "world");
-                    World homeWorld = Bukkit.getWorld(homeWorldName != null ? homeWorldName : worldName); // Ev dünyası belirtilmemişse ada dünyasını kullan
+                    World homeWorld = Bukkit.getWorld(homeWorldName != null ? homeWorldName : worldName);
                     if (homeWorld != null) {
                         namedHomes.put(homeNameKey.toLowerCase(), new Location(homeWorld,
                                 homesCfgSection.getDouble(homePath + "x"),
@@ -207,38 +201,31 @@ public class IslandDataHandler {
                 }
             }
 
+            // DÜZELTME: Island constructor çağrısından bannedPlayers argümanı kaldırıldı.
             Island island = new Island(ownerUUID, islandName, baseLocation, creationTimestamp,
-                    isPublic, boundariesEnforced, members, bannedPlayers,
-                    namedHomes, currentBiome, welcomeMessage);
+                    isPublic, boundariesEnforced, members, /* bannedPlayers, */ namedHomes,
+                    currentBiome, welcomeMessage);
             islandsData.put(ownerUUID, island);
             successfullyLoaded++;
         }
         plugin.getLogger().info(successfullyLoaded + " ada verisi config'den başarıyla yüklendi (IslandDataHandler).");
     }
 
-    /**
-     * Tüm ada verilerini bellekten YAML config nesnesine yazar, sonra diske kaydeder.
-     * Sadece değişiklik varsa diske yazar.
-     */
     public void saveAllIslandsToDisk() {
         plugin.getLogger().info("Tüm ada verileri kaydediliyor...");
-        islandsConfig.set("islands", null); // Önceki verileri temizle
+        islandsConfig.set("islands", null);
         if (islandsData.isEmpty()) {
             plugin.getLogger().info("Kaydedilecek aktif ada verisi bulunmuyor.");
         } else {
             for (Island island : islandsData.values()) {
-                writeIslandToConfigInternal(island); // Config nesnesine yaz
+                writeIslandToConfigInternal(island);
             }
             plugin.getLogger().info(islandsData.size() + " ada verisi config nesnesine yazıldı.");
         }
-        dataChangedSinceLastSave = true; // Toplu kaydetme her zaman değişikliğe neden olur
-        saveChangesToDisk(); // Değişiklik varsa diske yaz
+        dataChangedSinceLastSave = true;
+        saveChangesToDisk();
     }
 
-    /**
-     * Belirli bir ada nesnesini YAML config nesnesine yazar.
-     * Bu metod doğrudan diske yazmaz, sadece islandsConfig nesnesini günceller.
-     */
     private void writeIslandToConfigInternal(Island island) {
         if (island == null) {
             plugin.getLogger().warning("Null bir ada nesnesi config'e yazılamaz.");
@@ -270,9 +257,9 @@ public class IslandDataHandler {
         }
 
         islandsConfig.set(path + "members", island.getMembers().stream().map(UUID::toString).collect(Collectors.toList()));
-        islandsConfig.set(path + "bannedPlayers", island.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.toList()));
+        // DÜZELTME: bannedPlayers kaydetme satırı kaldırıldı.
+        // islandsConfig.set(path + "bannedPlayers", island.getBannedPlayers().stream().map(UUID::toString).collect(Collectors.toList()));
 
-        // Evleri kaydetmeden önce eski bölümü temizle
         islandsConfig.set(path + "homes", null);
         if (island.getNamedHomes() != null && !island.getNamedHomes().isEmpty()) {
             for (Map.Entry<String, Location> homeEntry : island.getNamedHomes().entrySet()) {
@@ -291,27 +278,17 @@ public class IslandDataHandler {
         }
     }
 
-    /**
-     * Bir adayı belleğe ve config nesnesine ekler veya günceller.
-     * Değişiklik bayrağını true yapar. Diske hemen yazmaz.
-     * @param island Eklenecek veya güncellenecek ada.
-     */
     public void addOrUpdateIslandData(Island island) {
         if (island == null) {
             plugin.getLogger().warning("Null ada verisi eklenemez/güncellenemez.");
             return;
         }
         islandsData.put(island.getOwnerUUID(), island);
-        writeIslandToConfigInternal(island); // Config nesnesini de güncelle
+        writeIslandToConfigInternal(island);
         dataChangedSinceLastSave = true;
         plugin.getLogger().fine("Ada verisi güncellendi (bellek ve config): " + island.getOwnerUUID());
     }
 
-    /**
-     * Bir adayı bellekten ve config nesnesinden siler.
-     * Değişiklik bayrağını true yapar. Diske hemen yazmaz.
-     * @param ownerUUID Silinecek adanın sahip UUID'si.
-     */
     public void removeIslandData(UUID ownerUUID) {
         if (ownerUUID == null) return;
         Island removedIsland = islandsData.remove(ownerUUID);
@@ -328,9 +305,6 @@ public class IslandDataHandler {
         }
     }
 
-    /**
-     * Bellekteki config değişikliklerini diske kaydeder, eğer değişiklik yapıldıysa.
-     */
     public void saveChangesToDisk() {
         if (islandsConfig == null || islandsFile == null) {
             plugin.getLogger().severe("Islands config veya islandsFile null, değişiklikler diske yazılamadı!");
@@ -339,7 +313,7 @@ public class IslandDataHandler {
         if (dataChangedSinceLastSave) {
             try {
                 islandsConfig.save(islandsFile);
-                dataChangedSinceLastSave = false; // Bayrağı sıfırla
+                dataChangedSinceLastSave = false;
                 plugin.getLogger().info("Ada verilerindeki değişiklikler " + islandsFile.getName() + " dosyasına kaydedildi.");
             } catch (IOException e) {
                 plugin.getLogger().log(Level.SEVERE, islandsFile.getName() + " dosyasına kaydedilirken G/Ç hatası oluştu!", e);
@@ -377,17 +351,16 @@ public class IslandDataHandler {
             return null;
         }
         if (this.skyblockWorld == null || !location.getWorld().equals(this.skyblockWorld)) {
-            return null; // Sadece ana skyblock dünyasında ara
+            return null;
         }
 
         for (Island island : islandsData.values()) {
             if (island.getWorld() == null || !island.getWorld().equals(location.getWorld())) {
-                continue; // Farklı dünyadaki adayı atla (bu kontrol skyblockWorld kontrolü ile büyük ölçüde gereksizleşir ama yine de iyi)
+                continue;
             }
 
             RegionManager regionManager = plugin.getRegionManager(island.getWorld());
             if (regionManager == null) {
-                // Bu durum kritik olabilir, log seviyesi SEVERE yapılabilir.
                 plugin.getLogger().warning("getIslandAt: Ada " + island.getOwnerUUID() + " için RegionManager alınamadı (Dünya: " + island.getWorld().getName() + "). Bölge kontrolü yapılamıyor.");
                 continue;
             }
@@ -412,7 +385,7 @@ public class IslandDataHandler {
 
         @Override
         public Location getFixedSpawnLocation(World world, Random random) {
-            return new Location(world, 0.5, 128, 0.5); // Config'den alınabilir veya sabit olabilir
+            return new Location(world, 0.5, 128, 0.5);
         }
     }
 }

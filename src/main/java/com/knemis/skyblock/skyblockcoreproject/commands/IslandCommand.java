@@ -11,7 +11,6 @@ import com.knemis.skyblock.skyblockcoreproject.island.IslandTeleportManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 
-// Hata 1 için eklendi:
 import com.sk89q.worldedit.math.BlockVector3;
 
 import org.bukkit.Bukkit;
@@ -25,7 +24,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
-// Uyarı 3 için eklendi:
 import org.jetbrains.annotations.NotNull;
 
 
@@ -58,9 +56,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
     // Bu alanlar komutlar arası durumu tuttuğu için sınıf üyesi olmalıdır.
     // IDE uyarısı (Field can be converted to a local variable) bu bağlamda göz ardı edilebilir.
-    private final Map<UUID, Long> createCooldowns; // Satır 55 civarı
+    private final Map<UUID, Long> createCooldowns;
     private final long CREATE_COOLDOWN_SECONDS;
-    private final Map<UUID, Long> deleteConfirmations; // Satır 57 civarı
+    private final Map<UUID, Long> deleteConfirmations;
     private final long DELETE_CONFIRM_TIMEOUT_SECONDS = 30;
     private final Map<UUID, Long> resetConfirmations;
     private final long RESET_CONFIRM_TIMEOUT_SECONDS = 30;
@@ -91,7 +89,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) { // Uyarı 3 için @NotNull eklendi
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
+        // ... (metodun başı aynı) ...
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "Bu komutu sadece oyuncular kullanabilir.");
             return true;
@@ -114,7 +113,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 handleHomeCommand(player, args);
                 break;
             case "sethome":
-                handleSetHomeCommand(player, args); // Hata burada değildi, içindeydi
+                handleSetHomeCommand(player, args);
                 break;
             case "delhome":
                 handleDelHomeCommand(player, args);
@@ -133,7 +132,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 break;
             case "info":
             case "bilgi":
-                handleInfoCommand(player, args); // Uyarı 4 burada olabilir
+                handleInfoCommand(player, args);
                 break;
             case "settings":
             case "ayarlar":
@@ -142,11 +141,11 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             case "team":
             case "takım":
             case "uye":
-                handleTeamCommand(player, args); // Uyarı 4 burada olabilir
+                handleTeamCommand(player, args);
                 break;
             case "visit":
             case "ziyaret":
-                handleVisitCommand(player, args); // Uyarı 4 burada olabilir
+                handleVisitCommand(player, args);
                 break;
             case "help":
             case "yardim":
@@ -167,6 +166,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendHelpMessage(Player player) {
+        // ... (yardım mesajları aynı) ...
         player.sendMessage(ChatColor.GOLD + "--- Skyblock Komutları ---");
         player.sendMessage(ChatColor.YELLOW + "/island create" + ChatColor.GRAY + " - Yeni ada oluştur.");
         player.sendMessage(ChatColor.YELLOW + "/island go" + ChatColor.GRAY + " - Adanın ana spawn noktasına git.");
@@ -176,11 +176,11 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.YELLOW + "/island delhome <isim>" + ChatColor.GRAY + " - Belirtilen evini sil.");
         player.sendMessage(ChatColor.YELLOW + "/island biome <set|get|list> [biyom]" + ChatColor.GRAY + " - Ada biyomunu yönet.");
         player.sendMessage(ChatColor.YELLOW + "/island welcome <set|clear|view> [mesaj]" + ChatColor.GRAY + " - Ada karşılama mesajını yönet.");
-        player.sendMessage(ChatColor.YELLOW + "/island flags" + ChatColor.GRAY + " - Ada bayraklarını yönet (ziyaretçiler için).");
+        player.sendMessage(ChatColor.YELLOW + "/island flags" + ChatColor.GRAY + " - Ada bayraklarını yönet (Genel).");
         player.sendMessage(ChatColor.YELLOW + "/island info [oyuncu]" + ChatColor.GRAY + " - Kendi adanın veya başkasının adasının bilgilerini gör.");
         player.sendMessage(ChatColor.YELLOW + "/island settings name <yeni_isim>" + ChatColor.GRAY + " - Adanın ismini değiştir.");
         player.sendMessage(ChatColor.YELLOW + "/island settings visibility <public|private>" + ChatColor.GRAY + " - Adanın ziyaretçi durumunu ayarla.");
-        player.sendMessage(ChatColor.YELLOW + "/island settings boundary [on|off]" + ChatColor.GRAY + " - Ada sınırlarını aç/kapa (toggle).");
+        player.sendMessage(ChatColor.YELLOW + "/island settings boundary" + ChatColor.GRAY + " - Ada sınırlarını aç/kapa (toggle).");
         player.sendMessage(ChatColor.YELLOW + "/island team add <oyuncu>" + ChatColor.GRAY + " - Adana üye ekle.");
         player.sendMessage(ChatColor.YELLOW + "/island team remove <oyuncu>" + ChatColor.GRAY + " - Adadan üye çıkar.");
         player.sendMessage(ChatColor.YELLOW + "/island team list" + ChatColor.GRAY + " - Ada üyelerini listele.");
@@ -191,6 +191,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleCreateCommand(Player player) {
+        // ... (metod aynı) ...
         if (createCooldowns.containsKey(player.getUniqueId())) {
             long timeElapsedMillis = System.currentTimeMillis() - createCooldowns.get(player.getUniqueId());
             long cooldownMillis = CREATE_COOLDOWN_SECONDS * 1000;
@@ -214,6 +215,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleHomeCommand(Player player, String[] args) {
+        // ... (metod aynı) ...
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Önce bir ada oluşturmalısın: " + ChatColor.GOLD + "/island create");
@@ -239,6 +241,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSetHomeCommand(Player player, String[] args) {
+        // ... (metod aynı, önceki düzeltmelerle) ...
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Ev noktanı ayarlayabileceğin bir adan yok!");
@@ -263,7 +266,6 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         try {
-            // HATA 1 DÜZELTMESİ: contains metodu BlockVector3.at() ile çağrıldı.
             if (!islandLifecycleManager.getIslandTerritoryRegion(island.getBaseLocation()).contains(BlockVector3.at(player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ()))) {
                 player.sendMessage(ChatColor.RED + "Ev noktanı sadece adanın (genişletilmiş) sınırları içinde ayarlayabilirsin!");
                 return;
@@ -281,6 +283,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleDelHomeCommand(Player player, String[] args) {
+        // ... (metod aynı) ...
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Ev silebilmek için önce bir adanız olmalı!");
@@ -301,6 +304,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleDeleteCommand(Player player, String[] args) {
+        // ... (metod aynı) ...
         if (!this.islandDataHandler.playerHasIsland(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "Silebileceğin bir adan yok!");
             return;
@@ -335,6 +339,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleResetCommand(Player player, String[] args) {
+        // ... (metod aynı) ...
         if (!this.islandDataHandler.playerHasIsland(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "Sıfırlayabileceğin bir adan yok!");
             return;
@@ -374,6 +379,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         this.flagGUIManager.openFlagsGUI(player);
     }
 
+    @SuppressWarnings("deprecation") // Bukkit.getOfflinePlayer(String) kullanımı için
     private void handleInfoCommand(Player player, String[] args) {
         Island islandToInfo;
         String islandOwnerName;
@@ -386,11 +392,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             }
             islandOwnerName = player.getName();
         } else if (args.length == 2) {
-            // Uyarı 4: Bukkit.getOfflinePlayer(String) deprecated.
-            // İdeal çözüm UUID kullanmak, ama şimdilik mevcut yapıyı koruyoruz.
-            OfflinePlayer targetOwner = Bukkit.getOfflinePlayer(args[1]);
-            if (targetOwner == null || (!targetOwner.hasPlayedBefore() && !targetOwner.isOnline() && targetOwner.getUniqueId() == null)) { // UUID kontrolü eklendi
-                player.sendMessage(ChatColor.RED + "'" + args[1] + "' adında bir oyuncu bulunamadı veya bu oyuncunun hiç ada verisi yok.");
+            OfflinePlayer targetOwner = Bukkit.getOfflinePlayer(args[1]); // Deprecated
+            // DÜZELTME: OfflinePlayer null ve UUID null kontrolü basitleştirildi/iyileştirildi
+            if (targetOwner == null || targetOwner.getUniqueId() == null) { // Eğer UUID yoksa, oyuncu geçerli sayılmaz
+                player.sendMessage(ChatColor.RED + "'" + args[1] + "' adında geçerli bir oyuncu profili bulunamadı.");
                 return;
             }
             islandToInfo = this.islandDataHandler.getIslandByOwner(targetOwner.getUniqueId());
@@ -403,6 +408,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.RED + "Kullanım: /island info [oyuncu_adı]");
             return;
         }
+        // ... (metodun geri kalanı aynı) ...
         DateTimeFormatter formatter = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.MEDIUM)
                 .withLocale(new Locale("tr", "TR"))
                 .withZone(ZoneId.systemDefault());
@@ -428,6 +434,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSettingsCommand(Player player, String[] args) {
+        // ... (metodun başı aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Ayarlarını düzenleyebileceğin bir adan yok!");
@@ -464,19 +471,25 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 break;
             case "boundary":
             case "sınır":
+                // DÜZELTME: Koşul mantığı korunuyor, IDE uyarısı muhtemelen spesifik bir senaryoya işaret ediyor.
+                // Eğer island.areBoundariesEnforced() her zaman false dönüyorsa, bu komut dışında bir sorun vardır.
                 if (args.length == 2) {
                     this.islandSettingsManager.toggleIslandBoundaryEnforcement(player, island);
                 } else if (args.length == 3) {
                     String desiredState = args[2].toLowerCase();
-                    boolean currentBoundaryState = island.areBoundariesEnforced();
-                    if ((desiredState.equals("on") || desiredState.equals("aktif")) && !currentBoundaryState) {
-                        this.islandSettingsManager.toggleIslandBoundaryEnforcement(player, island);
-                    } else if ((desiredState.equals("off") || desiredState.equals("pasif")) && currentBoundaryState) {
-                        this.islandSettingsManager.toggleIslandBoundaryEnforcement(player, island);
-                    } else if ((desiredState.equals("on") || desiredState.equals("aktif")) && currentBoundaryState) {
-                        player.sendMessage(ChatColor.YELLOW + "Ada sınırları zaten aktif.");
-                    } else if ((desiredState.equals("off") || desiredState.equals("pasif")) && !currentBoundaryState) {
-                        player.sendMessage(ChatColor.YELLOW + "Ada sınırları zaten pasif.");
+                    boolean currentBoundaryState = island.areBoundariesEnforced(); // Bu değerin doğruluğunu kontrol et
+                    if ((desiredState.equals("on") || desiredState.equals("aktif"))) {
+                        if (!currentBoundaryState) { // Sadece kapalıysa açmak için toggle et
+                            this.islandSettingsManager.toggleIslandBoundaryEnforcement(player, island);
+                        } else {
+                            player.sendMessage(ChatColor.YELLOW + "Ada sınırları zaten aktif.");
+                        }
+                    } else if ((desiredState.equals("off") || desiredState.equals("pasif"))) {
+                        if (currentBoundaryState) { // Sadece açıksa kapatmak için toggle et
+                            this.islandSettingsManager.toggleIslandBoundaryEnforcement(player, island);
+                        } else {
+                            player.sendMessage(ChatColor.YELLOW + "Ada sınırları zaten pasif.");
+                        }
                     } else {
                         player.sendMessage(ChatColor.RED + "Geçersiz sınır komutu. Kullanım: /island settings boundary [on|off] veya sadece /island settings boundary");
                     }
@@ -490,9 +503,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    @SuppressWarnings("deprecation") // Bukkit.getOfflinePlayer(String) kullanımı için
     private void handleTeamCommand(Player player, String[] args) {
+        // ... (metodun başı aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
-        // Davet sistemi vb. yoksa, ada sahibi olmadan üye eklenemez/çıkarılamaz/listelenemez.
         if (island == null && !(args.length > 1 && (args[1].equalsIgnoreCase("accept") || args[1].equalsIgnoreCase("deny")) ) ) {
             player.sendMessage(ChatColor.RED + "Takım komutlarını kullanabilmek için bir adanız olmalı.");
             return;
@@ -506,17 +520,17 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         switch (teamAction) {
             case "add":
             case "ekle":
-                if (island == null) { // Ada sahibi olmadan 'add' kullanılamaz
+                if (island == null) {
                     player.sendMessage(ChatColor.RED + "Üye eklemek için ada sahibi olmalısınız."); return;
                 }
                 if (args.length < 3) {
                     player.sendMessage(ChatColor.RED + "Kullanım: /island team add <oyuncu_adı>");
                     return;
                 }
-                // Uyarı 4: Bukkit.getOfflinePlayer(String) deprecated.
                 OfflinePlayer targetToAdd = Bukkit.getOfflinePlayer(args[2]);
-                if (targetToAdd == null || (!targetToAdd.hasPlayedBefore() && !targetToAdd.isOnline() && targetToAdd.getUniqueId() == null)) {
-                    player.sendMessage(ChatColor.RED + "'" + args[2] + "' adında bir oyuncu bulunamadı.");
+                // DÜZELTME: OfflinePlayer null ve UUID null kontrolü
+                if (targetToAdd == null || targetToAdd.getUniqueId() == null) {
+                    player.sendMessage(ChatColor.RED + "'" + args[2] + "' adında geçerli bir oyuncu profili bulunamadı.");
                     return;
                 }
                 this.islandMemberManager.addMember(island, targetToAdd, player);
@@ -525,19 +539,24 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             case "kick":
             case "at":
             case "çıkar":
-                if (island == null) { // Ada sahibi olmadan 'remove' kullanılamaz
+                if (island == null) {
                     player.sendMessage(ChatColor.RED + "Üye çıkarmak için ada sahibi olmalısınız."); return;
                 }
                 if (args.length < 3) {
                     player.sendMessage(ChatColor.RED + "Kullanım: /island team remove <oyuncu_adı>");
                     return;
                 }
-                // Uyarı 4: Bukkit.getOfflinePlayer(String) deprecated.
                 OfflinePlayer targetToRemove = Bukkit.getOfflinePlayer(args[2]);
+                // DÜZELTME: OfflinePlayer null ve UUID null kontrolü (IslandMemberManager içinde daha detaylı kontrol var)
+                if (targetToRemove == null || targetToRemove.getUniqueId() == null) {
+                    player.sendMessage(ChatColor.RED + "'" + args[2] + "' adında geçerli bir oyuncu profili bulunamadı.");
+                    return;
+                }
                 this.islandMemberManager.removeMember(island, targetToRemove, player);
                 break;
             case "list":
             case "liste":
+                // ... (liste kısmı aynı) ...
                 if (island == null) {
                     player.sendMessage(ChatColor.RED + "Listelenecek bir adan yok.");
                     return;
@@ -558,16 +577,17 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
     }
 
+    @SuppressWarnings("deprecation") // Bukkit.getOfflinePlayer(String) kullanımı için
     private void handleVisitCommand(Player player, String[] args) {
+        // ... (metod aynı, önceki isBanned düzeltmesiyle) ...
         if (args.length < 2) {
             player.sendMessage(ChatColor.RED + "Kullanım: /island visit <oyuncu_adı>");
             return;
         }
         String ownerName = args[1];
-        // Uyarı 4: Bukkit.getOfflinePlayer(String) deprecated.
         OfflinePlayer targetOwner = Bukkit.getOfflinePlayer(ownerName);
-        if (targetOwner == null || (!targetOwner.hasPlayedBefore() && !targetOwner.isOnline() && targetOwner.getUniqueId() == null)) {
-            player.sendMessage(ChatColor.RED + "'" + ownerName + "' adında bir oyuncu bulunamadı veya hiç oynamamış.");
+        if (targetOwner == null || targetOwner.getUniqueId() == null) {
+            player.sendMessage(ChatColor.RED + "'" + ownerName + "' adında geçerli bir oyuncu profili bulunamadı.");
             return;
         }
 
@@ -583,17 +603,14 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         if (!targetIsland.canPlayerVisit(player)) {
-            if(targetIsland.isBanned(player.getUniqueId())){
-                player.sendMessage(ChatColor.RED + "Bu adadan yasaklanmışsın!");
-            } else {
-                player.sendMessage(ChatColor.RED + "'" + (targetOwner.getName() != null ? targetOwner.getName() : ownerName) + "' adlı oyuncunun adası özel ve ziyaret edilemez.");
-            }
+            player.sendMessage(ChatColor.RED + "'" + (targetOwner.getName() != null ? targetOwner.getName() : ownerName) + "' adlı oyuncunun adası ziyaret edilemez (muhtemelen özel).");
             return;
         }
         this.islandTeleportManager.teleportPlayerToVisitIsland(player, targetIsland);
     }
 
     private void handleBiomeCommand(Player player, String[] args) {
+        // ... (metod aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Bu komutu kullanmak için bir adanız olmalı.");
@@ -606,7 +623,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         String biomeAction = args[1].toLowerCase();
-        if (this.islandBiomeManager == null) { // Should be initialized by SkyBlockProject
+        if (this.islandBiomeManager == null) {
             player.sendMessage(ChatColor.RED + "Biyom yöneticisi yüklenemedi. Lütfen sunucu yöneticisine bildirin.");
             plugin.getLogger().severe("IslandCommand: IslandBiomeManager null geldi!");
             return;
@@ -635,6 +652,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleWelcomeCommand(Player player, String[] args) {
+        // ... (metod aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Bu komutu kullanmak için bir adanız olmalı.");
@@ -647,7 +665,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         String welcomeAction = args[1].toLowerCase();
-        if (this.islandWelcomeManager == null) { // Should be initialized by SkyBlockProject
+        if (this.islandWelcomeManager == null) {
             player.sendMessage(ChatColor.RED + "Karşılama mesajı yöneticisi yüklenemedi.");
             plugin.getLogger().severe("IslandCommand: IslandWelcomeManager null!");
             return;
@@ -679,7 +697,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     @Override
-    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) { // Uyarı 3 için @NotNull eklendi
+    public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+        // ... (metod aynı) ...
         if (!(sender instanceof Player)) {
             return Collections.emptyList();
         }
@@ -698,9 +717,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         String subCmd = args[0].toLowerCase();
-        String arg1Lower = args.length >= 2 ? args[1].toLowerCase() : "";
-
+        // arg1Lower ve arg2Lower tanımlamaları ilgili if bloklarının içine alındı
         if (args.length == 2) {
+            String arg1Lower = args[1].toLowerCase(); // Tanımlama burada
             if (subCmd.equals("home") || subCmd.equals("delhome") || subCmd.equals("sethome")) {
                 Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
                 if (island != null) {
@@ -753,16 +772,15 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             }
         }
 
-        String arg2Lower = args.length >= 3 ? args[2].toLowerCase() : "";
-
         if (args.length == 3) {
             String actionOrSetting = args[1].toLowerCase();
+            String arg2Lower = args[2].toLowerCase(); // Tanımlama burada
             if (subCmd.equals("settings")) {
                 if (actionOrSetting.equals("visibility")) {
                     if ("public".startsWith(arg2Lower)) completions.add("public");
                     if ("private".startsWith(arg2Lower)) completions.add("private");
                 } else if (actionOrSetting.equals("boundary")) {
-                    if ("on".startsWith(arg2Lower)) completions.add("on"); // Tab-tamamlamada on/off kalabilir, metod toggle yapsa da
+                    if ("on".startsWith(arg2Lower)) completions.add("on");
                     if ("off".startsWith(arg2Lower)) completions.add("off");
                 }
             } else if (subCmd.equals("team") && (actionOrSetting.equals("add") || actionOrSetting.equals("remove"))) {

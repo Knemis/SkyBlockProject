@@ -5,9 +5,10 @@ import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
+// import com.sk89q.worldguard.protection.flags.RegionGroup; // KALDIRILDI
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import org.bukkit.ChatColor; // Oyuncuya mesaj gönderirken hala kullanılabilir
+import org.bukkit.ChatColor;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,11 +17,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-
-// Adventure API importu gerekebilir eğer Component ile doğrudan işlem yapacaksak,
-// ama burada sadece equals için kullanıyoruz, FlagGUIManager'dan gelen Component ile.
-// import net.kyori.adventure.text.Component;
-
+import net.kyori.adventure.text.Component;
 
 public class FlagGUIListener implements Listener {
 
@@ -28,6 +25,7 @@ public class FlagGUIListener implements Listener {
     private final FlagGUIManager flagGUIManager;
     private final IslandFlagManager islandFlagManager;
     private final NamespacedKey flagNameKey;
+    // private final NamespacedKey flagGroupKey; // KALDIRILDI
     private final FlagRegistry flagRegistry;
 
     public FlagGUIListener(SkyBlockProject plugin, FlagGUIManager flagGUIManager) {
@@ -35,6 +33,7 @@ public class FlagGUIListener implements Listener {
         this.flagGUIManager = flagGUIManager;
         this.islandFlagManager = plugin.getIslandFlagManager();
         this.flagNameKey = flagGUIManager.getFlagNameKey();
+        // this.flagGroupKey = flagGUIManager.getFlagGroupKey(); // KALDIRILDI
         this.flagRegistry = WorldGuard.getInstance().getFlagRegistry();
     }
 
@@ -42,8 +41,12 @@ public class FlagGUIListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
 
-        // DÜZELTME: getTitle() yerine title() kullanıldı ve GUI_TITLE_COMPONENT ile karşılaştırıldı.
-        if (!event.getView().title().equals(FlagGUIManager.GUI_TITLE_COMPONENT)) return;
+        Component viewTitle = event.getView().title();
+
+        // Tek genel GUI başlığı ile kontrol
+        if (!viewTitle.equals(FlagGUIManager.GUI_TITLE_COMPONENT)) {
+            return;
+        }
 
         event.setCancelled(true);
         Player player = (Player) event.getWhoClicked();
@@ -51,18 +54,28 @@ public class FlagGUIListener implements Listener {
 
         if (clickedItem == null || !clickedItem.hasItemMeta()) return;
         ItemMeta itemMeta = clickedItem.getItemMeta();
-        if (itemMeta == null || !itemMeta.getPersistentDataContainer().has(flagNameKey, PersistentDataType.STRING)) return;
-
-        String flagName = itemMeta.getPersistentDataContainer().get(flagNameKey, PersistentDataType.STRING);
-        if (flagName == null) {
-            plugin.getLogger().warning("FlagGUIListener: Tıklanan öğeden flagName null geldi. Oyuncu: " + player.getName());
+        // Sadece flagNameKey kontrolü yeterli
+        if (itemMeta == null || !itemMeta.getPersistentDataContainer().has(flagNameKey, PersistentDataType.STRING)) {
+            plugin.getLogger().warning("FlagGUIListener: Tıklanan öğede flagNameKey eksik. Oyuncu: " + player.getName());
             return;
         }
+
+        String flagName = itemMeta.getPersistentDataContainer().get(flagNameKey, PersistentDataType.STRING);
+        // String groupName = itemMeta.getPersistentDataContainer().get(flagGroupKey, PersistentDataType.STRING); // KALDIRILDI
+
+        if (flagName == null) { // groupName kontrolü kaldırıldı
+            plugin.getLogger().warning("FlagGUIListener: flagName null geldi. Oyuncu: " + player.getName());
+            return;
+        }
+
+        // RegionGroup regionGroupContext; // KALDIRILDI
+        // try {
+        // regionGroupContext = RegionGroup.valueOf(groupName.toUpperCase());
+        // } catch (IllegalArgumentException e) { /* ... */ return; }
 
         Flag<?> genericFlag = flagRegistry.get(flagName);
         if (genericFlag == null) {
             player.sendMessage(ChatColor.RED + "Bilinmeyen bayrak adı: " + flagName);
-            plugin.getLogger().warning("FlagGUIListener: Bilinmeyen bayrak adı: " + flagName + ". Oyuncu: " + player.getName());
             return;
         }
 
@@ -72,6 +85,7 @@ public class FlagGUIListener implements Listener {
         }
         StateFlag stateFlag = (StateFlag) genericFlag;
 
+        // Bayrak durumu grup olmadan, genel olarak alınır
         StateFlag.State currentState = islandFlagManager.getIslandFlagState(player.getUniqueId(), stateFlag);
         StateFlag.State newState;
 
@@ -83,6 +97,7 @@ public class FlagGUIListener implements Listener {
             newState = null;
         }
 
+        // Bayrak durumu grup olmadan, genel olarak ayarlanır
         boolean success = islandFlagManager.setIslandFlagState(player, player.getUniqueId(), stateFlag, newState);
 
         if (success) {
@@ -90,17 +105,15 @@ public class FlagGUIListener implements Listener {
             ChatColor statusColor;
 
             if (newState == StateFlag.State.ALLOW) {
-                newStateString = "İZİNLİ";
-                statusColor = ChatColor.GREEN;
+                newStateString = "İZİNLİ"; statusColor = ChatColor.GREEN;
             } else if (newState == StateFlag.State.DENY) {
-                newStateString = "YASAKLI";
-                statusColor = ChatColor.RED;
+                newStateString = "YASAKLI"; statusColor = ChatColor.RED;
             } else {
-                newStateString = "VARSAYILAN";
-                statusColor = ChatColor.GRAY;
+                newStateString = "VARSAYILAN"; statusColor = ChatColor.GRAY;
             }
-            // Oyuncuya gönderilen mesajlar şimdilik ChatColor ile kalabilir veya Component'e çevrilebilir.
-            player.sendMessage(ChatColor.GOLD + "'" + flagName + "' bayrağı " + statusColor + ChatColor.BOLD + newStateString + ChatColor.GOLD + " olarak ayarlandı.");
+            // Mesajdan grup bilgisi çıkarıldı
+            player.sendMessage(ChatColor.GOLD + "'" + flagName + "' bayrağı (genel) " + statusColor + ChatColor.BOLD + newStateString + ChatColor.GOLD + " olarak ayarlandı.");
+            // GUI grup parametresi olmadan yeniden açılır
             flagGUIManager.openFlagsGUI(player);
         } else {
             player.closeInventory();
