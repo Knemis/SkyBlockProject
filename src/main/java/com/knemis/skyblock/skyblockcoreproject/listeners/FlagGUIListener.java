@@ -3,7 +3,7 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
-import com.knemis.skyblock.skyblockcoreproject.island.IslandManager;
+// IslandManager import is not directly used here as IslandFlagManager handles the logic
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
@@ -22,15 +22,16 @@ public class FlagGUIListener implements Listener {
 
     private final SkyBlockProject plugin;
     private final FlagGUIManager flagGUIManager;
-    private final IslandFlagManager islandFlagManager; // YENİ: Bayrak işlemleri için
+    private final IslandFlagManager islandFlagManager; // Reference to the flag manager
     private final NamespacedKey flagNameKey;
     private final FlagRegistry flagRegistry;
 
-    public FlagGUIListener(SkyBlockProject plugin, FlagGUIManager flagGUIManager /*, IslandManager islandManager - kaldırıldı */) {
+    public FlagGUIListener(SkyBlockProject plugin, FlagGUIManager flagGUIManager) {
         this.plugin = plugin;
         this.flagGUIManager = flagGUIManager;
-        this.islandFlagManager = plugin.getIslandFlagManager(); // SkyBlockProject'ten al
-        this.flagNameKey = flagGUIManager.getFlagNameKey(); // FlagGUIManager'dan anahtarı al
+        // Obtain IslandFlagManager from the plugin (SkyBlockProject should provide a getter for the refactored manager)
+        this.islandFlagManager = plugin.getIslandFlagManager();
+        this.flagNameKey = flagGUIManager.getFlagNameKey(); // Get the key from FlagGUIManager
         this.flagRegistry = WorldGuard.getInstance().getFlagRegistry();
     }
 
@@ -66,21 +67,21 @@ public class FlagGUIListener implements Listener {
         }
         StateFlag stateFlag = (StateFlag) genericFlag;
 
-        // Mevcut durumu IslandFlagManager üzerinden al
+        // Get current state from IslandFlagManager
         StateFlag.State currentState = islandFlagManager.getIslandFlagState(player.getUniqueId(), stateFlag);
         StateFlag.State newState;
 
-        // Döngüsel Değişim: VARSAYILAN (null) -> İZİNLİ (ALLOW) -> YASAKLI (DENY) -> VARSAYILAN (null) ...
-        if (currentState == null) {
+        // Cycle through states: DEFAULT (null) -> ALLOW -> DENY -> DEFAULT (null)
+        if (currentState == null) { // If current is DEFAULT (null)
             newState = StateFlag.State.ALLOW;
         } else if (currentState == StateFlag.State.ALLOW) {
             newState = StateFlag.State.DENY;
         } else { // currentState == StateFlag.State.DENY
-            newState = null; // Varsayılana döndür
+            newState = null; // Set back to DEFAULT (null)
         }
 
-        // Yeni durumu IslandFlagManager üzerinden ayarla
-        // setIslandFlagState metodu artık 'changer' (değişikliği yapan oyuncu) parametresini de alıyor.
+        // Set the new state using IslandFlagManager
+        // The 'changer' (player) is passed to check permissions within setIslandFlagState
         boolean success = islandFlagManager.setIslandFlagState(player, player.getUniqueId(), stateFlag, newState);
 
         if (success) {
@@ -98,12 +99,11 @@ public class FlagGUIListener implements Listener {
                 statusColor = ChatColor.GRAY;
             }
             player.sendMessage(ChatColor.GOLD + "'" + flagName + "' bayrağı " + statusColor + ChatColor.BOLD + newStateString + ChatColor.GOLD + " olarak ayarlandı.");
-            flagGUIManager.openFlagsGUI(player); // GUI'yi güncel durumla yeniden aç
+            flagGUIManager.openFlagsGUI(player); // Reopen GUI to reflect changes
         } else {
-            // islandFlagManager.setIslandFlagState zaten oyuncuya bir hata mesajı göndermiş olmalı.
-            // Ek olarak log da tutmuş olmalı.
-            // player.sendMessage(ChatColor.RED + "'" + flagName + "' bayrağı ayarlanırken bir sorun oluştu."); // Bu satır artık IslandFlagManager'da olabilir.
-            player.closeInventory(); // Hata durumunda envanteri kapatabiliriz.
+            // islandFlagManager.setIslandFlagState should have already sent an error message to the player.
+            // And logged the issue.
+            player.closeInventory(); // Optionally close inventory on error
         }
     }
 }

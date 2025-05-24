@@ -2,12 +2,11 @@ package com.knemis.skyblock.skyblockcoreproject.island.features;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
-import com.knemis.skyblock.skyblockcoreproject.island.IslandManager;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler; // IslandManager yerine
 
-import com.sk89q.worldguard.domains.DefaultDomain;
 import com.sk89q.worldguard.protection.flags.Flag;
 import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.flags.RegionGroup; // Bu importun varlığından emin olun
+import com.sk89q.worldguard.protection.flags.RegionGroup;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
@@ -29,22 +28,28 @@ import java.util.logging.Level;
 public class IslandFlagManager {
 
     private final SkyBlockProject plugin;
-    private final IslandManager islandManager;
+    // IslandManager, IslandDataHandler ile değiştirildi
+    private final IslandDataHandler islandDataHandler;
     private final Map<StateFlag, StateFlag.State> defaultIslandFlags;
     private final boolean detailedFlagLogging;
 
-    // criticalOwnerBypassFlags listesi artık doğrudan sahip grubu için bayrak ayarlamada kullanılmayacak,
-    // ancak hangi bayrakların sahip için kritik olduğu bilgisini tutmaya devam edebilir (ileride başka bir mantık için).
+    // Bu liste, hangi bayrakların sahip için kritik olduğu bilgisini tutar.
+    // WorldGuard'ın sahip muafiyeti ve LuckPerms bypass izinleri ana mekanizmadır.
     private final List<StateFlag> criticalOwnerBypassFlags = Arrays.asList(
             Flags.BUILD,
             Flags.INTERACT,
             Flags.CHEST_ACCESS,
-            Flags.USE
+            Flags.USE,
+            Flags.ITEM_DROP,
+            Flags.ITEM_PICKUP,
+            Flags.TRAMPLE_BLOCKS,
+            Flags.RIDE
     );
 
-    public IslandFlagManager(SkyBlockProject plugin, IslandManager islandManager) {
+    // Constructor güncellendi
+    public IslandFlagManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler) {
         this.plugin = plugin;
-        this.islandManager = islandManager;
+        this.islandDataHandler = islandDataHandler;
         this.defaultIslandFlags = new LinkedHashMap<>();
         this.detailedFlagLogging = plugin.getConfig().getBoolean("logging.detailed-flag-changes", false);
         initializeDefaultFlags();
@@ -64,15 +69,19 @@ public class IslandFlagManager {
         defaultIslandFlags.put(Flags.TNT, StateFlag.State.DENY);
         defaultIslandFlags.put(Flags.CREEPER_EXPLOSION, StateFlag.State.DENY);
         defaultIslandFlags.put(Flags.OTHER_EXPLOSION, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.ENDERPEARL, StateFlag.State.ALLOW);
-        defaultIslandFlags.put(Flags.POTION_SPLASH, StateFlag.State.ALLOW);
+        defaultIslandFlags.put(Flags.ENDERPEARL, StateFlag.State.ALLOW); // Genellikle izin verilir
+        defaultIslandFlags.put(Flags.POTION_SPLASH, StateFlag.State.ALLOW); // Genellikle izin verilir
         defaultIslandFlags.put(Flags.FIRE_SPREAD, StateFlag.State.DENY);
         defaultIslandFlags.put(Flags.LAVA_FLOW, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.WATER_FLOW, StateFlag.State.ALLOW);
-        defaultIslandFlags.put(Flags.MOB_SPAWNING, StateFlag.State.ALLOW);
+        defaultIslandFlags.put(Flags.WATER_FLOW, StateFlag.State.ALLOW); // Ada yapımı için önemli olabilir
+        defaultIslandFlags.put(Flags.MOB_SPAWNING, StateFlag.State.ALLOW); // Oyuncunun kontrolünde olmalı
         defaultIslandFlags.put(Flags.LEAF_DECAY, StateFlag.State.ALLOW);
         defaultIslandFlags.put(Flags.LIGHTNING, StateFlag.State.DENY);
         defaultIslandFlags.put(Flags.SNOW_FALL, StateFlag.State.ALLOW);
+    }
+
+    private String getRegionId(UUID ownerUUID) {
+        return "skyblock_island_" + ownerUUID.toString();
     }
 
     private ProtectedRegion getProtectedRegionForIsland(UUID ownerUUID) {
@@ -80,11 +89,24 @@ public class IslandFlagManager {
             plugin.getLogger().warning("[FlagManager] getProtectedRegionForIsland çağrısında ownerUUID null geldi.");
             return null;
         }
-        return islandManager.getProtectedRegion(ownerUUID);
+        Island island = islandDataHandler.getIslandByOwner(ownerUUID);
+        if (island == null || island.getWorld() == null) {
+            if (detailedFlagLogging) {
+                plugin.getLogger().warning("[FlagManager-DEBUG] getProtectedRegionForIsland: Oyuncu " + ownerUUID + " için ada veya dünya bulunamadı.");
+            }
+            return null;
+        }
+        RegionManager regionManager = plugin.getRegionManager(island.getWorld());
+        if (regionManager == null) {
+            if (detailedFlagLogging) {
+                plugin.getLogger().warning("[FlagManager-DEBUG] getProtectedRegionForIsland: Dünya '" + island.getWorld().getName() + "' için RegionManager alınamadı.");
+            }
+            return null;
+        }
+        return regionManager.getRegion(getRegionId(ownerUUID));
     }
 
     public StateFlag.State getIslandFlagState(UUID ownerUUID, StateFlag flag) {
-        // ... (Bu metod aynı kalacak) ...
         if (ownerUUID == null || flag == null) {
             plugin.getLogger().warning("[FlagManager] getIslandFlagState çağrısında ownerUUID veya flag null geldi.");
             return null;
@@ -104,71 +126,55 @@ public class IslandFlagManager {
     }
 
     public boolean setIslandFlagState(Player changer, UUID ownerUUID, StateFlag flag, StateFlag.State newState) {
-        // ... (Parametre ve izin kontrolleri aynı kalacak) ...
         if (changer == null || ownerUUID == null || flag == null) {
             plugin.getLogger().severe("[FlagManager] setIslandFlagState çağrısında kritik bir parametre null geldi!");
             if(changer != null) changer.sendMessage(ChatColor.RED + "Bayrak ayarlanırken dahili bir hata oluştu (parametre eksik).");
             return false;
         }
-        Island island = islandManager.getIslandByOwner(ownerUUID);
+
+        Island island = islandDataHandler.getIslandByOwner(ownerUUID); // IslandDataHandler kullanıldı
         if (island == null || island.getWorld() == null) {
             changer.sendMessage(ChatColor.RED + "Bayrak ayarlanacak ada veya dünya bulunamadı.");
             return false;
         }
+
         ProtectedRegion region = getProtectedRegionForIsland(ownerUUID);
         if (region == null) {
             changer.sendMessage(ChatColor.RED + "Adanın koruma bölgesi bulunamadı.");
             return false;
         }
+
+        // İzin kontrolleri
         if (!changer.getUniqueId().equals(ownerUUID) && !changer.hasPermission("skyblock.admin.setanyflag")) {
             changer.sendMessage(ChatColor.RED + "Bu adanın bayraklarını değiştirme izniniz yok.");
             return false;
         }
         String specificFlagPermission = "skyblock.flags.manage." + flag.getName().toLowerCase().replace("_", "-");
-        if (!changer.hasPermission(specificFlagPermission) && !changer.getUniqueId().equals(ownerUUID) ) {
-            if(!changer.hasPermission("skyblock.admin.setanyflag")){
-                changer.sendMessage(ChatColor.RED + "'" + flag.getName() + "' bayrağını değiştirmek için özel izniniz ("+ specificFlagPermission +") bulunmuyor.");
-                if (detailedFlagLogging) {
-                    plugin.getLogger().info("[FlagManager] Oyuncu " + changer.getName() + ", " + ownerUUID + " adasındaki '" + flag.getName() + "' bayrağını değiştirmeye çalıştı ancak '" + specificFlagPermission + "' izni yok.");
-                }
-                return false;
+        if (!changer.getUniqueId().equals(ownerUUID) && !changer.hasPermission("skyblock.admin.setanyflag") && !changer.hasPermission(specificFlagPermission)) {
+            changer.sendMessage(ChatColor.RED + "'" + flag.getName() + "' bayrağını değiştirmek için özel izniniz ("+ specificFlagPermission +") bulunmuyor.");
+            if (detailedFlagLogging) {
+                plugin.getLogger().info("[FlagManager] Oyuncu " + changer.getName() + ", " + ownerUUID + " adasındaki '" + flag.getName() + "' bayrağını değiştirmeye çalıştı ancak '" + specificFlagPermission + "' izni yok.");
             }
+            return false;
         }
 
         StateFlag.State oldState = region.getFlag(flag);
-
         try {
-            plugin.getLogger().info("[FlagManager-ATTEMPT] Genel bayrak ayarlanıyor: region.setFlag(flag=" + flag.getName() + ", newState=" + (newState == null ? "null" : newState.name()) + ")");
-            region.setFlag(flag, newState); // Sadece genel bayrağı ayarla
-            plugin.getLogger().info("[FlagManager-SUCCESS] Genel bayrak ayarlandı.");
+            if (detailedFlagLogging) {
+                plugin.getLogger().info("[FlagManager-ATTEMPT] Genel bayrak ayarlanıyor: region=" + region.getId() + ", flag=" + flag.getName() + ", newState=" + (newState == null ? "null (VARSAYILAN)" : newState.name()));
+            }
+            region.setFlag(flag, newState); // Genel bayrağı ayarla (herkes için)
 
-            // SAHİPLER GRUBU İÇİN BAYRAK ATAMA KISMI GEÇİCİ OLARAK KALDIRILDI (DERLEME HATASI NEDENİYLE)
-            // if (criticalOwnerBypassFlags.contains(flag)) {
-            //     Flag<?> regionGroupSpecificFlag = flag.getRegionGroupFlag();
-            //     // ... (loglama) ...
-            //     if (regionGroupSpecificFlag instanceof StateFlag && regionGroupSpecificFlag != null) {
-            //         try {
-            //             // region.setFlag((StateFlag) regionGroupSpecificFlag, RegionGroup.OWNERS.name().toLowerCase(), StateFlag.State.ALLOW); // BU SATIR HATA VERİYORDU
-            //             plugin.getLogger().info("[FlagManager-INFO] Sahip grubu için bayrak atama (regionGroupSpecificFlag ile) geçici olarak devre dışı.");
-            //         } catch (Exception e_group) {
-            //              plugin.getLogger().log(Level.WARNING, "[FlagManager-ERROR] SAHİPLER grubu için bayrak '" + regionGroupSpecificFlag.getName() + "' ayarlanırken hata.", e_group);
-            //         }
-            //     } else {
-            //          // Alternatif olarak orijinal flag ile deneme (BU DA HATA VERİYORDU)
-            //         try {
-            //             // region.setFlag(flag, RegionGroup.OWNERS.name().toLowerCase(), StateFlag.State.ALLOW); // BU SATIR HATA VERİYORDU
-            //             plugin.getLogger().info("[FlagManager-INFO] Sahip grubu için bayrak atama (orijinal flag ile) geçici olarak devre dışı.");
-            //         } catch (Exception e_owner_flag) {
-            //             plugin.getLogger().log(Level.WARNING, "[FlagManager-ERROR] SAHİPLER grubu için (orijinal flag ile) bayrak '" + flag.getName() + "' ayarlanırken hata.", e_owner_flag);
-            //         }
-            //     }
-            // }
+            // Sahip (OWNERS) grubu için bayrakları ayarlama WorldGuard'ın kendi iç mantığına
+            // (region owners always bypass) ve LuckPerms bypass izinlerine bırakılmıştır.
+            // WorldGuard'da region.setFlag(flag, RegionGroup.OWNERS, state) kullanımı
+            // bayrağın kendisine RegionGroupFlag özelliği eklenmesini gerektirir ve bu karmaşıktır.
+            // En temizi, sahiplerin bypass izinleri (LuckPerms) veya WG'nin varsayılan sahip bypass'ı ile çalışmasıdır.
             if (criticalOwnerBypassFlags.contains(flag) && detailedFlagLogging) {
                 plugin.getLogger().info("[FlagManager-INFO] Kritik bayrak ("+flag.getName()+") ayarlandı. Sahip muafiyeti WorldGuard'ın varsayılan davranışına ve sunucu izinlerine bırakıldı.");
             }
 
-
-            RegionManager regionManager = islandManager.getWGRegionManager(island.getWorld());
+            RegionManager regionManager = plugin.getRegionManager(island.getWorld()); // Ana plugin üzerinden RegionManager al
             if (regionManager == null) {
                 plugin.getLogger().severe("[FlagManager] setIslandFlagState: Bayrak ayarlanırken RegionManager alınamadı.");
                 changer.sendMessage(ChatColor.RED + "Bayrak ayarlanırken bir hata oluştu (RM).");
@@ -178,17 +184,14 @@ public class IslandFlagManager {
 
             String oldStateString = (oldState == null) ? "VARSAYILAN" : oldState.name();
             String newStateString = (newState == null) ? "VARSAYILAN" : newState.name();
-
             changer.sendMessage(ChatColor.GREEN + "'" + flag.getName() + "' bayrağı " + ChatColor.AQUA + newStateString + ChatColor.GREEN + " olarak ayarlandı.");
             plugin.getLogger().info("[FlagManager] " + changer.getName() + " -> Ada: " + ownerUUID + ", Bayrak: '" + flag.getName() + "', Eski Durum: " + oldStateString + ", Yeni Durum: " + newStateString + ".");
-
             if (detailedFlagLogging) {
                 plugin.getLogger().info("[FlagManager-DETAY] Bölge ID: " + region.getId() + ". Sahipler: " + region.getOwners().toPlayersString() + ", Üyeler: " + region.getMembers().toPlayersString());
             }
             return true;
-
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "[FlagManager] setIslandFlagState sırasında ana bayrak ayarlanırken GENEL HATA: " + e.getMessage(), e);
+        } catch (Exception e) { // StorageException dahil genel hatalar için
+            plugin.getLogger().log(Level.SEVERE, "[FlagManager] setIslandFlagState sırasında bayrak ayarlanırken hata: " + e.getMessage(), e);
             changer.sendMessage(ChatColor.RED + "Bayrak ayarlanırken beklenmedik bir hata oluştu. Lütfen konsolu kontrol edin.");
             return false;
         }
@@ -200,44 +203,30 @@ public class IslandFlagManager {
             return;
         }
         plugin.getLogger().info("[FlagManager] '" + region.getId() + "' bölgesi için varsayılan ada bayrakları uygulanıyor...");
-        DefaultDomain owners = region.getOwners();
 
         for (Map.Entry<StateFlag, StateFlag.State> entry : defaultIslandFlags.entrySet()) {
             StateFlag flag = entry.getKey();
             StateFlag.State defaultStateForRegion = entry.getValue();
 
-            region.setFlag(flag, defaultStateForRegion); // Sadece genel bayrağı ayarla
+            region.setFlag(flag, defaultStateForRegion); // Sadece genel bayrağı (herkes için) ayarla
             if (detailedFlagLogging) {
                 plugin.getLogger().info("[FlagManager-DEBUG] Varsayılan genel bayrak uygulandı: " + flag.getName() + " -> " + (defaultStateForRegion == null ? "VARSAYILAN" : defaultStateForRegion.name()) + ", Bölge=" + region.getId());
             }
-
-            // SAHİPLER GRUBU İÇİN BAYRAK ATAMA KISMI GEÇİCİ OLARAK KALDIRILDI
-            // if (criticalOwnerBypassFlags.contains(flag) && (owners != null && !owners.getPlayers().isEmpty()) ) {
-            //     Flag<?> regionGroupSpecificFlag = flag.getRegionGroupFlag();
-            //     // ... (loglama) ...
-            //     if (regionGroupSpecificFlag instanceof StateFlag && regionGroupSpecificFlag != null) {
-            //          try {
-            //             // region.setFlag((StateFlag) regionGroupSpecificFlag, RegionGroup.OWNERS.name().toLowerCase(), StateFlag.State.ALLOW); // HATA VEREN SATIR
-            //             plugin.getLogger().info("[FlagManager-INFO] applyDefaultFlags - Sahip grubu için bayrak atama (regionGroupSpecificFlag ile) geçici olarak devre dışı.");
-            //         } catch (Exception e_groupflag_apply) {
-            //              plugin.getLogger().log(Level.WARNING, "[FlagManager-ERROR] applyDefaultFlags - SAHİPLER grubu için bayrak '" + flag.getName() + "' ayarlanırken hata: ", e_groupflag_apply);
-            //         }
-            //     } else if (detailedFlagLogging) {
-            //          plugin.getLogger().info("[FlagManager-DEBUG] " + flag.getName() + " için geçerli bir State-based region group flag bulunamadı (applyDefault).");
-            //     }
-            // }
+            // Sahip grubu için özel bayrak ayarları WorldGuard'ın bypass mekanizmalarına ve LuckPerms'e bırakılmıştır.
             if (criticalOwnerBypassFlags.contains(flag) && detailedFlagLogging) {
                 plugin.getLogger().info("[FlagManager-INFO] applyDefaultFlags - Kritik bayrak ("+flag.getName()+") için sahip muafiyeti WG varsayılanlarına ve sunucu izinlerine bırakıldı.");
             }
         }
-        // Değişikliklerin kaydedilmesi IslandManager'ın createIsland/resetIsland metodları içinde yapılmalı.
+        // Değişikliklerin kaydedilmesi bu metodu çağıran yerin sorumluluğundadır (örn: IslandLifecycleManager içinde createIsland).
     }
 
     public List<StateFlag> getManagableFlags() {
+        // GUI'de gösterilecek ve yönetilebilecek bayrakların listesi
         return Collections.unmodifiableList(new ArrayList<>(defaultIslandFlags.keySet()));
     }
 
     public StateFlag.State getDefaultStateFor(StateFlag flag) {
+        // Bir bayrağın bu eklenti tarafından tanımlanan varsayılan durumunu döndürür
         return defaultIslandFlags.get(flag);
     }
 

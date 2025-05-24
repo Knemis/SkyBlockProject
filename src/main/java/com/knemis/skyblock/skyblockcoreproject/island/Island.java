@@ -1,77 +1,73 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
 import org.bukkit.Location;
-import org.bukkit.OfflinePlayer; // OfflinePlayer kullanmak daha iyi olabilir
-import org.bukkit.World; // World importu eklendi
+import org.bukkit.OfflinePlayer; // For canPlayerVisit
+import org.bukkit.World;
 
-import java.util.UUID;
-import java.util.Set;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.List;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.time.Instant; // Oluşturulma tarihi için
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 public class Island {
 
     private final UUID ownerUUID;
-    private String islandName; // Ada ismi
-    private Location baseLocation; // Ada şematiğinin yapıştırıldığı temel nokta
-    private final Instant creationDate; // Ada oluşturulma tarihi
-    private boolean isPublic; // Herkes ziyaret edebilir mi?
-    private boolean boundariesEnforced; // Sınır kontrolü aktif mi?
+    private String islandName;
+    private Location baseLocation;
+    private final Instant creationDate;
+    private boolean isPublic;
+    private boolean boundariesEnforced;
 
-
-    private Set<UUID> members; // Ada üyelerinin UUID'leri
-    private Set<UUID> bannedPlayers; // Adadan yasaklanan oyuncuların UUID'leri (ziyaret edemezler)
-    private Map<String, Location> namedHomes; // İsimlendirilmiş evler
+    private Set<UUID> members;
+    private Set<UUID> bannedPlayers;
+    private Map<String, Location> namedHomes;
     private String welcomeMessage;
-
-    private transient World world; // Ada dünyası (geçici, baseLocation'dan alınacak)
     private String currentBiome;
-    // Yeni ada oluşturulurken kullanılacak constructor
+
+    private transient World world; // To be derived from baseLocation
+
+    // Constructor for creating a new island
     public Island(UUID ownerUUID, Location baseLocation, String defaultIslandName) {
         this.ownerUUID = ownerUUID;
         this.baseLocation = baseLocation;
-        this.world = baseLocation.getWorld();
-        this.islandName = defaultIslandName; // Başlangıçta varsayılan bir isim atanabilir
+        if (this.baseLocation != null) {
+            this.world = this.baseLocation.getWorld();
+        }
+        this.islandName = defaultIslandName;
         this.creationDate = Instant.now();
-        this.isPublic = false; // Varsayılan olarak özel
-        this.boundariesEnforced = true; // Varsayılan olarak sınırlar aktif
+        this.isPublic = false; // Default to private
+        this.boundariesEnforced = true; // Default to boundaries enforced
         this.members = new HashSet<>();
         this.bannedPlayers = new HashSet<>();
         this.namedHomes = new HashMap<>();
-        this.currentBiome = null;
-        this.welcomeMessage = null;
+        this.currentBiome = null; // Default biome (or could be set from schematic's actual biome)
+        this.welcomeMessage = null; // No welcome message by default
     }
 
-    // Veri kaynağından (örn: islands.yml) yüklenirken kullanılacak constructor
+    // Constructor for loading an island from data source (e.g., YAML)
     public Island(UUID ownerUUID, String islandName, Location baseLocation, long creationTimestamp,
                   boolean isPublic, boolean boundariesEnforced,
                   Set<UUID> members, Set<UUID> bannedPlayers, Map<String, Location> namedHomes,
-                  String currentBiome, String welcomeMessage) { // welcomeMessage parametresi EKLENDİ
+                  String currentBiome, String welcomeMessage) {
         this.ownerUUID = ownerUUID;
         this.islandName = islandName;
         this.baseLocation = baseLocation;
-        if (this.baseLocation != null && this.baseLocation.getWorld() != null) { // getWorld() null kontrolü eklendi
+        if (this.baseLocation != null && this.baseLocation.getWorld() != null) {
             this.world = this.baseLocation.getWorld();
         }
         this.creationDate = Instant.ofEpochMilli(creationTimestamp);
         this.isPublic = isPublic;
         this.boundariesEnforced = boundariesEnforced;
-        this.members = members != null ? members : new HashSet<>();
-        this.bannedPlayers = bannedPlayers != null ? bannedPlayers : new HashSet<>();
-        this.namedHomes = namedHomes != null ? namedHomes : new HashMap<>();
-        this.currentBiome = currentBiome; // Parametreden gelen değer atanıyor
+        this.members = (members != null) ? members : new HashSet<>();
+        this.bannedPlayers = (bannedPlayers != null) ? bannedPlayers : new HashSet<>();
+        this.namedHomes = (namedHomes != null) ? namedHomes : new HashMap<>();
+        this.currentBiome = currentBiome;
         this.welcomeMessage = welcomeMessage;
     }
-
-    // Getter ve Setter'lar (currentBiome için zaten vardı, doğru)
-
-    // Getter ve Setter'lar
-
-
 
     public UUID getOwnerUUID() {
         return ownerUUID;
@@ -91,11 +87,12 @@ public class Island {
 
     public void setBaseLocation(Location baseLocation) {
         this.baseLocation = baseLocation;
-        if (baseLocation != null) {
-            this.world = baseLocation.getWorld();
+        if (this.baseLocation != null) {
+            this.world = this.baseLocation.getWorld();
+        } else {
+            this.world = null;
         }
     }
-
 
     public World getWorld() {
         if (world == null && baseLocation != null) {
@@ -133,7 +130,7 @@ public class Island {
     }
 
     public boolean addMember(UUID memberUUID) {
-        if (memberUUID.equals(ownerUUID)) return false; // Sahip zaten üye sayılmaz (doğrudan yetkili)
+        if (memberUUID.equals(ownerUUID)) return false; // Owner cannot be a member of their own island
         return members.add(memberUUID);
     }
 
@@ -150,7 +147,7 @@ public class Island {
     }
 
     public boolean banPlayer(UUID playerUUID) {
-        if (playerUUID.equals(ownerUUID) || isMember(playerUUID)) return false; // Sahip veya üyeler banlanamaz
+        if (playerUUID.equals(ownerUUID) || isMember(playerUUID)) return false; // Owner or members cannot be banned
         return bannedPlayers.add(playerUUID);
     }
 
@@ -167,16 +164,21 @@ public class Island {
     }
 
     public Location getNamedHome(String homeName) {
+        if (homeName == null) return null;
         return namedHomes.get(homeName.toLowerCase());
     }
 
     public boolean setNamedHome(String homeName, Location location) {
-        // İsimlendirme kuralları ve maksimum ev sayısı kontrolü IslandManager'da yapılabilir.
+        if (homeName == null || location == null) return false;
+        // Further validation (max homes, name pattern, location within island bounds)
+        // should be handled by a manager class (e.g., IslandTeleportManager or IslandSettingsManager)
+        // before calling this method.
         namedHomes.put(homeName.toLowerCase(), location.clone());
         return true;
     }
 
     public boolean deleteNamedHome(String homeName) {
+        if (homeName == null) return false;
         return namedHomes.remove(homeName.toLowerCase()) != null;
     }
 
@@ -184,22 +186,11 @@ public class Island {
         return new ArrayList<>(namedHomes.keySet());
     }
 
-    // Helper method to check if a player can visit (considering bans and privacy)
-    public boolean canPlayerVisit(OfflinePlayer player) {
-        if (player.getUniqueId().equals(ownerUUID) || isMember(player.getUniqueId())) {
-            return true; // Sahip ve üyeler her zaman ziyaret edebilir
-        }
-        if (isBanned(player.getUniqueId())) {
-            return false; // Yasaklıysa ziyaret edemez
-        }
-        return isPublic; // Herkese açıksa ziyaret edebilir
-    }
-
-    public String getWelcomeMessage() { // EKLENDİ
+    public String getWelcomeMessage() {
         return welcomeMessage;
     }
 
-    public void setWelcomeMessage(String welcomeMessage) { // EKLENDİ
+    public void setWelcomeMessage(String welcomeMessage) {
         this.welcomeMessage = welcomeMessage;
     }
 
@@ -211,9 +202,21 @@ public class Island {
         this.currentBiome = currentBiome;
     }
 
-    // İleride eklenecek özellikler için yer tutucular:
-    // - Ada seviyesi
-    // - Ada bankası
-    // - Üye rolleri ve izinleri (daha detaylı)
-    // - Ada yükseltmeleri
+    /**
+     * Helper method to check if a player can visit (considering bans and privacy).
+     * @param player The player to check.
+     * @return True if the player can visit, false otherwise.
+     */
+    public boolean canPlayerVisit(OfflinePlayer player) {
+        if (player == null) return false;
+        UUID playerUUID = player.getUniqueId();
+
+        if (playerUUID.equals(ownerUUID) || isMember(playerUUID)) {
+            return true; // Owner and members can always visit
+        }
+        if (isBanned(playerUUID)) {
+            return false; // Banned players cannot visit
+        }
+        return isPublic; // Otherwise, depends on public status
+    }
 }

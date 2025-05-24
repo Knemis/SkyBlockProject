@@ -76,7 +76,7 @@ public class IslandLifecycleManager {
         );
     }
 
-    private String getRegionId(UUID playerUUID) {
+    public String getRegionId(UUID playerUUID) {
         return "skyblock_island_" + playerUUID.toString();
     }
 

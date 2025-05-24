@@ -2,7 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
-import com.knemis.skyblock.skyblockcoreproject.island.IslandManager;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler; // IslandManager yerine IslandDataHandler
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -18,13 +18,15 @@ import java.util.UUID;
 public class IslandWelcomeListener implements Listener {
 
     private final SkyBlockProject plugin;
-    private final IslandManager islandManager;
+    // IslandManager alanı IslandDataHandler ile değiştirildi
+    private final IslandDataHandler islandDataHandler;
     private final IslandWelcomeManager welcomeManager;
     private final Map<UUID, UUID> lastPlayerIslandOwner; // Oyuncu UUID -> Son bulunduğu adanın sahibi UUID
 
-    public IslandWelcomeListener(SkyBlockProject plugin, IslandManager islandManager, IslandWelcomeManager welcomeManager) {
+    // Constructor güncellendi: IslandManager yerine IslandDataHandler
+    public IslandWelcomeListener(SkyBlockProject plugin, IslandDataHandler islandDataHandler, IslandWelcomeManager welcomeManager) {
         this.plugin = plugin;
-        this.islandManager = islandManager;
+        this.islandDataHandler = islandDataHandler;
         this.welcomeManager = welcomeManager;
         this.lastPlayerIslandOwner = new HashMap<>();
     }
@@ -46,26 +48,25 @@ public class IslandWelcomeListener implements Listener {
             return;
         }
 
-        Island islandAtTo = islandManager.getIslandAt(to);
+        // IslandDataHandler üzerinden ada bilgisini al
+        // IslandDataHandler.getIslandAt(Location) metodu, WorldGuard bölgelerini kontrol ederek
+        // o konumdaki adayı bulmalıdır. Bu metodun IslandDataHandler içinde implemente edilmesi gerekecek.
+        Island islandAtTo = islandDataHandler.getIslandAt(to);
         UUID currentIslandOwnerUUID = (islandAtTo != null) ? islandAtTo.getOwnerUUID() : null;
         UUID lastIslandOwnerUUID = lastPlayerIslandOwner.get(player.getUniqueId());
 
         // Eğer oyuncu farklı bir adaya girdiyse veya bir adadan çıkıp başka bir adaya girdiyse
         if (currentIslandOwnerUUID != null && !currentIslandOwnerUUID.equals(lastIslandOwnerUUID)) {
             // Oyuncu kendi adasına veya üyesi olduğu adaya giriyorsa mesaj gösterme
-            if (currentIslandOwnerUUID.equals(player.getUniqueId()) || islandAtTo.isMember(player.getUniqueId())) {
+            if (currentIslandOwnerUUID.equals(player.getUniqueId()) || (islandAtTo != null && islandAtTo.isMember(player.getUniqueId()))) {
                 lastPlayerIslandOwner.put(player.getUniqueId(), currentIslandOwnerUUID);
                 return;
             }
 
             String welcomeMessage = welcomeManager.getWelcomeMessage(islandAtTo);
             if (welcomeMessage != null && !welcomeMessage.isEmpty()) {
-                // Mesajı göstermeden önce bekleme süresi eklenebilir (spam önlemek için)
-                // Veya oyuncuya sadece bir adaya ilk girişinde gösterilebilir.
-                // Şimdilik her farklı adaya girişte gösterelim.
-
                 // Mesajı PlaceholderAPI ile zenginleştirebiliriz (opsiyonel)
-                // String formattedMessage = PlaceholderAPI.setPlaceholders(player, welcomeMessage);
+                // String formattedMessage = me.clip.placeholderapi.PlaceholderAPI.setPlaceholders(player, welcomeMessage);
                 // player.sendMessage(ChatColor.translateAlternateColorCodes('&', formattedMessage));
                 player.sendMessage(ChatColor.translateAlternateColorCodes('&', welcomeMessage));
             }

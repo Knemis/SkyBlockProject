@@ -4,16 +4,14 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.model.user.User;
-import net.luckperms.api.node.Node;
-import net.luckperms.api.node.types.PermissionNode;
+// LuckPerms importları burada doğrudan kullanılmıyor, SkyBlockProject üzerinden erişiliyor.
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -24,16 +22,27 @@ public class IslandMemberManager {
 
     private final SkyBlockProject plugin;
     private final IslandDataHandler islandDataHandler;
-    // IslandManager'a hala ProtectedRegion almak için ihtiyaç duyulabilir veya bu metod IslandUtils'e taşınabilir.
-    // Şimdilik IslandManager'daki getProtectedRegion ve getWGRegionManager metodlarını kullandığını varsayalım.
-    // Bu metodlar daha sonra IslandLifecycleManager veya IslandUtils'e taşınabilir.
-    private final IslandManager islandManager; // Geçici olarak ProtectedRegion işlemleri için
+    // Eski IslandManager yerine IslandLifecycleManager, özellikle regionId almak için
+    private final IslandLifecycleManager islandLifecycleManager;
 
-    public IslandMemberManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler, IslandManager islandManager) {
+    // Constructor güncellendi
+    public IslandMemberManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler, IslandLifecycleManager islandLifecycleManager) {
         this.plugin = plugin;
         this.islandDataHandler = islandDataHandler;
-        this.islandManager = islandManager; // TODO: Bu bağımlılığı azaltmak veya kaldırmak iyi olur.
+        this.islandLifecycleManager = islandLifecycleManager;
     }
+
+    private String getRegionId(UUID ownerUUID) {
+        // IslandLifecycleManager'da bu metodun olduğunu varsayıyoruz veya doğrudan oluşturuyoruz.
+        // IslandLifecycleManager'da getRegionId metodu (source 536) bulunuyor.
+        if (this.islandLifecycleManager != null) {
+            return this.islandLifecycleManager.getRegionId(ownerUUID);
+        }
+        // Fallback veya hata durumu
+        plugin.getLogger().warning("IslandMemberManager: IslandLifecycleManager null olduğu için region ID oluşturulamadı, manuel olarak oluşturuluyor.");
+        return "skyblock_island_" + ownerUUID.toString();
+    }
+
 
     /**
      * Bir oyuncuyu bir adaya üye olarak ekler.
@@ -60,7 +69,7 @@ public class IslandMemberManager {
             return false;
         }
 
-        int maxMembers = plugin.getConfig().getInt("island.max-members", 3); // Sahip hariç üye sayısı
+        int maxMembers = plugin.getConfig().getInt("island.max-members", 3);
         if (island.getMembers().size() >= maxMembers) {
             actor.sendMessage(ChatColor.RED + "Maksimum üye sayısına (" + maxMembers + ") ulaştınız.");
             return false;
@@ -69,24 +78,35 @@ public class IslandMemberManager {
         island.addMember(targetMember.getUniqueId());
 
         // WorldGuard bölgesine üye olarak ekle
-        ProtectedRegion region = islandManager.getProtectedRegion(island.getOwnerUUID());
-        if (region != null && island.getWorld() != null) {
-            region.getMembers().addPlayer(targetMember.getUniqueId());
-            RegionManager regionManager = islandManager.getWGRegionManager(island.getWorld());
+        World islandWorld = island.getWorld();
+        if (islandWorld != null) {
+            RegionManager regionManager = plugin.getRegionManager(islandWorld);
             if (regionManager != null) {
-                try {
-                    regionManager.saveChanges();
-                    plugin.getLogger().info(targetMember.getName() + ", " + island.getIslandName() + " (" + island.getOwnerUUID() + ") adasına WorldGuard üyesi olarak eklendi.");
-                } catch (StorageException e) {
-                    plugin.getLogger().log(Level.SEVERE, "WorldGuard üyesi eklenirken bölge kaydedilemedi: " + e.getMessage(), e);
+                String regionId = getRegionId(island.getOwnerUUID());
+                ProtectedRegion region = regionManager.getRegion(regionId);
+                if (region != null) {
+                    region.getMembers().addPlayer(targetMember.getUniqueId());
+                    try {
+                        regionManager.saveChanges();
+                        plugin.getLogger().info(targetMember.getName() + ", " + island.getIslandName() + " (" + island.getOwnerUUID() + ") adasına WorldGuard üyesi olarak eklendi.");
+                    } catch (StorageException e) {
+                        plugin.getLogger().log(Level.SEVERE, "WorldGuard üyesi eklenirken bölge kaydedilemedi: " + regionId, e);
+                        actor.sendMessage(ChatColor.RED + "Ada üyesi WorldGuard'a eklenirken bir hata oluştu.");
+                        // Başarısız olursa üyeliği geri alabiliriz veya hata mesajı verebiliriz.
+                        // Şimdilik sadece logla ve devam et.
+                    }
+                } else {
+                    plugin.getLogger().warning(island.getIslandName() + " adası için WorldGuard bölgesi (" + regionId + ") bulunamadı. WG üyesi eklenemedi.");
                 }
+            } else {
+                plugin.getLogger().warning("WorldGuard RegionManager, " + islandWorld.getName() + " dünyası için alınamadı. WG üyesi eklenemedi.");
             }
         } else {
-            plugin.getLogger().warning(island.getIslandName() + " adasına " + targetMember.getName() + " WG üyesi olarak eklenemedi (bölge veya dünya bulunamadı).");
+            plugin.getLogger().warning(island.getIslandName() + " adası için dünya null. WG üyesi eklenemedi.");
         }
 
-        islandDataHandler.addOrUpdateIslandData(island); // Değişikliği kaydet
-        islandDataHandler.saveChangesToDisk();       // Diske yaz
+        islandDataHandler.addOrUpdateIslandData(island); // Değişikliği IslandDataHandler ile kaydet
+        islandDataHandler.saveChangesToDisk(); // Diske yaz
 
         actor.sendMessage(ChatColor.GREEN + targetMember.getName() + " başarıyla '" + island.getIslandName() + "' adasına üye olarak eklendi.");
         if (targetMember.isOnline() && targetMember.getPlayer() != null) {
@@ -109,7 +129,6 @@ public class IslandMemberManager {
         }
 
         boolean isSelfLeave = actor.getUniqueId().equals(targetMember.getUniqueId());
-
         if (!isSelfLeave && !island.getOwnerUUID().equals(actor.getUniqueId()) && !actor.hasPermission("skyblock.admin.manage_members")) {
             actor.sendMessage(ChatColor.RED + "Bu adadan üye çıkarma yetkiniz yok.");
             return false;
@@ -123,24 +142,33 @@ public class IslandMemberManager {
         island.removeMember(targetMember.getUniqueId());
 
         // WorldGuard bölgesinden üyeyi çıkar
-        ProtectedRegion region = islandManager.getProtectedRegion(island.getOwnerUUID());
-        if (region != null && island.getWorld() != null) {
-            region.getMembers().removePlayer(targetMember.getUniqueId());
-            RegionManager regionManager = islandManager.getWGRegionManager(island.getWorld());
+        World islandWorld = island.getWorld();
+        if (islandWorld != null) {
+            RegionManager regionManager = plugin.getRegionManager(islandWorld);
             if (regionManager != null) {
-                try {
-                    regionManager.saveChanges();
-                    plugin.getLogger().info(targetMember.getName() + ", " + island.getIslandName() + " (" + island.getOwnerUUID() + ") adasından WorldGuard üyesi olarak çıkarıldı.");
-                } catch (StorageException e) {
-                    plugin.getLogger().log(Level.SEVERE, "WorldGuard üyesi çıkarılırken bölge kaydedilemedi: " + e.getMessage(), e);
+                String regionId = getRegionId(island.getOwnerUUID());
+                ProtectedRegion region = regionManager.getRegion(regionId);
+                if (region != null) {
+                    region.getMembers().removePlayer(targetMember.getUniqueId());
+                    try {
+                        regionManager.saveChanges();
+                        plugin.getLogger().info(targetMember.getName() + ", " + island.getIslandName() + " (" + island.getOwnerUUID() + ") adasından WorldGuard üyesi olarak çıkarıldı.");
+                    } catch (StorageException e) {
+                        plugin.getLogger().log(Level.SEVERE, "WorldGuard üyesi çıkarılırken bölge kaydedilemedi: " + regionId, e);
+                        // Hata durumunda mesaj verilebilir.
+                    }
+                } else {
+                    plugin.getLogger().warning(island.getIslandName() + " adası için WorldGuard bölgesi (" + regionId + ") bulunamadı. WG üyesi çıkarılamadı.");
                 }
+            } else {
+                plugin.getLogger().warning("WorldGuard RegionManager, " + islandWorld.getName() + " dünyası için alınamadı. WG üyesi çıkarılamadı.");
             }
         } else {
-            plugin.getLogger().warning(island.getIslandName() + " adasından " + targetMember.getName() + " WG üyesi olarak çıkarılamadı (bölge veya dünya bulunamadı).");
+            plugin.getLogger().warning(island.getIslandName() + " adası için dünya null. WG üyesi çıkarılamadı.");
         }
 
-        islandDataHandler.addOrUpdateIslandData(island); // Değişikliği kaydet
-        islandDataHandler.saveChangesToDisk();       // Diske yaz
+        islandDataHandler.addOrUpdateIslandData(island); // Değişikliği IslandDataHandler ile kaydet
+        islandDataHandler.saveChangesToDisk(); // Diske yaz
 
         if (isSelfLeave) {
             actor.sendMessage(ChatColor.GREEN + "'" + island.getIslandName() + "' adasının üyeliğinden başarıyla ayrıldınız.");
@@ -178,7 +206,7 @@ public class IslandMemberManager {
             return false;
         }
         // Ada sahibi de bir nevi "en yetkili üye"dir, ancak isMember genellikle eklenenleri kasteder.
-        // Eğer sahip de dahil edilecekse, island.getOwnerUUID().equals(playerUUID) || island.isMember(playerUUID)
+        // Eğer sahip de dahil edilecekse: island.getOwnerUUID().equals(playerUUID) || island.isMember(playerUUID)
         return island.isMember(playerUUID);
     }
 }

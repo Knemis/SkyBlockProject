@@ -2,27 +2,30 @@ package com.knemis.skyblock.skyblockcoreproject.island.features;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
-import com.knemis.skyblock.skyblockcoreproject.island.IslandManager;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler; // IslandManager yerine
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class IslandWelcomeManager {
 
     private final SkyBlockProject plugin;
-    private final IslandManager islandManager;
+    // Eski IslandManager alanı IslandDataHandler ile değiştirildi
+    private final IslandDataHandler islandDataHandler;
 
-    public IslandWelcomeManager(SkyBlockProject plugin, IslandManager islandManager) {
+    // Constructor güncellendi
+    public IslandWelcomeManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler) {
         this.plugin = plugin;
-        this.islandManager = islandManager;
+        this.islandDataHandler = islandDataHandler;
     }
 
     /**
      * Bir adanın karşılama mesajını ayarlar.
+     * @param player Komutu kullanan oyuncu (mesaj göndermek için).
      * @param island Mesajı ayarlanacak ada.
      * @param message Ayarlanacak mesaj. Boş veya null ise mesaj silinir.
-     * @param player Komutu kullanan oyuncu (mesaj göndermek için).
      */
     public void setWelcomeMessage(Player player, Island island, String message) {
         if (island == null) {
@@ -31,17 +34,20 @@ public class IslandWelcomeManager {
         }
 
         // Mesaj uzunluğu kontrolü (config'den alınabilir)
-        int maxLength = plugin.getConfig().getInt("island.welcome-message.max-length", 100);
+        int maxLength = plugin.getConfig().getInt("island.welcome-message.max-length", 100); // [cite: 10]
         if (message != null && message.length() > maxLength) {
             player.sendMessage(ChatColor.RED + "Karşılama mesajı maksimum " + maxLength + " karakter olabilir.");
             return;
         }
 
         String oldMessage = island.getWelcomeMessage();
-        island.setWelcomeMessage(message); // Null ise mesajı temizler (Island sınıfında bu şekilde ayarlanmalı)
-        islandManager.saveIslandData(island); // IslandManager değişikliği kaydeder
+        island.setWelcomeMessage(message); // Island nesnesindeki mesajı güncelle
+
+        // Ada verisini IslandDataHandler üzerinden kaydet
+        islandDataHandler.addOrUpdateIslandData(island);
         try {
-            islandManager.getIslandsConfig().save(islandManager.getIslandsFile());
+            islandDataHandler.saveChangesToDisk(); // Değişiklikleri diske yaz
+
             if (message == null || message.isEmpty()) {
                 if (oldMessage != null && !oldMessage.isEmpty()) { // Sadece önceden mesaj varsa silindi mesajı gönder
                     player.sendMessage(ChatColor.GREEN + "Ada karşılama mesajınız başarıyla silindi.");
@@ -51,17 +57,17 @@ public class IslandWelcomeManager {
             } else {
                 player.sendMessage(ChatColor.GREEN + "Ada karşılama mesajınız ayarlandı: " + ChatColor.RESET + ChatColor.translateAlternateColorCodes('&', message));
             }
-            plugin.getLogger().info(player.getName() + " adasının (" + island.getOwnerUUID() + ") karşılama mesajını güncelledi.");
-        } catch (IOException e) {
+            plugin.getLogger().info(player.getName() + " (" + player.getUniqueId() + ") adasının (" + island.getOwnerUUID() + ") karşılama mesajını güncelledi.");
+        } catch (Exception e) { // Geniş tuttuk, saveChangesToDisk IOException atabilir veya başka bir runtime.
             player.sendMessage(ChatColor.RED + "Karşılama mesajı kaydedilirken bir hata oluştu.");
-            plugin.getLogger().severe("Ada karşılama mesajı kaydedilemedi (Sahip: " + island.getOwnerUUID() + "): " + e.getMessage());
+            plugin.getLogger().log(Level.SEVERE, "Ada karşılama mesajı kaydedilemedi (Sahip: " + island.getOwnerUUID() + "): " + e.getMessage(), e);
         }
     }
 
     /**
      * Bir adanın karşılama mesajını temizler.
-     * @param island Mesajı temizlenecek ada.
      * @param player Komutu kullanan oyuncu.
+     * @param island Mesajı temizlenecek ada.
      */
     public void clearWelcomeMessage(Player player, Island island) {
         setWelcomeMessage(player, island, null); // Null mesaj göndermek silme işlemi yapar
