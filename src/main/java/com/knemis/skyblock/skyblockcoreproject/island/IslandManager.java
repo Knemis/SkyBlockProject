@@ -1,7 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager; // Gerekli olabilir
+// IslandFlagManager importu burada doğrudan kullanılmıyor, plugin üzerinden erişiliyor
+// import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 
 // WorldEdit importları
 import com.sk89q.worldedit.EditSession;
@@ -20,11 +21,11 @@ import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.world.block.BlockTypes;
 
 // WorldGuard importları
+import com.sk89q.worldguard.protection.flags.Flags; // Kritik bayrakları almak için
+import com.sk89q.worldguard.protection.flags.StateFlag; // Kritik bayrakları almak için
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-import com.sk89q.worldguard.protection.flags.Flags;
-import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 
 // Bukkit importları
@@ -41,11 +42,19 @@ import org.bukkit.entity.Player;
 import org.bukkit.generator.ChunkGenerator;
 import org.bukkit.scheduler.BukkitRunnable;
 
+// LuckPerms API importları
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.Node;
+import net.luckperms.api.node.types.PermissionNode;
+import net.luckperms.api.model.data.DataMutateResult;
+
 // Java importları
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,21 +62,35 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 public class IslandManager {
 
     private final SkyBlockProject plugin;
-    private World skyblockWorld; // Bukkit World nesnesi
+    private World skyblockWorld;
     private File schematicFile;
-
     private File islandsFile;
     private FileConfiguration islandsConfig;
-
-    private Map<UUID, Island> islandsData; // Oyuncu UUID -> Island nesnesi
-
+    private Map<UUID, Island> islandsData;
     private int maxHomesPerIsland;
     private final String defaultIslandNamePrefix;
+
+    // Sahip bypass için kritik bayrakların listesi (WorldGuard Flags sınıfından)
+    // Bu liste, hangi bayraklar için özel bypass izni verileceğini belirlemek için kullanılacak.
+    private final List<StateFlag> criticalFlagsForOwnerBypass = Arrays.asList(
+            Flags.BUILD,
+            Flags.INTERACT,
+            Flags.CHEST_ACCESS,
+            Flags.USE,
+            Flags.ITEM_DROP,
+            Flags.ITEM_PICKUP,
+            Flags.TRAMPLE_BLOCKS,
+            Flags.RIDE
+            // İhtiyaç duyarsanız buraya başka StateFlag'lar ekleyebilirsiniz
+            // Örn: Flags.DAMAGE_ANIMALS (eğer sahiplerin hayvanlarına zarar verebilmesini istiyorsanız)
+    );
+
 
     public IslandManager(SkyBlockProject plugin) {
         this.plugin = plugin;
@@ -77,12 +100,10 @@ public class IslandManager {
         if (!plugin.getDataFolder().exists()) {
             plugin.getDataFolder().mkdirs();
         }
-
         if (!schematicFile.exists()) {
             plugin.getLogger().warning("Ada şematiği bulunamadı: " + schematicFile.getPath());
             plugin.getLogger().warning("Lütfen 'plugins/" + plugin.getName() + "/island.schem' dosyasını oluşturun.");
         }
-
         this.islandsFile = new File(plugin.getDataFolder(), "islands.yml");
         this.islandsData = new HashMap<>();
         this.maxHomesPerIsland = plugin.getConfig().getInt("island.max-named-homes", 5);
@@ -191,10 +212,10 @@ public class IslandManager {
                             }
                         }
                     }
-                    // Biyom verisi burada okunacak
                     String currentBiome = islandsConfig.getString(path + "currentBiome", null);
-                    String welcomeMessage = islandsConfig.getString(path + "welcomeMessage", null); // welcomeMessage okunuyor
-                    Island island = new Island( // Doğru constructor çağrılıyor
+                    String welcomeMessage = islandsConfig.getString(path + "welcomeMessage", null);
+
+                    Island island = new Island(
                             ownerUUID, islandName, baseLocation, creationTimestamp,
                             isPublic, boundariesEnforced, members, bannedPlayers,
                             namedHomes, currentBiome, welcomeMessage
@@ -225,7 +246,7 @@ public class IslandManager {
             }
             return;
         }
-        islandsConfig.set("islands", null); // Önce temizle
+        islandsConfig.set("islands", null);
 
         for (Island island : islandsData.values()) {
             saveIslandData(island);
@@ -248,8 +269,9 @@ public class IslandManager {
         islandsConfig.set(path + "creationDate", island.getCreationTimestamp());
         islandsConfig.set(path + "isPublic", island.isPublic());
         islandsConfig.set(path + "boundariesEnforced", island.areBoundariesEnforced());
-        islandsConfig.set(path + "currentBiome", island.getCurrentBiome()); // Biyom verisi kaydediliyor
-        islandsConfig.set(path + "welcomeMessage", island.getWelcomeMessage()); // EKLENDİ: welcomeMessage kaydediliyor
+        islandsConfig.set(path + "currentBiome", island.getCurrentBiome());
+        islandsConfig.set(path + "welcomeMessage", island.getWelcomeMessage());
+
         Location baseLoc = island.getBaseLocation();
         if (baseLoc != null && baseLoc.getWorld() != null) {
             islandsConfig.set(path + "baseLocation.world", baseLoc.getWorld().getName());
@@ -350,7 +372,6 @@ public class IslandManager {
         }
 
         player.sendMessage(ChatColor.YELLOW + "Adanız oluşturuluyor... Bu işlem birkaç saniye sürebilir, lütfen bekleyin.");
-
         final int actualIslandX = plugin.getNextIslandXAndIncrement();
         final Location islandBaseLocation = new Location(this.skyblockWorld, actualIslandX, 100, 0);
 
@@ -381,7 +402,6 @@ public class IslandManager {
                         Operations.complete(operation);
                     }
                     String newIslandName = defaultIslandNamePrefix + "-" + player.getName();
-                    // Yeni ada oluşturulurken biyom null olarak başlar (veya varsayılan)
                     Island newIsland = new Island(player.getUniqueId(), islandBaseLocation, newIslandName);
                     islandsData.put(player.getUniqueId(), newIsland);
                     saveIslandData(newIsland);
@@ -393,36 +413,68 @@ public class IslandManager {
                         CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
 
                         if (regionManager.hasRegion(regionId)) {
-                            plugin.getLogger().info("Mevcut WorldGuard bölgesi '" + regionId + "' güncellenmek üzere siliniyor.");
                             regionManager.removeRegion(regionId);
                         }
-
                         ProtectedCuboidRegion protectedRegion = new ProtectedCuboidRegion(
-                                regionId,
-                                islandTerritory.getMinimumPoint(),
-                                islandTerritory.getMaximumPoint()
+                                regionId, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()
                         );
                         protectedRegion.getOwners().addPlayer(player.getUniqueId());
                         protectedRegion.setPriority(plugin.getConfig().getInt("island.region-priority", 10));
 
-
-                        IslandFlagManager flagManager = plugin.getIslandFlagManager();
+                        com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager flagManager = plugin.getIslandFlagManager(); // Tam yoluyla belirttik
                         if (flagManager != null) {
                             flagManager.applyDefaultFlagsToRegion(protectedRegion);
                         } else {
                             plugin.getLogger().severe("IslandFlagManager null! Varsayılan bayraklar uygulanamadı.");
-                            // Eski setInitialRegionFlags geçici olarak burada kalabilir veya hata mesajı verilebilir.
                         }
-
-
-
-                        plugin.getLogger().info("'" + regionId + "' için varsayılan ziyaretçi bayrakları ayarlanıyor...");
-
 
                         regionManager.addRegion(protectedRegion);
                         try {
                             regionManager.saveChanges();
-                            plugin.getLogger().info(player.getName() + " için WorldGuard bölgesi (" + regionId + ") oluşturuldu ve varsayılan koruma bayrakları ayarlandı.");
+                            plugin.getLogger().info(player.getName() + " için WorldGuard bölgesi (" + regionId + ") oluşturuldu ve bayraklar ayarlandı.");
+
+                            // === LUCKPERMS İZİNLERİNİ VERME (GÜNCELLENDİ) ===
+                            LuckPerms lpApi = plugin.getLuckPermsApi();
+                            if (lpApi != null) {
+                                UUID playerUUID = player.getUniqueId();
+                                String worldName = islandBaseLocation.getWorld().getName();
+
+                                final List<Node> nodesToAdd = new ArrayList<>();
+
+                                // 1. Genel Bölge Bypass İzni
+                                String generalBypassNode = "worldguard.region.bypass." + worldName + "." + regionId;
+                                nodesToAdd.add(PermissionNode.builder(generalBypassNode).value(true).build());
+                                plugin.getLogger().info(player.getName() + " için LuckPerms genel bypass izni ekleniyor: " + generalBypassNode);
+
+                                // 2. Kritik Bayraklar İçin Özel Bayrak Bazlı Bypass İzinleri
+                                for (StateFlag criticalFlag : criticalFlagsForOwnerBypass) {
+                                    // WorldGuard bayrak adları genellikle '-' içerir, izin düğümlerinde '.' veya '_' tercih edilebilir.
+                                    // WorldGuard genellikle kendi içinde '-' kullanır. Biz de öyle kullanalım.
+                                    String flagNameForPerm = criticalFlag.getName().toLowerCase().replace("_", "-");
+                                    String flagSpecificBypassNode = "worldguard.bypass.flag." + flagNameForPerm + "." + worldName + "." + regionId;
+                                    nodesToAdd.add(PermissionNode.builder(flagSpecificBypassNode).value(true).build());
+                                    plugin.getLogger().info(player.getName() + " için LuckPerms bayrak-özel bypass izni ekleniyor: " + flagSpecificBypassNode);
+                                }
+
+                                lpApi.getUserManager().modifyUser(playerUUID, user -> {
+                                    nodesToAdd.forEach(node -> {
+                                        DataMutateResult addResult = user.data().add(node);
+                                        if (!addResult.wasSuccessful() && plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
+                                            plugin.getLogger().warning("LuckPerms izni (" + node.getKey() + ") eklenirken beklenen sonuç alınamadı: " + addResult.name());
+                                        }
+                                    });
+                                }).thenRunAsync(() -> { // Bukkit thread'inde çalıştırmak için
+                                            plugin.getLogger().info(player.getName() + " için LuckPerms bypass izinleri başarıyla eklendi ve kaydedilmesi istendi.");
+                                        }, runnable -> Bukkit.getScheduler().runTask(plugin, runnable)
+                                ).exceptionally(ex -> {
+                                    plugin.getLogger().log(Level.SEVERE, player.getName() + " için LuckPerms izinleri kaydedilirken hata oluştu.", ex);
+                                    return null;
+                                });
+                            } else {
+                                plugin.getLogger().warning("LuckPerms API bulunamadığı için " + player.getName() + " adlı oyuncuya otomatik bypass izni verilemedi.");
+                            }
+                            // === LUCKPERMS İZİNLERİ BİTTİ ===
+
                         } catch (StorageException e) {
                             plugin.getLogger().severe("WorldGuard bölgeleri oluşturulurken (kayıt) hata: " + e.getMessage());
                             e.printStackTrace();
@@ -451,21 +503,13 @@ public class IslandManager {
                         }
                     }.runTaskTimer(plugin, 0L, 1L);
 
-
-                } catch (IOException | WorldEditException e) {
-                    plugin.getLogger().severe("Ada oluşturulurken bir WorldEdit/IO hatası oluştu: " + e.getMessage());
-                    e.printStackTrace();
-                    player.sendMessage(ChatColor.RED + "Ada oluşturulurken beklenmedik bir hata oluştu.");
                 } catch (Exception e) {
-                    plugin.getLogger().severe("Ada oluşturma sırasında genel bir hata oluştu: " + e.getMessage());
-                    e.printStackTrace();
+                    plugin.getLogger().log(Level.SEVERE, "Ada oluşturma sırasında genel bir hata oluştu (Oyuncu: " + player.getName() + ")", e);
                     player.sendMessage(ChatColor.RED + "Ada oluşturulurken çok beklenmedik bir hata oluştu.");
                 }
             }
         }.runTask(plugin);
     }
-
-
 
     public boolean deleteIsland(Player player) {
         Island island = getIsland(player);
@@ -475,9 +519,11 @@ public class IslandManager {
         }
         Location islandBaseLocation = island.getBaseLocation();
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
-            player.sendMessage(ChatColor.RED + "Adanın konumu veya dünyası bulunamadı.");
+            player.sendMessage(ChatColor.RED + "Adanın konumu veya dünyası bulunamadı (silme işlemi için).");
             return false;
         }
+        String worldName = islandBaseLocation.getWorld().getName();
+        String regionId = getRegionId(player.getUniqueId());
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi siliniyor...");
         try {
@@ -493,12 +539,10 @@ public class IslandManager {
                 editSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
                 editSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), BlockTypes.AIR.getDefaultState());
             }
-            plugin.getLogger().info(player.getName() + " adlı oyuncunun ada bölgesi (" + islandTerritory.toString() + ") başarıyla silindi (bloklar temizlendi).");
+            plugin.getLogger().info(player.getName() + " adlı oyuncunun ada bölgesi temizlendi.");
 
             RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
-                String regionId = getRegionId(player.getUniqueId());
-                ProtectedRegion region = regionManager.getRegion(regionId);
                 if (regionManager.hasRegion(regionId)) {
                     regionManager.removeRegion(regionId);
                     try {
@@ -516,24 +560,57 @@ public class IslandManager {
             }
 
             removeIslandDataFromStorage(player.getUniqueId());
-            try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada silindikten sonra islands.yml kaydedilirken hata: " + e.getMessage());}
+            try { islandsConfig.save(islandsFile); } catch (IOException e) {
+                plugin.getLogger().severe("Ada silindikten sonra islands.yml kaydedilirken hata: " + e.getMessage());
+            }
+
+            // === LUCKPERMS İZİNLERİNİ GERİ ALMA (GÜNCELLENDİ) ===
+            LuckPerms lpApi = plugin.getLuckPermsApi();
+            if (lpApi != null) {
+                UUID playerUUID = player.getUniqueId();
+
+                final List<Node> nodesToRemove = new ArrayList<>();
+                String generalBypassNode = "worldguard.region.bypass." + worldName + "." + regionId;
+                nodesToRemove.add(PermissionNode.builder(generalBypassNode).build()); // value belirtmeye gerek yok kaldırırken
+                plugin.getLogger().info(player.getName() + " için LuckPerms genel bypass izni kaldırılıyor: " + generalBypassNode);
+
+                for (StateFlag criticalFlag : criticalFlagsForOwnerBypass) {
+                    String flagNameForPerm = criticalFlag.getName().toLowerCase().replace("_", "-");
+                    String flagSpecificBypassNode = "worldguard.bypass.flag." + flagNameForPerm + "." + worldName + "." + regionId;
+                    nodesToRemove.add(PermissionNode.builder(flagSpecificBypassNode).build());
+                    plugin.getLogger().info(player.getName() + " için LuckPerms bayrak-özel bypass izni kaldırılıyor: " + flagSpecificBypassNode);
+                }
+
+                lpApi.getUserManager().modifyUser(playerUUID, user -> {
+                    nodesToRemove.forEach(node -> {
+                        DataMutateResult result = user.data().remove(node);
+                        if (!result.wasSuccessful() && plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) { // Config'den loglama seviyesi
+                            plugin.getLogger().warning("LuckPerms izni (" + node.getKey() + ") oyuncu " + player.getName() + " için kaldırılırken beklenen sonuç alınamadı: " + result.name());
+                        }
+                    });
+                }).thenRunAsync(() -> {
+                            plugin.getLogger().info(player.getName() + " için LuckPerms bypass izinleri başarıyla kaldırıldı ve kaydedilmesi istendi.");
+                        }, runnable -> Bukkit.getScheduler().runTask(plugin, runnable)
+                ).exceptionally(ex -> {
+                    plugin.getLogger().log(Level.SEVERE, player.getName() + " için LuckPerms izinleri kaldırılırken hata oluştu.", ex);
+                    return null;
+                });
+            } else {
+                plugin.getLogger().warning("LuckPerms API bulunamadığı için " + player.getName() + " adlı oyuncunun bypass izinleri geri ALINAMADI.");
+            }
+            // === LUCKPERMS İZİNLERİ GERİ ALMA BİTTİ ===
 
             player.sendMessage(ChatColor.GREEN + "Adanız başarıyla silindi.");
             return true;
 
-        } catch (IOException | WorldEditException e) {
-            plugin.getLogger().severe(player.getName() + " için ada silinirken hata: " + e.getMessage());
-            e.printStackTrace();
-            player.sendMessage(ChatColor.RED + "Adanız silinirken bir hata oluştu.");
-            return false;
         } catch (Exception e) {
-            plugin.getLogger().severe(player.getName() + " için ada silinirken genel bir hata: " + e.getMessage());
-            e.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, player.getName() + " için ada silinirken genel hata: ", e);
             player.sendMessage(ChatColor.RED + "Adanız silinirken çok beklenmedik bir hata oluştu.");
             return false;
         }
     }
 
+    // ... (Kalan metodlar: resetIsland, playerHasIsland, getPastedSchematicRegion, vb. aynı kalacak) ...
     public boolean resetIsland(Player player) {
         Island island = getIsland(player);
         if (island == null) {
@@ -588,8 +665,6 @@ public class IslandManager {
             island.getNamedHomes().clear();
             island.setCurrentBiome(null);
             island.setWelcomeMessage(null);
-            // Biyomu da varsayılana (null) döndür
-            island.setCurrentBiome(null);
 
             RegionManager regionManager = getWGRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
@@ -599,14 +674,12 @@ public class IslandManager {
                     plugin.getLogger().info("'" + regionId + "' için bayraklar sıfırlanıyor (reset)...");
                     region.getFlags().clear();
 
-
-                    IslandFlagManager flagManager = plugin.getIslandFlagManager();
+                    com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager flagManager = plugin.getIslandFlagManager(); // Tam yoluyla belirttik
                     if (flagManager != null) {
                         flagManager.applyDefaultFlagsToRegion(region);
                     } else {
                         plugin.getLogger().severe("IslandFlagManager null! Varsayılan bayraklar uygulanamadı (reset).");
                     }
-
 
                     try {
                         regionManager.saveChanges();
@@ -618,7 +691,7 @@ public class IslandManager {
                     plugin.getLogger().warning(player.getName() + " için sıfırlanacak/güncellenecek WorldGuard bölgesi (" + regionId + ") bulunamadı.");
                 }
             }
-            saveIslandData(island); // Biyom dahil tüm değişiklikleri kaydet
+            saveIslandData(island);
             try { islandsConfig.save(islandsFile); } catch (IOException e) { plugin.getLogger().severe("Ada sıfırlandıktan sonra islands.yml kaydedilirken hata: " + e.getMessage());}
 
             teleportToIsland(player);
@@ -849,9 +922,6 @@ public class IslandManager {
     }
 
 
-
-
-
     public boolean setIslandName(Player player, String newName) {
         Island island = getIsland(player);
         if (island == null) {
@@ -1007,3 +1077,4 @@ public class IslandManager {
         @Override public Location getFixedSpawnLocation(World world, Random random) { return new Location(world, 0.0, 128, 0.0); }
     }
 }
+

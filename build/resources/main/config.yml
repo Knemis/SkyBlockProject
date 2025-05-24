@@ -6,7 +6,7 @@ island:
 
 
 logging:
-  detailed-flag-changes: false
+  detailed-flag-changes: true
 
 
 skyblock-world-name: "skyblock_world"

@@ -17,6 +17,8 @@ import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManage
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager; // EKLENDİ
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
+import org.bukkit.plugin.RegisteredServiceProvider; // EKLENDİ: LuckPerms için
+import net.luckperms.api.LuckPerms; // EKLENDİ: LuckPerms API
 
 import org.bukkit.World; // Bukkit World importu
 
@@ -30,10 +32,12 @@ public final class SkyBlockProject extends JavaPlugin {
     private IslandWelcomeManager islandWelcomeManager;
     private IslandFlagManager islandFlagManager;
 
+
     private int nextIslandX;
     // private final int islandSpacing = 300; // Artık config'den okunuyor
 
     private WorldGuard worldGuardInstance;
+    private LuckPerms luckPermsApi;
 
     @Override
     public void onEnable() {
@@ -65,6 +69,16 @@ public final class SkyBlockProject extends JavaPlugin {
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0);
 
         getLogger().info("SkyBlockProject Eklentisi Aktif Ediliyor...");
+
+
+        RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
+        if (provider != null) {
+            this.luckPermsApi = provider.getProvider();
+            getLogger().info("LuckPerms API başarıyla bağlandı.");
+        } else {
+            getLogger().warning("LuckPerms API bulunamadı! Ada sahibi bypass izinleri otomatik olarak ATANAMAYACAK.");
+            // this.luckPermsApi null kalacak, diğer kodlarda null kontrolü yapılmalı.
+        }
 
         if (!hookPlugin("WorldEdit") || !setupWorldGuard()) {
             getLogger().severe("Gerekli bağımlılıklar (WorldEdit/WorldGuard) bulunamadı veya aktif değil! Eklenti devre dışı bırakılıyor.");
@@ -169,5 +183,9 @@ public final class SkyBlockProject extends JavaPlugin {
 
     public IslandFlagManager getIslandFlagManager() {
         return islandFlagManager;
+    }
+
+    public LuckPerms getLuckPermsApi() {
+        return luckPermsApi;
     }
 }

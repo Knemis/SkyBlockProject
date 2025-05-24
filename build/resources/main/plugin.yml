@@ -8,6 +8,9 @@ depend: # Eklentinizin çalışması için KESİNLİKLE GEREKLİ olan eklentiler
   - WorldEdit
   - WorldGuard
 
+softdepend: # EKLENDİ
+  - LuckPerms
+
 commands:
   island:
     description: Temel Skyblock ada komutları.
