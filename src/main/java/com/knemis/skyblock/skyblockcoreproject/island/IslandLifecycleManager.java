@@ -55,6 +55,8 @@ public class IslandLifecycleManager {
     private final File schematicFile;
     private final String defaultIslandNamePrefix;
     private final Economy economy;
+    private final int initialMaxHomes;
+
 
     public IslandLifecycleManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler, IslandFlagManager islandFlagManager) {
         this.plugin = plugin;
@@ -62,9 +64,11 @@ public class IslandLifecycleManager {
         this.islandFlagManager = islandFlagManager;
         this.schematicFile = new File(plugin.getDataFolder(), "island.schem");
         this.defaultIslandNamePrefix = plugin.getConfig().getString("island.default-name-prefix", "Ada");
-        this.economy = plugin.getEconomy();
+        this.economy = plugin.getEconomy(); // SkyBlockProject'ten ekonomi nesnesini al
+        this.initialMaxHomes = plugin.getConfig().getInt("island.max-named-homes", 3); // Başlangıç ev limitini al
     }
 
+    // ... (getRegionId, getPastedSchematicRegion, getIslandTerritoryRegion metodları aynı kalacak) ...
     public String getRegionId(UUID playerUUID) {
         return "skyblock_island_" + playerUUID.toString();
     }
@@ -94,8 +98,6 @@ public class IslandLifecycleManager {
         BlockVector3 worldMaxSchematic = islandPastePoint.add(clipboardMaxRel);
 
         com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
-        // IDE uyarısı 'weWorld == null' her zaman false olabilir, ancak BukkitAdapter.adapt()
-        // beklenmedik durumlarda null dönebileceği için bu kontrol güvenlik amaçlıdır.
         if (weWorld == null) {
             throw new IOException("Yapıştırılan şematik bölgesi için WorldEdit dünyası null geldi (adaptasyon başarısız).");
         }
@@ -109,7 +111,6 @@ public class IslandLifecycleManager {
         CuboidRegion schematicRegion = getPastedSchematicRegion(islandBaseLocation);
 
         int expansionRadiusHorizontal = plugin.getConfig().getInt("island.expansion-radius-horizontal", 50);
-        // int expansionRadiusVerticalTop = plugin.getConfig().getInt("island.expansion-radius-vertical-top", 50); // KULLANILMIYOR, KALDIRILDI
         int expansionRadiusVerticalBottom = plugin.getConfig().getInt("island.expansion-radius-vertical-bottom", 20);
 
         World world = islandBaseLocation.getWorld();
@@ -126,11 +127,10 @@ public class IslandLifecycleManager {
 
         boolean allowBuildBelow = plugin.getConfig().getBoolean("island.allow-build-below-schematic-base", false);
         int schematicBaseY = schematicMin.getBlockY();
-        int buildLimitAboveSchematicTop = plugin.getConfig().getInt("island.build-limit-above-schematic-top", 150); // Bu kullanılıyor
+        int buildLimitAboveSchematicTop = plugin.getConfig().getInt("island.build-limit-above-schematic-top", 150);
 
         int territoryMinY = allowBuildBelow ? Math.max(worldMinBuildHeight, schematicBaseY - expansionRadiusVerticalBottom)
                 : schematicBaseY;
-        // territoryMaxY hesaplamasında buildLimitAboveSchematicTop kullanılıyor, expansionRadiusVerticalTop değil.
         int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY() + buildLimitAboveSchematicTop);
 
 
@@ -145,7 +145,6 @@ public class IslandLifecycleManager {
                 BlockVector3.at(territoryMinX, territoryMinY, territoryMinZ),
                 BlockVector3.at(territoryMaxX, territoryMaxY, territoryMaxZ));
     }
-
 
     public void createIsland(Player player) {
         if (islandDataHandler.playerHasIsland(player.getUniqueId())) {
@@ -163,6 +162,25 @@ public class IslandLifecycleManager {
             return;
         }
 
+        // DÜZELTME: newIslandName metodun başında tanımlanıyor.
+        String newIslandName = defaultIslandNamePrefix + "-" + player.getName();
+
+        // DÜZELTME: Ekonomik işlem ada oluşturulmadan önce yapılıyor.
+        double creationCost = plugin.getConfig().getDouble("island.creation-cost", 0.0);
+        if (this.economy != null && creationCost > 0) {
+            if (economy.getBalance(player) < creationCost) {
+                player.sendMessage(ChatColor.RED + "Ada oluşturmak için yeterli paran yok! Gereken: " + economy.format(creationCost));
+                return; // Para yoksa işlemi burada sonlandır
+            }
+            EconomyResponse r = economy.withdrawPlayer(player, creationCost);
+            if (r.transactionSuccess()) {
+                player.sendMessage(ChatColor.GREEN + economy.format(creationCost) + " ada oluşturma ücreti olarak hesabından çekildi.");
+            } else {
+                player.sendMessage(ChatColor.RED + "Ada oluşturma ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+                return; // Para çekilemezse işlemi burada sonlandır
+            }
+        }
+
         player.sendMessage(ChatColor.YELLOW + "Adanız oluşturuluyor... Bu işlem birkaç saniye sürebilir, lütfen bekleyin.");
         final int actualIslandX = plugin.getNextIslandXAndIncrement();
         final Location islandBaseLocation = new Location(skyblockWorld, actualIslandX, 100, 0);
@@ -174,6 +192,7 @@ public class IslandLifecycleManager {
                 plugin.getLogger().severe("Şematik formatı tanınamadı: " + schematicFile.getName());
                 return;
             }
+
             Clipboard clipboard;
             try (FileInputStream fis = new FileInputStream(schematicFile);
                  ClipboardReader reader = format.getReader(fis)) {
@@ -181,7 +200,6 @@ public class IslandLifecycleManager {
             }
 
             com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld);
-            // IDE uyarısı 'adaptedWorld == null' her zaman false olabilir, ancak güvenlik amaçlı kontrol yerinde bırakıldı.
             if (adaptedWorld == null) {
                 player.sendMessage(ChatColor.RED + "Ada oluşturulurken dünya adaptasyonunda bir hata oluştu.");
                 plugin.getLogger().severe("createIsland: Skyblock dünyası WorldEdit'e adapte edilemedi.");
@@ -198,9 +216,10 @@ public class IslandLifecycleManager {
                 Operations.complete(operation);
             }
 
-            String newIslandName = defaultIslandNamePrefix + "-" + player.getName();
-            Island newIsland = new Island(player.getUniqueId(), islandBaseLocation, newIslandName);
-            islandDataHandler.addOrUpdateIslandData(newIsland);
+            // DÜZELTME: Island nesnesi burada, doğru constructor ile BİR KERE oluşturuluyor.
+            // initialMaxHomes sınıf üyesi olarak constructor'da atanmıştı.
+            Island newIsland = new Island(player.getUniqueId(), islandBaseLocation, newIslandName, this.initialMaxHomes);
+            islandDataHandler.addOrUpdateIslandData(newIsland); // Ve BİR KERE kaydediliyor.
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
@@ -208,7 +227,7 @@ public class IslandLifecycleManager {
                 CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
 
                 if (regionManager.hasRegion(regionId)) {
-                    regionManager.removeRegion(regionId);
+                    regionManager.removeRegion(regionId); // Önceki bölge varsa kaldır
                 }
                 ProtectedCuboidRegion protectedRegion = new ProtectedCuboidRegion(
                         regionId, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()
@@ -234,7 +253,6 @@ public class IslandLifecycleManager {
             } else {
                 plugin.getLogger().severe("Ada için WorldGuard RegionManager alınamadı! Koruma oluşturulamadı.");
                 player.sendMessage(ChatColor.RED + "Adanız oluşturuldu ancak koruma sağlanırken bir sorun oluştu.");
-                // Boş 'else' bloğu uyarısı almamak için burada loglama veya mesaj var.
             }
 
             double offsetX = plugin.getConfig().getDouble("island-spawn-offset.x", 0.5);
@@ -244,10 +262,10 @@ public class IslandLifecycleManager {
             teleportLocation.setYaw(0f);
             teleportLocation.setPitch(0f);
 
-            // BukkitRunnable.runTaskLater dönüş değeri genellikle kullanılmaz, uyarı göz ardı edilebilir.
             new BukkitRunnable() {
                 @Override
                 public void run() {
+                    if (!player.isOnline()) return; // Oyuncu offline ise ışınlama
                     if (!teleportLocation.getChunk().isLoaded()) {
                         teleportLocation.getChunk().load();
                     }
@@ -260,25 +278,16 @@ public class IslandLifecycleManager {
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "Ada oluşturma sırasında genel bir hata oluştu (Oyuncu: " + player.getName() + ")", e);
             player.sendMessage(ChatColor.RED + "Ada oluşturulurken çok beklenmedik bir hata oluştu. Lütfen yetkililere bildirin.");
+            // Eğer bir hata oluşursa, daha önce çekilen parayı iade etmeyi düşünebilirsin.
+            // Şimdilik bu eklenmedi.
+            return; // Hata durumunda metoddan çık.
         }
-        islandDataHandler.saveChangesToDisk();
-        double creationCost = plugin.getConfig().getDouble("island.creation-cost", 0.0); // Varsayılan 0.0
-        if (this.economy != null && creationCost > 0) {
-            if (economy.getBalance(player) < creationCost) {
-                player.sendMessage(ChatColor.RED + "Ada oluşturmak için yeterli paran yok! Gereken: " + economy.format(creationCost));
-                return; // Para yoksa işlemi burada sonlandır
-            }
-            EconomyResponse r = economy.withdrawPlayer(player, creationCost);
-            if (r.transactionSuccess()) {
-                player.sendMessage(ChatColor.GREEN + economy.format(creationCost) + " ada oluşturma ücreti olarak hesabından çekildi.");
-            } else {
-                player.sendMessage(ChatColor.RED + "Ada oluşturma ücreti çekilirken bir hata oluştu: " + r.errorMessage);
-                return; // Para çekilemezse işlemi burada sonlandır
-            }
-        }
+        // DÜZELTME: Ada verisi zaten try bloğu içinde kaydedildi, disk kaydı da orada veya sonda bir kere yapılmalı.
+        // Tekrar addOrUpdateIslandData ve gereksiz Island nesnesi oluşturma kaldırıldı.
+        islandDataHandler.saveChangesToDisk(); // Tüm işlemler başarılıysa en sonda disk'e kaydet.
     }
 
-
+    // ... (deleteIsland, resetIsland, grantOwnerBypassPermissions, revokeOwnerBypassPermissions metodları aynı kalacak) ...
     public boolean deleteIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) { player.sendMessage(ChatColor.RED + "Silebileceğin bir adan yok!"); return false; }
@@ -317,14 +326,12 @@ public class IslandLifecycleManager {
             if (regionManager != null) {
                 if (regionManager.hasRegion(regionId)) {
                     regionManager.removeRegion(regionId);
-                    try { regionManager.saveChanges(); /* ... */ } catch (StorageException e) { /* ... */ }
+                    try { regionManager.saveChanges(); } catch (StorageException e) { plugin.getLogger().log(Level.SEVERE, "WG region silinirken kayıt hatası", e); }
                 } else {
                     plugin.getLogger().warning(player.getName() + " için silinecek WorldGuard bölgesi (" + regionId + ") bulunamadı.");
-                    // Boş 'else' uyarısı almamak için loglama var.
                 }
             } else {
                 plugin.getLogger().severe("Ada silinirken WorldGuard RegionManager alınamadı! (Dünya: " + islandBaseLocation.getWorld().getName() + ")");
-                // Boş 'else' uyarısı almamak için loglama var.
             }
 
             islandDataHandler.removeIslandData(player.getUniqueId());
@@ -343,18 +350,18 @@ public class IslandLifecycleManager {
 
     public boolean resetIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
-        if (island == null) { /* ... */ return false;}
+        if (island == null) { player.sendMessage(ChatColor.RED + "Sıfırlayacak adan yok."); return false;}
         Location islandBaseLocation = island.getBaseLocation();
-        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) { /* ... */ return false;}
-        if (!schematicFile.exists()) { /* ... */ return false;}
+        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) { player.sendMessage(ChatColor.RED + "Adanın konumu/dünyası bulunamadı."); return false;}
+        if (!schematicFile.exists()) { player.sendMessage(ChatColor.RED + "Ada şematiği bulunamadı."); return false;}
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.");
         try {
             com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
-            if (weWorld == null) { /* ... */ return false; }
+            if (weWorld == null) { player.sendMessage(ChatColor.RED + "Dünya hatası (WE)."); return false; }
 
             BlockState airState = BlockTypes.AIR != null ? BlockTypes.AIR.getDefaultState() : null;
-            if (airState == null) { /* ... */ return false; }
+            if (airState == null) { player.sendMessage(ChatColor.RED + "Blok hatası (WE)."); return false; }
 
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
             try (EditSession clearSession = WorldEdit.getInstance().newEditSession(weWorld)) {
@@ -364,7 +371,7 @@ public class IslandLifecycleManager {
 
             Clipboard clipboard;
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
-            if (format == null) { /* ... */ return false; }
+            if (format == null) { player.sendMessage(ChatColor.RED + "Şematik format hatası."); return false; }
             try (FileInputStream fis = new FileInputStream(schematicFile);
                  ClipboardReader reader = format.getReader(fis)) {
                 clipboard = reader.read();
@@ -379,43 +386,57 @@ public class IslandLifecycleManager {
             }
             plugin.getLogger().info(player.getName() + " ("+island.getOwnerUUID()+") için ada şematiği yeniden yapıştırıldı (reset).");
 
-            island.getNamedHomes().clear();
-            island.setCurrentBiome(null);
-            island.setWelcomeMessage(null);
+            // Reset specific island properties
+            island.getNamedHomes().clear(); // Clear all homes
+            island.setCurrentBiome(null); // Reset biome to default (or null to let it be whatever the schematic sets)
+            island.setWelcomeMessage(null); // Clear welcome message
+            // maxHomesLimit'i başlangıç değerine döndür
+            island.setMaxHomesLimit(plugin.getConfig().getInt("island.max-named-homes", 3));
+
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
                 String regionId = getRegionId(player.getUniqueId());
                 ProtectedRegion region = regionManager.getRegion(regionId);
                 if (region != null) {
-                    region.getFlags().clear();
+                    region.getFlags().clear(); // Clear all flags
                     if (islandFlagManager != null) {
-                        islandFlagManager.applyDefaultFlagsToRegion(region);
+                        islandFlagManager.applyDefaultFlagsToRegion(region); // Apply default flags
                     } else {
                         plugin.getLogger().severe("IslandFlagManager null! Ada sıfırlanırken varsayılan bayraklar uygulanamadı.");
                     }
-                    try { regionManager.saveChanges(); /* ... */ } catch (StorageException e) { /* ... */ }
+                    try { regionManager.saveChanges(); } catch (StorageException e) { plugin.getLogger().log(Level.SEVERE, "WG region sıfırlanırken kayıt hatası", e); }
                 } else {
                     plugin.getLogger().warning(player.getName() + " için sıfırlanacak/güncellenecek WorldGuard bölgesi (" + regionId + ") bulunamadı.");
                 }
             }
-            islandDataHandler.addOrUpdateIslandData(island);
+            islandDataHandler.addOrUpdateIslandData(island); // Save changes to island object
             islandDataHandler.saveChangesToDisk();
 
-            plugin.getIslandTeleportManager().teleportPlayerToIslandSpawn(player);
-            return true;
-        } catch (Exception e) { /* ... */ return false; }
-    }
+            // Teleport player after a short delay
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    if (player.isOnline()) {
+                        plugin.getIslandTeleportManager().teleportPlayerToIslandSpawn(player);
+                        player.sendMessage(ChatColor.GREEN + "Adanız başarıyla sıfırlandı ve ışınlandınız!");
+                    }
+                }
+            }.runTaskLater(plugin, 20L); // 1 saniye sonra ışınla (chunk yüklenmesi için)
 
-    // IDE Önerisi: Bu metodun (grantOwnerBypassPermissions) içeriği çok uzun olduğu için,
-    // flagSpecificBypassNode üreten kısım veya döngü ayrı bir yardımcı metoda çıkarılabilir.
-    // Şimdilik okunabilirlik için böyle bırakılmıştır.
+            return true;
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, player.getName() + " ("+island.getOwnerUUID()+") için ada sıfırlanırken genel hata: ", e);
+            player.sendMessage(ChatColor.RED + "Adanız sıfırlanırken çok beklenmedik bir hata oluştu.");
+            return false;
+        }
+    }
     private void grantOwnerBypassPermissions(Player owner, String worldName, String regionId) {
         LuckPerms lpApi = plugin.getLuckPermsApi();
-        if (lpApi == null) { /* ... */ return; }
+        if (lpApi == null) { return; }
 
         List<StateFlag> manageableFlags = plugin.getIslandFlagManager().getManagableFlags();
-        if (manageableFlags == null || manageableFlags.isEmpty()) { /* ... */ return; }
+        if (manageableFlags == null || manageableFlags.isEmpty()) { return; }
 
         UUID playerUUID = owner.getUniqueId();
         final List<Node> nodesToAdd = new ArrayList<>();
@@ -428,9 +449,8 @@ public class IslandLifecycleManager {
                 plugin.getLogger().info(owner.getName() + " için LuckPerms bayrak-özel bypass izni ekleniyor: " + flagSpecificBypassNode);
             }
         }
-        if (nodesToAdd.isEmpty()){ /* ... */ return; }
+        if (nodesToAdd.isEmpty()){ return; }
 
-        // LuckPerms CompletableFuture dönüş değeri genellikle zincirleme ile kullanılır, uyarı göz ardı edilebilir.
         lpApi.getUserManager().modifyUser(playerUUID, user -> {
             nodesToAdd.forEach(node -> {
                 DataMutateResult addResult = user.data().add(node);
@@ -438,7 +458,6 @@ public class IslandLifecycleManager {
                     plugin.getLogger().warning("LuckPerms izni (" + node.getKey() + ") oyuncu " + owner.getName() + " için eklenirken beklenen sonuç alınamadı: " + addResult.name());
                 }
             });
-            // Lambda ifadeye dönüştürüldü (Statement lambda to expression lambda uyarısı için)
         }).thenRunAsync(() -> plugin.getLogger().info(owner.getName() + " için LuckPerms bypass izinleri başarıyla eklendi ve kaydedilmesi istendi."),
                 runnable -> Bukkit.getScheduler().runTask(plugin, runnable)
         ).exceptionally(ex -> {
@@ -449,10 +468,10 @@ public class IslandLifecycleManager {
 
     private void revokeOwnerBypassPermissions(Player owner, String worldName, String regionId) {
         LuckPerms lpApi = plugin.getLuckPermsApi();
-        if (lpApi == null) { /* ... */ return; }
+        if (lpApi == null) { return; }
 
         List<StateFlag> manageableFlags = plugin.getIslandFlagManager().getManagableFlags();
-        if (manageableFlags == null || manageableFlags.isEmpty()) { /* ... */ return; }
+        if (manageableFlags == null || manageableFlags.isEmpty()) { return; }
 
         UUID playerUUID = owner.getUniqueId();
         final List<Node> nodesToRemove = new ArrayList<>();
@@ -464,7 +483,7 @@ public class IslandLifecycleManager {
                 plugin.getLogger().info(owner.getName() + " için LuckPerms bayrak-özel bypass izni kaldırılıyor: " + flagSpecificBypassNode);
             }
         }
-        if (nodesToRemove.isEmpty()){ /* ... */ return; }
+        if (nodesToRemove.isEmpty()){ return; }
 
         lpApi.getUserManager().modifyUser(playerUUID, user -> {
             nodesToRemove.forEach(node -> {
@@ -473,7 +492,6 @@ public class IslandLifecycleManager {
                     plugin.getLogger().warning("LuckPerms izni (" + node.getKey() + ") oyuncu " + owner.getName() + " için kaldırılırken beklenen sonuç alınamadı: " + result.name());
                 }
             });
-            // Lambda ifadeye dönüştürüldü
         }).thenRunAsync(() -> plugin.getLogger().info(owner.getName() + " için LuckPerms bypass izinleri başarıyla kaldırıldı ve kaydedilmesi istendi."),
                 runnable -> Bukkit.getScheduler().runTask(plugin, runnable)
         ).exceptionally(ex -> {

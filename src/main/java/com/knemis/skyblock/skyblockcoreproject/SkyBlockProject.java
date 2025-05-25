@@ -74,6 +74,10 @@ public final class SkyBlockProject extends JavaPlugin {
         getConfig().addDefault("commands.sethome.cost", 50.0);
         getConfig().addDefault("commands.biome_set.cost", 250.0); // Biyom değiştirme maliyeti
         getConfig().addDefault("commands.settings_name.cost", 100.0); // Ada ismi değiştirme maliyeti
+        getConfig().addDefault("island.max-named-homes", 3); // Yeni adalar için BAŞLANGIÇ ev sayısı
+        getConfig().addDefault("island.upgrades.homes.increment_amount", 1); // Her yükseltmede kaç ev artacağı
+        getConfig().addDefault("island.upgrades.homes.cost_per_upgrade", 2000.0); // Her yükseltmenin maliyeti
+        getConfig().addDefault("island.upgrades.homes.max_possible_total_homes", 10); // Ulaşılabilecek maksimum ev sayısı (sunucu geneli limit)
         saveConfig(); // [cite: 11]
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0); // [cite: 11]

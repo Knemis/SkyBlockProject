@@ -164,6 +164,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             case "welcome":
                 handleWelcomeCommand(player, args);
                 break;
+            case "upgrade": // YENİ
+                handleUpgradeCommand(player, args);
+                break;
             default:
                 player.sendMessage(ChatColor.RED + "Bilinmeyen alt komut: " + subCommand);
                 sendHelpMessage(player);
@@ -191,6 +194,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.YELLOW + "/island team add <oyuncu>" + ChatColor.GRAY + " - Adana üye ekle.");
         player.sendMessage(ChatColor.YELLOW + "/island team remove <oyuncu>" + ChatColor.GRAY + " - Adadan üye çıkar.");
         player.sendMessage(ChatColor.YELLOW + "/island team list" + ChatColor.GRAY + " - Ada üyelerini listele.");
+        player.sendMessage(ChatColor.YELLOW + "/island upgrade homes" + ChatColor.GRAY + " - Maksimum ev sayını artır.");
         player.sendMessage(ChatColor.YELLOW + "/island visit <oyuncu_adı>" + ChatColor.GRAY + " - Başka bir oyuncunun adasını ziyaret et.");
         player.sendMessage(ChatColor.YELLOW + "/island reset" + ChatColor.GRAY + " - Adanı sıfırla (onay gerekir).");
         player.sendMessage(ChatColor.YELLOW + "/island delete" + ChatColor.GRAY + " - Adanı sil (onay gerekir).");
@@ -222,28 +226,27 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleHomeCommand(Player player, String[] args) {
-        // ... (metod aynı) ...
-        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
+        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId()); //
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Önce bir ada oluşturmalısın: " + ChatColor.GOLD + "/island create");
+            player.sendMessage(ChatColor.RED + "Önce bir ada oluşturmalısın: " + ChatColor.GOLD + "/island create"); //
             return;
         }
-        if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("spawn"))) {
-            this.islandTeleportManager.teleportPlayerToIslandSpawn(player);
+        if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("spawn"))) { //
+            this.islandTeleportManager.teleportPlayerToIslandSpawn(player); //
         } else if (args.length == 2) {
-            if (args[1].equalsIgnoreCase("list")) {
-                List<String> homes = island.getHomeNames();
-                int maxHomes = plugin.getConfig().getInt("island.max-named-homes", 5);
-                if (homes.isEmpty()) {
-                    player.sendMessage(ChatColor.YELLOW + "Ayarlanmış hiç ev noktan yok. " + ChatColor.GRAY + "(Maks: " + maxHomes + ")");
+            if (args[1].equalsIgnoreCase("list")) { //
+                List<String> homes = island.getHomeNames(); //
+                int currentIslandMaxHomes = island.getMaxHomesLimit(); // GÜNCELLENDİ: Adaya özel limitten al
+                if (homes.isEmpty()) { //
+                    player.sendMessage(ChatColor.YELLOW + "Ayarlanmış hiç ev noktan yok. " + ChatColor.GRAY + "(Maks: " + currentIslandMaxHomes + ")"); //
                 } else {
-                    player.sendMessage(ChatColor.GREEN + "Ev Noktaların (" + homes.size() + "/" + maxHomes + "): " + ChatColor.GOLD + String.join(ChatColor.GRAY + ", " + ChatColor.GOLD, homes));
+                    player.sendMessage(ChatColor.GREEN + "Ev Noktaların (" + homes.size() + "/" + currentIslandMaxHomes + "): " + ChatColor.GOLD + String.join(ChatColor.GRAY + ", " + ChatColor.GOLD, homes)); //
                 }
             } else {
-                this.islandTeleportManager.teleportPlayerToNamedHome(player, args[1]);
+                this.islandTeleportManager.teleportPlayerToNamedHome(player, args[1]); //
             }
         } else {
-            player.sendMessage(ChatColor.RED + "Kullanım: /island home [isim|list|spawn]");
+            player.sendMessage(ChatColor.RED + "Kullanım: /island home [isim|list|spawn]"); //
         }
     }
 
@@ -280,9 +283,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
 
         Map<String, Location> homes = island.getNamedHomes();
-        int maxHomes = plugin.getConfig().getInt("island.max-named-homes", 5);
-        if (!homes.containsKey(homeNameToSet.toLowerCase()) && homes.size() >= maxHomes) {
-            player.sendMessage(ChatColor.RED + "Maksimum ev sayısına (" + maxHomes + ") ulaştın. Yeni bir ev ayarlamak için önce birini silmelisin.");
+        int currentIslandMaxHomes = island.getMaxHomesLimit();
+        if (!homes.containsKey(homeNameToSet.toLowerCase()) && homes.size() >= currentIslandMaxHomes) {
+            // DÜZELTME: Mesajda da 'currentIslandMaxHomes' kullanılıyor.
+            player.sendMessage(ChatColor.RED + "Maksimum ev sayısına (" + currentIslandMaxHomes + ") ulaştın. Yeni bir ev ayarlamak için önce birini silmelisin veya /island upgrade homes ile limiti artırmalısın.");
             return;
         }
 
@@ -303,6 +307,68 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.GREEN + "'" + homeNameToSet + "' adlı ev noktan ayarlandı!");
     }
 
+    // YENİ METOD: handleUpgradeCommand
+    private void handleUpgradeCommand(Player player, String[] args) {
+        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Yükseltme yapabileceğin bir adan yok!");
+            return;
+        }
+
+        if (args.length < 2 || !args[1].equalsIgnoreCase("homes")) {
+            player.sendMessage(ChatColor.RED + "Kullanım: /island upgrade homes");
+            player.sendMessage(ChatColor.YELLOW + "Bu komut, adanızdaki maksimum ev sayısını artırmanızı sağlar.");
+            // Mevcut durumu ve sonraki yükseltme maliyetini göstermek iyi olabilir
+            int currentLimit = island.getMaxHomesLimit();
+            int maxPossible = plugin.getConfig().getInt("island.upgrades.homes.max_possible_total_homes", 10);
+            double costPerUpgrade = plugin.getConfig().getDouble("island.upgrades.homes.cost_per_upgrade", 2000.0);
+            int incrementAmount = plugin.getConfig().getInt("island.upgrades.homes.increment_amount", 1);
+
+            player.sendMessage(ChatColor.AQUA + "Mevcut maksimum ev limitin: " + ChatColor.GOLD + currentLimit);
+            if (currentLimit < maxPossible) {
+                player.sendMessage(ChatColor.AQUA + "Sonraki yükseltme ile limitin " + ChatColor.GOLD + (currentLimit + incrementAmount) + ChatColor.AQUA + " olacak.");
+                player.sendMessage(ChatColor.AQUA + "Maliyet: " + ChatColor.GOLD + economy.format(costPerUpgrade));
+            } else {
+                player.sendMessage(ChatColor.GREEN + "Maksimum ev limitine zaten ulaşmışsın!");
+            }
+            return;
+        }
+
+        // Yükseltme işlemi
+        if (args[1].equalsIgnoreCase("homes")) {
+            int currentLimit = island.getMaxHomesLimit();
+            int incrementAmount = plugin.getConfig().getInt("island.upgrades.homes.increment_amount", 1);
+            double costPerUpgrade = plugin.getConfig().getDouble("island.upgrades.homes.cost_per_upgrade", 2000.0);
+            int maxPossibleTotalHomes = plugin.getConfig().getInt("island.upgrades.homes.max_possible_total_homes", 10);
+
+            if (currentLimit >= maxPossibleTotalHomes) {
+                player.sendMessage(ChatColor.RED + "Zaten ulaşabileceğin maksimum ev limitine (" + maxPossibleTotalHomes + ") sahipsin!");
+                return;
+            }
+
+            if (this.economy == null) {
+                player.sendMessage(ChatColor.RED + "Ekonomi sistemi aktif değil. Yükseltme yapılamıyor.");
+                return;
+            }
+
+            if (economy.getBalance(player) < costPerUpgrade) {
+                player.sendMessage(ChatColor.RED + "Ev limitini yükseltmek için yeterli paran yok! Gereken: " + economy.format(costPerUpgrade));
+                return;
+            }
+
+            EconomyResponse r = economy.withdrawPlayer(player, costPerUpgrade);
+            if (r.transactionSuccess()) {
+                int newLimit = Math.min(currentLimit + incrementAmount, maxPossibleTotalHomes); // Limitin maxPossible'ı geçmediğinden emin ol
+                island.setMaxHomesLimit(newLimit);
+                islandDataHandler.addOrUpdateIslandData(island);
+                islandDataHandler.saveChangesToDisk();
+                player.sendMessage(ChatColor.GREEN + "Tebrikler! Maksimum ev limitin " + ChatColor.GOLD + newLimit + ChatColor.GREEN + " olarak yükseltildi.");
+                player.sendMessage(ChatColor.GRAY + economy.format(costPerUpgrade) + " hesabından çekildi.");
+            } else {
+                player.sendMessage(ChatColor.RED + "Yükseltme ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+            }
+        }
+    }
     private void handleDelHomeCommand(Player player, String[] args) {
         // ... (metod aynı) ...
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
@@ -404,6 +470,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     private void handleInfoCommand(Player player, String[] args) {
         Island islandToInfo;
         String islandOwnerName;
+        OfflinePlayer ownerToDisplay; // Ada sahibini göstermek için
+
 
         if (args.length == 1) {
             islandToInfo = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
@@ -765,8 +833,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
         Player player = (Player) sender;
         List<String> completions = new ArrayList<>();
-        List<String> subCommands = Arrays.asList("create", "go", "sethome", "home", "delhome", "delete", "reset", "flags", "info", "settings", "team", "visit", "help", "biome", "welcome");
-
+        List<String> subCommands = Arrays.asList("create", "go", "sethome", "home", "delhome", "delete", "reset", "flags", "info", "settings", "team", "visit", "help", "biome", "welcome", "upgrade"); // "upgrade" eklendi
         if (args.length == 1) {
             String arg0Lower = args[0].toLowerCase();
             for (String sc : subCommands) {
@@ -829,6 +896,11 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                     if (action.startsWith(arg1Lower)) {
                         completions.add(action);
                     }
+                }
+            }
+            if (subCmd.equals("upgrade")) { // YENİ
+                if ("homes".startsWith(arg1Lower)) {
+                    completions.add("homes");
                 }
             }
         }

@@ -17,25 +17,25 @@ public class Island {
 
     private final UUID ownerUUID;
     private String islandName;
-    private final Location baseLocation; // final yapıldı, setBaseLocation kaldırıldı
+    private final Location baseLocation;
     private final Instant creationDate;
     private boolean isPublic;
     private boolean boundariesEnforced;
 
-    // Bu alanlar final yapıldı
     private final Set<UUID> members;
-    // private final Set<UUID> bannedPlayers; // Kullanılmadığı için kaldırıldı
     private final Map<String, Location> namedHomes;
 
     private String welcomeMessage;
     private String currentBiome;
+    private int maxHomesLimit; // Adaya özel maksimum ev limiti
 
     private transient World world;
 
     // Constructor for creating a new island
-    public Island(UUID ownerUUID, Location baseLocation, String defaultIslandName) {
+    // DÜZELTME: initialMaxHomes parametresi eklendi
+    public Island(UUID ownerUUID, Location baseLocation, String defaultIslandName, int initialMaxHomes) {
         this.ownerUUID = ownerUUID;
-        this.baseLocation = baseLocation; // final olduğu için burada atanmalı
+        this.baseLocation = baseLocation;
         if (this.baseLocation != null) {
             this.world = this.baseLocation.getWorld();
         }
@@ -44,21 +44,22 @@ public class Island {
         this.isPublic = false;
         this.boundariesEnforced = true;
         this.members = new HashSet<>();
-        // this.bannedPlayers = new HashSet<>(); // Kaldırıldı
         this.namedHomes = new HashMap<>();
         this.currentBiome = null;
         this.welcomeMessage = null;
+        this.maxHomesLimit = initialMaxHomes; // Parametreden gelen değer atandı
     }
 
     // Constructor for loading an island from data source
-    // bannedPlayers parametresi kaldırıldı
+    // Bu constructor zaten doğruydu, maxHomesLimit parametresini alıyordu.
     public Island(UUID ownerUUID, String islandName, Location baseLocation, long creationTimestamp,
                   boolean isPublic, boolean boundariesEnforced,
-                  Set<UUID> members, /* Set<UUID> bannedPlayers, */ Map<String, Location> namedHomes,
-                  String currentBiome, String welcomeMessage) {
+                  Set<UUID> members, Map<String, Location> namedHomes,
+                  String currentBiome, String welcomeMessage,
+                  int maxHomesLimit) { // bannedPlayers parametresi kaldırılmıştı.
         this.ownerUUID = ownerUUID;
         this.islandName = islandName;
-        this.baseLocation = baseLocation; // final olduğu için burada atanmalı
+        this.baseLocation = baseLocation;
         if (this.baseLocation != null && this.baseLocation.getWorld() != null) {
             this.world = this.baseLocation.getWorld();
         }
@@ -66,11 +67,13 @@ public class Island {
         this.isPublic = isPublic;
         this.boundariesEnforced = boundariesEnforced;
         this.members = (members != null) ? members : new HashSet<>();
-        // this.bannedPlayers = (bannedPlayers != null) ? bannedPlayers : new HashSet<>(); // Kaldırıldı
         this.namedHomes = (namedHomes != null) ? namedHomes : new HashMap<>();
         this.currentBiome = currentBiome;
         this.welcomeMessage = welcomeMessage;
+        this.maxHomesLimit = maxHomesLimit;
     }
+
+    // ... (getOwnerUUID() ve diğer getter/setter'lar aynı kalacak) ...
 
     public UUID getOwnerUUID() {
         return ownerUUID;
@@ -87,15 +90,6 @@ public class Island {
     public Location getBaseLocation() {
         return baseLocation;
     }
-
-    // public void setBaseLocation(Location baseLocation) { // Kullanılmadığı için kaldırıldı
-    // this.baseLocation = baseLocation;
-    // if (this.baseLocation != null) {
-    // this.world = this.baseLocation.getWorld();
-    // } else {
-    // this.world = null;
-    // }
-    // }
 
     public World getWorld() {
         if (world == null && baseLocation != null) {
@@ -147,26 +141,6 @@ public class Island {
         return members.contains(playerUUID);
     }
 
-    // Kullanılmadığı için kaldırıldı
-    // public Set<UUID> getBannedPlayers() {
-    // return bannedPlayers;
-    // }
-
-    // public boolean banPlayer(UUID playerUUID) {
-    // if (playerUUID == null || playerUUID.equals(ownerUUID) || isMember(playerUUID)) return false;
-    // return bannedPlayers.add(playerUUID);
-    // }
-
-    // public boolean unbanPlayer(UUID playerUUID) {
-    // if (playerUUID == null) return false;
-    // return bannedPlayers.remove(playerUUID);
-    // }
-
-    // public boolean isBanned(UUID playerUUID) {
-    // if (playerUUID == null) return false;
-    // return bannedPlayers.contains(playerUUID);
-    // }
-
     public Map<String, Location> getNamedHomes() {
         return namedHomes;
     }
@@ -176,14 +150,19 @@ public class Island {
         return namedHomes.get(homeName.toLowerCase());
     }
 
-    // Dönüş tipi void olarak değiştirildi
     public void setNamedHome(String homeName, Location location) {
         if (homeName == null || homeName.trim().isEmpty() || location == null) {
-            // İsteğe bağlı: Hatalı giriş için bir log atılabilir veya exception fırlatılabilir.
-            // Şimdilik sessizce başarısız oluyor.
             return;
         }
         namedHomes.put(homeName.toLowerCase(), location.clone());
+    }
+
+    public int getMaxHomesLimit() {
+        return maxHomesLimit;
+    }
+
+    public void setMaxHomesLimit(int maxHomesLimit) {
+        this.maxHomesLimit = maxHomesLimit;
     }
 
     public boolean deleteNamedHome(String homeName) {
@@ -218,10 +197,6 @@ public class Island {
         if (playerUUID.equals(ownerUUID) || isMember(playerUUID)) {
             return true;
         }
-        // bannedPlayers kaldırıldığı için isBanned kontrolü de kaldırıldı.
-        // if (isBanned(playerUUID)) {
-        // return false;
-        // }
         return isPublic;
     }
 }

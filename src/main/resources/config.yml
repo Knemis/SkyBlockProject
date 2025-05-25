@@ -1,7 +1,15 @@
 island:
-  welcome-message:
-    max-length: 100
-    creation-cost: 0.0
+
+ welcome-message:
+ max-length: 100
+ max-named-homes: 3
+ creation-cost: 0.0
+ upgrades: # YENİ BÖLÜM
+   homes:
+    increment_amount: 1            # Her yükseltmede ev limitine eklenecek miktar
+    cost_per_upgrade: 2000.0       # Her bir yükseltmenin maliyeti
+    max_possible_total_homes: 10
+
 
 commands: # Yeni bölüm
   sethome:

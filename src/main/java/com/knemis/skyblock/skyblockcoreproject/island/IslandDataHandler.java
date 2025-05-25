@@ -37,7 +37,7 @@ public class IslandDataHandler {
     private final Map<UUID, Island> islandsData;
     private final String defaultIslandNamePrefix;
     private World skyblockWorld;
-
+    private final int defaultInitialMaxHomes;
     private boolean dataChangedSinceLastSave = false;
 
     public IslandDataHandler(SkyBlockProject plugin) {
@@ -45,7 +45,7 @@ public class IslandDataHandler {
         this.islandsFile = new File(plugin.getDataFolder(), "islands.yml");
         this.islandsData = new HashMap<>();
         this.defaultIslandNamePrefix = plugin.getConfig().getString("island.default-name-prefix", "Ada");
-
+        this.defaultInitialMaxHomes = plugin.getConfig().getInt("island.max-named-homes", 3); // YENİ
         if (!plugin.getDataFolder().exists()) {
             if (!plugin.getDataFolder().mkdirs()) {
                 plugin.getLogger().severe("Plugin veri klasörü oluşturulamadı: " + plugin.getDataFolder().getPath());
@@ -165,6 +165,7 @@ public class IslandDataHandler {
             boolean boundariesEnforced = islandsConfig.getBoolean(path + "boundariesEnforced", true);
             String currentBiome = islandsConfig.getString(path + "currentBiome", null);
             String welcomeMessage = islandsConfig.getString(path + "welcomeMessage", "");
+            int maxHomesLimit = islandsConfig.getInt(path + "maxHomesLimit", defaultInitialMaxHomes); // YENİ: maxHomesLimit yükle
 
             Set<UUID> members = new HashSet<>();
             islandsConfig.getStringList(path + "members").forEach(memberStr -> {
@@ -201,10 +202,9 @@ public class IslandDataHandler {
                 }
             }
 
-            // DÜZELTME: Island constructor çağrısından bannedPlayers argümanı kaldırıldı.
             Island island = new Island(ownerUUID, islandName, baseLocation, creationTimestamp,
-                    isPublic, boundariesEnforced, members, /* bannedPlayers, */ namedHomes,
-                    currentBiome, welcomeMessage);
+                    isPublic, boundariesEnforced, members, namedHomes,
+                    currentBiome, welcomeMessage, maxHomesLimit); // maxHomesLimit constructor'a eklendi
             islandsData.put(ownerUUID, island);
             successfullyLoaded++;
         }
@@ -245,6 +245,7 @@ public class IslandDataHandler {
         islandsConfig.set(path + "boundariesEnforced", island.areBoundariesEnforced());
         islandsConfig.set(path + "currentBiome", island.getCurrentBiome());
         islandsConfig.set(path + "welcomeMessage", island.getWelcomeMessage());
+        islandsConfig.set(path + "maxHomesLimit", island.getMaxHomesLimit()); // YENİ: maxHomesLimit kaydet
 
         Location baseLoc = island.getBaseLocation();
         if (baseLoc != null && baseLoc.getWorld() != null) {
