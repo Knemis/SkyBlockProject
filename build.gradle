@@ -69,3 +69,10 @@ processResources {
         expand props
     }
 }
+
+configurations.all {
+    resolutionStrategy {
+        force 'com.google.guava:guava:21.0'
+        force 'com.google.code.gson:gson:2.8.0'
+    }
+}
