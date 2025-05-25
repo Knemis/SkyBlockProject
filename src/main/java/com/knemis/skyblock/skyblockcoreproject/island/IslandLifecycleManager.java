@@ -44,6 +44,9 @@ import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
 
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+
 public class IslandLifecycleManager {
 
     private final SkyBlockProject plugin;
@@ -51,6 +54,7 @@ public class IslandLifecycleManager {
     private final IslandFlagManager islandFlagManager;
     private final File schematicFile;
     private final String defaultIslandNamePrefix;
+    private final Economy economy;
 
     public IslandLifecycleManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler, IslandFlagManager islandFlagManager) {
         this.plugin = plugin;
@@ -58,6 +62,7 @@ public class IslandLifecycleManager {
         this.islandFlagManager = islandFlagManager;
         this.schematicFile = new File(plugin.getDataFolder(), "island.schem");
         this.defaultIslandNamePrefix = plugin.getConfig().getString("island.default-name-prefix", "Ada");
+        this.economy = plugin.getEconomy();
     }
 
     public String getRegionId(UUID playerUUID) {
@@ -257,7 +262,22 @@ public class IslandLifecycleManager {
             player.sendMessage(ChatColor.RED + "Ada oluşturulurken çok beklenmedik bir hata oluştu. Lütfen yetkililere bildirin.");
         }
         islandDataHandler.saveChangesToDisk();
+        double creationCost = plugin.getConfig().getDouble("island.creation-cost", 0.0); // Varsayılan 0.0
+        if (this.economy != null && creationCost > 0) {
+            if (economy.getBalance(player) < creationCost) {
+                player.sendMessage(ChatColor.RED + "Ada oluşturmak için yeterli paran yok! Gereken: " + economy.format(creationCost));
+                return; // Para yoksa işlemi burada sonlandır
+            }
+            EconomyResponse r = economy.withdrawPlayer(player, creationCost);
+            if (r.transactionSuccess()) {
+                player.sendMessage(ChatColor.GREEN + economy.format(creationCost) + " ada oluşturma ücreti olarak hesabından çekildi.");
+            } else {
+                player.sendMessage(ChatColor.RED + "Ada oluşturma ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+                return; // Para çekilemezse işlemi burada sonlandır
+            }
+        }
     }
+
 
     public boolean deleteIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());

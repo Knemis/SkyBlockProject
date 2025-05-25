@@ -1,7 +1,15 @@
 island:
   welcome-message:
     max-length: 100
+    creation-cost: 0.0
 
+commands: # Yeni bölüm
+  sethome:
+    cost: 50.0
+  biome_set:
+    cost: 10000.0
+  settings_name:
+    cost: 50000.0
 
 
 

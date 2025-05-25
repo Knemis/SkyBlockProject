@@ -16,6 +16,9 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import net.milkbowl.vault.economy.Economy; //
+import org.bukkit.plugin.RegisteredServiceProvider;
+
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -39,6 +42,8 @@ public final class SkyBlockProject extends JavaPlugin {
     private int nextIslandX;
     private WorldGuard worldGuardInstance;
     private LuckPerms luckPermsApi;
+    private Economy vaultEconomy = null; //
+
 
     @Override
     public void onEnable() {
@@ -65,6 +70,10 @@ public final class SkyBlockProject extends JavaPlugin {
         getConfig().addDefault("island.spacing", 300);
         getConfig().addDefault("island.welcome-message.max-length", 100);
         getConfig().addDefault("logging.detailed-flag-changes", false);
+        getConfig().addDefault("island.creation-cost", 0.0); // İlk ada oluşturma ücretsiz
+        getConfig().addDefault("commands.sethome.cost", 50.0);
+        getConfig().addDefault("commands.biome_set.cost", 250.0); // Biyom değiştirme maliyeti
+        getConfig().addDefault("commands.settings_name.cost", 100.0); // Ada ismi değiştirme maliyeti
         saveConfig(); // [cite: 11]
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0); // [cite: 11]
@@ -75,6 +84,16 @@ public final class SkyBlockProject extends JavaPlugin {
         if (!setupLuckPerms()) {
             getLogger().warning("LuckPerms API bulunamadı! Ada sahibi bypass izinleri otomatik olarak ATANAMAYACAK."); // [cite: 13]
         }
+
+        if (!setupEconomy() ) { //
+            getLogger().severe("Vault ile ekonomi sistemi kurulamadı! Ekonomi özellikleri devre dışı kalacak.");
+            // İsteğe bağlı olarak burada plugin'i devre dışı bırakabilirsin veya ekonomi özelliklerini kapatabilirsin.
+            // getServer().getPluginManager().disablePlugin(this);
+            // return;
+        } else {
+            getLogger().info("Vault ile ekonomi sistemi başarıyla kuruldu!");
+        }
+
         if (!hookPlugin("WorldEdit") || !setupWorldGuard()) { // [cite: 14]
             getLogger().severe("Gerekli bağımlılıklar (WorldEdit/WorldGuard) bulunamadı veya aktif değil! Eklenti devre dışı bırakılıyor."); // [cite: 14]
             getServer().getPluginManager().disablePlugin(this); // [cite: 15]
@@ -155,6 +174,25 @@ public final class SkyBlockProject extends JavaPlugin {
         }
         // this.luckPermsApi will remain null, null checks should be performed in other code. [cite: 14]
         return false;
+    }
+
+    private boolean setupEconomy() { //
+        if (getServer().getPluginManager().getPlugin("Vault") == null) {
+            getLogger().warning("Vault plugini bulunamadı! Ekonomi özellikleri kullanılamayacak.");
+            return false;
+        }
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class); //
+        if (rsp == null) {
+            getLogger().warning("Vault için kayıtlı bir ekonomi sağlayıcısı bulunamadı! (EssentialsX Economy vb. yüklü mü?)");
+            return false;
+        }
+        vaultEconomy = rsp.getProvider(); //
+        return vaultEconomy != null;
+    }
+
+    // Ekonomi nesnesini diğer sınıfların kullanabilmesi için bir getter
+    public Economy getEconomy() { //
+        return vaultEconomy;
     }
 
     private boolean setupWorldGuard() {

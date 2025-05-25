@@ -11,6 +11,10 @@ import com.knemis.skyblock.skyblockcoreproject.island.IslandTeleportManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 
+
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
+
 import com.sk89q.worldedit.math.BlockVector3;
 
 import org.bukkit.Bukkit;
@@ -53,6 +57,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     private final IslandBiomeManager islandBiomeManager;
     private final IslandWelcomeManager islandWelcomeManager;
     private final FlagGUIManager flagGUIManager;
+    private final Economy economy;
+
 
     // Bu alanlar komutlar arası durumu tuttuğu için sınıf üyesi olmalıdır.
     // IDE uyarısı (Field can be converted to a local variable) bu bağlamda göz ardı edilebilir.
@@ -81,6 +87,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         this.islandBiomeManager = islandBiomeManager;
         this.islandWelcomeManager = islandWelcomeManager;
         this.flagGUIManager = flagGUIManager;
+        this.economy = plugin.getEconomy(); // Ekonomi nesnesini al
 
         this.createCooldowns = new HashMap<>();
         this.CREATE_COOLDOWN_SECONDS = plugin.getConfig().getLong("island.creation-cooldown-seconds", 300);
@@ -242,6 +249,20 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
     private void handleSetHomeCommand(Player player, String[] args) {
         // ... (metod aynı, önceki düzeltmelerle) ...
+        double setHomeCost = plugin.getConfig().getDouble("commands.sethome.cost", 50.0);
+        if (this.economy != null && setHomeCost > 0) {
+            if (economy.getBalance(player) < setHomeCost) {
+                player.sendMessage(ChatColor.RED + "/island sethome kullanmak için yeterli paran yok! Gereken: " + economy.format(setHomeCost));
+                return; // Para yoksa işlemi burada sonlandır
+            }
+            EconomyResponse r = economy.withdrawPlayer(player, setHomeCost);
+            if (r.transactionSuccess()) {
+                player.sendMessage(ChatColor.AQUA + economy.format(setHomeCost) + " sethome kullanım ücreti olarak hesabından çekildi.");
+            } else {
+                player.sendMessage(ChatColor.RED + "SetHome ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+                return; // Para çekilemezse işlemi burada sonlandır
+            }
+        }
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
             player.sendMessage(ChatColor.RED + "Ev noktanı ayarlayabileceğin bir adan yok!");
@@ -440,10 +461,15 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             player.sendMessage(ChatColor.RED + "Ayarlarını düzenleyebileceğin bir adan yok!");
             return;
         }
+
+
         if (args.length < 2) {
             player.sendMessage(ChatColor.RED + "Kullanım: /island settings <name|visibility|boundary> [değer]");
             return;
         }
+
+
+
         String settingType = args[1].toLowerCase();
         switch (settingType) {
             case "name":
@@ -451,6 +477,23 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(ChatColor.RED + "Kullanım: /island settings name <yeni_isim>");
                     return;
                 }
+
+                // SETTINGS NAME MALİYET KONTROLÜ
+                double settingsNameCost = plugin.getConfig().getDouble("commands.settings_name.cost", 50000.0);
+                if (this.economy != null && settingsNameCost > 0) {
+                    if (economy.getBalance(player) < settingsNameCost) {
+                        player.sendMessage(ChatColor.RED + "Ada ismini değiştirmek için yeterli paran yok! Gereken: " + economy.format(settingsNameCost));
+                        return; // Para yoksa işlemi burada sonlandır
+                    }
+                    EconomyResponse r = economy.withdrawPlayer(player, settingsNameCost);
+                    if (r.transactionSuccess()) {
+                        player.sendMessage(ChatColor.AQUA + economy.format(settingsNameCost) + " isim değiştirme ücreti olarak hesabından çekildi.");
+                    } else {
+                        player.sendMessage(ChatColor.RED + "İsim değiştirme ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+                        return; // Para çekilemezse işlemi burada sonlandır
+                    }
+                }
+
                 String newName = String.join(" ", Arrays.copyOfRange(args, 2, args.length));
                 this.islandSettingsManager.setIslandName(player, island, newName);
                 break;
@@ -635,9 +678,27 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                     player.sendMessage(ChatColor.RED + "Kullanım: /island biome set <biyom_adı>");
                     return;
                 }
+                // BIOME SET MALİYET KONTROLÜ
+                double biomeSetCost = plugin.getConfig().getDouble("commands.biome_set.cost", 10000.0);
+                if (this.economy != null && biomeSetCost > 0) {
+                    if (economy.getBalance(player) < biomeSetCost) {
+                        player.sendMessage(ChatColor.RED + "Ada biyomunu değiştirmek için yeterli paran yok! Gereken: " + economy.format(biomeSetCost));
+                        return; // Para yoksa işlemi burada sonlandır
+                    }
+                    EconomyResponse r = economy.withdrawPlayer(player, biomeSetCost);
+                    if (r.transactionSuccess()) {
+                        player.sendMessage(ChatColor.AQUA + economy.format(biomeSetCost) + " biyom değiştirme ücreti olarak hesabından çekildi.");
+                    } else {
+                        player.sendMessage(ChatColor.RED + "Biyom değiştirme ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+                        return; // Para çekilemezse işlemi burada sonlandır
+                    }
+                }
+
+
                 String biomeName = args[2].toUpperCase();
                 this.islandBiomeManager.setIslandBiome(player, island, biomeName);
                 break;
+
             case "get":
                 String currentBiome = this.islandBiomeManager.getIslandBiome(island);
                 player.sendMessage(ChatColor.YELLOW + "Adanızın mevcut biyomu: " + ChatColor.AQUA + currentBiome);
