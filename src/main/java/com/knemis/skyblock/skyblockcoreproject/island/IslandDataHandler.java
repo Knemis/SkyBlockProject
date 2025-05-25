@@ -166,6 +166,8 @@ public class IslandDataHandler {
             String currentBiome = islandsConfig.getString(path + "currentBiome", null);
             String welcomeMessage = islandsConfig.getString(path + "welcomeMessage", "");
             int maxHomesLimit = islandsConfig.getInt(path + "maxHomesLimit", defaultInitialMaxHomes); // YENİ: maxHomesLimit yükle
+            double islandWorth = islandsConfig.getDouble(path + "islandWorth", 0.0); // YENİ
+            int islandLevel = islandsConfig.getInt(path + "islandLevel", 1);
 
             Set<UUID> members = new HashSet<>();
             islandsConfig.getStringList(path + "members").forEach(memberStr -> {
@@ -204,7 +206,7 @@ public class IslandDataHandler {
 
             Island island = new Island(ownerUUID, islandName, baseLocation, creationTimestamp,
                     isPublic, boundariesEnforced, members, namedHomes,
-                    currentBiome, welcomeMessage, maxHomesLimit); // maxHomesLimit constructor'a eklendi
+                    currentBiome, welcomeMessage, maxHomesLimit, islandWorth, islandLevel); // Bu çağrı yukarıdaki constructor'a uymalı
             islandsData.put(ownerUUID, island);
             successfullyLoaded++;
         }
@@ -246,7 +248,8 @@ public class IslandDataHandler {
         islandsConfig.set(path + "currentBiome", island.getCurrentBiome());
         islandsConfig.set(path + "welcomeMessage", island.getWelcomeMessage());
         islandsConfig.set(path + "maxHomesLimit", island.getMaxHomesLimit()); // YENİ: maxHomesLimit kaydet
-
+        islandsConfig.set(path + "islandWorth", island.getIslandWorth());     // YENİ
+        islandsConfig.set(path + "islandLevel", island.getIslandLevel());
         Location baseLoc = island.getBaseLocation();
         if (baseLoc != null && baseLoc.getWorld() != null) {
             islandsConfig.set(path + "baseLocation.world", baseLoc.getWorld().getName());

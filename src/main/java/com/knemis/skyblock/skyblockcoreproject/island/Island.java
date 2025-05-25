@@ -28,6 +28,8 @@ public class Island {
     private String welcomeMessage;
     private String currentBiome;
     private int maxHomesLimit; // Adaya özel maksimum ev limiti
+    private double islandWorth;     // YENİ: Adanın hesaplanmış değeri
+    private int islandLevel;        // YENİ: Adanın mevcut seviyesi
 
     private transient World world;
 
@@ -47,7 +49,9 @@ public class Island {
         this.namedHomes = new HashMap<>();
         this.currentBiome = null;
         this.welcomeMessage = null;
-        this.maxHomesLimit = initialMaxHomes; // Parametreden gelen değer atandı
+        this.maxHomesLimit = initialMaxHomes;
+        this.islandWorth = 0.0; // Başlangıç değeri
+        this.islandLevel = 1;   // Başlangıç seviyesi
     }
 
     // Constructor for loading an island from data source
@@ -56,7 +60,7 @@ public class Island {
                   boolean isPublic, boolean boundariesEnforced,
                   Set<UUID> members, Map<String, Location> namedHomes,
                   String currentBiome, String welcomeMessage,
-                  int maxHomesLimit) { // bannedPlayers parametresi kaldırılmıştı.
+                  int maxHomesLimit, double islandWorth, int islandLevel) { // Son 3 parametre önemli
         this.ownerUUID = ownerUUID;
         this.islandName = islandName;
         this.baseLocation = baseLocation;
@@ -71,6 +75,8 @@ public class Island {
         this.currentBiome = currentBiome;
         this.welcomeMessage = welcomeMessage;
         this.maxHomesLimit = maxHomesLimit;
+        this.islandWorth = islandWorth;         // Bu satır eklenmiş olmalı
+        this.islandLevel = islandLevel;         // Bu satır eklenmiş olmalı
     }
 
     // ... (getOwnerUUID() ve diğer getter/setter'lar aynı kalacak) ...
@@ -108,6 +114,21 @@ public class Island {
 
     public boolean isPublic() {
         return isPublic;
+    }
+    public double getIslandWorth() {
+        return islandWorth;
+    }
+
+    public void setIslandWorth(double islandWorth) {
+        this.islandWorth = islandWorth;
+    }
+
+    public int getIslandLevel() {
+        return islandLevel;
+    }
+
+    public void setIslandLevel(int islandLevel) {
+        this.islandLevel = islandLevel;
     }
 
     public void setPublic(boolean isPublic) {

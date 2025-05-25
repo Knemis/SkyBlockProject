@@ -1,14 +1,47 @@
 island:
 
- welcome-message:
- max-length: 100
- max-named-homes: 3
- creation-cost: 0.0
- upgrades: # YENİ BÖLÜM
-   homes:
+    welcome-message:
+    max-length: 100
+    max-named-homes: 3
+    creation-cost: 0.0
+    upgrades: # YENİ BÖLÜM
+    homes:
     increment_amount: 1            # Her yükseltmede ev limitine eklenecek miktar
     cost_per_upgrade: 2000.0       # Her bir yükseltmenin maliyeti
     max_possible_total_homes: 10
+    worth: # YENİ BÖLÜM
+      block_values:
+        DIAMOND_BLOCK: 150.0
+        EMERALD_BLOCK: 120.0
+        GOLD_BLOCK: 80.0
+        IRON_BLOCK: 40.0
+        LAPIS_BLOCK: 20.0
+        COAL_BLOCK: 10.0
+        REDSTONE_BLOCK: 10.0
+        QUARTZ_BLOCK: 15.0
+        BEACON: 500.0
+        NETHERITE_BLOCK: 1000.0
+        OBSIDIAN: 5.0
+        GRASS_BLOCK: 0.5
+        DIRT: 0.1
+        STONE: 0.2
+        COBBLESTONE: 0.1
+        OAK_LOG: 1.0
+        # İhtiyacınıza göre daha fazla blok ekleyebilirsiniz.
+        # Kullanılmayan bloklar 0 değerinde olacak veya listeye hiç eklenmeyebilir.
+      level_requirements: # Her seviyeye ulaşmak için gereken minimum ada değeri
+        1: 0.0      # Seviye 1
+        2: 1000.0   # Seviye 2
+        3: 5000.0   # Seviye 3
+        4: 15000.0
+        5: 50000.0
+        10: 250000.0
+      level_up_rewards: # Opsiyonel: Seviye atlandığında konsoldan çalıştırılacak komutlar
+        # {player} = oyuncu adı, {island_owner_uuid} = ada sahibinin uuid'si, {island_level} = ulaşılan yeni seviye
+        2: "eco give {player} 250"       # Örnek: Vault ile oyuncuya 250 para ver
+        3: "eco give {player} 500"
+        5: "give {player} diamond 5"     # Örnek: Oyuncuya 5 elmas ver
+        10: "say {player} adası 10. seviyeye ulaştı! Herkes alkışlasın!" # Örnek: Duyuru yap
 
 
 commands: # Yeni bölüm

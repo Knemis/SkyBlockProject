@@ -8,6 +8,11 @@ import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
+import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager; //Yeni
+import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
+import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
+
+
 
 import net.luckperms.api.LuckPerms;
 import org.bukkit.Bukkit;
@@ -17,7 +22,6 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.milkbowl.vault.economy.Economy; //
-import org.bukkit.plugin.RegisteredServiceProvider;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
@@ -33,6 +37,9 @@ public final class SkyBlockProject extends JavaPlugin {
     private IslandMemberManager islandMemberManager;
     private IslandTeleportManager islandTeleportManager;
 
+
+    private IslandWorthManager islandWorthManager; // YENİ
+
     // --- Existing Feature Managers (constructors will be adapted) ---
     private IslandFlagManager islandFlagManager;
     private IslandBiomeManager islandBiomeManager;
@@ -43,6 +50,8 @@ public final class SkyBlockProject extends JavaPlugin {
     private WorldGuard worldGuardInstance;
     private LuckPerms luckPermsApi;
     private Economy vaultEconomy = null; //
+
+    private ShopManager shopManager;
 
 
     @Override
@@ -78,11 +87,47 @@ public final class SkyBlockProject extends JavaPlugin {
         getConfig().addDefault("island.upgrades.homes.increment_amount", 1); // Her yükseltmede kaç ev artacağı
         getConfig().addDefault("island.upgrades.homes.cost_per_upgrade", 2000.0); // Her yükseltmenin maliyeti
         getConfig().addDefault("island.upgrades.homes.max_possible_total_homes", 10); // Ulaşılabilecek maksimum ev sayısı (sunucu geneli limit)
+        getConfig().addDefault("island.worth.block_values.DIAMOND_BLOCK", 150.0);
+        getConfig().addDefault("island.worth.block_values.EMERALD_BLOCK", 120.0);
+        getConfig().addDefault("island.worth.block_values.GOLD_BLOCK", 80.0);
+        getConfig().addDefault("island.worth.block_values.IRON_BLOCK", 40.0);
+        getConfig().addDefault("island.worth.block_values.LAPIS_BLOCK", 20.0);
+        getConfig().addDefault("island.worth.block_values.COAL_BLOCK", 10.0);
+        getConfig().addDefault("island.worth.block_values.REDSTONE_BLOCK", 10.0);
+        getConfig().addDefault("island.worth.block_values.QUARTZ_BLOCK", 15.0);
+        getConfig().addDefault("island.worth.block_values.BEACON", 500.0);
+        getConfig().addDefault("island.worth.block_values.NETHERITE_BLOCK", 1000.0);
+        getConfig().addDefault("island.worth.block_values.OBSIDIAN", 5.0);
+        getConfig().addDefault("island.worth.block_values.GRASS_BLOCK", 0.5);
+        getConfig().addDefault("island.worth.block_values.DIRT", 0.1);
+        getConfig().addDefault("island.worth.block_values.STONE", 0.2);
+        getConfig().addDefault("island.worth.block_values.COBBLESTONE", 0.1);
+        getConfig().addDefault("island.worth.block_values.OAK_LOG", 1.0);
+        // Diğer blokları da ekleyebilirsiniz...
+
+        getConfig().addDefault("island.worth.level_requirements.1", 0.0);      // Seviye 1 için gereken değer
+        getConfig().addDefault("island.worth.level_requirements.2", 1000.0);   // Seviye 2 için
+        getConfig().addDefault("island.worth.level_requirements.3", 5000.0);   // Seviye 3 için
+        getConfig().addDefault("island.worth.level_requirements.4", 15000.0);
+        getConfig().addDefault("island.worth.level_requirements.5", 50000.0);
+        getConfig().addDefault("island.worth.level_requirements.10", 250000.0);
+
+        getConfig().addDefault("island.worth.level_up_rewards.2", "eco give {player} 250"); // {player} oyuncu adıyla değişecek
+        getConfig().addDefault("island.worth.level_up_rewards.3", "eco give {player} 500");
+        getConfig().addDefault("island.worth.level_up_rewards.5", "give {player} diamond 5"); // Örnek eşya ödülü
+        getConfig().addDefault("island.worth.level_up_rewards.10", "say {player} adası 10. seviyeye ulaştı! Herkes alkışlasın!");
         saveConfig(); // [cite: 11]
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0); // [cite: 11]
 
         getLogger().info("SkyBlockProject Eklentisi Aktif Ediliyor...");
+
+
+        shopManager = new ShopManager(this);
+
+
+        getServer().getPluginManager().registerEvents(new ShopListener(this, shopManager), this);
+
 
         // Load dependencies (LuckPerms, WorldEdit, WorldGuard)
         if (!setupLuckPerms()) {
@@ -125,6 +170,8 @@ public final class SkyBlockProject extends JavaPlugin {
         // 3. Lifecycle Manager (depends on IslandDataHandler and IslandFlagManager)
         this.islandLifecycleManager = new IslandLifecycleManager(this, this.islandDataHandler, this.islandFlagManager);
 
+        this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager); // YENİ
+
         // 4. Managers that might depend on IslandLifecycleManager for more complex operations or specific data access.
         // IslandMemberManager will depend on IslandDataHandler and IslandLifecycleManager (for region context)
         // instead of the old IslandManager.
@@ -161,12 +208,17 @@ public final class SkyBlockProject extends JavaPlugin {
                 this.islandTeleportManager,
                 this.islandBiomeManager,
                 this.islandWelcomeManager,
-                this.flagGUIManager // FlagGUIManager is passed for /is flags
+                this.flagGUIManager,
+                this.islandWorthManager // YENİ: IslandWorthManager'ı komutlara ekle
         );
         getCommand("island").setExecutor(islandCommandExecutor); // [cite: 23]
         getCommand("island").setTabCompleter(islandCommandExecutor); // [cite: 23]
 
         getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi! Bir sonraki ada için X koordinatı başlangıcı: " + this.nextIslandX); // [cite: 24]
+    }
+
+    public ShopManager getShopManager() {
+        return shopManager;
     }
 
     private boolean setupLuckPerms() {
@@ -194,9 +246,22 @@ public final class SkyBlockProject extends JavaPlugin {
         return vaultEconomy != null;
     }
 
+
+
+//yeni ekonmomi
+
+
+
+
+
+
     // Ekonomi nesnesini diğer sınıfların kullanabilmesi için bir getter
     public Economy getEconomy() { //
         return vaultEconomy;
+    }
+
+    public IslandWorthManager getIslandWorthManager() { // YENİ GETTER
+        return islandWorthManager;
     }
 
     private boolean setupWorldGuard() {

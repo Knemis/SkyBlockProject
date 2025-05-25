@@ -10,6 +10,10 @@ import com.knemis.skyblock.skyblockcoreproject.island.IslandSettingsManager;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandTeleportManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
+import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager; // YENİ
+import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager; //Yeni
+
+
 
 
 import net.milkbowl.vault.economy.Economy;
@@ -58,6 +62,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     private final IslandWelcomeManager islandWelcomeManager;
     private final FlagGUIManager flagGUIManager;
     private final Economy economy;
+    private final IslandWorthManager islandWorthManager; // <<-- EKLENMESİ GEREKEN ALAN TANIMI
+
 
 
     // Bu alanlar komutlar arası durumu tuttuğu için sınıf üyesi olmalıdır.
@@ -77,7 +83,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                          IslandTeleportManager islandTeleportManager,
                          IslandBiomeManager islandBiomeManager,
                          IslandWelcomeManager islandWelcomeManager,
-                         FlagGUIManager flagGUIManager) {
+                         FlagGUIManager flagGUIManager, IslandWorthManager islandWorthManager) {
         this.plugin = plugin;
         this.islandDataHandler = islandDataHandler;
         this.islandLifecycleManager = islandLifecycleManager;
@@ -88,6 +94,8 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         this.islandWelcomeManager = islandWelcomeManager;
         this.flagGUIManager = flagGUIManager;
         this.economy = plugin.getEconomy(); // Ekonomi nesnesini al
+        this.islandWorthManager = islandWorthManager; // YENİ
+
 
         this.createCooldowns = new HashMap<>();
         this.CREATE_COOLDOWN_SECONDS = plugin.getConfig().getLong("island.creation-cooldown-seconds", 300);
@@ -166,6 +174,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 break;
             case "upgrade": // YENİ
                 handleUpgradeCommand(player, args);
+                break;
+            case "level": // YENİ
+            case "worth": // YENİ (level için alias)
+                handleLevelCommand(player, args);
                 break;
             default:
                 player.sendMessage(ChatColor.RED + "Bilinmeyen alt komut: " + subCommand);
@@ -247,6 +259,29 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             }
         } else {
             player.sendMessage(ChatColor.RED + "Kullanım: /island home [isim|list|spawn]"); //
+        }
+    }
+    // YENİ METOD: handleLevelCommand
+    private void handleLevelCommand(Player player, String[] args) {
+        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Bu komutu kullanmak için bir adan olmalı.");
+            return;
+        }
+
+        if (args.length > 1 && args[1].equalsIgnoreCase("calculate")) {
+            if (islandWorthManager != null) {
+                islandWorthManager.calculateAndSetIslandWorth(island, player);
+            } else {
+                player.sendMessage(ChatColor.RED + "Ada değer sistemi şu anda kullanılamıyor.");
+                plugin.getLogger().severe("IslandWorthManager IslandCommand içinde null!");
+            }
+        } else {
+            // Sadece mevcut değeri göster
+            player.sendMessage(ChatColor.AQUA + "--- Ada Değerin & Seviyen ---");
+            player.sendMessage(ChatColor.YELLOW + "Mevcut Değer: " + ChatColor.GOLD + String.format("%.2f", island.getIslandWorth()));
+            player.sendMessage(ChatColor.YELLOW + "Mevcut Seviye: " + ChatColor.GOLD + island.getIslandLevel());
+            player.sendMessage(ChatColor.GRAY + "Değeri yeniden hesaplamak için: /island level calculate");
         }
     }
 
@@ -833,7 +868,11 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
         Player player = (Player) sender;
         List<String> completions = new ArrayList<>();
-        List<String> subCommands = Arrays.asList("create", "go", "sethome", "home", "delhome", "delete", "reset", "flags", "info", "settings", "team", "visit", "help", "biome", "welcome", "upgrade"); // "upgrade" eklendi
+        List<String> subCommands = new ArrayList<>(Arrays.asList(
+                "create", "go", "sethome", "home", "delhome", "delete", "reset",
+                "flags", "info", "settings", "team", "visit", "help", "biome", "welcome", "upgrade",
+                "level", "worth" // YENİ
+        ));
         if (args.length == 1) {
             String arg0Lower = args[0].toLowerCase();
             for (String sc : subCommands) {
@@ -902,6 +941,16 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 if ("homes".startsWith(arg1Lower)) {
                     completions.add("homes");
                 }
+            }
+            switch (subCmd) {
+                // ... (mevcut case'ler) ...
+                case "level": // YENİ
+                case "worth": // YENİ
+                    if ("calculate".startsWith(arg1Lower)) {
+                        completions.add("calculate");
+                    }
+                    break;
+                // ...
             }
         }
 
