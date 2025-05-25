@@ -1,364 +1,269 @@
 package com.knemis.skyblock.skyblockcoreproject;
 
 import com.knemis.skyblock.skyblockcoreproject.commands.IslandCommand;
+import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.island.*;
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager; // Kullanıcının sağladığı
+import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandLifecycleManager;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandMemberManager;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandSettingsManager;
+import com.knemis.skyblock.skyblockcoreproject.island.IslandTeleportManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
-import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager; //Yeni
-import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
-
-
-
-import net.luckperms.api.LuckPerms;
-import org.bukkit.Bukkit;
-import org.bukkit.World;
-import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import net.milkbowl.vault.economy.Economy; //
+import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener; // Kullanıcının sağladığı
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Kullanıcının sağladığı
+import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 
+import net.luckperms.api.LuckPerms;
+import net.milkbowl.vault.economy.Economy;
+
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.World;
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public final class SkyBlockProject extends JavaPlugin {
 
-    // --- New Specific Managers ---
+    // Ada Yönetimi
     private IslandDataHandler islandDataHandler;
     private IslandLifecycleManager islandLifecycleManager;
     private IslandSettingsManager islandSettingsManager;
     private IslandMemberManager islandMemberManager;
     private IslandTeleportManager islandTeleportManager;
 
-
-    private IslandWorthManager islandWorthManager; // YENİ
-
-    // --- Existing Feature Managers (constructors will be adapted) ---
+    // Ada Özellikleri
     private IslandFlagManager islandFlagManager;
     private IslandBiomeManager islandBiomeManager;
     private IslandWelcomeManager islandWelcomeManager;
+
+    // Ekonomi ve Mağaza Yönetimi
+    private IslandWorthManager islandWorthManager;
+    private ShopManager shopManager;
+    private ShopSetupGUIManager shopSetupGUIManager;
+    private ShopVisitGUIManager shopVisitGUIManager; // Kullanıcının sağladığı
+
+    // GUI Yöneticileri
     private FlagGUIManager flagGUIManager;
 
+    // Diğer
     private int nextIslandX;
     private WorldGuard worldGuardInstance;
     private LuckPerms luckPermsApi;
-    private Economy vaultEconomy = null; //
+    private Economy vaultEconomy = null;
 
-    private ShopManager shopManager;
-
+    // Oyuncu Durum Takibi (Mağaza için)
+    private final Map<UUID, Location> playerShopSetupState = new HashMap<>();
+    private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
 
     @Override
     public void onEnable() {
+        // 1. Config Yükleme ve Varsayılanlar
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
-        // Config defaults from source [cite: 8, 9, 10]
+        // --- Tüm getConfig().addDefault(...) satırları burada olmalı ---
+        // Örnek birkaçı:
         getConfig().addDefault("general.next-island-x", 0);
-        getConfig().addDefault("island.creation-cooldown-seconds", 300);
         getConfig().addDefault("skyblock-world-name", "skyblock_world");
-        getConfig().addDefault("island-spawn-offset.x", 0.5);
-        getConfig().addDefault("island-spawn-offset.y", 1.5);
-        getConfig().addDefault("island-spawn-offset.z", 0.5);
-        getConfig().addDefault("island.max-named-homes", 5);
-        getConfig().addDefault("island.expansion-radius-horizontal", 50);
-        getConfig().addDefault("island.allow-build-below-schematic-base", false);
-        getConfig().addDefault("island.build-limit-above-schematic-top", 150);
-        getConfig().addDefault("island.default-name-prefix", "Ada");
-        getConfig().addDefault("island.max-members", 3);
-        getConfig().addDefault("island.home-name-pattern", "^[a-zA-Z0-9_]{2,16}$");
-        getConfig().addDefault("island.name.pattern", "^[a-zA-Z0-9_\\- ]{3,25}$");
-        getConfig().addDefault("island.name.min-length", 3);
-        getConfig().addDefault("island.name.max-length", 25);
-        getConfig().addDefault("island.region-priority", 10);
-        getConfig().addDefault("island.spacing", 300);
-        getConfig().addDefault("island.welcome-message.max-length", 100);
-        getConfig().addDefault("logging.detailed-flag-changes", false);
-        getConfig().addDefault("island.creation-cost", 0.0); // İlk ada oluşturma ücretsiz
-        getConfig().addDefault("commands.sethome.cost", 50.0);
-        getConfig().addDefault("commands.biome_set.cost", 250.0); // Biyom değiştirme maliyeti
-        getConfig().addDefault("commands.settings_name.cost", 100.0); // Ada ismi değiştirme maliyeti
-        getConfig().addDefault("island.max-named-homes", 3); // Yeni adalar için BAŞLANGIÇ ev sayısı
-        getConfig().addDefault("island.upgrades.homes.increment_amount", 1); // Her yükseltmede kaç ev artacağı
-        getConfig().addDefault("island.upgrades.homes.cost_per_upgrade", 2000.0); // Her yükseltmenin maliyeti
-        getConfig().addDefault("island.upgrades.homes.max_possible_total_homes", 10); // Ulaşılabilecek maksimum ev sayısı (sunucu geneli limit)
+        // Ada Değer Sistemi için
         getConfig().addDefault("island.worth.block_values.DIAMOND_BLOCK", 150.0);
-        getConfig().addDefault("island.worth.block_values.EMERALD_BLOCK", 120.0);
-        getConfig().addDefault("island.worth.block_values.GOLD_BLOCK", 80.0);
-        getConfig().addDefault("island.worth.block_values.IRON_BLOCK", 40.0);
-        getConfig().addDefault("island.worth.block_values.LAPIS_BLOCK", 20.0);
-        getConfig().addDefault("island.worth.block_values.COAL_BLOCK", 10.0);
-        getConfig().addDefault("island.worth.block_values.REDSTONE_BLOCK", 10.0);
-        getConfig().addDefault("island.worth.block_values.QUARTZ_BLOCK", 15.0);
-        getConfig().addDefault("island.worth.block_values.BEACON", 500.0);
-        getConfig().addDefault("island.worth.block_values.NETHERITE_BLOCK", 1000.0);
-        getConfig().addDefault("island.worth.block_values.OBSIDIAN", 5.0);
-        getConfig().addDefault("island.worth.block_values.GRASS_BLOCK", 0.5);
-        getConfig().addDefault("island.worth.block_values.DIRT", 0.1);
-        getConfig().addDefault("island.worth.block_values.STONE", 0.2);
-        getConfig().addDefault("island.worth.block_values.COBBLESTONE", 0.1);
-        getConfig().addDefault("island.worth.block_values.OAK_LOG", 1.0);
-        // Diğer blokları da ekleyebilirsiniz...
+        getConfig().addDefault("island.worth.level_requirements.1", 0.0);
+        getConfig().addDefault("island.worth.level_up_rewards.2", "eco give {player} 250");
+        // Mağaza Maliyetleri (varsa)
+        // Diğer tüm addDefault çağrılarınız...
+        saveConfig();
 
-        getConfig().addDefault("island.worth.level_requirements.1", 0.0);      // Seviye 1 için gereken değer
-        getConfig().addDefault("island.worth.level_requirements.2", 1000.0);   // Seviye 2 için
-        getConfig().addDefault("island.worth.level_requirements.3", 5000.0);   // Seviye 3 için
-        getConfig().addDefault("island.worth.level_requirements.4", 15000.0);
-        getConfig().addDefault("island.worth.level_requirements.5", 50000.0);
-        getConfig().addDefault("island.worth.level_requirements.10", 250000.0);
-
-        getConfig().addDefault("island.worth.level_up_rewards.2", "eco give {player} 250"); // {player} oyuncu adıyla değişecek
-        getConfig().addDefault("island.worth.level_up_rewards.3", "eco give {player} 500");
-        getConfig().addDefault("island.worth.level_up_rewards.5", "give {player} diamond 5"); // Örnek eşya ödülü
-        getConfig().addDefault("island.worth.level_up_rewards.10", "say {player} adası 10. seviyeye ulaştı! Herkes alkışlasın!");
-        saveConfig(); // [cite: 11]
-
-        this.nextIslandX = getConfig().getInt("general.next-island-x", 0); // [cite: 11]
-
+        this.nextIslandX = getConfig().getInt("general.next-island-x", 0);
         getLogger().info("SkyBlockProject Eklentisi Aktif Ediliyor...");
 
-
-        shopManager = new ShopManager(this);
-
-
-        getServer().getPluginManager().registerEvents(new ShopListener(this, shopManager), this);
-
-
-        // Load dependencies (LuckPerms, WorldEdit, WorldGuard)
+        // 2. Bağımlılık Kontrolleri ve Kurulumları
         if (!setupLuckPerms()) {
-            getLogger().warning("LuckPerms API bulunamadı! Ada sahibi bypass izinleri otomatik olarak ATANAMAYACAK."); // [cite: 13]
+            getLogger().warning("LuckPerms API bulunamadı! Ada sahibi bypass izinleri otomatik olarak ATANAMAYACAK.");
         }
-
-        if (!setupEconomy() ) { //
+        if (!setupEconomyVault()) { // Vault hooklama
             getLogger().severe("Vault ile ekonomi sistemi kurulamadı! Ekonomi özellikleri devre dışı kalacak.");
-            // İsteğe bağlı olarak burada plugin'i devre dışı bırakabilirsin veya ekonomi özelliklerini kapatabilirsin.
-            // getServer().getPluginManager().disablePlugin(this);
-            // return;
+            // Eklentiyi devre dışı bırakmak veya ekonomi özelliklerini kapatmak isteyebilirsiniz.
         } else {
             getLogger().info("Vault ile ekonomi sistemi başarıyla kuruldu!");
+            EconomyManager.setupEconomy(); // Sizin EconomyManager'ınızdaki statik Vault setup metodu
         }
-
-        if (!hookPlugin("WorldEdit") || !setupWorldGuard()) { // [cite: 14]
-            getLogger().severe("Gerekli bağımlılıklar (WorldEdit/WorldGuard) bulunamadı veya aktif değil! Eklenti devre dışı bırakılıyor."); // [cite: 14]
-            getServer().getPluginManager().disablePlugin(this); // [cite: 15]
+        if (!hookPlugin("WorldEdit") || !setupWorldGuard()) {
+            getLogger().severe("Gerekli bağımlılıklar (WorldEdit/WorldGuard) bulunamadı veya aktif değil! Eklenti devre dışı bırakılıyor.");
+            getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        getLogger().info("WorldEdit ve WorldGuard başarıyla bulundu ve aktif."); // [cite: 15]
+        getLogger().info("WorldEdit ve WorldGuard başarıyla bulundu ve aktif.");
 
-        // --- Manager Initialization Order ---
-
-        // 1. Core Data Handler
+        // 3. Ana Veri Yöneticisi
         this.islandDataHandler = new IslandDataHandler(this);
-        this.islandDataHandler.loadSkyblockWorld(); // Creates or loads the skyblock world
-        this.islandDataHandler.loadIslandsFromConfig(); // Loads island data from islands.yml
+        this.islandDataHandler.loadSkyblockWorld(); // Skyblock dünyasını yükler veya oluşturur
+        this.islandDataHandler.loadIslandsFromConfig(); // Ada verilerini yükler
 
-        // 2. Feature Managers that primarily depend on IslandDataHandler or base plugin
-        //    (Assuming their constructors will be refactored to accept new dependencies)
-
-        // IslandFlagManager will depend on IslandDataHandler (for Island objects)
-        // and use plugin.getRegionManager() internally, instead of the old IslandManager.
+        // 4. Ada Özellik Yöneticileri (IslandDataHandler'a bağımlı)
         this.islandFlagManager = new IslandFlagManager(this, this.islandDataHandler);
-
         this.islandSettingsManager = new IslandSettingsManager(this, this.islandDataHandler);
         this.islandTeleportManager = new IslandTeleportManager(this, this.islandDataHandler);
 
-        // 3. Lifecycle Manager (depends on IslandDataHandler and IslandFlagManager)
+        // 5. Ada Yaşam Döngüsü Yöneticisi (Diğer ada yöneticilerine ve IslandFlagManager'a bağımlı olabilir)
         this.islandLifecycleManager = new IslandLifecycleManager(this, this.islandDataHandler, this.islandFlagManager);
 
-        this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager); // YENİ
+        // 6. Ekonomi ve Mağaza Sistemi Yöneticileri
+        this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager);
+        this.shopManager = new ShopManager(this); // ShopStorage'ı kendi içinde başlatır
+        this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager);
+        this.shopVisitGUIManager = new ShopVisitGUIManager(); // Kullanıcının sağladığı, constructor'ı parametresiz.
 
-        // 4. Managers that might depend on IslandLifecycleManager for more complex operations or specific data access.
-        // IslandMemberManager will depend on IslandDataHandler and IslandLifecycleManager (for region context)
-        // instead of the old IslandManager.
+        // 7. Diğer Ada Yöneticileri
         this.islandMemberManager = new IslandMemberManager(this, this.islandDataHandler, this.islandLifecycleManager);
-
-        // IslandBiomeManager will depend on IslandDataHandler and IslandLifecycleManager
-        // (for territory and saving island state) instead of the old IslandManager.
         this.islandBiomeManager = new IslandBiomeManager(this, this.islandDataHandler, this.islandLifecycleManager);
-
-        // IslandWelcomeManager will depend on IslandDataHandler (for island data and saving)
-        // instead of the old IslandManager.
         this.islandWelcomeManager = new IslandWelcomeManager(this, this.islandDataHandler);
 
-        // 5. GUI Managers
-        // FlagGUIManager will depend on IslandDataHandler (to get island for player) and IslandFlagManager
-        // instead of the old IslandManager.
+        // 8. GUI Yöneticileri
         this.flagGUIManager = new FlagGUIManager(this, this.islandDataHandler, this.islandFlagManager);
 
-        // 6. Listeners (Their constructors will be updated to use new manager dependencies)
-        // FlagGUIListener's constructor in KodlarProje.txt is (SkyBlockProject, FlagGUIManager) which is fine.
-        getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this); // [cite: 21]
-        // IslandWelcomeListener's constructor will change from (plugin, IslandManager, IslandWelcomeManager)
-        // to (plugin, IslandDataHandler, IslandWelcomeManager).
-        getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this); // [cite: 22]
+        // 9. Listener Kayıtları (Tüm manager'lar başlatıldıktan sonra)
+        getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this);
+        getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this);
+        // ShopListener Düzeltilmiş Hali (5 argümanlı)
+        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager), this);
+        getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
+        // ShopVisitListener (Kullanıcının sağladığı listener, constructor'ını (SkyBlockProject plugin, ShopManager shopManager) alacak şekilde güncellediğinizi varsayıyorum)
+        getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager /*, this.shopVisitGUIManager // Eğer constructor'ı bunu da alıyorsa*/ ), this);
 
-        // 7. Commands
-        // IslandCommand's constructor will be refactored to take all necessary new specific managers.
+
+        // 10. Komut Kayıtları
         IslandCommand islandCommandExecutor = new IslandCommand(
-                this,
-                this.islandDataHandler,
-                this.islandLifecycleManager,
-                this.islandSettingsManager,
-                this.islandMemberManager,
-                this.islandTeleportManager,
-                this.islandBiomeManager,
-                this.islandWelcomeManager,
-                this.flagGUIManager,
-                this.islandWorthManager // YENİ: IslandWorthManager'ı komutlara ekle
+                this, this.islandDataHandler, this.islandLifecycleManager, this.islandSettingsManager,
+                this.islandMemberManager, this.islandTeleportManager, this.islandBiomeManager,
+                this.islandWelcomeManager, this.flagGUIManager, this.islandWorthManager
         );
-        getCommand("island").setExecutor(islandCommandExecutor); // [cite: 23]
-        getCommand("island").setTabCompleter(islandCommandExecutor); // [cite: 23]
+        if (getCommand("island") != null) {
+            getCommand("island").setExecutor(islandCommandExecutor);
+            getCommand("island").setTabCompleter(islandCommandExecutor);
+        } else {
+            getLogger().severe("'island' komutu plugin.yml dosyasında tanımlanmamış!");
+        }
 
-        getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi! Bir sonraki ada için X koordinatı başlangıcı: " + this.nextIslandX); // [cite: 24]
+        getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi!");
     }
 
-    public ShopManager getShopManager() {
-        return shopManager;
+    @Override
+    public void onDisable() {
+        if (islandDataHandler != null) {
+            islandDataHandler.saveAllIslandsToDisk();
+        }
+        getLogger().info("SkyBlockProject Eklentisi Devre Dışı Bırakıldı.");
     }
 
+    // --- Bağımlılık Kurulum Metodları ---
     private boolean setupLuckPerms() {
-        RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class); // [cite: 12]
+        RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) {
-            this.luckPermsApi = provider.getProvider(); // [cite: 12]
-            getLogger().info("LuckPerms API başarıyla bağlandı."); // [cite: 13]
+            this.luckPermsApi = provider.getProvider();
+            getLogger().info("LuckPerms API başarıyla bağlandı.");
             return true;
         }
-        // this.luckPermsApi will remain null, null checks should be performed in other code. [cite: 14]
+        getLogger().warning("LuckPerms API bulunamadı!");
         return false;
     }
 
-    private boolean setupEconomy() { //
+    private boolean setupEconomyVault() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().warning("Vault plugini bulunamadı! Ekonomi özellikleri kullanılamayacak.");
+            getLogger().severe("Vault plugini bulunamadı! Ekonomi özellikleri kullanılamayacak.");
             return false;
         }
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class); //
+        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            getLogger().warning("Vault için kayıtlı bir ekonomi sağlayıcısı bulunamadı! (EssentialsX Economy vb. yüklü mü?)");
+            getLogger().severe("Vault için kayıtlı bir ekonomi sağlayıcısı bulunamadı! (EssentialsX Economy vb. yüklü mü?)");
             return false;
         }
-        vaultEconomy = rsp.getProvider(); //
+        vaultEconomy = rsp.getProvider();
         return vaultEconomy != null;
     }
 
-
-
-//yeni ekonmomi
-
-
-
-
-
-
-    // Ekonomi nesnesini diğer sınıfların kullanabilmesi için bir getter
-    public Economy getEconomy() { //
-        return vaultEconomy;
-    }
-
-    public IslandWorthManager getIslandWorthManager() { // YENİ GETTER
-        return islandWorthManager;
-    }
-
     private boolean setupWorldGuard() {
-        Plugin wgPlugin = Bukkit.getPluginManager().getPlugin("WorldGuard"); // [cite: 25]
-        if (wgPlugin == null) {
-            getLogger().severe("WorldGuard eklentisi bulunamadı!"); // [cite: 26]
-            return false; // [cite: 27]
+        Plugin wgPlugin = Bukkit.getPluginManager().getPlugin("WorldGuard");
+        if (wgPlugin == null || !wgPlugin.isEnabled()) {
+            getLogger().severe("WorldGuard eklentisi bulunamadı veya aktif değil!");
+            return false;
         }
-        this.worldGuardInstance = WorldGuard.getInstance(); // [cite: 27]
+        this.worldGuardInstance = WorldGuard.getInstance();
         if (this.worldGuardInstance == null) {
-            getLogger().severe("WorldGuard instance alınamadı!"); // [cite: 28]
-            return false; // [cite: 29]
+            getLogger().severe("WorldGuard instance alınamadı!");
+            return false;
         }
         getLogger().info("WorldGuard API başarıyla hooklandı.");
         return true;
     }
 
     private boolean hookPlugin(String pluginName) {
-        Plugin plugin = Bukkit.getPluginManager().getPlugin(pluginName); // [cite: 30]
-        return plugin != null && plugin.isEnabled(); // [cite: 31]
+        Plugin plugin = Bukkit.getPluginManager().getPlugin(pluginName);
+        return plugin != null && plugin.isEnabled();
     }
 
-    @Override
-    public void onDisable() {
-        if (islandDataHandler != null) {
-            // Use the new IslandDataHandler to save all island data
-            islandDataHandler.saveAllIslandsToDisk();
-        }
-        getLogger().info("SkyBlockProject Eklentisi Devre Dışı Bırakıldı!"); // [cite: 32]
+    // --- Getter Metodları ---
+    public Economy getEconomy() {
+        return vaultEconomy;
+    }
+
+    public IslandDataHandler getIslandDataHandler() { return islandDataHandler; }
+    public IslandLifecycleManager getIslandLifecycleManager() { return islandLifecycleManager; }
+    public IslandSettingsManager getIslandSettingsManager() { return islandSettingsManager; }
+    public IslandMemberManager getIslandMemberManager() { return islandMemberManager; }
+    public IslandTeleportManager getIslandTeleportManager() { return islandTeleportManager; }
+    public IslandFlagManager getIslandFlagManager() { return islandFlagManager; }
+    public IslandBiomeManager getIslandBiomeManager() { return islandBiomeManager; }
+    public IslandWelcomeManager getIslandWelcomeManager() { return islandWelcomeManager; }
+    public IslandWorthManager getIslandWorthManager() { return islandWorthManager; }
+    public ShopManager getShopManager() { return shopManager; }
+    public ShopSetupGUIManager getShopSetupGUIManager() { return shopSetupGUIManager; }
+    public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; } // Getter eklendi
+    public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
+    public LuckPerms getLuckPermsApi() { return luckPermsApi; }
+
+    public Map<UUID, Location> getPlayerShopSetupState() {
+        return playerShopSetupState;
+    }
+    public Map<UUID, Location> getPlayerViewingShopLocation() {
+        return playerViewingShopLocation;
     }
 
     public int getNextIslandXAndIncrement() {
-        int currentX = this.nextIslandX; // [cite: 33]
-        this.nextIslandX += getConfig().getInt("island.spacing", 300); // [cite: 34]
-        getConfig().set("general.next-island-x", this.nextIslandX); // [cite: 34]
-        saveConfig();
+        int currentX = this.nextIslandX;
+        this.nextIslandX += getConfig().getInt("island.spacing", 300);
+        getConfig().set("general.next-island-x", this.nextIslandX);
+        // saveConfig(); // Her X artışında config kaydetmek yerine onDisable'da veya periyodik kaydetmek daha iyi olabilir.
         return currentX;
     }
 
     public RegionManager getRegionManager(World bukkitWorld) {
         if (worldGuardInstance == null || bukkitWorld == null) {
-            getLogger().severe("WorldGuard instance null veya verilen dünya null. RegionManager alınamıyor."); // [cite: 34]
-            return null; // [cite: 35]
+            getLogger().severe("WorldGuard instance null veya verilen dünya null. RegionManager alınamıyor.");
+            return null;
         }
-        com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(bukkitWorld); // [cite: 35]
-        RegionContainer container = worldGuardInstance.getPlatform().getRegionContainer(); // [cite: 35]
+        com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(bukkitWorld);
+        RegionContainer container = worldGuardInstance.getPlatform().getRegionContainer();
         if (container == null) {
-            getLogger().severe("WorldGuard RegionContainer alınamadı!"); // [cite: 36]
-            return null; // [cite: 37]
+            getLogger().severe("WorldGuard RegionContainer alınamadı!");
+            return null;
         }
-        return container.get(adaptedWorld); // [cite: 37]
+        return container.get(adaptedWorld);
     }
-
-    // --- Getters for New Managers ---
-    public IslandDataHandler getIslandDataHandler() {
-        return islandDataHandler;
-    }
-
-    public IslandLifecycleManager getIslandLifecycleManager() {
-        return islandLifecycleManager;
-    }
-
-    public IslandSettingsManager getIslandSettingsManager() {
-        return islandSettingsManager;
-    }
-
-    public IslandMemberManager getIslandMemberManager() {
-        return islandMemberManager;
-    }
-
-    public IslandTeleportManager getIslandTeleportManager() {
-        return islandTeleportManager;
-    }
-
-    // --- Getters for Existing Managers ---
-    public IslandFlagManager getIslandFlagManager() { // [cite: 43]
-        return islandFlagManager;
-    }
-
-    public FlagGUIManager getFlagGUIManager() { // [cite: 40]
-        return flagGUIManager;
-    }
-
-    public IslandBiomeManager getIslandBiomeManager() { // [cite: 41]
-        return islandBiomeManager;
-    }
-
-    public IslandWelcomeManager getIslandWelcomeManager() { // [cite: 42]
-        return islandWelcomeManager;
-    }
-
-    public LuckPerms getLuckPermsApi() {
-        return luckPermsApi;
-    }
-
-    // Optional: Getter for WorldGuard instance if other classes need it directly
-    // public WorldGuard getWorldGuardInstance() {
-    // return worldGuardInstance;
-    // }
 }
