@@ -7,9 +7,11 @@ description: KnemisSkyblockProject
 depend: # Eklentinizin çalışması için KESİNLİKLE GEREKLİ olan eklentiler
   - WorldEdit
   - WorldGuard
+  - Vault
 
 softdepend: # EKLENDİ
   - LuckPerms
+  - Essentials
 
 commands:
   island:
