@@ -240,8 +240,9 @@ public class ShopSetupListener implements Listener {
             ItemStack itemInSlot = event.getInventory().getItem(ITEM_PLACEMENT_SLOT);
             if (itemInSlot != null && itemInSlot.getType() != Material.AIR) {
                 pendingShop.setTemplateItemStack(itemInSlot.clone());
-                player.sendMessage(ChatColor.GREEN + "Satılacak eşya şablonu ayarlandı: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot));
-                event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null);
+                plugin.getPlayerInitialShopStockItem().put(playerId, itemInSlot.clone()); // Store for initial stock
+                player.sendMessage(ChatColor.GREEN + "Satılacak eşya şablonu ayarlandı: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) + ChatColor.GREEN + ". Bu eşya dükkanınızın başlangıç stoku olacak.");
+                event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null); // Item is now held by the setup process
 
                 new BukkitRunnable() {
                     @Override
@@ -254,25 +255,33 @@ public class ShopSetupListener implements Listener {
                 isStillInSetupChain = true;
             } else {
                 player.sendMessage(ChatColor.YELLOW + "Eşya seçilmedi, mağaza kurulumu iptal ediliyor.");
+                plugin.getPlayerInitialShopStockItem().remove(playerId); // Ensure cleared if never set or cancelled
             }
         } else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
-            if (pendingShop.getItemQuantityForPrice() <= 0) {
-                ItemStack itemInSlot = event.getInventory().getItem(ITEM_PLACEMENT_SLOT);
+            if (pendingShop.getItemQuantityForPrice() <= 0) { // Quantity not confirmed, setup cancelled at this stage
+                ItemStack itemInSlot = event.getInventory().getItem(ITEM_PLACEMENT_SLOT); // Item for quantity
                 if (itemInSlot != null && itemInSlot.getType() != Material.AIR) {
                     player.getInventory().addItem(itemInSlot.clone());
-                    player.sendMessage(ChatColor.YELLOW + "Miktar belirlenmedi, slotta kalan eşyalar iade edildi.");
+                    player.sendMessage(ChatColor.YELLOW + "Miktar belirlenmedi, miktar yuvasındaki eşyalar iade edildi.");
+                }
+
+                ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
+                if (initialStock != null && initialStock.getType() != Material.AIR) {
+                    player.getInventory().addItem(initialStock);
+                    player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock) + ChatColor.YELLOW + ") envanterinize iade edildi.");
                 }
                 player.sendMessage(ChatColor.YELLOW + "Miktar belirlenmedi, mağaza kurulumu iptal ediliyor.");
             } else {
+                // Quantity was confirmed, proceeding to price input via chat
                 isStillInSetupChain = true;
             }
-            event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null);
+            event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null); // Clear the slot in quantity GUI
         }
 
         if (!isStillInSetupChain) {
             plugin.getPlayerShopSetupState().remove(playerId);
-            // Yarım kalan pendingShop'u da temizlemek için ShopManager'da bir metod olabilir
-            // shopManager.removePendingShop(chestLocation);
+            plugin.getPlayerInitialShopStockItem().remove(playerId); // General cleanup if setup chain broken
+            // shopManager.removePendingShop(chestLocation); // Consider if needed
         }
     }
 
@@ -415,10 +424,14 @@ public class ShopSetupListener implements Listener {
 
             // 'iptal' komutu burada da geçerli olmalı
             if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
+                ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
+                if (initialStock != null && initialStock.getType() != Material.AIR) {
+                    player.getInventory().addItem(initialStock);
+                    player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock) + ChatColor.YELLOW + ") envanterinize iade edildi.");
+                }
                 plugin.getPlayerShopSetupState().remove(playerId);
-                // shopManager.removePendingShop(chestLocation); // pendingShop'u ShopManager'dan da silmek için metod
+                // shopManager.removePendingShop(chestLocation); // Consider adding this
                 player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve mağaza kurulumu iptal edildi.");
-                // Miktar GUI'sinde bırakılan itemleri iade etme mantığı eklenebilir (InventoryClose'da da var)
                 return;
             }
 
@@ -430,17 +443,22 @@ public class ShopSetupListener implements Listener {
                 }
 
                 double finalPrice = price;
-                // State'i burada temizleme, finalizeShopSetup içinde zaten pendingShop kaldırılıyor.
-                // Eğer finalizeShopSetup başarısız olursa state kalabilir, bu yüzden finalize sonrası temizlemek daha iyi.
-                // Şimdilik, finalize çağrısından hemen önce temizleyelim.
-                plugin.getPlayerShopSetupState().remove(playerId);
+                ItemStack initialStockItem = plugin.getPlayerInitialShopStockItem().remove(playerId);
 
+                // plugin.getPlayerShopSetupState().remove(playerId); // Moved to after finalize or on failure
 
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        shopManager.finalizeShopSetup(chestLocation, pendingShop.getTemplateItemStack(), pendingShop.getItemQuantityForPrice(), finalPrice, player);
-                        // Başarı veya hata mesajı finalizeShopSetup içinde veya sonrasında veriliyor.
+                        if (initialStockItem == null || initialStockItem.getType() == Material.AIR) {
+                            player.sendMessage(ChatColor.RED + "HATA: Mağaza için başlangıç eşyası bulunamadı! Kurulum iptal edildi. Lütfen tekrar deneyin.");
+                            // shopManager.removeShop(chestLocation, player); // This might be too aggressive for a pending shop
+                            // Consider a specific method in ShopManager to clear a pending shop if it exists.
+                            plugin.getPlayerShopSetupState().remove(playerId); // Clean up state
+                            return;
+                        }
+                        shopManager.finalizeShopSetup(chestLocation, pendingShop.getTemplateItemStack(), pendingShop.getItemQuantityForPrice(), finalPrice, player, initialStockItem);
+                        plugin.getPlayerShopSetupState().remove(playerId); // Clean up state after successful finalization or attempt
                     }
                 }.runTask(plugin);
 

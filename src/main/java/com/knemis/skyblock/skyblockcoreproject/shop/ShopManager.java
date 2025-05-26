@@ -81,7 +81,7 @@ public class ShopManager {
         return pendingShops.get(location);
     }
 
-    public void finalizeShopSetup(Location location, ItemStack templateItemStack, int itemQuantityForPrice, double price, Player actor) {
+    public void finalizeShopSetup(Location location, ItemStack templateItemStack, int itemQuantityForPrice, double price, Player actor, ItemStack initialStockItem) {
         if (location == null || templateItemStack == null || actor == null) {
             plugin.getLogger().severe("finalizeShopSetup: Null parametreler alındı!");
             if (actor != null) actor.sendMessage(ChatColor.RED + "Mağaza kurulumu sırasında beklenmedik bir hata oluştu (null parametre).");
@@ -112,11 +112,30 @@ public class ShopManager {
         activeShops.put(location, shop);
         shopStorage.saveShop(shop);
         updateAttachedSign(shop);
+
+        // Add initial stock to the chest
+        if (initialStockItem != null && initialStockItem.getType() != Material.AIR) {
+            Block shopBlock = location.getBlock();
+            if (shopBlock.getState() instanceof Chest) {
+                Chest chest = (Chest) shopBlock.getState();
+                Inventory chestInventory = chest.getInventory();
+                chestInventory.clear(); // Optional: Clear before adding
+                chestInventory.addItem(initialStockItem.clone());
+                plugin.getLogger().info("Initial stock of " + initialStockItem.getAmount() + "x " +
+                        initialStockItem.getType() + " added to shop at " + Shop.locationToString(location));
+            } else {
+                plugin.getLogger().severe("Shop block at " + Shop.locationToString(location) + " is not a Chest. Cannot add initial stock.");
+            }
+        } else {
+            plugin.getLogger().warning("Initial stock item was null or AIR for shop at " + Shop.locationToString(location) + ". No stock added.");
+        }
+
         plugin.getLogger().info("Shop finalized by " + actor.getName() + ": " + Shop.locationToString(location) +
                 " | Item: " + templateItemStack.getType() +
                 " (Meta: " + (templateItemStack.hasItemMeta() ? "Evet" : "Hayır") + ")" +
-                " Qty: " + itemQuantityForPrice + " Price: " + price);
-        actor.sendMessage(ChatColor.GREEN + "Mağazanız başarıyla kuruldu!");
+                " Qty: " + itemQuantityForPrice + " Price: " + price +
+                (initialStockItem != null && initialStockItem.getType() != Material.AIR ? " | Initial stock added: " + initialStockItem.getAmount() + "x " + initialStockItem.getType() : " | No initial stock specified"));
+        actor.sendMessage(ChatColor.GREEN + "Mağazanız başarıyla kuruldu ve başlangıç stoku eklendi!");
     }
 
     public boolean isActiveShop(Location location) {

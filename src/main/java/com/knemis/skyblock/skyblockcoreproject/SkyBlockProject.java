@@ -76,6 +76,7 @@ public final class SkyBlockProject extends JavaPlugin {
     private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
     private final Map<UUID, Location> playerAdministeringShop = new HashMap<>(); // Yeni eklendi: Hangi oyuncu hangi dükkanı yönetiyor
     private final Map<UUID, ShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>(); // Yeni eklendi: Oyuncudan beklenen admin girişi türü
+    private final Map<UUID, ItemStack> playerInitialShopStockItem = new HashMap<>();
 
     @Override
     public void onEnable() {
@@ -240,6 +241,7 @@ public final class SkyBlockProject extends JavaPlugin {
     public Map<UUID, Location> getPlayerViewingShopLocation() { return playerViewingShopLocation; }
     public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; } // Yeni eklendi
     public Map<UUID, ShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; } // Yeni eklendi
+    public Map<UUID, ItemStack> getPlayerInitialShopStockItem() { return playerInitialShopStockItem; }
 
 
     public int getNextIslandXAndIncrement() {
