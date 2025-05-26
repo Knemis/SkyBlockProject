@@ -81,61 +81,102 @@ public class ShopManager {
         return pendingShops.get(location);
     }
 
-    public void finalizeShopSetup(Location location, ItemStack templateItemStack, int itemQuantityForPrice, double price, Player actor, ItemStack initialStockItem) {
-        if (location == null || templateItemStack == null || actor == null) {
-            plugin.getLogger().severe("finalizeShopSetup: Null parametreler alındı!");
-            if (actor != null) actor.sendMessage(ChatColor.RED + "Mağaza kurulumu sırasında beklenmedik bir hata oluştu (null parametre).");
-            if (location != null) pendingShops.remove(location);
-            return;
-        }
-        Shop shop = pendingShops.remove(location);
-        if (shop == null) {
-            plugin.getLogger().warning("Tamamlanacak bekleyen mağaza bulunamadı: " + Shop.locationToString(location));
-            actor.sendMessage(ChatColor.RED + "Mağaza kurulum bilgisi bulunamadı, lütfen baştan başlayın.");
-            return;
-        }
-        if (shop.getShopType() == null) {
-            plugin.getLogger().warning("Mağaza türü belirlenmeden kurulum tamamlanamaz: " + Shop.locationToString(location));
-            actor.sendMessage(ChatColor.RED + "Mağaza türü seçilmemiş! Kurulum iptal edildi.");
-            return;
-        }
-        if (templateItemStack.getType() == Material.AIR || itemQuantityForPrice <= 0 || price < 0) {
-            plugin.getLogger().warning("Geçersiz parametrelerle mağaza kurulumu tamamlanamaz: " + Shop.locationToString(location));
-            actor.sendMessage(ChatColor.RED + "Geçersiz eşya, miktar veya fiyat! Kurulum iptal edildi.");
+    // Refactored signature
+    public void finalizeShopSetup(Location location, Player actor, ItemStack initialStockItem) {
+        if (location == null || actor == null) {
+            plugin.getLogger().severe("finalizeShopSetup: Location or actor is null!");
+            if (actor != null) actor.sendMessage(ChatColor.RED + "Shop setup failed due to an internal error (null parameters).");
+            if (location != null) pendingShops.remove(location); // Clean up pending shop if location is valid
+            // Cannot return initialStockItem if actor is null or inventory is inaccessible.
             return;
         }
 
-        shop.setTemplateItemStack(templateItemStack.clone());
-        shop.setItemQuantityForPrice(itemQuantityForPrice);
-        shop.setPrice(price);
-        shop.setSetupComplete(true);
-        activeShops.put(location, shop);
-        shopStorage.saveShop(shop);
-        updateAttachedSign(shop);
+        Shop pendingShop = pendingShops.get(location); // Retrieve from pendingShops map
+        if (pendingShop == null) {
+            plugin.getLogger().warning("No pending shop found for finalization at: " + Shop.locationToString(location));
+            actor.sendMessage(ChatColor.RED + "Shop setup information not found. Please start over.");
+            if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
+            return;
+        }
 
-        // Add initial stock to the chest
-        if (initialStockItem != null && initialStockItem.getType() != Material.AIR) {
+        // Validation based on pendingShop's state
+        if (pendingShop.getShopType() == null) {
+            plugin.getLogger().warning("Shop type not set for shop at: " + Shop.locationToString(location));
+            actor.sendMessage(ChatColor.RED + "Shop type was not selected! Setup cancelled.");
+            pendingShops.remove(location);
+            if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
+            return;
+        }
+
+        ItemStack templateItem = pendingShop.getTemplateItemStack();
+        if (templateItem == null || templateItem.getType() == Material.AIR) {
+            plugin.getLogger().warning("Template item not set for shop at: " + Shop.locationToString(location));
+            actor.sendMessage(ChatColor.RED + "The item to be sold/bought was not set! Setup cancelled.");
+            pendingShops.remove(location);
+            if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
+            return;
+        }
+
+        if (pendingShop.getItemQuantityForPrice() <= 0) {
+            plugin.getLogger().warning("Item quantity for price is invalid for shop at: " + Shop.locationToString(location) + " Qty: " + pendingShop.getItemQuantityForPrice());
+            actor.sendMessage(ChatColor.RED + "Invalid item quantity per transaction! Setup cancelled.");
+            pendingShops.remove(location);
+            if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
+            return;
+        }
+
+        boolean hasValidBuyPrice = pendingShop.getBuyPrice() >= 0;
+        boolean hasValidSellPrice = pendingShop.getSellPrice() >= 0;
+
+        if (!hasValidBuyPrice && !hasValidSellPrice) {
+            plugin.getLogger().warning("Neither buy price nor sell price is valid for shop at: " + Shop.locationToString(location) + " BuyP: " + pendingShop.getBuyPrice() + " SellP: " + pendingShop.getSellPrice());
+            actor.sendMessage(ChatColor.RED + "No valid price set for buying or selling! Setup cancelled.");
+            pendingShops.remove(location);
+            if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
+            return;
+        }
+
+        // All validations passed, remove from pending and proceed
+        pendingShops.remove(location); // Remove from pending map
+
+        pendingShop.setSetupComplete(true); // Mark as complete
+        activeShops.put(location, pendingShop); // Add to active shops
+        shopStorage.saveShop(pendingShop);    // Persist
+        updateAttachedSign(pendingShop);      // Update sign
+
+        // Add initial stock to the chest if applicable
+        // A shop that only buys from players (sellPrice >= 0 and buyPrice == -1) should not have initial stock placed.
+        // initialStockItem should be null in that case, which is handled by ShopSetupListener.
+        boolean needsStocking = initialStockItem != null && initialStockItem.getType() != Material.AIR;
+        boolean canBeStocked = pendingShop.getBuyPrice() != -1; // Shop sells to players (or is two-way)
+
+        if (needsStocking && canBeStocked) {
             Block shopBlock = location.getBlock();
             if (shopBlock.getState() instanceof Chest) {
                 Chest chest = (Chest) shopBlock.getState();
                 Inventory chestInventory = chest.getInventory();
-                chestInventory.clear(); // Optional: Clear before adding
+                chestInventory.clear();
                 chestInventory.addItem(initialStockItem.clone());
                 plugin.getLogger().info("Initial stock of " + initialStockItem.getAmount() + "x " +
                         initialStockItem.getType() + " added to shop at " + Shop.locationToString(location));
             } else {
                 plugin.getLogger().severe("Shop block at " + Shop.locationToString(location) + " is not a Chest. Cannot add initial stock.");
             }
+        } else if (needsStocking && !canBeStocked) {
+            plugin.getLogger().info("Initial stock item provided for shop at " + Shop.locationToString(location) +
+                    ", but shop is configured to only buy from players (buyPrice is -1). Stock not added.");
         } else {
-            plugin.getLogger().warning("Initial stock item was null or AIR for shop at " + Shop.locationToString(location) + ". No stock added.");
+            plugin.getLogger().info("No initial stock item provided or item was AIR for shop at " + Shop.locationToString(location) + ". No stock added by default.");
         }
 
+        // Updated logging
         plugin.getLogger().info("Shop finalized by " + actor.getName() + ": " + Shop.locationToString(location) +
-                " | Item: " + templateItemStack.getType() +
-                " (Meta: " + (templateItemStack.hasItemMeta() ? "Evet" : "Hayır") + ")" +
-                " Qty: " + itemQuantityForPrice + " Price: " + price +
-                (initialStockItem != null && initialStockItem.getType() != Material.AIR ? " | Initial stock added: " + initialStockItem.getAmount() + "x " + initialStockItem.getType() : " | No initial stock specified"));
-        actor.sendMessage(ChatColor.GREEN + "Mağazanız başarıyla kuruldu ve başlangıç stoku eklendi!");
+                " | Item: " + pendingShop.getTemplateItemStack().getType() +
+                " Qty: " + pendingShop.getItemQuantityForPrice() +
+                " BuyPrice: " + pendingShop.getBuyPrice() + // Price players pay
+                " SellPrice: " + pendingShop.getSellPrice() + // Price players receive
+                (needsStocking && canBeStocked ? " | Initial stock added: " + initialStockItem.getAmount() + "x " + initialStockItem.getType() : " | No initial stock or shop only buys"));
+        actor.sendMessage(ChatColor.GREEN + "Your shop has been successfully created!");
     }
 
     public boolean isActiveShop(Location location) {
@@ -251,14 +292,44 @@ public class ShopManager {
             }
         }
 
-        String priceInfo = shop.getItemQuantityForPrice() + "/" + String.format("%.1f", shop.getPrice()) + currencySymbol;
-        if (ChatColor.stripColor(priceInfo).length() > 15) {
-            priceInfo = shop.getItemQuantityForPrice() + "/" + String.format("%.0f", shop.getPrice()) + currencySymbol;
+        // Sign update logic needs to consider buy/sell prices
+        String priceString;
+        String shopAction; // "Buying", "Selling", "B/S"
+
+        if (shop.getBuyPrice() >= 0 && shop.getSellPrice() >= 0) {
+            shopAction = "B/S"; // Both Buy and Sell
+            priceString = String.format("B:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
+        } else if (shop.getBuyPrice() >= 0) {
+            shopAction = "Selling"; // Owner is selling, players are buying
+            priceString = String.format("Price:%.0f", shop.getBuyPrice());
+        } else if (shop.getSellPrice() >= 0) {
+            shopAction = "Buying"; // Owner is buying, players are selling
+            priceString = String.format("Pay:%.0f", shop.getSellPrice());
+        } else {
+            shopAction = "Error";
+            priceString = "Not Priced"; // Should not happen if finalizeShopSetup validation is correct
         }
 
-        signState.line(0, Component.text("[Mağaza]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD));
+        // Construct the full price line, e.g., "16 for B:10 S:8 $"
+        String fullPriceLine = shop.getItemQuantityForPrice() + " for " + priceString + currencySymbol;
+        if (ChatColor.stripColor(fullPriceLine).length() > 15) { // Attempt to shorten
+            if (shop.getBuyPrice() >= 0 && shop.getSellPrice() >= 0) {
+                fullPriceLine = String.format("B:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
+            } else if (shop.getBuyPrice() >= 0) {
+                fullPriceLine = String.format("Sell:%.0f", shop.getBuyPrice());
+            } else if (shop.getSellPrice() >= 0) {
+                fullPriceLine = String.format("Buy:%.0f", shop.getSellPrice());
+            }
+            // Prepend quantity again
+            fullPriceLine = shop.getItemQuantityForPrice() + "/" + fullPriceLine;
+            if (ChatColor.stripColor(fullPriceLine).length() > 15) { // Final attempt
+                fullPriceLine = shop.getItemQuantityForPrice() + "/" + (shop.getBuyPrice() >=0 ? shop.getBuyPrice() : shop.getSellPrice());
+            }
+        }
+
+        signState.line(0, Component.text("[Shop]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD));
         signState.line(1, Component.text(itemName, NamedTextColor.BLACK));
-        signState.line(2, Component.text(priceInfo, NamedTextColor.DARK_GREEN));
+        signState.line(2, Component.text(fullPriceLine, NamedTextColor.DARK_GREEN)); // Updated price line
         signState.line(3, Component.text(ownerName, NamedTextColor.DARK_PURPLE));
         signState.update(true);
     }
@@ -401,10 +472,16 @@ public class ShopManager {
 
         int itemsPerBundle = shop.getItemQuantityForPrice();
         int totalItemsToBuy = bundlesToBuy * itemsPerBundle;
-        double totalCost = bundlesToBuy * shop.getPrice();
+
+        // executePurchase is for when a player BUYS from the shop.
+        if (shop.getBuyPrice() < 0) { // Shop does not sell this item (buyPrice is what player pays)
+            buyer.sendMessage(ChatColor.RED + "This shop is not selling items currently.");
+            return false;
+        }
+        double totalCost = bundlesToBuy * shop.getBuyPrice(); // Player pays the shop's buyPrice
         ItemStack templateItem = shop.getTemplateItemStack();
 
-        if (totalItemsToBuy <= 0 || totalCost < 0) { // Fiyat 0 olabilir (ücretsiz)
+        if (totalItemsToBuy <= 0 || totalCost < 0) { // buyPrice can be 0 for free items
             plugin.getLogger().warning("[ShopManager-Purchase] Geçersiz hesaplanmış miktar veya fiyat. Mağaza: " + Shop.locationToString(shop.getLocation()));
             buyer.sendMessage(ChatColor.RED + "Mağaza ayarlarında bir sorun var.");
             return false;

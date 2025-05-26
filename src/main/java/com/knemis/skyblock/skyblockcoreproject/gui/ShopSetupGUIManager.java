@@ -74,35 +74,54 @@ public class ShopSetupGUIManager {
     public void openShopTypeSelectionMenu(Player player, Location chestLocation) {
         Inventory gui = Bukkit.createInventory(null, 27, SHOP_TYPE_TITLE);
 
-        // Alışveriş Sandığı Seçeneği
-        ItemStack tradeChestItem = new ItemStack(Material.CHEST);
-        ItemMeta tradeMeta = tradeChestItem.getItemMeta();
-        if (tradeMeta != null) {
-            tradeMeta.displayName(Component.text("Alışveriş Mağazası", NamedTextColor.GOLD, TextDecoration.BOLD));
-            List<Component> tradeLore = new ArrayList<>();
-            tradeLore.add(Component.text("Oyuncular belirlediğiniz paketler halinde", NamedTextColor.YELLOW));
-            tradeLore.add(Component.text("ürün satın alabilirler.", NamedTextColor.YELLOW));
-            tradeLore.add(Component.text("Örn: 16 Taş / 10 Para", NamedTextColor.GRAY));
-            tradeMeta.lore(tradeLore);
-            tradeChestItem.setItemMeta(tradeMeta);
+        // PLAYER_SELL_SHOP (Players buy from owner)
+        ItemStack sellShopItem = new ItemStack(Material.CHEST);
+        ItemMeta sellMeta = sellShopItem.getItemMeta();
+        if (sellMeta != null) {
+            sellMeta.displayName(Component.text("Sell Shop (Players Buy From You)", NamedTextColor.GOLD, TextDecoration.BOLD));
+            List<Component> sellLore = new ArrayList<>();
+            sellLore.add(Component.text("Players will buy items that you stock", NamedTextColor.YELLOW));
+            sellLore.add(Component.text("in this shop.", NamedTextColor.YELLOW));
+            sellLore.add(Component.text("You set the price for items you sell.", NamedTextColor.GRAY));
+            sellMeta.lore(sellLore);
+            sellShopItem.setItemMeta(sellMeta);
         }
 
-        // Banka Sandığı Seçeneği
-        ItemStack bankChestItem = new ItemStack(Material.ENDER_CHEST);
-        ItemMeta bankMeta = bankChestItem.getItemMeta();
-        if (bankMeta != null) {
-            bankMeta.displayName(Component.text("Banka Mağazası", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
-            List<Component> bankLore = new ArrayList<>();
-            bankLore.add(Component.text("Oyuncular sandıktaki tüm ürünleri", NamedTextColor.YELLOW));
-            bankLore.add(Component.text("(veya paraları yettiği kadarını)", NamedTextColor.YELLOW));
-            bankLore.add(Component.text("tek seferde satın alabilir.", NamedTextColor.YELLOW));
-            bankMeta.lore(bankLore);
-            bankChestItem.setItemMeta(bankMeta);
+        // PLAYER_BUY_SHOP (Players sell to owner)
+        ItemStack buyShopItem = new ItemStack(Material.HOPPER);
+        ItemMeta buyMeta = buyShopItem.getItemMeta();
+        if (buyMeta != null) {
+            buyMeta.displayName(Component.text("Buy Shop (Players Sell To You)", NamedTextColor.AQUA, TextDecoration.BOLD));
+            List<Component> buyLore = new ArrayList<>();
+            buyLore.add(Component.text("Players will sell items to this shop.", NamedTextColor.YELLOW));
+            buyLore.add(Component.text("You set the price for items you buy.", NamedTextColor.GRAY));
+            buyLore.add(Component.text("Ensure your island has funds for purchases.", NamedTextColor.LIGHT_PURPLE));
+            buyMeta.lore(buyLore);
+            buyShopItem.setItemMeta(buyMeta);
         }
 
-        fillGuiBackground(gui, PLACEHOLDER_ITEM_GRAY, 11, 15); // Belirli slotlar hariç doldur
-        gui.setItem(11, tradeChestItem);
-        gui.setItem(15, bankChestItem);
+        // PLAYER_BUY_SELL_SHOP (Two-way shop)
+        ItemStack buySellShopItem = new ItemStack(Material.REPEATER); // Or another suitable icon like OBSERVER
+        ItemMeta buySellMeta = buySellShopItem.getItemMeta();
+        if (buySellMeta != null) {
+            buySellMeta.displayName(Component.text("Two-Way Shop (Buy & Sell)", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
+            List<Component> buySellLore = new ArrayList<>();
+            buySellLore.add(Component.text("This shop allows players to both buy", NamedTextColor.YELLOW));
+            buySellLore.add(Component.text("items from you and sell items to you.", NamedTextColor.YELLOW));
+            buySellLore.add(Component.text("You set both buy and sell prices.", NamedTextColor.GRAY));
+            buySellMeta.lore(buySellLore);
+            buySellShopItem.setItemMeta(buySellMeta);
+        }
+
+        // Slot placements for three items (e.g., 10, 13, 16 for center row)
+        int sellShopSlot = 10;
+        int buySellShopSlot = 13;
+        int buyShopSlot = 16;
+
+        fillGuiBackground(gui, PLACEHOLDER_ITEM_GRAY, sellShopSlot, buySellShopSlot, buyShopSlot);
+        gui.setItem(sellShopSlot, sellShopItem);
+        gui.setItem(buySellShopSlot, buySellShopItem);
+        gui.setItem(buyShopSlot, buyShopItem);
 
         plugin.getPlayerShopSetupState().put(player.getUniqueId(), chestLocation);
         player.openInventory(gui);
@@ -228,13 +247,33 @@ public class ShopSetupGUIManager {
                 LegacyComponentSerializer.legacySection().serialize(shop.getTemplateItemStack().getItemMeta().displayName()) :
                 shop.getTemplateItemStack().getType().toString().toLowerCase().replace("_", " ");
 
-        player.sendMessage(ChatColor.GOLD + "===== Fiyat Belirleme =====");
-        player.sendMessage(ChatColor.YELLOW + "Satılacak Eşya: " + ChatColor.AQUA + itemName);
-        player.sendMessage(ChatColor.YELLOW + "Paket Miktarı: " + ChatColor.AQUA + shop.getItemQuantityForPrice() + " adet");
-        player.sendMessage(ChatColor.GREEN + "Lütfen bu paket için belirlemek istediğiniz toplam fiyatı chat'e girin.");
-        player.sendMessage(ChatColor.GRAY + "Örnek: " + ChatColor.WHITE + "100.50" + ChatColor.GRAY + " veya " + ChatColor.WHITE + "50");
-        player.sendMessage(ChatColor.GRAY + "İptal etmek için '" + ChatColor.RED + "iptal" + ChatColor.GRAY + "' yazın.");
-        // playerShopSetupState zaten ShopListener veya önceki GUI açılışında ayarlanmıştı,
-        // fiyat girildiğinde bu state'e göre işlem yapılacak.
+        player.sendMessage(ChatColor.GOLD + "===== Price Setup =====");
+        player.sendMessage(ChatColor.YELLOW + "Item: " + ChatColor.AQUA + itemName);
+        player.sendMessage(ChatColor.YELLOW + "Quantity per transaction: " + ChatColor.AQUA + shop.getItemQuantityForPrice());
+
+        switch (shop.getShopType()) {
+            case PLAYER_SELL_SHOP:
+                player.sendMessage(ChatColor.GREEN + "Please enter the price players will pay to buy this package.");
+                player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "100.50" + ChatColor.GRAY + " or " + ChatColor.WHITE + "50");
+                break;
+            case PLAYER_BUY_SHOP:
+                player.sendMessage(ChatColor.GREEN + "Please enter the price you will pay players for this package.");
+                player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "80.00" + ChatColor.GRAY + " or " + ChatColor.WHITE + "75");
+                break;
+            case PLAYER_BUY_SELL_SHOP:
+                player.sendMessage(ChatColor.GREEN + "Enter prices as 'YOUR_BUY_PRICE:YOUR_SELL_PRICE'.");
+                player.sendMessage(ChatColor.GRAY + "YOUR_BUY_PRICE is what players pay you (e.g., you sell for 100).");
+                player.sendMessage(ChatColor.GRAY + "YOUR_SELL_PRICE is what you pay players (e.g., you buy for 80).");
+                player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "100:80");
+                player.sendMessage(ChatColor.GRAY + "If you only want to sell, use a sell price of -1 (e.g., '100:-1').");
+                player.sendMessage(ChatColor.GRAY + "If you only want to buy, use a buy price of -1 (e.g., '-1:80').");
+                break;
+            default:
+                player.sendMessage(ChatColor.RED + "Error: Unknown shop type! Please restart setup.");
+                plugin.getPlayerShopSetupState().remove(player.getUniqueId());
+                plugin.getPlayerInitialShopStockItem().remove(player.getUniqueId()); // Clean up potential stock
+                return;
+        }
+        player.sendMessage(ChatColor.GRAY + "To cancel, type '" + ChatColor.RED + "iptal" + ChatColor.GRAY + "'.");
     }
 }

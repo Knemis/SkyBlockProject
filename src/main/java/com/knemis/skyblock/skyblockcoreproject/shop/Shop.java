@@ -21,7 +21,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
     // Geliştirilmiş Eşya Tanımlaması
     private ItemStack templateItemStack; // Satılacak eşyanın tam bir kopyası (NBT dahil)
     private int itemQuantityForPrice;  // Bu 'templateItemStack'den kaç adet için fiyat belirlendiği
-    private double price;              // Belirlenen miktar için fiyat
+    private double buyPrice;           // Oyuncunun eşyayı almak için ödeyeceği fiyat (dükkan SATIYOR)
+    private double sellPrice;          // Oyuncunun eşyayı satmak için alacağı fiyat (dükkan ALIYOR), -1 ise alım yok
 
     private boolean setupComplete;     // Kurulum tamamlandı mı?
     private boolean isAdminShop;       // Bu bir admin mağazası mı?
@@ -50,28 +51,47 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         this.shopType = shopType;
         this.setupComplete = false;
         this.isAdminShop = false; // Varsayılan olarak oyuncu mağazası
+        this.buyPrice = 0.0;      // Kurulumda atanacak
+        this.sellPrice = -1.0;    // Kurulumda atanacak, -1 alım olmadığını gösterir
         this.totalItemsSold = 0;
         this.totalEarnings = 0.0;
         this.lastActivityTimestamp = System.currentTimeMillis();
-        // templateItemStack, itemQuantityForPrice, price kurulum sırasında atanacak
+        // templateItemStack, itemQuantityForPrice kurulum sırasında atanacak
     }
 
     /**
      * Tamamen yapılandırılmış bir mağaza için (veya dosyadan yüklenirken) constructor.
      */
     public Shop(Location location, UUID ownerUUID, ShopType shopType,
-                ItemStack templateItemStack, int itemQuantityForPrice, double price,
+                ItemStack templateItemStack, int itemQuantityForPrice, double buyPrice, double sellPrice,
                 boolean setupComplete, boolean isAdminShop,
                 long totalItemsSold, double totalEarnings, String shopDisplayName, long lastActivityTimestamp) {
         this(location, ownerUUID, shopType); // Temel constructor'ı çağır
 
         if (templateItemStack == null && setupComplete) throw new IllegalArgumentException("Template ItemStack cannot be null for a completed shop.");
         if (itemQuantityForPrice <= 0 && setupComplete) throw new IllegalArgumentException("Item quantity for price must be positive for a completed shop.");
-        if (price < 0 && setupComplete) throw new IllegalArgumentException("Price cannot be negative for a completed shop.");
+        // buyPrice >= 0 olmalı, sellPrice >= -1 (ya da >=0 eğer -1 "not set" anlamındaysa)
+        if (buyPrice < 0 && setupComplete && shopType != ShopType.BANK_CHEST) { // Bank chestler için fiyat olmayabilir
+            // veya sellPrice > 0 ise (yani alım mağazasıysa) buyPrice 0 olabilir
+            boolean isPotentiallyBuyShop = sellPrice >= 0;
+            if (!isPotentiallyBuyShop) { // Eğer sadece satış mağazasıysa (buyPrice üzerinden) ve buyPrice < 0 ise hata.
+                throw new IllegalArgumentException("Buy price cannot be negative for a completed non-bank, non-buy-only shop.");
+            } else if (buyPrice < 0 && isPotentiallyBuyShop && shopType != ShopType.BANK_CHEST) {
+                // Hem alım hem satım yapıyorsa ve buyPrice < 0 ise hata.
+                // Aslında bu durum "sadece alım" mağazası olarak yorumlanabilir, buyPrice = 0 veya pozitif olmalı.
+                // Şimdilik basit tutalım: buyPrice < 0 ise ve alım mağazası değilse (sellPrice < 0) hata.
+                // Eğer sellPrice >=0 ise, buyPrice'ın 0 veya pozitif olması beklenir.
+                // Bu mantık ShopManager'da daha detaylı ele alınabilir. Şimdilik buyPrice < 0 ise ve sellPrice < 0 ise hata verelim.
+                if (sellPrice < 0) throw new IllegalArgumentException("Buy price cannot be negative if sell price is not set.");
+            }
+        }
+        if (sellPrice < -1 && setupComplete && shopType != ShopType.BANK_CHEST) throw new IllegalArgumentException("Sell price cannot be less than -1 for a completed non-bank shop.");
+
 
         this.templateItemStack = (templateItemStack != null) ? templateItemStack.clone() : null;
         this.itemQuantityForPrice = itemQuantityForPrice;
-        this.price = price;
+        this.buyPrice = buyPrice;
+        this.sellPrice = sellPrice;
         this.setupComplete = setupComplete;
         this.isAdminShop = isAdminShop;
         this.totalItemsSold = totalItemsSold;
@@ -86,7 +106,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
     public ShopType getShopType() { return shopType; }
     public ItemStack getTemplateItemStack() { return (templateItemStack != null) ? templateItemStack.clone() : null; }
     public int getItemQuantityForPrice() { return itemQuantityForPrice; }
-    public double getPrice() { return price; }
+    public double getBuyPrice() { return buyPrice; } // Renamed
+    public double getSellPrice() { return sellPrice; } // Added
     public boolean isSetupComplete() { return setupComplete; }
     public boolean isAdminShop() { return isAdminShop; }
     public long getTotalItemsSold() { return totalItemsSold; }
@@ -117,11 +138,19 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         updateLastActivity();
     }
 
-    public void setPrice(double price) {
-        if (price < 0) { // Fiyat 0 olabilir (ücretsiz itemler için)
-            throw new IllegalArgumentException("Price cannot be negative.");
+    public void setBuyPrice(double buyPrice) { // Renamed
+        if (buyPrice < 0) { // Fiyat 0 olabilir (ücretsiz itemler için)
+            throw new IllegalArgumentException("Buy price cannot be negative.");
         }
-        this.price = price;
+        this.buyPrice = buyPrice;
+        updateLastActivity();
+    }
+
+    public void setSellPrice(double sellPrice) { // Added
+        if (sellPrice < -1.0) { // -1.0 "not set" anlamına gelebilir
+            throw new IllegalArgumentException("Sell price cannot be less than -1.");
+        }
+        this.sellPrice = sellPrice;
         updateLastActivity();
     }
 
@@ -168,7 +197,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
             map.put("templateItemStack", templateItemStack.serialize()); // ItemStack serileştirme
         }
         map.put("itemQuantityForPrice", itemQuantityForPrice);
-        map.put("price", price);
+        map.put("buyPrice", buyPrice); // Renamed
+        map.put("sellPrice", sellPrice); // Added
         map.put("setupComplete", setupComplete);
         map.put("isAdminShop", isAdminShop);
         map.put("totalItemsSold", totalItemsSold);
@@ -209,7 +239,17 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         }
 
         shop.itemQuantityForPrice = (int) map.getOrDefault("itemQuantityForPrice", 1);
-        shop.price = ((Number) map.getOrDefault("price", 0.0)).doubleValue();
+
+        // Backward compatibility for price -> buyPrice
+        if (map.containsKey("buyPrice")) {
+            shop.buyPrice = ((Number) map.get("buyPrice")).doubleValue();
+        } else if (map.containsKey("price")) { // Legacy support
+            shop.buyPrice = ((Number) map.get("price")).doubleValue();
+        } else {
+            shop.buyPrice = 0.0; // Default if neither is found
+        }
+        shop.sellPrice = ((Number) map.getOrDefault("sellPrice", -1.0)).doubleValue(); // Default to -1.0 if not found
+
         shop.setupComplete = (boolean) map.getOrDefault("setupComplete", false);
         shop.isAdminShop = (boolean) map.getOrDefault("isAdminShop", false);
         shop.totalItemsSold = ((Number) map.getOrDefault("totalItemsSold", 0L)).longValue();

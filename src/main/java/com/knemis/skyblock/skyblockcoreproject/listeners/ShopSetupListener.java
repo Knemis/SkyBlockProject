@@ -34,9 +34,12 @@ public class ShopSetupListener implements Listener {
     private final ShopManager shopManager;
     private final ShopSetupGUIManager shopSetupGUIManager;
 
-    private static final int SHOP_TYPE_TRADE_SLOT = 11;
-    private static final int SHOP_TYPE_BANK_SLOT = 15;
-    private static final int ITEM_PLACEMENT_SLOT = 13;
+    // Updated slot constants for three shop types
+    private static final int PLAYER_SELL_SHOP_SLOT = 10;
+    private static final int PLAYER_BUY_SELL_SHOP_SLOT = 13;
+    private static final int PLAYER_BUY_SHOP_SLOT = 16;
+
+    private static final int ITEM_PLACEMENT_SLOT = 13; // This is for ITEM_SELECT_TITLE and QUANTITY_INPUT_TITLE GUIs
     private static final int CONFIRM_BUTTON_SLOT_QUANTITY = 31;
 
     public ShopSetupListener(SkyBlockProject plugin, ShopManager shopManager, ShopSetupGUIManager shopSetupGUIManager) {
@@ -61,7 +64,8 @@ public class ShopSetupListener implements Listener {
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
             int rawSlot = event.getRawSlot();
-            if (rawSlot != SHOP_TYPE_TRADE_SLOT && rawSlot != SHOP_TYPE_BANK_SLOT) return;
+            // Check against new slot constants
+            if (rawSlot != PLAYER_SELL_SHOP_SLOT && rawSlot != PLAYER_BUY_SELL_SHOP_SLOT && rawSlot != PLAYER_BUY_SHOP_SLOT) return;
 
             Location chestLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
             if (chestLocation == null) {
@@ -77,10 +81,12 @@ public class ShopSetupListener implements Listener {
             }
 
             ShopType selectedType = null;
-            if (clickedItem.getType() == Material.CHEST && rawSlot == SHOP_TYPE_TRADE_SLOT) {
-                selectedType = ShopType.TRADE_CHEST;
-            } else if (clickedItem.getType() == Material.ENDER_CHEST && rawSlot == SHOP_TYPE_BANK_SLOT) {
-                selectedType = ShopType.BANK_CHEST;
+            if (clickedItem.getType() == Material.CHEST && rawSlot == PLAYER_SELL_SHOP_SLOT) {
+                selectedType = ShopType.PLAYER_SELL_SHOP;
+            } else if (clickedItem.getType() == Material.REPEATER && rawSlot == PLAYER_BUY_SELL_SHOP_SLOT) { // Assuming REPEATER for BUY_SELL
+                selectedType = ShopType.PLAYER_BUY_SELL_SHOP;
+            } else if (clickedItem.getType() == Material.HOPPER && rawSlot == PLAYER_BUY_SHOP_SLOT) {
+                selectedType = ShopType.PLAYER_BUY_SHOP;
             }
 
             if (selectedType != null) {
@@ -240,9 +246,29 @@ public class ShopSetupListener implements Listener {
             ItemStack itemInSlot = event.getInventory().getItem(ITEM_PLACEMENT_SLOT);
             if (itemInSlot != null && itemInSlot.getType() != Material.AIR) {
                 pendingShop.setTemplateItemStack(itemInSlot.clone());
-                plugin.getPlayerInitialShopStockItem().put(playerId, itemInSlot.clone()); // Store for initial stock
-                player.sendMessage(ChatColor.GREEN + "Satılacak eşya şablonu ayarlandı: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) + ChatColor.GREEN + ". Bu eşya dükkanınızın başlangıç stoku olacak.");
+                // Store initial stock only if it's not a pure BUY shop.
+                // For BUY_SELL shops, it's provisionally stored; might be cleared later if only buying.
+                if (pendingShop.getShopType() != ShopType.PLAYER_BUY_SHOP) {
+                    plugin.getPlayerInitialShopStockItem().put(playerId, itemInSlot.clone());
+                    player.sendMessage(ChatColor.GREEN + "Template item set: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) + ChatColor.GREEN + ". This will be your initial stock if your shop sells this item.");
+                } else {
+                    player.sendMessage(ChatColor.GREEN + "Template item set: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) + ChatColor.GREEN + ". (Initial stock not applicable for Buy-Only shops).");
+                }
                 event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null); // Item is now held by the setup process
+
+
+                // Check if it's a PLAYER_BUY_SHOP, if so, clear any potentially (erroneously) stored initial stock.
+                // This specific check here in ITEM_SELECT_TITLE's close might be slightly redundant
+                // if type is selected first, but good for safety. The main check would be before finalize.
+                if (pendingShop.getShopType() == ShopType.PLAYER_BUY_SHOP) {
+                    ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(player.getUniqueId());
+                    if (initialStock != null && initialStock.getType() != Material.AIR) {
+                        // This item should not have been stored, but if it was, return it.
+                        // Normally, the player wouldn't have a chance to set initial stock for a BUY_SHOP.
+                        player.getInventory().addItem(initialStock);
+                        player.sendMessage(ChatColor.YELLOW + "Internal note: Initial stock item was cleared as this is a 'Buy Shop'.");
+                    }
+                }
 
                 new BukkitRunnable() {
                     @Override
@@ -424,46 +450,102 @@ public class ShopSetupListener implements Listener {
 
             // 'iptal' komutu burada da geçerli olmalı
             if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
-                ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
-                if (initialStock != null && initialStock.getType() != Material.AIR) {
-                    player.getInventory().addItem(initialStock);
-                    player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock) + ChatColor.YELLOW + ") envanterinize iade edildi.");
+                ItemStack initialStockToReturn = plugin.getPlayerInitialShopStockItem().remove(playerId);
+                if (initialStockToReturn != null && initialStockToReturn.getType() != Material.AIR) {
+                    player.getInventory().addItem(initialStockToReturn);
+                    player.sendMessage(ChatColor.YELLOW + "Initial stock item (" + ChatColor.AQUA + getItemNameForMessages(initialStockToReturn) + ChatColor.YELLOW + ") returned to inventory.");
                 }
                 plugin.getPlayerShopSetupState().remove(playerId);
-                // shopManager.removePendingShop(chestLocation); // Consider adding this
-                player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve mağaza kurulumu iptal edildi.");
+                player.sendMessage(ChatColor.YELLOW + "Price input and shop setup cancelled.");
                 return;
             }
 
+            ShopType shopType = pendingShop.getShopType();
+            double buyPrice = -1;  // Price players pay to buy from shop owner
+            double sellPrice = -1; // Price players get for selling to shop owner
+            ItemStack actualInitialStock = plugin.getPlayerInitialShopStockItem().get(playerId); // Get, don't remove yet
+
             try {
-                double price = Double.parseDouble(message);
-                if (price < 0) {
-                    player.sendMessage(ChatColor.RED + "Fiyat negatif olamaz. Lütfen geçerli bir fiyat girin veya 'iptal' yazın.");
-                    return; // State'i koru, oyuncu tekrar denesin.
+                switch (shopType) {
+                    case PLAYER_SELL_SHOP:
+                        buyPrice = Double.parseDouble(message);
+                        if (buyPrice < 0) {
+                            player.sendMessage(ChatColor.RED + "Buy price cannot be negative. Please enter a valid price or 'iptal'.");
+                            return;
+                        }
+                        pendingShop.setBuyPrice(buyPrice);
+                        pendingShop.setSellPrice(-1); // Explicitly not a buy-from-player shop
+                        break;
+                    case PLAYER_BUY_SHOP:
+                        sellPrice = Double.parseDouble(message);
+                        if (sellPrice < 0) {
+                            player.sendMessage(ChatColor.RED + "Sell price cannot be negative. Please enter a valid price or 'iptal'.");
+                            return;
+                        }
+                        pendingShop.setSellPrice(sellPrice);
+                        pendingShop.setBuyPrice(-1); // Explicitly not a sell-to-player shop
+                        actualInitialStock = null; // No initial stock for pure buy shops
+                        plugin.getPlayerInitialShopStockItem().remove(playerId); // Clear it if it was there
+                        break;
+                    case PLAYER_BUY_SELL_SHOP:
+                        String[] prices = message.split(":");
+                        if (prices.length != 2) {
+                            player.sendMessage(ChatColor.RED + "Invalid format. Use 'BUY_PRICE:SELL_PRICE' (e.g., 100:80 or 100:-1 or -1:80). Or type 'iptal'.");
+                            return;
+                        }
+                        buyPrice = Double.parseDouble(prices[0].trim());
+                        sellPrice = Double.parseDouble(prices[1].trim());
+
+                        if (buyPrice < 0 && buyPrice != -1) {
+                            player.sendMessage(ChatColor.RED + "Invalid buy price. Must be positive or -1 (to disable buying from shop). Try again or 'iptal'.");
+                            return;
+                        }
+                        if (sellPrice < 0 && sellPrice != -1) {
+                            player.sendMessage(ChatColor.RED + "Invalid sell price. Must be positive or -1 (to disable selling to shop). Try again or 'iptal'.");
+                            return;
+                        }
+                        if (buyPrice == -1 && sellPrice == -1) {
+                            player.sendMessage(ChatColor.RED + "Both buy and sell prices cannot be -1. At least one must be active. Try again or 'iptal'.");
+                            return;
+                        }
+                        pendingShop.setBuyPrice(buyPrice);
+                        pendingShop.setSellPrice(sellPrice);
+                        if (buyPrice == -1) { // If shop is only buying from players, no initial stock needed from owner.
+                            actualInitialStock = null;
+                            plugin.getPlayerInitialShopStockItem().remove(playerId);
+                        }
+                        break;
+                    default:
+                        player.sendMessage(ChatColor.RED + "Internal error: Unknown shop type during price setup. Please cancel and restart.");
+                        return;
                 }
 
-                double finalPrice = price;
-                ItemStack initialStockItem = plugin.getPlayerInitialShopStockItem().remove(playerId);
+                // Finalize: Remove states and call ShopManager
+                plugin.getPlayerShopSetupState().remove(playerId);
+                plugin.getPlayerInitialShopStockItem().remove(playerId); // Remove now that we've decided on actualInitialStock
 
-                // plugin.getPlayerShopSetupState().remove(playerId); // Moved to after finalize or on failure
+                // Make a final copy for the runnable
+                final ItemStack finalInitialStock = actualInitialStock;
+                final Shop finalPendingShop = pendingShop; // Capture current state for runnable
 
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        if (initialStockItem == null || initialStockItem.getType() == Material.AIR) {
-                            player.sendMessage(ChatColor.RED + "HATA: Mağaza için başlangıç eşyası bulunamadı! Kurulum iptal edildi. Lütfen tekrar deneyin.");
-                            // shopManager.removeShop(chestLocation, player); // This might be too aggressive for a pending shop
-                            // Consider a specific method in ShopManager to clear a pending shop if it exists.
-                            plugin.getPlayerShopSetupState().remove(playerId); // Clean up state
-                            return;
-                        }
-                        shopManager.finalizeShopSetup(chestLocation, pendingShop.getTemplateItemStack(), pendingShop.getItemQuantityForPrice(), finalPrice, player, initialStockItem);
-                        plugin.getPlayerShopSetupState().remove(playerId); // Clean up state after successful finalization or attempt
+                        // Template item and quantity should already be set on finalPendingShop
+                        // The Shop object (finalPendingShop) should already have its buyPrice and sellPrice set
+                        // by the logic within this onPlayerChatForPrice method before this runnable.
+                        // The template item and quantity are also already set on finalPendingShop.
+                        // ShopManager.finalizeShopSetup will now retrieve these from the pendingShop via location.
+                        shopManager.finalizeShopSetup(
+                                chestLocation,
+                                player,
+                                finalInitialStock // This will be null if not applicable for the shop type
+                        );
                     }
                 }.runTask(plugin);
 
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Geçersiz fiyat formatı. Lütfen sadece sayı girin (örn: 10.5 veya 100) veya 'iptal' yazın.");
+                player.sendMessage(ChatColor.RED + "Invalid price format. Please enter numbers (e.g., 10.5 or 100:80) or 'iptal'.");
                 // State'i koru, oyuncu tekrar denesin.
             }
         }
