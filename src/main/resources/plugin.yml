@@ -18,3 +18,8 @@ commands:
     description: Temel Skyblock ada komutları.
     usage: /<command> [create | ...] # Oyuncuya komutun nasıl kullanılacağını gösterir
     aliases: [i, is] # Komut için alternatif isimler (isteğe bağlı)
+  missions:
+    description: Access and manage your island missions.
+    aliases: [mission, quests, quest, challenges]
+    usage: /<command> [gui|open]
+    permission: skyblock.missions.access

@@ -16,11 +16,17 @@ import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener; // Added import
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
+import com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager; // Added import
+import com.knemis.skyblock.skyblockcoreproject.missions.MissionManager;
+import com.knemis.skyblock.skyblockcoreproject.missions.MissionPlayerDataManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
+import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand; // Added import
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
@@ -64,6 +70,11 @@ public final class SkyBlockProject extends JavaPlugin {
 
     // GUI Yöneticileri
     private FlagGUIManager flagGUIManager;
+
+    // Missions System
+    private MissionManager missionManager;
+    private MissionPlayerDataManager missionPlayerDataManager;
+    private MissionGUIManager missionGUIManager; // Added field
 
     // Diğer
     private int nextIslandX;
@@ -138,6 +149,11 @@ public final class SkyBlockProject extends JavaPlugin {
         // 8. GUI Yöneticileri
         this.flagGUIManager = new FlagGUIManager(this, this.islandDataHandler, this.islandFlagManager);
 
+        // 8.5. Mission System
+        this.missionManager = new MissionManager(this);
+        this.missionPlayerDataManager = new MissionPlayerDataManager(this);
+        this.missionGUIManager = new MissionGUIManager(this); // Instantiate MissionGUIManager
+
         // 9. Listener Kayıtları
         getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this);
         getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this);
@@ -145,6 +161,7 @@ public final class SkyBlockProject extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.shopAdminGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
+        getServer().getPluginManager().registerEvents(new MissionListener(this), this); // Register MissionListener
 
         // 10. Komut Kayıtları
         IslandCommand islandCommandExecutor = new IslandCommand(
@@ -159,6 +176,15 @@ public final class SkyBlockProject extends JavaPlugin {
             getLogger().severe("'island' komutu plugin.yml dosyasında tanımlanmamış!");
         }
 
+        MissionCommand missionCommandExecutor = new MissionCommand(this);
+        if (getCommand("missions") != null) {
+            getCommand("missions").setExecutor(missionCommandExecutor);
+            getCommand("missions").setTabCompleter(missionCommandExecutor);
+        } else {
+            getLogger().severe("'missions' komutu plugin.yml dosyasında tanımlanmamış!");
+        }
+
+
         getLogger().info("SkyBlockProject Eklentisi Başarıyla Aktif Edildi!");
     }
 
@@ -166,6 +192,9 @@ public final class SkyBlockProject extends JavaPlugin {
     public void onDisable() {
         if (islandDataHandler != null) {
             islandDataHandler.saveAllIslandsToDisk();
+        }
+        if (missionPlayerDataManager != null) { // Added save all player mission data
+            missionPlayerDataManager.saveAllPlayerData();
         }
         getLogger().info("SkyBlockProject Eklentisi Devre Dışı Bırakıldı.");
     }
@@ -235,6 +264,9 @@ public final class SkyBlockProject extends JavaPlugin {
     public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; }
     public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; } // Yeni eklendi
     public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
+    public MissionManager getMissionManager() { return missionManager; }
+    public MissionPlayerDataManager getMissionPlayerDataManager() { return missionPlayerDataManager; }
+    public MissionGUIManager getMissionGUIManager() { return missionGUIManager; } // Added getter
     public LuckPerms getLuckPermsApi() { return luckPermsApi; }
 
     public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; }

@@ -28,8 +28,10 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
     private boolean isAdminShop;       // Bu bir admin mağazası mı?
 
     // İstatistikler
-    private long totalItemsSold;
-    private double totalEarnings;
+    private long totalItemsSold;    // Items sold by the shop to players
+    private double totalEarnings;   // Money earned by the shop from players
+    private long totalItemsBought;  // Items bought by the shop from players
+    private double totalMoneySpent; // Money spent by the shop to buy from players
 
     // Opsiyonel Geliştirmeler
     private String shopDisplayName;    // Oyuncunun mağazaya verdiği özel isim
@@ -55,6 +57,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         this.sellPrice = -1.0;    // Kurulumda atanacak, -1 alım olmadığını gösterir
         this.totalItemsSold = 0;
         this.totalEarnings = 0.0;
+        this.totalItemsBought = 0;  // Initialize new field
+        this.totalMoneySpent = 0.0; // Initialize new field
         this.lastActivityTimestamp = System.currentTimeMillis();
         // templateItemStack, itemQuantityForPrice kurulum sırasında atanacak
     }
@@ -65,7 +69,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
     public Shop(Location location, UUID ownerUUID, ShopType shopType,
                 ItemStack templateItemStack, int itemQuantityForPrice, double buyPrice, double sellPrice,
                 boolean setupComplete, boolean isAdminShop,
-                long totalItemsSold, double totalEarnings, String shopDisplayName, long lastActivityTimestamp) {
+                long totalItemsSold, double totalEarnings, long totalItemsBought, double totalMoneySpent, // Added new params
+                String shopDisplayName, long lastActivityTimestamp) {
         this(location, ownerUUID, shopType); // Temel constructor'ı çağır
 
         if (templateItemStack == null && setupComplete) throw new IllegalArgumentException("Template ItemStack cannot be null for a completed shop.");
@@ -96,6 +101,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         this.isAdminShop = isAdminShop;
         this.totalItemsSold = totalItemsSold;
         this.totalEarnings = totalEarnings;
+        this.totalItemsBought = totalItemsBought; // Assign new param
+        this.totalMoneySpent = totalMoneySpent;   // Assign new param
         this.shopDisplayName = shopDisplayName;
         this.lastActivityTimestamp = lastActivityTimestamp;
     }
@@ -112,6 +119,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
     public boolean isAdminShop() { return isAdminShop; }
     public long getTotalItemsSold() { return totalItemsSold; }
     public double getTotalEarnings() { return totalEarnings; }
+    public long getTotalItemsBought() { return totalItemsBought; } // Added getter
+    public double getTotalMoneySpent() { return totalMoneySpent; } // Added getter
     public String getShopDisplayName() { return shopDisplayName; }
     public long getLastActivityTimestamp() { return lastActivityTimestamp; }
 
@@ -186,6 +195,18 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         updateLastActivity();
     }
 
+    /**
+     * Called when a player sells items to this shop. Updates shop statistics.
+     * @param quantityBoughtByShop Number of items (individual, not bundles) the shop bought.
+     * @param moneySpentByShop Total money the shop paid to the player.
+     */
+    public void recordPlayerSaleToShop(int quantityBoughtByShop, double moneySpentByShop) {
+        if (quantityBoughtByShop <= 0 || moneySpentByShop < 0) return; // Invalid transaction
+        this.totalItemsBought += quantityBoughtByShop;
+        this.totalMoneySpent += moneySpentByShop;
+        updateLastActivity();
+    }
+
     // --- ConfigurationSerializable Metodları (ItemStack'i YAML'a kaydetmek için) ---
     @Override
     public Map<String, Object> serialize() {
@@ -203,6 +224,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         map.put("isAdminShop", isAdminShop);
         map.put("totalItemsSold", totalItemsSold);
         map.put("totalEarnings", totalEarnings);
+        map.put("totalItemsBought", totalItemsBought);   // Serialize new field
+        map.put("totalMoneySpent", totalMoneySpent); // Serialize new field
         if (shopDisplayName != null) {
             map.put("shopDisplayName", shopDisplayName);
         }
@@ -254,6 +277,8 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         shop.isAdminShop = (boolean) map.getOrDefault("isAdminShop", false);
         shop.totalItemsSold = ((Number) map.getOrDefault("totalItemsSold", 0L)).longValue();
         shop.totalEarnings = ((Number) map.getOrDefault("totalEarnings", 0.0)).doubleValue();
+        shop.totalItemsBought = ((Number) map.getOrDefault("totalItemsBought", 0L)).longValue();   // Deserialize new field
+        shop.totalMoneySpent = ((Number) map.getOrDefault("totalMoneySpent", 0.0)).doubleValue(); // Deserialize new field
         shop.shopDisplayName = (String) map.get("shopDisplayName"); // null olabilir
         shop.lastActivityTimestamp = ((Number) map.getOrDefault("lastActivityTimestamp", System.currentTimeMillis())).longValue();
 

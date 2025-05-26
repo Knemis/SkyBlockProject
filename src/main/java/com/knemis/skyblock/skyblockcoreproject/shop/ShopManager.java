@@ -457,6 +457,74 @@ public class ShopManager {
         return activeShops != null ? activeShops.size() : 0; // Null kontrolü
     }
 
+    // --- Player Inventory Helper Methods ---
+
+    /**
+     * Counts the number of items matching the template in a player's inventory.
+     * @param player The player whose inventory to check.
+     * @param templateItem The item to match (ignores amount, checks type and meta).
+     * @return The total count of matching items.
+     */
+    public int countItemsInInventory(Player player, ItemStack templateItem) {
+        if (player == null || templateItem == null || templateItem.getType() == Material.AIR) return 0;
+        int count = 0;
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item != null && item.isSimilar(templateItem)) {
+                count += item.getAmount();
+            }
+        }
+        return count;
+    }
+
+    /**
+     * Removes a specified amount of an item from the player's inventory.
+     * Assumes the player has enough items (pre-check with countItemsInInventory).
+     * @param player The player to remove items from.
+     * @param templateItem The item to remove (type and meta match).
+     * @param amountToRemove The total amount to remove.
+     * @return True if removal was successful.
+     */
+    public boolean removeItemsFromInventory(Player player, ItemStack templateItem, int amountToRemove) {
+        if (player == null || templateItem == null || templateItem.getType() == Material.AIR || amountToRemove <= 0) return false;
+
+        ItemStack itemToRemoveCloned = templateItem.clone();
+        itemToRemoveCloned.setAmount(amountToRemove);
+
+        HashMap<Integer, ItemStack> didNotRemove = player.getInventory().removeItem(itemToRemoveCloned);
+
+        return didNotRemove.isEmpty();
+    }
+
+
+    // --- Chest Inventory Helper Methods ---
+    /**
+     * Checks if a chest has enough space to add a given quantity of an item.
+     * @param chest The chest to check.
+     * @param itemToAdd The item to be added.
+     * @param quantityToAdd The quantity of the item to be added.
+     * @return True if there's enough space, false otherwise.
+     */
+    public boolean hasEnoughSpaceInChest(Chest chest, ItemStack itemToAdd, int quantityToAdd) {
+        if (chest == null || itemToAdd == null || itemToAdd.getType() == Material.AIR || quantityToAdd <= 0) return false;
+
+        Inventory chestInventory = chest.getInventory();
+        int maxStackSize = itemToAdd.getMaxStackSize();
+        int remainingToAdd = quantityToAdd;
+
+        for (ItemStack slotItem : chestInventory.getStorageContents()) {
+            if (remainingToAdd <= 0) break;
+
+            if (slotItem == null || slotItem.getType() == Material.AIR) {
+                remainingToAdd -= maxStackSize;
+            } else if (slotItem.isSimilar(itemToAdd)) {
+                int spaceInSlot = maxStackSize - slotItem.getAmount();
+                remainingToAdd -= spaceInSlot;
+            }
+        }
+        return remainingToAdd <= 0;
+    }
+
+
     /**
      * Satın alma işlemini gerçekleştiren ana metod.
      * Bu metod, listener tarafından çağrılır ve gerekli tüm kontrolleri,
@@ -575,5 +643,116 @@ public class ShopManager {
             }
         }
         return "$"; // Varsayılan
+    }
+
+    /**
+     * Handles a player selling items to a shop.
+     * @param seller The player selling items.
+     * @param shop The shop being sold to.
+     * @param bundlesToSell Number of bundles the player wants to sell.
+     * @return True if the sale was successful.
+     */
+    public boolean executeSellToShop(Player seller, Shop shop, int bundlesToSell) {
+        if (shop == null || !shop.isSetupComplete() || seller == null || bundlesToSell <= 0 || shop.getTemplateItemStack() == null) {
+            plugin.getLogger().warning("[ShopManager-SellToShop] Invalid parameters or shop state.");
+            if (seller != null) seller.sendMessage(ChatColor.RED + "Sell transaction failed due to an issue.");
+            return false;
+        }
+
+        if (shop.getSellPrice() < 0) { // Shop does not buy this item (sellPrice is what player receives)
+            seller.sendMessage(ChatColor.RED + "This shop is not buying items currently.");
+            return false;
+        }
+
+        int itemsPerBundle = shop.getItemQuantityForPrice();
+        int totalItemsToSell = bundlesToSell * itemsPerBundle;
+        double totalPaymentToPlayer = bundlesToSell * shop.getSellPrice(); // Player receives shop's sellPrice
+        ItemStack templateItem = shop.getTemplateItemStack();
+        String formattedItemName = getItemDisplayNameForSign(templateItem, 30);
+        String currencySymbol = getCurrencySymbol();
+
+        if (totalItemsToSell <= 0 || totalPaymentToPlayer < 0) { // Payment can be 0 if shop buys for free (unlikely but possible)
+            plugin.getLogger().warning("[ShopManager-SellToShop] Invalid calculated quantity or payment for shop: " + Shop.locationToString(shop.getLocation()));
+            seller.sendMessage(ChatColor.RED + "Shop configuration error for this item.");
+            return false;
+        }
+
+        // 1. Check if player has enough items
+        if (countItemsInInventory(seller, templateItem) < totalItemsToSell) {
+            seller.sendMessage(ChatColor.RED + "You don't have enough " + ChatColor.AQUA + formattedItemName + ChatColor.RED + " to sell. You need " + totalItemsToSell + ".");
+            return false;
+        }
+
+        // 2. Check if shop has enough space in its chest
+        Block shopBlock = shop.getLocation().getBlock();
+        if (!(shopBlock.getState() instanceof Chest)) {
+            seller.sendMessage(ChatColor.RED + "Shop chest not found!");
+            plugin.getLogger().severe("[ShopManager-SellToShop] Shop block at " + Shop.locationToString(shop.getLocation()) + " is not a Chest.");
+            return false;
+        }
+        Chest chest = (Chest) shopBlock.getState();
+        if (!hasEnoughSpaceInChest(chest, templateItem, totalItemsToSell)) {
+            seller.sendMessage(ChatColor.RED + "The shop does not have enough space for " + ChatColor.AQUA + totalItemsToSell + " " + formattedItemName + ChatColor.RED + ".");
+            return false;
+        }
+
+        // 3. Check shop owner's balance (using personal balance for now)
+        OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
+        if (!EconomyManager.isEconomyAvailable()) {
+            seller.sendMessage(ChatColor.RED + "Economy system is not available.");
+            return false;
+        }
+        if (EconomyManager.getBalance(owner) < totalPaymentToPlayer) {
+            seller.sendMessage(ChatColor.RED + "The shop owner does not have enough funds to buy your items.");
+            if (owner.isOnline() && owner.getPlayer() != null) {
+                owner.getPlayer().sendMessage(ChatColor.RED + "Your shop at " + Shop.locationToString(shop.getLocation()) + " couldn't afford to buy " + totalItemsToSell + " " + formattedItemName + " from " + seller.getName() + ".");
+            }
+            return false;
+        }
+
+        // --- Transaction Process ---
+        // 4. Withdraw money from owner
+        if (!EconomyManager.withdraw(owner, totalPaymentToPlayer)) {
+            seller.sendMessage(ChatColor.RED + "Failed to process payment from shop owner. Please try again.");
+            plugin.getLogger().severe("[ShopManager-SellToShop] Failed to withdraw " + totalPaymentToPlayer + " from owner " + owner.getName() + " for shop " + Shop.locationToString(shop.getLocation()));
+            return false;
+        }
+
+        // 5. Deposit money to seller
+        if (!EconomyManager.deposit(seller, totalPaymentToPlayer)) {
+            EconomyManager.deposit(owner, totalPaymentToPlayer); // Refund owner
+            seller.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "CRITICAL ERROR: " + ChatColor.RESET + ChatColor.RED + "Could not deposit funds to your account. Owner has been refunded.");
+            plugin.getLogger().severe("[ShopManager-SellToShop] CRITICAL: Failed to deposit " + totalPaymentToPlayer + " to seller " + seller.getName() + ". Owner " + owner.getName() + " refunded for shop " + Shop.locationToString(shop.getLocation()));
+            return false;
+        }
+
+        // 6. Remove items from seller's inventory
+        if (!removeItemsFromInventory(seller, templateItem, totalItemsToSell)) {
+            EconomyManager.withdraw(seller, totalPaymentToPlayer); // Take back money from seller
+            EconomyManager.deposit(owner, totalPaymentToPlayer);   // Refund owner
+            seller.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "CRITICAL ERROR: " + ChatColor.RESET + ChatColor.RED + "Failed to remove items from your inventory. Transaction reversed.");
+            plugin.getLogger().severe("[ShopManager-SellToShop] CRITICAL: Failed to remove " + totalItemsToSell + " of " + templateItem.getType() + " from " + seller.getName() + ". Transaction reversed for shop " + Shop.locationToString(shop.getLocation()));
+            return false;
+        }
+
+        // 7. Add items to shop's chest
+        ItemStack itemsToAdd = templateItem.clone();
+        itemsToAdd.setAmount(totalItemsToSell);
+        chest.getInventory().addItem(itemsToAdd.clone()); // Add items to chest
+
+        // 8. Record transaction for the shop
+        shop.recordPlayerSaleToShop(totalItemsToSell, totalPaymentToPlayer); // New method in Shop.java
+        shopStorage.saveShop(shop);
+
+        seller.sendMessage(ChatColor.GREEN + "Successfully sold " + ChatColor.AQUA + totalItemsToSell + " " + formattedItemName +
+                ChatColor.GREEN + " to the shop for " + ChatColor.GOLD + String.format("%.2f", totalPaymentToPlayer) + currencySymbol + ChatColor.GREEN + ".");
+        if (owner.isOnline() && owner.getPlayer() != null) {
+            owner.getPlayer().sendMessage(ChatColor.YELLOW + "Your shop at " + Shop.locationToString(shop.getLocation()) +
+                    " bought " + ChatColor.AQUA + totalItemsToSell + " " + formattedItemName +
+                    ChatColor.YELLOW + " from " + ChatColor.GOLD + seller.getName() +
+                    ChatColor.YELLOW + " for " + ChatColor.GOLD + String.format("%.2f", totalPaymentToPlayer) + currencySymbol + ChatColor.YELLOW + ".");
+        }
+        updateAttachedSign(shop); // Update sign if stock/price display changes based on this
+        return true;
     }
 }

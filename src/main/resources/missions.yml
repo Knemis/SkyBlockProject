@@ -1,0 +1,90 @@
+missions:
+  FARMER_01:
+    name: "Novice Farmer"
+    description:
+      - "Collect 64 Wheat to prove your farming skills."
+    category: "Farming"
+    iconMaterial: "WHEAT"
+    objectives:
+      - type: "GATHER_ITEM"
+        target: "WHEAT"
+        amount: 64
+        # display_name_override: "Gather fresh Wheat"
+    rewards:
+      money: 50.0
+      experience: 10
+      # items:
+      #   - "STONE_HOE 1"
+      # commands:
+      #   - "say {player} has become a Novice Farmer!"
+    dependencies: []
+    repeatableType: "NONE"
+    # cooldownHours: 24
+    # requiredPermission: "skyblock.missions.farmer"
+  MINER_01:
+    name: "Basic Miner"
+    description:
+      - "Mine 128 Cobblestone."
+    category: "Mining"
+    iconMaterial: "COBBLESTONE"
+    objectives:
+      - type: "GATHER_ITEM"
+        target: "COBBLESTONE"
+        amount: 128
+    rewards:
+      money: 75.0
+      # experience: 0
+      # items: []
+      # commands: []
+    dependencies: []
+    repeatableType: "COOLDOWN"
+    cooldownHours: 1
+  BUILDER_01:
+    name: "First Structure"
+    description:
+      - "Place 100 blocks on your island."
+    category: "Building"
+    iconMaterial: "OAK_PLANKS"
+    objectives:
+      - type: "PLACE_BLOCKS" # Custom type
+        target: "ANY" # Target could be specific block or ANY
+        amount: 100
+    rewards:
+      money: 100.0
+      experience: 20
+    dependencies: []
+    repeatableType: "NONE"
+  ISLAND_LEVEL_01:
+    name: "Island Expansion I"
+    description:
+      - "Reach island level 5."
+    category: "Progression"
+    iconMaterial: "GRASS_BLOCK"
+    objectives:
+      - type: "ISLAND_LEVEL"
+        target: "5" # Target here is the level number
+        amount: 1 # Amount is 1 because we're checking if the target level is reached
+    rewards:
+      money: 200.0
+      experience: 50
+      commands:
+        - "eco give {player} 50" # Example command
+    dependencies: []
+    repeatableType: "NONE"
+  MOB_HUNTER_01:
+    name: "Zombie Slayer"
+    description:
+      - "Defeat 20 Zombies."
+    category: "Combat"
+    iconMaterial: "ZOMBIE_HEAD"
+    objectives:
+      - type: "KILL_MOB"
+        target: "ZOMBIE"
+        amount: 20
+    rewards:
+      money: 60.0
+      items:
+        - "IRON_SWORD 1"
+    dependencies: []
+    repeatableType: "DAILY" # Example of a daily repeatable mission
+    # cooldownHours: 0 # Not needed if DAILY/WEEKLY (handled by reset logic)
