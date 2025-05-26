@@ -3,8 +3,9 @@ package com.knemis.skyblock.skyblockcoreproject;
 import com.knemis.skyblock.skyblockcoreproject.commands.IslandCommand;
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // Yeni eklendi
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager; // Kullanıcının sağladığı
+import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandLifecycleManager;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandMemberManager;
@@ -17,8 +18,8 @@ import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener; // Kullanıcının sağladığı
-import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Kullanıcının sağladığı
+import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -58,7 +59,8 @@ public final class SkyBlockProject extends JavaPlugin {
     private IslandWorthManager islandWorthManager;
     private ShopManager shopManager;
     private ShopSetupGUIManager shopSetupGUIManager;
-    private ShopVisitGUIManager shopVisitGUIManager; // Kullanıcının sağladığı
+    private ShopVisitGUIManager shopVisitGUIManager;
+    private ShopAdminGUIManager shopAdminGUIManager; // Yeni eklendi
 
     // GUI Yöneticileri
     private FlagGUIManager flagGUIManager;
@@ -69,25 +71,22 @@ public final class SkyBlockProject extends JavaPlugin {
     private LuckPerms luckPermsApi;
     private Economy vaultEconomy = null;
 
-    // Oyuncu Durum Takibi (Mağaza için)
+    // Oyuncu Durum Takibi
     private final Map<UUID, Location> playerShopSetupState = new HashMap<>();
     private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
+    private final Map<UUID, Location> playerAdministeringShop = new HashMap<>(); // Yeni eklendi: Hangi oyuncu hangi dükkanı yönetiyor
+    private final Map<UUID, ShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>(); // Yeni eklendi: Oyuncudan beklenen admin girişi türü
 
     @Override
     public void onEnable() {
         // 1. Config Yükleme ve Varsayılanlar
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
-        // --- Tüm getConfig().addDefault(...) satırları burada olmalı ---
-        // Örnek birkaçı:
         getConfig().addDefault("general.next-island-x", 0);
         getConfig().addDefault("skyblock-world-name", "skyblock_world");
-        // Ada Değer Sistemi için
         getConfig().addDefault("island.worth.block_values.DIAMOND_BLOCK", 150.0);
         getConfig().addDefault("island.worth.level_requirements.1", 0.0);
         getConfig().addDefault("island.worth.level_up_rewards.2", "eco give {player} 250");
-        // Mağaza Maliyetleri (varsa)
-        // Diğer tüm addDefault çağrılarınız...
         saveConfig();
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0);
@@ -97,12 +96,11 @@ public final class SkyBlockProject extends JavaPlugin {
         if (!setupLuckPerms()) {
             getLogger().warning("LuckPerms API bulunamadı! Ada sahibi bypass izinleri otomatik olarak ATANAMAYACAK.");
         }
-        if (!setupEconomyVault()) { // Vault hooklama
+        if (!setupEconomyVault()) {
             getLogger().severe("Vault ile ekonomi sistemi kurulamadı! Ekonomi özellikleri devre dışı kalacak.");
-            // Eklentiyi devre dışı bırakmak veya ekonomi özelliklerini kapatmak isteyebilirsiniz.
         } else {
             getLogger().info("Vault ile ekonomi sistemi başarıyla kuruldu!");
-            EconomyManager.setupEconomy(); // Sizin EconomyManager'ınızdaki statik Vault setup metodu
+            EconomyManager.setupEconomy();
         }
         if (!hookPlugin("WorldEdit") || !setupWorldGuard()) {
             getLogger().severe("Gerekli bağımlılıklar (WorldEdit/WorldGuard) bulunamadı veya aktif değil! Eklenti devre dışı bırakılıyor.");
@@ -113,22 +111,23 @@ public final class SkyBlockProject extends JavaPlugin {
 
         // 3. Ana Veri Yöneticisi
         this.islandDataHandler = new IslandDataHandler(this);
-        this.islandDataHandler.loadSkyblockWorld(); // Skyblock dünyasını yükler veya oluşturur
-        this.islandDataHandler.loadIslandsFromConfig(); // Ada verilerini yükler
+        this.islandDataHandler.loadSkyblockWorld();
+        this.islandDataHandler.loadIslandsFromConfig();
 
-        // 4. Ada Özellik Yöneticileri (IslandDataHandler'a bağımlı)
+        // 4. Ada Özellik Yöneticileri
         this.islandFlagManager = new IslandFlagManager(this, this.islandDataHandler);
         this.islandSettingsManager = new IslandSettingsManager(this, this.islandDataHandler);
         this.islandTeleportManager = new IslandTeleportManager(this, this.islandDataHandler);
 
-        // 5. Ada Yaşam Döngüsü Yöneticisi (Diğer ada yöneticilerine ve IslandFlagManager'a bağımlı olabilir)
+        // 5. Ada Yaşam Döngüsü Yöneticisi
         this.islandLifecycleManager = new IslandLifecycleManager(this, this.islandDataHandler, this.islandFlagManager);
 
         // 6. Ekonomi ve Mağaza Sistemi Yöneticileri
         this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager);
-        this.shopManager = new ShopManager(this); // ShopStorage'ı kendi içinde başlatır
+        this.shopManager = new ShopManager(this);
         this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager);
-        this.shopVisitGUIManager = new ShopVisitGUIManager(); // Kullanıcının sağladığı, constructor'ı parametresiz.
+        this.shopVisitGUIManager = new ShopVisitGUIManager(this, this.shopManager);
+        this.shopAdminGUIManager = new ShopAdminGUIManager(this, this.shopManager); // Yeni eklendi: Başlatma
 
         // 7. Diğer Ada Yöneticileri
         this.islandMemberManager = new IslandMemberManager(this, this.islandDataHandler, this.islandLifecycleManager);
@@ -138,15 +137,13 @@ public final class SkyBlockProject extends JavaPlugin {
         // 8. GUI Yöneticileri
         this.flagGUIManager = new FlagGUIManager(this, this.islandDataHandler, this.islandFlagManager);
 
-        // 9. Listener Kayıtları (Tüm manager'lar başlatıldıktan sonra)
+        // 9. Listener Kayıtları
         getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this);
         getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this);
-        // ShopListener Düzeltilmiş Hali (5 argümanlı)
-        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager), this);
+        // ShopListener constructor'ı güncelleneceği için ShopAdminGUIManager eklendi
+        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.shopAdminGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
-        // ShopVisitListener (Kullanıcının sağladığı listener, constructor'ını (SkyBlockProject plugin, ShopManager shopManager) alacak şekilde güncellediğinizi varsayıyorum)
-        getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager /*, this.shopVisitGUIManager // Eğer constructor'ı bunu da alıyorsa*/ ), this);
-
+        getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
 
         // 10. Komut Kayıtları
         IslandCommand islandCommandExecutor = new IslandCommand(
@@ -234,16 +231,16 @@ public final class SkyBlockProject extends JavaPlugin {
     public IslandWorthManager getIslandWorthManager() { return islandWorthManager; }
     public ShopManager getShopManager() { return shopManager; }
     public ShopSetupGUIManager getShopSetupGUIManager() { return shopSetupGUIManager; }
-    public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; } // Getter eklendi
+    public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; }
+    public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; } // Yeni eklendi
     public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
     public LuckPerms getLuckPermsApi() { return luckPermsApi; }
 
-    public Map<UUID, Location> getPlayerShopSetupState() {
-        return playerShopSetupState;
-    }
-    public Map<UUID, Location> getPlayerViewingShopLocation() {
-        return playerViewingShopLocation;
-    }
+    public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; }
+    public Map<UUID, Location> getPlayerViewingShopLocation() { return playerViewingShopLocation; }
+    public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; } // Yeni eklendi
+    public Map<UUID, ShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; } // Yeni eklendi
+
 
     public int getNextIslandXAndIncrement() {
         int currentX = this.nextIslandX;

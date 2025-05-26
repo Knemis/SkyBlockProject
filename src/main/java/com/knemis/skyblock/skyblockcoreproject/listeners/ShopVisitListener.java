@@ -2,23 +2,28 @@
 package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager; // Kullanıcının sağladığı
 import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
+import net.milkbowl.vault.economy.Economy;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.Sound;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -29,181 +34,199 @@ public class ShopVisitListener implements Listener {
 
     private final SkyBlockProject plugin;
     private final ShopManager shopManager;
-    // ShopVisitGUIManager'a doğrudan bağımlılık GUI başlığını kontrol etmek için gerekli.
+    private final ShopVisitGUIManager shopVisitGUIManager; // GUI'yi yeniden açmak için
 
-    public ShopVisitListener(SkyBlockProject plugin, ShopManager shopManager) {
+    public ShopVisitListener(SkyBlockProject plugin, ShopManager shopManager, ShopVisitGUIManager shopVisitGUIManager) {
         this.plugin = plugin;
         this.shopManager = shopManager;
+        this.shopVisitGUIManager = shopVisitGUIManager;
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.NORMAL, ignoreCancelled = true)
     public void onInventoryClick(InventoryClickEvent event) {
-        if (!(event.getWhoClicked() instanceof Player)) {
-            return;
-        }
+        if (!(event.getWhoClicked() instanceof Player)) return;
+
         Player buyer = (Player) event.getWhoClicked();
-        Inventory clickedInventory = event.getClickedInventory();
         Inventory topInventory = event.getView().getTopInventory();
 
-        // Tıklanan envanterin bizim GUI'miz olup olmadığını ve başlığın eşleşip eşleşmediğini kontrol et
         if (topInventory == null || !event.getView().title().equals(ShopVisitGUIManager.SHOP_VISIT_TITLE)) {
             return;
         }
 
-        // Oyuncunun kendi envanterine tıklamasına izin ver, GUI etkileşimlerini iptal et
-        if (clickedInventory == null || !clickedInventory.equals(topInventory)) {
-            // Eğer kendi envanterine tıklıyorsa (örn: itemlerini düzenlemek için), iptal etme
-            if (clickedInventory != null && clickedInventory.equals(buyer.getOpenInventory().getBottomInventory())) {
-                event.setCancelled(false);
-            } else {
-                event.setCancelled(true); // GUI dışı veya bilinmeyen tıklamalar
-            }
+        Inventory clickedInventory = event.getClickedInventory();
+
+        // Oyuncunun kendi envanterine tıklamasına izin ver
+        if (clickedInventory != null && clickedInventory.equals(buyer.getOpenInventory().getBottomInventory())) {
+            event.setCancelled(false);
             return;
         }
 
-        event.setCancelled(true); // GUI içindeki varsayılan item hareketlerini engelle
+        // GUI içindeki diğer tüm varsayılan item hareketlerini engelle
+        event.setCancelled(true);
 
-        ItemStack currentItem = event.getCurrentItem();
-        if (currentItem == null || currentItem.getType() == Material.AIR) {
+        ItemStack clickedItemRepresentation = event.getCurrentItem();
+        if (clickedItemRepresentation == null || clickedItemRepresentation.getType() == Material.AIR) {
             return;
         }
 
-        // Mağazanın GUI'sinde genellikle ortadaki slot (13) satın alma itemini içerir.
-        // ShopVisitGUIManager'daki yapıya göre bu slot numarasını doğrula.
-        if (event.getRawSlot() != 13) { // Sadece slot 13'teki iteme tıklanırsa devam et
+        // ShopVisitGUIManager slot 13'te item gösteriyor
+        if (event.getRawSlot() != 13) {
+            buyer.sendMessage(ChatColor.YELLOW + "Satın almak için lütfen mağaza ürününe tıklayın.");
             return;
         }
 
-        // Oyuncunun hangi mağazaya baktığını SkyBlockProject'teki map'ten al
         Location shopLocation = plugin.getPlayerViewingShopLocation().get(buyer.getUniqueId());
         if (shopLocation == null) {
-            buyer.sendMessage(ChatColor.RED + "Hangi mağazadan alışveriş yaptığınız anlaşılamadı. Lütfen mağazayı tekrar açın.");
+            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "HATA: " + ChatColor.RESET + ChatColor.RED + "Mağaza bilgisi bulunamadı. Lütfen mağazayı kapatıp tekrar açın.");
             buyer.closeInventory();
             return;
         }
 
         Shop shop = shopManager.getActiveShop(shopLocation);
-        if (shop == null || !shop.isSetupComplete()) {
-            buyer.sendMessage(ChatColor.RED + "Bu mağaza artık mevcut değil veya kurulumu tamamlanmamış.");
+        if (shop == null || !shop.isSetupComplete() || shop.getTemplateItemStack() == null) {
+            buyer.sendMessage(ChatColor.RED + "Bu mağaza şu anda mevcut değil veya henüz tam olarak ayarlanmamış.");
             buyer.closeInventory();
-            plugin.getPlayerViewingShopLocation().remove(buyer.getUniqueId()); // Hatalı durumu temizle
+            plugin.getPlayerViewingShopLocation().remove(buyer.getUniqueId());
             return;
         }
 
-        // Mağaza sahibi kendi mağazasından alım yapamaz
         if (shop.getOwnerUUID().equals(buyer.getUniqueId())) {
             buyer.sendMessage(ChatColor.YELLOW + "Kendi mağazanızdan ürün satın alamazsınız.");
-            // GUI açık kalabilir veya kapatılabilir.
             return;
         }
 
-        // Satın alınacak ürün ve fiyat bilgileri
+        ItemStack templateItemFromShop = shop.getTemplateItemStack();
         int itemsPerBundle = shop.getItemQuantityForPrice();
         double bundlePrice = shop.getPrice();
-        Material itemType = shop.getItemType();
-        String formattedItemName = itemType.toString().toLowerCase().replace("_", " ");
-        String currencyName = plugin.getEconomy() != null && plugin.getEconomy().currencyNamePlural() != null && !plugin.getEconomy().currencyNamePlural().isEmpty() ? plugin.getEconomy().currencyNamePlural() : "Para";
+        String formattedItemName = getItemNameForMessages(templateItemFromShop);
+        String currencyName = getCurrencyName();
 
-
-        if (itemsPerBundle <= 0 || bundlePrice < 0) { // Fiyat 0 olabilir (ücretsiz item)
-            buyer.sendMessage(ChatColor.RED + "Mağaza fiyat veya miktar ayarlarında bir sorun var. Lütfen mağaza sahibine bildirin.");
-            plugin.getLogger().warning("Geçersiz mağaza ayarı (fiyat/miktar <=0): " + Shop.locationToString(shopLocation) + " Fiyat: " + bundlePrice + " Miktar: " + itemsPerBundle);
+        if (itemsPerBundle <= 0 || bundlePrice < 0) { // Ücretsiz itemler için fiyat 0 olabilir
+            buyer.sendMessage(ChatColor.RED + "Mağaza ayarlarında bir sorun var (Fiyat/Miktar). Lütfen mağaza sahibine bildirin.");
+            plugin.getLogger().warning("Geçersiz mağaza ayarı: " + Shop.locationToString(shopLocation) + " Fiyat: " + bundlePrice + " Miktar: " + itemsPerBundle);
             return;
         }
 
-        // Ekonomi Sistemi Kontrolü
         if (!EconomyManager.isEconomyAvailable()) {
-            buyer.sendMessage(ChatColor.RED + "Ekonomi sistemi şu anda aktif değil. Satın alma işlemi yapılamıyor.");
-            plugin.getLogger().severe("ShopVisitListener: Ekonomi sistemi (Vault/EconomyManager) bulunamadı!");
+            buyer.sendMessage(ChatColor.RED + "Ekonomi sistemi şu anda aktif değil.");
             return;
         }
 
-        // Bakiye Kontrolü
         if (EconomyManager.getBalance(buyer) < bundlePrice) {
-            buyer.sendMessage(ChatColor.RED + "Yeterli paranız yok. " +
+            buyer.sendMessage(ChatColor.RED + "Yetersiz bakiye! " +
                     ChatColor.YELLOW + "Gereken: " + ChatColor.GOLD + String.format("%.2f", bundlePrice) + " " + currencyName +
-                    ChatColor.RED + ", Sizin: " + ChatColor.GOLD + String.format("%.2f", EconomyManager.getBalance(buyer)) + " " + currencyName);
+                    ChatColor.RED + ", Mevcut: " + ChatColor.GOLD + String.format("%.2f", EconomyManager.getBalance(buyer)) + " " + currencyName);
             return;
         }
 
-        // Mağaza Sandığı ve Stok Kontrolü
         Block shopBlock = shop.getLocation().getBlock();
         if (!(shopBlock.getState() instanceof Chest)) {
-            buyer.sendMessage(ChatColor.RED + "Mağaza sandığı bulunamadı veya türü değişmiş! Satın alma iptal edildi.");
-            plugin.getLogger().warning("Mağaza sandığı ("+Shop.locationToString(shopLocation)+") artık Chest değil: " + shopBlock.getType());
+            buyer.sendMessage(ChatColor.RED + "Kritik Hata: Mağaza sandığı artık mevcut değil! İşlem iptal edildi.");
+            plugin.getLogger().severe("Mağaza sandığı (" + Shop.locationToString(shopLocation) + ") artık Chest değil: " + shopBlock.getType());
+            closeShopForPlayer(buyer);
             return;
         }
         Chest chest = (Chest) shopBlock.getState();
-        if (shopManager.countItemsInChest(chest, itemType) < itemsPerBundle) {
-            buyer.sendMessage(ChatColor.RED + "Mağazada yeterli stok kalmamış! (" + itemsPerBundle + " adet " + formattedItemName + " gerekli)");
-            shopManager.updateShopSign(shop); // Stok bitti, tabelayı güncelle
-            // GUI'yi yeniden açarak güncel stokla göstermek iyi olabilir
-            // Veya ShopVisitGUIManager'daki GUI'yi dinamik olarak güncellemek
-            this.plugin.getShopVisitGUIManager().openShopVisitMenu(buyer, shop); // GUI'yi yenile
+
+        if (shopManager.countItemsInChest(chest, templateItemFromShop) < itemsPerBundle) {
+            buyer.sendMessage(ChatColor.GOLD + "Üzgünüz, mağazada bu üründen yeterli stok kalmamış!");
+            buyer.sendMessage(ChatColor.GRAY + "(" + itemsPerBundle + " adet " + formattedItemName + " gerekliydi)");
+            shopManager.updateAttachedSign(shop); // Stok bitti, tabelayı güncelle
+            this.shopVisitGUIManager.openShopVisitMenu(buyer, shop); // GUI'yi güncel stokla yeniden aç
             return;
         }
 
-        // Oyuncunun Envanterinde Yer Kontrolü
-        ItemStack itemsToReceive = new ItemStack(itemType, itemsPerBundle);
+        ItemStack itemsToReceive = templateItemFromShop.clone();
+        itemsToReceive.setAmount(itemsPerBundle);
         if (!shopManager.hasEnoughSpace(buyer, itemsToReceive)) {
             buyer.sendMessage(ChatColor.RED + "Envanterinizde " + itemsPerBundle + " adet " + formattedItemName + " için yeterli yer yok!");
             return;
         }
 
-        // --- Tüm Kontrollerden Geçti, İşlemleri Başlat ---
-
+        // ---- SATIN ALMA İŞLEMİ ----
         OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
 
-        // 1. Alıcıdan Para Çekme
         if (!EconomyManager.withdraw(buyer, bundlePrice)) {
-            buyer.sendMessage(ChatColor.RED + "Para çekme işlemi sırasında bir hata oluştu. Lütfen tekrar deneyin.");
-            plugin.getLogger().warning("Para çekme başarısız: " + buyer.getName() + ", Miktar: " + bundlePrice + " Mağaza: " + Shop.locationToString(shopLocation));
+            buyer.sendMessage(ChatColor.RED + "Para çekme işlemi başarısız oldu. Lütfen tekrar deneyin.");
+            plugin.getLogger().warning("[ShopPurchase] Para çekme başarısız: Alıcı=" + buyer.getName() + ", Miktar=" + bundlePrice + ", Mağaza=" + Shop.locationToString(shopLocation));
             return;
         }
 
-        // 2. Satıcıya Para Yatırma
         if (!EconomyManager.deposit(owner, bundlePrice)) {
-            EconomyManager.deposit(buyer, bundlePrice); // Parayı alıcıya iade et
-            buyer.sendMessage(ChatColor.RED + "Satıcıya para aktarılırken bir sorun oluştu. Paranız iade edildi. Lütfen durumu bir yetkiliye bildirin.");
-            plugin.getLogger().log(Level.SEVERE, "KRİTİK HATA: Mağaza sahibi " + owner.getName() + " (" + shop.getOwnerUUID() + ") hesabına para yatırılamadı! " +
+            EconomyManager.deposit(buyer, bundlePrice); // Parayı alıcıya iade et!
+            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Satıcıya para aktarılamadı. Paranız iade edildi. Lütfen durumu yetkililere bildirin!");
+            plugin.getLogger().log(Level.SEVERE, "[ShopPurchase] KRİTİK: Sahip " + owner.getName() + " (" + shop.getOwnerUUID() + ") hesabına para yatırılamadı! " +
                     buyer.getName() + " adlı oyuncudan çekilen " + bundlePrice + " " + currencyName + " iade edildi. Mağaza: " + Shop.locationToString(shopLocation));
+            closeShopForPlayer(buyer);
             return;
         }
 
-        // 3. Sandıktan Eşyaları Çekme
-        if (!shopManager.removeItemsFromChest(chest, itemType, itemsPerBundle)) {
+        if (!shopManager.removeItemsFromChest(chest, templateItemFromShop, itemsPerBundle)) {
             EconomyManager.withdraw(owner, bundlePrice); // Satıcıdan parayı geri al
             EconomyManager.deposit(buyer, bundlePrice);  // Alıcıya parayı iade et
-            buyer.sendMessage(ChatColor.RED + "Mağaza sandığından eşyalar alınırken bir sorun oluştu. Paranız iade edildi. Lütfen durumu bir yetkiliye bildirin.");
-            plugin.getLogger().log(Level.SEVERE, "KRİTİK HATA: Mağaza sandığından (" + Shop.locationToString(shopLocation) + ") " + itemsPerBundle + " adet " + itemType +
+            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Eşyalar mağazadan alınırken bir sorun oluştu. Paranız iade edildi. Lütfen durumu yetkililere bildirin!");
+            plugin.getLogger().log(Level.SEVERE, "[ShopPurchase] KRİTİK: Sandıktan (" + Shop.locationToString(shopLocation) + ") " + itemsPerBundle + " adet " + formattedItemName +
                     " çekilemedi! Para transferleri geri alındı.");
+            closeShopForPlayer(buyer);
             return;
         }
 
-        // 4. Alıcıya Eşyaları Verme
         buyer.getInventory().addItem(itemsToReceive.clone());
+        shop.recordTransaction(itemsPerBundle, bundlePrice);
+        plugin.getShopManager().getShopStorage().saveShop(shop); // Mağaza istatistiklerini ve son aktiviteyi kaydet
 
-        // 5. Başarı Mesajları ve Loglama
-        buyer.sendMessage(ChatColor.GREEN + "Başarıyla " + itemsPerBundle + " adet " + formattedItemName +
-                " satın aldınız (" + ChatColor.GOLD + String.format("%.2f", bundlePrice) + " " + currencyName + ChatColor.GREEN + ").");
+        buyer.playSound(buyer.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.2f);
+        buyer.sendMessage(ChatColor.GREEN + "Başarıyla " + ChatColor.AQUA + itemsPerBundle + " adet " + ChatColor.LIGHT_PURPLE + formattedItemName +
+                ChatColor.GREEN + " satın aldınız (" + ChatColor.GOLD + String.format("%.2f", bundlePrice) + " " + currencyName + ChatColor.GREEN + ").");
 
         if (owner.isOnline() && owner.getPlayer() != null) {
             owner.getPlayer().sendMessage(ChatColor.GOLD + buyer.getName() + ChatColor.YELLOW + " mağazanızdan " +
-                    ChatColor.AQUA + itemsPerBundle + " adet " + formattedItemName +
+                    ChatColor.AQUA + itemsPerBundle + " adet " + ChatColor.LIGHT_PURPLE + formattedItemName +
                     ChatColor.YELLOW + " satın aldı (" + ChatColor.GOLD + String.format("%.2f", bundlePrice) + " " + currencyName + ChatColor.YELLOW + ").");
+            owner.getPlayer().playSound(owner.getPlayer().getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.8f, 1.0f);
         }
-        plugin.getLogger().info(buyer.getName() + " bought " + itemsPerBundle + " of " + itemType + " for " + bundlePrice +
-                " from shop " + Shop.locationToString(shopLocation) + " (Owner: " + shop.getOwnerUUID() + ")");
+        plugin.getLogger().info("[SHOP TRANSACTION] " + buyer.getName() + " bought " + itemsPerBundle + " of [" + formattedItemName + "] for " + bundlePrice +
+                " from shop at " + Shop.locationToString(shopLocation) + " (Owner: " + shop.getOwnerUUID() + ")");
 
-        // 6. Tabela Güncelleme
-        shopManager.updateShopSign(shop);
+        shopManager.updateAttachedSign(shop);
+        closeShopForPlayer(buyer); // İşlem tamamlandı, GUI'yi kapat ve state'i temizle
+    }
 
-        // 7. GUI Kapatma ve State Temizleme
-        buyer.closeInventory(); // Başarılı işlem sonrası GUI'yi kapat
-        plugin.getPlayerViewingShopLocation().remove(buyer.getUniqueId());
+    @EventHandler
+    public void onInventoryClose(InventoryCloseEvent event) {
+        if (!(event.getPlayer() instanceof Player)) return;
+        Player player = (Player) event.getPlayer();
 
-        // İsteğe bağlı: GUI'yi güncel stokla yeniden açmak yerine kapatıyoruz.
-        // Eğer açık kalması ve güncellenmesi isteniyorsa, closeInventory yerine
-        // ShopVisitGUIManager üzerinden GUI'yi yeniden açma metodu çağrılabilir.
+        // Eğer bu bizim mağaza ziyaret GUI'miz ise ve oyuncu state'i hala varsa, temizle
+        if (event.getView().title().equals(ShopVisitGUIManager.SHOP_VISIT_TITLE)) {
+            if (plugin.getPlayerViewingShopLocation().containsKey(player.getUniqueId())) {
+                plugin.getPlayerViewingShopLocation().remove(player.getUniqueId());
+                // plugin.getLogger().fine(player.getName() + " için mağaza görüntüleme state'i temizlendi (GUI Kapatıldı).");
+            }
+        }
+    }
+
+    private String getItemNameForMessages(ItemStack itemStack) {
+        if (itemStack.hasItemMeta() && itemStack.getItemMeta().hasDisplayName()) {
+            try {
+                return LegacyComponentSerializer.legacySection().serialize(itemStack.getItemMeta().displayName());
+            } catch (Exception e) {
+                return ChatColor.stripColor(itemStack.getItemMeta().getDisplayName()); // Fallback
+            }
+        }
+        return itemStack.getType().toString().toLowerCase().replace("_", " ");
+    }
+
+    private String getCurrencyName() {
+        Economy econ = plugin.getEconomy();
+        if (econ != null && econ.currencyNamePlural() != null && !econ.currencyNamePlural().isEmpty()) {
+            return econ.currencyNamePlural();
+        }
+        return "$"; // Varsayılan
+    }
+
+    private void closeShopForPlayer(Player player) {
+        player.closeInventory();
+        plugin.getPlayerViewingShopLocation().remove(player.getUniqueId());
     }
 }
