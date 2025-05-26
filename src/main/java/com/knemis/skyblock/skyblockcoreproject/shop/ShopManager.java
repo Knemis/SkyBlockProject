@@ -54,7 +54,7 @@ public class ShopManager {
         }
     }
 
-    public Shop initiateShopCreation(Location location, Player player, ShopType initialShopType) {
+    public Shop initiateShopCreation(Location location, Player player, ShopMode initialShopMode) { // Changed ShopType to ShopMode
         if (location == null || player == null) {
             plugin.getLogger().warning("initiateShopCreation: Konum veya oyuncu null geldi.");
             return null;
@@ -70,9 +70,10 @@ public class ShopManager {
                 return null;
             }
         }
-        Shop newShop = new Shop(location, player.getUniqueId(), initialShopType);
+        // Ensure Shop constructor is called with ShopMode
+        Shop newShop = new Shop(location, player.getUniqueId(), initialShopMode);
         pendingShops.put(location, newShop);
-        plugin.getLogger().info("Pending shop initiated at " + Shop.locationToString(location) + " by " + player.getName());
+        plugin.getLogger().info("Pending shop initiated at " + Shop.locationToString(location) + " for owner " + player.getName() + " with mode " + initialShopMode);
         return newShop;
     }
 
@@ -100,15 +101,16 @@ public class ShopManager {
         }
 
         // Validation based on pendingShop's state
-        if (pendingShop.getShopType() == null) {
-            plugin.getLogger().warning("Shop type not set for shop at: " + Shop.locationToString(location));
-            actor.sendMessage(ChatColor.RED + "Shop type was not selected! Setup cancelled.");
+        if (pendingShop.getShopMode() == null) { // Changed from getShopType() to getShopMode()
+            plugin.getLogger().warning("Shop mode not set for shop at: " + Shop.locationToString(location));
+            actor.sendMessage(ChatColor.RED + "Shop mode was not selected! Setup cancelled.");
             pendingShops.remove(location);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
 
         ItemStack templateItem = pendingShop.getTemplateItemStack();
+        ItemStack templateItem = pendingShop.getTemplateItemStack(); // templateItem.getAmount() is bundle size
         if (templateItem == null || templateItem.getType() == Material.AIR) {
             plugin.getLogger().warning("Template item not set for shop at: " + Shop.locationToString(location));
             actor.sendMessage(ChatColor.RED + "The item to be sold/bought was not set! Setup cancelled.");
@@ -117,9 +119,9 @@ public class ShopManager {
             return;
         }
 
-        if (pendingShop.getItemQuantityForPrice() <= 0) {
-            plugin.getLogger().warning("Item quantity for price is invalid for shop at: " + Shop.locationToString(location) + " Qty: " + pendingShop.getItemQuantityForPrice());
-            actor.sendMessage(ChatColor.RED + "Invalid item quantity per transaction! Setup cancelled.");
+        if (pendingShop.getBundleAmount() <= 0) { // Changed from getItemQuantityForPrice to getBundleAmount
+            plugin.getLogger().warning("Bundle amount is invalid for shop at: " + Shop.locationToString(location) + " BundleAmount: " + pendingShop.getBundleAmount());
+            actor.sendMessage(ChatColor.RED + "Invalid bundle amount for transaction! Setup cancelled.");
             pendingShops.remove(location);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
@@ -172,9 +174,9 @@ public class ShopManager {
         // Updated logging
         plugin.getLogger().info("Shop finalized by " + actor.getName() + ": " + Shop.locationToString(location) +
                 " | Item: " + pendingShop.getTemplateItemStack().getType() +
-                " Qty: " + pendingShop.getItemQuantityForPrice() +
-                " BuyPrice: " + pendingShop.getBuyPrice() + // Price players pay
-                " SellPrice: " + pendingShop.getSellPrice() + // Price players receive
+                " BundleSize: " + pendingShop.getBundleAmount() + // Changed from Qty
+                " BuyPrice (for bundle): " + pendingShop.getBuyPrice() +
+                " SellPrice (for bundle): " + pendingShop.getSellPrice() +
                 (needsStocking && canBeStocked ? " | Initial stock added: " + initialStockItem.getAmount() + "x " + initialStockItem.getType() : " | No initial stock or shop only buys"));
         actor.sendMessage(ChatColor.GREEN + "Your shop has been successfully created!");
     }
@@ -311,7 +313,7 @@ public class ShopManager {
         }
 
         // Construct the full price line, e.g., "16 for B:10 S:8 $"
-        String fullPriceLine = shop.getItemQuantityForPrice() + " for " + priceString + currencySymbol;
+        String fullPriceLine = shop.getBundleAmount() + " for " + priceString + currencySymbol; // Changed from getItemQuantityForPrice
         if (ChatColor.stripColor(fullPriceLine).length() > 15) { // Attempt to shorten
             if (shop.getBuyPrice() >= 0 && shop.getSellPrice() >= 0) {
                 fullPriceLine = String.format("B:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
@@ -321,9 +323,9 @@ public class ShopManager {
                 fullPriceLine = String.format("Buy:%.0f", shop.getSellPrice());
             }
             // Prepend quantity again
-            fullPriceLine = shop.getItemQuantityForPrice() + "/" + fullPriceLine;
+            fullPriceLine = shop.getBundleAmount() + "/" + fullPriceLine; // Changed from getItemQuantityForPrice
             if (ChatColor.stripColor(fullPriceLine).length() > 15) { // Final attempt
-                fullPriceLine = shop.getItemQuantityForPrice() + "/" + (shop.getBuyPrice() >=0 ? shop.getBuyPrice() : shop.getSellPrice());
+                fullPriceLine = shop.getBundleAmount() + "/" + (shop.getBuyPrice() >=0 ? shop.getBuyPrice() : shop.getSellPrice()); // Changed
             }
         }
 
@@ -538,7 +540,8 @@ public class ShopManager {
             return false;
         }
 
-        int itemsPerBundle = shop.getItemQuantityForPrice();
+        int itemsPerBundle = shop.getBundleAmount(); // Changed from getItemQuantityForPrice
+        int itemsPerBundle = shop.getBundleAmount(); // Changed from getItemQuantityForPrice
         int totalItemsToBuy = bundlesToBuy * itemsPerBundle;
 
         // executePurchase is for when a player BUYS from the shop.

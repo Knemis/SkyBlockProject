@@ -432,6 +432,8 @@ public class IslandLifecycleManager {
         }
     }
     private void grantOwnerBypassPermissions(Player owner, String worldName, String regionId) {
+        plugin.getLogger().info("grantOwnerBypassPermissions for " + owner.getName() + " on region " + regionId + " is currently disabled for testing standard WorldGuard owner bypass.");
+        /*
         LuckPerms lpApi = plugin.getLuckPermsApi();
         if (lpApi == null) { return; }
 
@@ -464,9 +466,12 @@ public class IslandLifecycleManager {
             plugin.getLogger().log(Level.SEVERE, owner.getName() + " için LuckPerms izinleri kaydedilirken hata oluştu.", ex);
             return null;
         });
+        */
     }
 
     private void revokeOwnerBypassPermissions(Player owner, String worldName, String regionId) {
+        plugin.getLogger().info("revokeOwnerBypassPermissions for " + owner.getName() + " on region " + regionId + " is currently disabled.");
+        /*
         LuckPerms lpApi = plugin.getLuckPermsApi();
         if (lpApi == null) { return; }
 
@@ -498,5 +503,6 @@ public class IslandLifecycleManager {
             plugin.getLogger().log(Level.SEVERE, owner.getName() + " için LuckPerms izinleri kaldırılırken hata oluştu.", ex);
             return null;
         });
+        */
     }
 }

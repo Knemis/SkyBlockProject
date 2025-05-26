@@ -18,10 +18,11 @@ import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener; // Added import
+import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener; // Added import
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
-import com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager; // Added import
+import com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionPlayerDataManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
@@ -99,6 +100,7 @@ public final class SkyBlockProject extends JavaPlugin {
         getConfig().addDefault("island.worth.block_values.DIAMOND_BLOCK", 150.0);
         getConfig().addDefault("island.worth.level_requirements.1", 0.0);
         getConfig().addDefault("island.worth.level_up_rewards.2", "eco give {player} 250");
+        getConfig().addDefault("island.enforce-boundaries", true); // Added config option
         saveConfig();
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0);
@@ -161,7 +163,10 @@ public final class SkyBlockProject extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.shopAdminGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
-        getServer().getPluginManager().registerEvents(new MissionListener(this), this); // Register MissionListener
+        getServer().getPluginManager().registerEvents(new MissionListener(this), this);
+        if (getConfig().getBoolean("island.enforce-boundaries", true)) { // Register PlayerBoundaryListener
+            getServer().getPluginManager().registerEvents(new PlayerBoundaryListener(this), this);
+        }
 
         // 10. Komut Kayıtları
         IslandCommand islandCommandExecutor = new IslandCommand(
