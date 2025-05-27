@@ -37,7 +37,6 @@ public class IslandDeleteService {
                 editSession.setBlocks(islandTerritory, BlockTypes.AIR.getDefaultState());
             }
 
-            // Remove island data from storage
             plugin.getIslandManager().removeIslandDataFromStorage(player.getUniqueId());
             player.sendMessage(ChatColor.GREEN + "Adanız başarıyla silindi.");
             return true;

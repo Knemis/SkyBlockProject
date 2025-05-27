@@ -61,10 +61,8 @@ public class IslandCreateService {
                 Operations.complete(operation);
             }
 
-            // Register the new island
             plugin.getIslandManager().registerNewIsland(player, islandBaseLocation);
 
-            // Teleport player to their new island
             double offsetX = plugin.getConfig().getDouble("island-spawn-offset.x", 0.5);
             double offsetY = plugin.getConfig().getDouble("island-spawn-offset.y", 1.5);
             double offsetZ = plugin.getConfig().getDouble("island-spawn-offset.z", 0.5);

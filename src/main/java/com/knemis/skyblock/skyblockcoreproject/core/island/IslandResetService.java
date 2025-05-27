@@ -44,13 +44,11 @@ public class IslandResetService {
 
         player.sendMessage(ChatColor.YELLOW + "Adanız sıfırlanıyor... Lütfen bekleyin.");
         try {
-            // Clear existing island
             CuboidRegion islandTerritory = plugin.getIslandManager().getIslandTerritoryRegion(islandBaseLocation);
             try (EditSession clearSession = WorldEdit.getInstance().newEditSession(BukkitAdapter.adapt(islandBaseLocation.getWorld()))) {
                 clearSession.setBlocks(islandTerritory, BlockTypes.AIR.getDefaultState());
             }
 
-            // Paste new schematic
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
             Clipboard clipboard;
             try (ClipboardReader reader = format.getReader(new FileInputStream(schematicFile))) {
@@ -66,14 +64,10 @@ public class IslandResetService {
                 Operations.complete(operation);
             }
 
-            // Clear all named homes
             plugin.getIslandManager().clearNamedHomesForPlayer(player.getUniqueId());
-
-            // Reset island flags to default
             plugin.getIslandManager().resetIslandFlags(player.getUniqueId());
-
-            // Teleport player to island spawn
             plugin.getIslandManager().teleportToIsland(player);
+            
             player.sendMessage(ChatColor.GREEN + "Adanız başarıyla sıfırlandı!");
             return true;
 
