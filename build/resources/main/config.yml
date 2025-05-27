@@ -1,6 +1,0 @@
-skyblock-world-name: "skyblock_world"
-
-island-spawn-offset:
-  x: 0.5
-  y: 1.5 # Şematiğinizin zemininden ne kadar yukarıda olacağı
-  z: 0.5
