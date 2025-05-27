@@ -32,7 +32,11 @@ repositories {
 }
 
 dependencies {
-compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT"
+    compileOnly "com.destroystokyo.paper:paper-api:1.16.5-R0.1-SNAPSHOT" // Original Paper API
+    // compileOnly "io.papermc.paper:paper-api:1.16.5-R0.1-SNAPSHOT" // Reverted to Paper API (io.papermc.paper group)
+    // compileOnly "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"
+    // compileOnly 'net.kyori:adventure-api:4.9.3' // Added Kyori Adventure API
+    // compileOnly 'net.kyori:adventure-text-serializer-legacy:4.9.3' // Added Kyori Adventure Legacy Serializer
     compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5'
     compileOnly 'com.sk89q.worldguard:worldguard-bukkit:7.0.5'
     compileOnly 'com.sk89q.worldguard:worldguard-core:7.0.5'

@@ -35,7 +35,7 @@ public class ShopStorage {
 
         if (!plugin.getDataFolder().exists()) {
             if (!plugin.getDataFolder().mkdirs()) {
-                plugin.getLogger().severe("Plugin veri klasörü oluşturulamadı: " + plugin.getDataFolder().getPath());
+                plugin.getLogger().severe("Plugin data folder could not be created: " + plugin.getDataFolder().getPath());
             }
         }
         loadAndInitializeConfigFile();
@@ -52,31 +52,31 @@ public class ShopStorage {
                 shopsConfig.set("file-version", CURRENT_DATA_VERSION);
                 shopsConfig.createSection("shops");
                 shopsConfig.save(shopsFile);
-                plugin.getLogger().info(shopsFile.getName() + " oluşturuldu ve varsayılan yapıyla kaydedildi.");
+                plugin.getLogger().info(shopsFile.getName() + " created and saved with default structure.");
             } else {
                 shopsConfig.load(shopsFile);
                 int fileVersion = shopsConfig.getInt("file-version", 0);
                 if (fileVersion < CURRENT_DATA_VERSION) {
-                    plugin.getLogger().warning(shopsFile.getName() + " eski bir veri formatında (Versiyon: " + fileVersion + "). Mevcut versiyon: " + CURRENT_DATA_VERSION);
-                    // Burada eski veriyi yeni formata dönüştürme (migrasyon) kodu eklenebilir.
-                    // Şimdilik sadece uyarı veriyoruz. Yeni bir kayıtta dosya versiyonu güncellenecektir.
+                    plugin.getLogger().warning(shopsFile.getName() + " is in an old data format (Version: " + fileVersion + "). Current version: " + CURRENT_DATA_VERSION);
+                    // Code for converting (migrating) old data to the new format can be added here.
+                    // For now, we are just giving a warning. The file version will be updated on a new save.
                 }
-                plugin.getLogger().info(shopsFile.getName() + " başarıyla yüklendi.");
+                plugin.getLogger().info(shopsFile.getName() + " successfully loaded.");
             }
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, shopsFile.getName() + " oluşturulurken/yüklenirken G/Ç hatası!", e);
+            plugin.getLogger().log(Level.SEVERE, shopsFile.getName() + " I/O error while creating/loading!", e);
         } catch (InvalidConfigurationException e) {
-            plugin.getLogger().log(Level.SEVERE, shopsFile.getName() + " geçersiz YAML formatına sahip! Lütfen kontrol edin.", e);
-            plugin.getLogger().warning("Hata nedeniyle yedek dosyadan (" + shopsBackupFile.getName() + ") yükleme deneniyor...");
+            plugin.getLogger().log(Level.SEVERE, shopsFile.getName() + " has an invalid YAML format! Please check.", e);
+            plugin.getLogger().warning("Attempting to load from backup file (" + shopsBackupFile.getName() + ") due to error...");
             if (shopsBackupFile.exists()) {
                 try {
                     shopsConfig.load(shopsBackupFile);
-                    plugin.getLogger().info(shopsBackupFile.getName() + " başarıyla yedekten yüklendi.");
+                    plugin.getLogger().info(shopsBackupFile.getName() + " successfully loaded from backup.");
                 } catch (IOException | InvalidConfigurationException ex) {
-                    plugin.getLogger().log(Level.SEVERE, "Yedek dosyadan ("+ shopsBackupFile.getName() +") yükleme de başarısız oldu!", ex);
+                    plugin.getLogger().log(Level.SEVERE, "Loading from backup file ("+ shopsBackupFile.getName() +") also failed!", ex);
                 }
             } else {
-                plugin.getLogger().warning("Yedek dosya (" + shopsBackupFile.getName() + ") bulunamadı.");
+                plugin.getLogger().warning("Backup file (" + shopsBackupFile.getName() + ") not found.");
             }
         }
     }
@@ -86,60 +86,60 @@ public class ShopStorage {
             if (shopsFile.exists()) {
                 try {
                     Files.copy(shopsFile.toPath(), shopsBackupFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                    plugin.getLogger().fine(shopsFile.getName() + " dosyası " + shopsBackupFile.getName() + " olarak yedeklendi.");
+                    plugin.getLogger().fine(shopsFile.getName() + " file backed up as " + shopsBackupFile.getName() + ".");
                 } catch (IOException ex) {
-                    plugin.getLogger().log(Level.WARNING, shopsFile.getName() + " yedeklenirken hata oluştu!", ex);
+                    plugin.getLogger().log(Level.WARNING, shopsFile.getName() + " error occurred while backing up!", ex);
                 }
             }
             shopsConfig.set("file-version", CURRENT_DATA_VERSION);
             shopsConfig.save(shopsFile);
-            plugin.getLogger().fine(shopsFile.getName() + " dosyasına değişiklikler kaydedildi.");
+            plugin.getLogger().fine(shopsFile.getName() + " changes saved to file.");
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, shopsFile.getName() + " dosyasına kaydedilirken G/Ç hatası oluştu!", e);
+            plugin.getLogger().log(Level.SEVERE, shopsFile.getName() + " I/O error while saving to file!", e);
         }
     }
 
     public void saveShop(Shop shop) {
         if (shop == null || shop.getLocation() == null) {
-            plugin.getLogger().warning("Kaydedilecek mağaza veya konumu null.");
+            plugin.getLogger().warning("Shop or location to save is null.");
             return;
         }
         String locString = Shop.locationToString(shop.getLocation());
         if (locString.isEmpty()) {
-            plugin.getLogger().warning("Mağaza konumu string'e çevrilemedi, kaydedilemiyor: Sahip UUID " + shop.getOwnerUUID());
+            plugin.getLogger().warning("Shop location could not be converted to string, cannot save: Owner UUID " + shop.getOwnerUUID());
             return;
         }
         String path = "shops." + locString;
 
-        shopsConfig.set(path, shop.serialize()); // Shop nesnesinin serialize metodunu kullan
+        shopsConfig.set(path, shop.serialize()); // Use the serialize method of the Shop object
         saveConfigFile();
-        plugin.getLogger().fine("Mağaza (" + locString + ") shops.yml dosyasına kaydedildi/güncellendi.");
+        plugin.getLogger().fine("Shop (" + locString + ") saved/updated to shops.yml file.");
     }
 
-    @SuppressWarnings("unchecked") // ItemStack deserileştirme için
+    @SuppressWarnings("unchecked") // For ItemStack deserialization
     public Map<Location, Shop> loadShops() {
         Map<Location, Shop> loadedShops = new HashMap<>();
         try {
-            shopsConfig.load(shopsFile); // Her yüklemede dosyadan en güncel veriyi oku
+            shopsConfig.load(shopsFile); // Read the most current data from the file on every load
         } catch (IOException | InvalidConfigurationException e) {
-            plugin.getLogger().log(Level.SEVERE, "Mağazalar yüklenirken shops.yml okunamadı. Yedekten deneniyor.", e);
+            plugin.getLogger().log(Level.SEVERE, "Could not read shops.yml while loading shops. Trying from backup.", e);
             if (shopsBackupFile.exists()) {
                 try {
                     shopsConfig.load(shopsBackupFile);
-                    plugin.getLogger().info(shopsBackupFile.getName() + " başarıyla yedekten yüklendi (loadShops).");
+                    plugin.getLogger().info(shopsBackupFile.getName() + " successfully loaded from backup (loadShops).");
                 } catch (Exception ex) {
-                    plugin.getLogger().log(Level.SEVERE, "Yedek dosyadan yükleme de başarısız oldu (loadShops)!", ex);
+                    plugin.getLogger().log(Level.SEVERE, "Loading from backup file also failed (loadShops)!", ex);
                     return loadedShops;
                 }
             } else {
-                plugin.getLogger().warning("Yedek dosya (loadShops) bulunamadı.");
+                plugin.getLogger().warning("Backup file (loadShops) not found.");
                 return loadedShops;
             }
         }
 
         ConfigurationSection shopsSection = shopsConfig.getConfigurationSection("shops");
         if (shopsSection == null) {
-            plugin.getLogger().info("shops.yml'de 'shops' bölümü bulunamadı veya boş. Hiçbir mağaza yüklenmedi.");
+            plugin.getLogger().info("'shops' section not found or empty in shops.yml. No shops loaded.");
             return loadedShops;
         }
 
@@ -147,36 +147,36 @@ public class ShopStorage {
         int failedToLoad = 0;
 
         for (String locStringKey : shopsSection.getKeys(false)) {
-            // DÜZELTME: 'shopsShops' yerine 'shopsSection' kullanılacak.
+            // FIX: 'shopsSection' will be used instead of 'shopsShops'.
             ConfigurationSection shopMapSection = shopsSection.getConfigurationSection(locStringKey);
             if (shopMapSection == null) {
-                plugin.getLogger().warning("Mağaza verisi okunamadı (null section) key: " + locStringKey + " altında.");
+                plugin.getLogger().warning("Could not read shop data (null section) under key: " + locStringKey + ".");
                 failedToLoad++;
                 continue;
             }
             Map<String, Object> shopDataMap = shopMapSection.getValues(false);
 
-            // Shop.deserialize metodu doğrudan Map alıyor ve içinden "location" string'ini de okuyor.
-            // Bu yüzden locStringKey'i ayrıca deserialize'a göndermeye gerek yok,
-            // ancak Shop.deserialize içinde "location" anahtarının map'te olduğundan emin olmalıyız.
-            // Shop.serialize() metodu "location" anahtarını ekliyor.
+            // The Shop.deserialize method directly takes a Map and reads the "location" string from within it.
+            // So, there's no need to pass locStringKey separately to deserialize,
+            // but we must ensure that the "location" key is in the map within Shop.deserialize().
+            // The Shop.serialize() method adds the "location" key.
 
             Shop shop = null;
             try {
                 shop = Shop.deserialize(shopDataMap);
-                if (shop != null && shop.getLocation() != null) { // Konumun başarıyla deserialize edildiğinden emin ol
+                if (shop != null && shop.getLocation() != null) { // Ensure location was successfully deserialized
                     loadedShops.put(shop.getLocation(), shop);
                     successfullyLoaded++;
                 } else {
-                    plugin.getLogger().warning("Mağaza deserileştirilemedi veya konumu hatalı: " + locStringKey + (shop == null ? " (Shop null döndü)" : " (Konum null)"));
+                    plugin.getLogger().warning("Shop could not be deserialized or location is incorrect: " + locStringKey + (shop == null ? " (Shop returned null)" : " (Location null)"));
                     failedToLoad++;
                 }
             } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "shops.yml içindeki mağaza yüklenirken kritik hata: " + locStringKey, e);
+                plugin.getLogger().log(Level.SEVERE, "Critical error while loading shop from shops.yml: " + locStringKey, e);
                 failedToLoad++;
             }
         }
-        plugin.getLogger().info(successfullyLoaded + " mağaza başarıyla yüklendi. " + failedToLoad + " mağaza yüklenemedi.");
+        plugin.getLogger().info(successfullyLoaded + " shops successfully loaded. " + failedToLoad + " shops could not be loaded.");
         return loadedShops;
     }
 
@@ -184,16 +184,16 @@ public class ShopStorage {
         if (location == null) return;
         String locString = Shop.locationToString(location);
         if (locString.isEmpty()) {
-            plugin.getLogger().warning("Silinecek mağaza için geçersiz konum string'i.");
+            plugin.getLogger().warning("Invalid location string for shop to be deleted.");
             return;
         }
 
         if (shopsConfig.contains("shops." + locString)) {
             shopsConfig.set("shops." + locString, null);
             saveConfigFile();
-            plugin.getLogger().info("Mağaza verisi (" + locString + ") shops.yml dosyasından silindi.");
+            plugin.getLogger().info("Shop data (" + locString + ") deleted from shops.yml file.");
         } else {
-            plugin.getLogger().warning("Silinecek mağaza (" + locString + ") shops.yml dosyasında bulunamadı.");
+            plugin.getLogger().warning("Shop to be deleted (" + locString + ") not found in shops.yml file.");
         }
     }
 }

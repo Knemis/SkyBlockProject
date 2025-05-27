@@ -23,7 +23,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import net.milkbowl.vault.economy.Economy; // Vault Economy importu
+import net.milkbowl.vault.economy.Economy; // Vault Economy import
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -46,27 +46,27 @@ public class ShopManager {
         this.activeShops = this.shopStorage.loadShops();
         this.pendingShops = new HashMap<>();
         if (this.activeShops != null && !this.activeShops.isEmpty()) {
-            plugin.getLogger().info(this.activeShops.size() + " aktif mağaza ShopManager'a yüklendi.");
+            plugin.getLogger().info(this.activeShops.size() + " active shops loaded into ShopManager.");
         } else if (this.activeShops != null) {
-            plugin.getLogger().info("ShopManager'a yüklenecek aktif mağaza bulunamadı.");
+            plugin.getLogger().info("No active shops found to load into ShopManager.");
         } else {
-            plugin.getLogger().warning("ShopStorage.loadShops() null döndü, aktif mağaza yüklenemedi.");
+            plugin.getLogger().warning("ShopStorage.loadShops() returned null, active shops could not be loaded.");
         }
     }
 
     public Shop initiateShopCreation(Location location, Player player, ShopMode initialShopMode) { // Changed ShopType to ShopMode
         if (location == null || player == null) {
-            plugin.getLogger().warning("initiateShopCreation: Konum veya oyuncu null geldi.");
+            plugin.getLogger().warning("initiateShopCreation: Location or player is null.");
             return null;
         }
         if (isShop(location)) {
             Shop existing = getActiveShop(location);
             if (existing == null) existing = getPendingShop(location);
             if (existing != null && existing.getOwnerUUID().equals(player.getUniqueId())) {
-                player.sendMessage(ChatColor.YELLOW + "Bu sandıkta zaten bir mağaza kurulumunuz var veya aktif bir mağazanız bulunuyor.");
+                player.sendMessage(ChatColor.YELLOW + "You already have a shop setup or an active shop in this chest.");
                 return existing;
             } else if (existing != null) {
-                player.sendMessage(ChatColor.RED + "Bu sandık zaten başkasına ait bir mağaza olarak kullanılıyor.");
+                player.sendMessage(ChatColor.RED + "This chest is already in use as a shop by someone else.");
                 return null;
             }
         }
@@ -109,7 +109,6 @@ public class ShopManager {
             return;
         }
 
-        ItemStack templateItem = pendingShop.getTemplateItemStack();
         ItemStack templateItem = pendingShop.getTemplateItemStack(); // templateItem.getAmount() is bundle size
         if (templateItem == null || templateItem.getType() == Material.AIR) {
             plugin.getLogger().warning("Template item not set for shop at: " + Shop.locationToString(location));
@@ -206,18 +205,18 @@ public class ShopManager {
             if (shopToRemove != null) wasPending = true;
         }
         if (shopToRemove == null) {
-            player.sendMessage(ChatColor.RED + "Bu konumda kaldırılacak bir mağaza bulunmuyor.");
+            player.sendMessage(ChatColor.RED + "There is no shop at this location to remove.");
             return;
         }
         if (!shopToRemove.getOwnerUUID().equals(player.getUniqueId()) && !player.hasPermission("skyblock.admin.removeshop")) {
-            player.sendMessage(ChatColor.RED + "Bu mağazayı kaldırma yetkiniz yok.");
+            player.sendMessage(ChatColor.RED + "You do not have permission to remove this shop.");
             return;
         }
         if (!wasPending) activeShops.remove(location);
         else pendingShops.remove(location);
         shopStorage.removeShop(location);
         clearAttachedSign(location);
-        player.sendMessage(ChatColor.GREEN + "Mağaza başarıyla " + (wasPending ? "kurulumdan " : "") + "kaldırıldı.");
+        player.sendMessage(ChatColor.GREEN + "Shop successfully removed" + (wasPending ? " from setup" : "") + ".");
         plugin.getLogger().info("Shop removed at " + Shop.locationToString(location) + " by " + player.getName());
     }
 
@@ -236,7 +235,7 @@ public class ShopManager {
     }
 
     public String getItemDisplayNameForSign(ItemStack itemStack, int maxLength) {
-        if (itemStack == null || itemStack.getType() == Material.AIR) return "Boş";
+        if (itemStack == null || itemStack.getType() == Material.AIR) return "Empty";
         ItemMeta meta = itemStack.getItemMeta();
         if (meta != null && meta.hasDisplayName()) {
             try {
@@ -245,8 +244,8 @@ public class ShopManager {
                     return shortenFormattedString(LegacyComponentSerializer.legacySection().serialize(displayNameComponent), maxLength);
                 }
             } catch (Exception e) {
-                plugin.getLogger().log(Level.FINER, "Item özel adı (Component) alınırken/kısaltılırken hata (legacy denenecek): " + itemStack.getType(), e);
-                if (meta.getDisplayName() != null && !meta.getDisplayName().isEmpty()) { // Bukkit'in eski getDisplayName'i
+                plugin.getLogger().log(Level.FINER, "Error getting/shortening item custom name (Component) (will try legacy): " + itemStack.getType(), e);
+                if (meta.getDisplayName() != null && !meta.getDisplayName().isEmpty()) { // Bukkit's old getDisplayName
                     return shortenFormattedString(meta.getDisplayName(), maxLength);
                 }
             }
@@ -272,23 +271,23 @@ public class ShopManager {
         }
         Sign signState = findOrCreateAttachedSign(chestBlock);
         if (signState == null) {
-            plugin.getLogger().warning("Mağaza (" + Shop.locationToString(shop.getLocation()) + ") için uygun bir tabela yeri bulunamadı/oluşturulamadı.");
+            plugin.getLogger().warning("Could not find/create a suitable sign location for shop (" + Shop.locationToString(shop.getLocation()) + ").");
             return;
         }
 
         OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
-        String ownerName = owner.getName() != null ? shortenFormattedString(owner.getName(), 14) : "Bilinmeyen";
+        String ownerName = owner.getName() != null ? shortenFormattedString(owner.getName(), 14) : "Unknown";
         String itemName = getItemDisplayNameForSign(shop.getTemplateItemStack(), 15);
 
-        String currencySymbol = "$"; // Varsayılan
+        String currencySymbol = "$"; // Default
         Economy econ = plugin.getEconomy();
         if (econ != null) {
             String singular = econ.currencyNameSingular();
             String plural = econ.currencyNamePlural();
-            if (singular != null && !singular.isEmpty() && !Character.isLetterOrDigit(singular.charAt(0)) && singular.length() == 1) { // Tek karakterli sembol mü?
+            if (singular != null && !singular.isEmpty() && !Character.isLetterOrDigit(singular.charAt(0)) && singular.length() == 1) { // Single character symbol?
                 currencySymbol = singular;
             } else if (plural != null && !plural.isEmpty()) {
-                currencySymbol = " " + plural; // Dolar, Euro gibi
+                currencySymbol = " " + plural; // Like Dollar, Euro
             } else if (singular != null && !singular.isEmpty()){
                 currencySymbol = " " + singular;
             }
@@ -347,7 +346,7 @@ public class ShopManager {
                     WallSign wallSignData = (WallSign) relative.getBlockData();
                     if (wallSignData.getFacing().getOppositeFace() == face) {
                         Sign sign = (Sign) relative.getState();
-                        if (sign.line(0).equals(Component.text("[Mağaza]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) {
+                        if (sign.line(0).equals(Component.text("[Shop]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) { // Check for English "[Shop]"
                             return sign;
                         }
                     }
@@ -381,9 +380,9 @@ public class ShopManager {
                 WallSign wallSignData = (WallSign) signBlock.getBlockData();
                 if (wallSignData.getFacing().getOppositeFace() == face) {
                     Sign signState = (Sign) signBlock.getState();
-                    if (signState.line(0).equals(Component.text("[Mağaza]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) {
+                    if (signState.line(0).equals(Component.text("[Shop]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) { // Check for English "[Shop]"
                         signBlock.setType(Material.AIR);
-                        plugin.getLogger().info("Mağaza tabelası (yana bitişik) temizlendi: " + Shop.locationToString(chestLocation));
+                        plugin.getLogger().info("Shop sign (adjacent wall) cleared: " + Shop.locationToString(chestLocation));
                         return;
                     }
                 }
@@ -449,14 +448,14 @@ public class ShopManager {
 
     public List<Shop> getShopsByOwner(UUID ownerUUID) {
         if (ownerUUID == null) return new ArrayList<>();
-        if (activeShops == null) return new ArrayList<>(); // Null kontrolü
+        if (activeShops == null) return new ArrayList<>(); // Null check
         return activeShops.values().stream()
-                .filter(shop -> shop != null && shop.getOwnerUUID().equals(ownerUUID)) // shop null kontrolü
+                .filter(shop -> shop != null && shop.getOwnerUUID().equals(ownerUUID)) // shop null check
                 .collect(Collectors.toList());
     }
 
     public int getTotalActiveShops() {
-        return activeShops != null ? activeShops.size() : 0; // Null kontrolü
+        return activeShops != null ? activeShops.size() : 0; // Null check
     }
 
     // --- Player Inventory Helper Methods ---
@@ -528,19 +527,18 @@ public class ShopManager {
 
 
     /**
-     * Satın alma işlemini gerçekleştiren ana metod.
-     * Bu metod, listener tarafından çağrılır ve gerekli tüm kontrolleri,
-     * ekonomi işlemlerini ve envanter güncellemelerini yapar.
-     * @return Satın alma başarılıysa true.
+     * Main method to execute a purchase.
+     * This method is called by the listener and performs all necessary checks,
+     * economy transactions, and inventory updates.
+     * @return True if the purchase is successful.
      */
     public boolean executePurchase(Player buyer, Shop shop, int bundlesToBuy) {
         if (shop == null || !shop.isSetupComplete() || buyer == null || bundlesToBuy <= 0 || shop.getTemplateItemStack() == null) {
-            plugin.getLogger().warning("[ShopManager-Purchase] Geçersiz parametreler veya mağaza durumu.");
-            if (buyer != null) buyer.sendMessage(ChatColor.RED + "Satın alma işlemi sırasında bir sorun oluştu.");
+            plugin.getLogger().warning("[ShopManager-Purchase] Invalid parameters or shop state.");
+            if (buyer != null) buyer.sendMessage(ChatColor.RED + "An error occurred during the purchase process.");
             return false;
         }
 
-        int itemsPerBundle = shop.getBundleAmount(); // Changed from getItemQuantityForPrice
         int itemsPerBundle = shop.getBundleAmount(); // Changed from getItemQuantityForPrice
         int totalItemsToBuy = bundlesToBuy * itemsPerBundle;
 
@@ -553,8 +551,8 @@ public class ShopManager {
         ItemStack templateItem = shop.getTemplateItemStack();
 
         if (totalItemsToBuy <= 0 || totalCost < 0) { // buyPrice can be 0 for free items
-            plugin.getLogger().warning("[ShopManager-Purchase] Geçersiz hesaplanmış miktar veya fiyat. Mağaza: " + Shop.locationToString(shop.getLocation()));
-            buyer.sendMessage(ChatColor.RED + "Mağaza ayarlarında bir sorun var.");
+            plugin.getLogger().warning("[ShopManager-Purchase] Invalid calculated quantity or price. Shop: " + Shop.locationToString(shop.getLocation()));
+            buyer.sendMessage(ChatColor.RED + "There is an issue with the shop settings.");
             return false;
         }
 
@@ -563,22 +561,22 @@ public class ShopManager {
 
 
         if (!EconomyManager.isEconomyAvailable()) {
-            buyer.sendMessage(ChatColor.RED + "Ekonomi sistemi mevcut değil.");
+            buyer.sendMessage(ChatColor.RED + "Economy system is not available.");
             return false;
         }
         if (EconomyManager.getBalance(buyer) < totalCost) {
-            buyer.sendMessage(ChatColor.RED + "Yetersiz bakiye! Gereken: " + String.format("%.2f", totalCost) + currencySymbol);
+            buyer.sendMessage(ChatColor.RED + "Insufficient balance! Required: " + String.format("%.2f", totalCost) + currencySymbol);
             return false;
         }
 
         Block shopBlock = shop.getLocation().getBlock();
         if (!(shopBlock.getState() instanceof Chest)) {
-            buyer.sendMessage(ChatColor.RED + "Mağaza sandığı bulunamadı!");
+            buyer.sendMessage(ChatColor.RED + "Shop chest not found!");
             return false;
         }
         Chest chest = (Chest) shopBlock.getState();
         if (countItemsInChest(chest, templateItem) < totalItemsToBuy) {
-            buyer.sendMessage(ChatColor.RED + "Mağazada yeterli stok yok (" + totalItemsToBuy + " adet " + formattedItemName + " gerekli).");
+            buyer.sendMessage(ChatColor.RED + "Not enough stock in the shop (" + totalItemsToBuy + " " + formattedItemName + " required).");
             updateAttachedSign(shop);
             return false;
         }
@@ -586,29 +584,29 @@ public class ShopManager {
         ItemStack itemsToReceive = templateItem.clone();
         itemsToReceive.setAmount(totalItemsToBuy);
         if (!hasEnoughSpace(buyer, itemsToReceive)) {
-            buyer.sendMessage(ChatColor.RED + "Envanterinizde " + totalItemsToBuy + " adet " + formattedItemName + " için yeterli yer yok!");
+            buyer.sendMessage(ChatColor.RED + "Not enough space in your inventory for " + totalItemsToBuy + " " + formattedItemName + "!");
             return false;
         }
 
         OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
 
         if (!EconomyManager.withdraw(buyer, totalCost)) {
-            buyer.sendMessage(ChatColor.RED + "Para çekme işlemi başarısız oldu.");
+            buyer.sendMessage(ChatColor.RED + "Payment withdrawal failed.");
             return false;
         }
 
         if (!EconomyManager.deposit(owner, totalCost)) {
-            EconomyManager.deposit(buyer, totalCost); // Alıcıya iade et
-            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Satıcıya para aktarılamadı. Paranız iade edildi!");
-            plugin.getLogger().severe("[ShopManager-Purchase] KRİTİK: Sahip " + (owner.getName() != null ? owner.getName() : owner.getUniqueId()) + " hesabına para yatırılamadı. Alıcı " + buyer.getName() + " parası iade edildi.");
+            EconomyManager.deposit(buyer, totalCost); // Refund to buyer
+            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "CRITICAL ERROR: " + ChatColor.RESET + ChatColor.RED + "Could not transfer funds to the seller. Your money has been refunded!");
+            plugin.getLogger().severe("[ShopManager-Purchase] CRITICAL: Could not deposit funds to owner " + (owner.getName() != null ? owner.getName() : owner.getUniqueId()) + ". Buyer " + buyer.getName() + " was refunded.");
             return false;
         }
 
         if (!removeItemsFromChest(chest, templateItem, totalItemsToBuy)) {
-            EconomyManager.withdraw(owner, totalCost); // Satıcıdan geri al
-            EconomyManager.deposit(buyer, totalCost);  // Alıcıya iade et
-            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Eşyalar mağazadan alınamadı. Paranız iade edildi!");
-            plugin.getLogger().severe("[ShopManager-Purchase] KRİTİK: Sandıktan eşya çekilemedi. Para transferleri geri alındı. Mağaza: " + Shop.locationToString(shop.getLocation()));
+            EconomyManager.withdraw(owner, totalCost); // Take back from seller
+            EconomyManager.deposit(buyer, totalCost);  // Refund to buyer
+            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "CRITICAL ERROR: " + ChatColor.RESET + ChatColor.RED + "Could not retrieve items from the shop. Your money has been refunded!");
+            plugin.getLogger().severe("[ShopManager-Purchase] CRITICAL: Could not withdraw items from chest. Money transfers reversed. Shop: " + Shop.locationToString(shop.getLocation()));
             return false;
         }
 
@@ -616,36 +614,36 @@ public class ShopManager {
         shop.recordTransaction(totalItemsToBuy, totalCost);
         shopStorage.saveShop(shop);
 
-        buyer.sendMessage(ChatColor.GREEN + "Başarıyla " + ChatColor.AQUA + totalItemsToBuy + " adet " + ChatColor.LIGHT_PURPLE + formattedItemName + ChatColor.GREEN + " satın aldınız (" + ChatColor.GOLD + String.format("%.2f", totalCost) + currencySymbol + ChatColor.GREEN + ").");
+        buyer.sendMessage(ChatColor.GREEN + "Successfully purchased " + ChatColor.AQUA + totalItemsToBuy + " " + ChatColor.LIGHT_PURPLE + formattedItemName + ChatColor.GREEN + " for " + ChatColor.GOLD + String.format("%.2f", totalCost) + currencySymbol + ChatColor.GREEN + ".");
         if (owner.isOnline() && owner.getPlayer() != null) {
-            owner.getPlayer().sendMessage(ChatColor.GOLD + buyer.getName() + ChatColor.YELLOW + " mağazanızdan " +
-                    ChatColor.AQUA + totalItemsToBuy + " adet " + ChatColor.LIGHT_PURPLE + formattedItemName + ChatColor.YELLOW + " satın aldı.");
+            owner.getPlayer().sendMessage(ChatColor.GOLD + buyer.getName() + ChatColor.YELLOW + " purchased " +
+                    ChatColor.AQUA + totalItemsToBuy + " " + ChatColor.LIGHT_PURPLE + formattedItemName + ChatColor.YELLOW + " from your shop.");
         }
         updateAttachedSign(shop);
         return true;
     }
 
     /**
-     * Vault ekonomisinden para birimi sembolünü veya adını alır.
-     * @return Para birimi sembolü/adı veya varsayılan "$".
+     * Gets currency symbol or name from Vault economy.
+     * @return Currency symbol/name or default "$".
      */
     public String getCurrencySymbol() {
         Economy econ = plugin.getEconomy();
         if (econ != null) {
             String singular = econ.currencyNameSingular();
-            // Genellikle semboller tek karakter olur ($) veya para birimi adı (USD)
+            // Usually symbols are single characters ($) or currency name (USD)
             if (singular != null && !singular.isEmpty()) {
                 if (singular.length() == 1 && !Character.isLetterOrDigit(singular.charAt(0))) {
-                    return singular; // Sadece sembol ise ($)
+                    return singular; // If just symbol ($)
                 }
-                return " " + singular; // Dolar, Euro gibi ise boşluklu
+                return " " + singular; // If like Dollar, Euro, include space
             }
             String plural = econ.currencyNamePlural();
             if (plural != null && !plural.isEmpty()) {
                 return " " + plural;
             }
         }
-        return "$"; // Varsayılan
+        return "$"; // Default
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // Yeni eklendi
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // New addition
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
@@ -17,8 +17,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
-import org.bukkit.event.inventory.InventoryClickEvent; // InventoryCloseEvent için import
-import org.bukkit.event.inventory.InventoryCloseEvent;  // Yeni eklendi
+import org.bukkit.event.inventory.InventoryClickEvent; // Import for InventoryCloseEvent
+import org.bukkit.event.inventory.InventoryCloseEvent;  // New addition
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
@@ -29,28 +29,29 @@ import java.util.UUID; // Added import
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopMode;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopType; // Keep for old finalizeShopSetup if needed by other parts, though ideally it's removed
 
-private final SkyBlockProject plugin;
-private final ShopManager shopManager;
-private final ShopSetupGUIManager shopSetupGUIManager;
-private final IslandDataHandler islandDataHandler;
-private final ShopVisitGUIManager shopVisitGUIManager;
-private final ShopAdminGUIManager shopAdminGUIManager; // Yeni eklendi
+public class ShopListener implements Listener {
+    private final SkyBlockProject plugin;
+    private final ShopManager shopManager;
+    private final ShopSetupGUIManager shopSetupGUIManager;
+    private final IslandDataHandler islandDataHandler;
+    private final ShopVisitGUIManager shopVisitGUIManager;
+    private final ShopAdminGUIManager shopAdminGUIManager; // New addition
 
-public ShopListener(SkyBlockProject plugin,
-                    ShopManager shopManager,
-                    ShopSetupGUIManager shopSetupGUIManager,
-                    IslandDataHandler islandDataHandler,
-                    ShopVisitGUIManager shopVisitGUIManager,
-                    ShopAdminGUIManager shopAdminGUIManager) { // Constructor'a eklendi
-    this.plugin = plugin;
-    this.shopManager = shopManager;
-    this.shopSetupGUIManager = shopSetupGUIManager;
-    this.islandDataHandler = islandDataHandler;
-    this.shopVisitGUIManager = shopVisitGUIManager;
-    this.shopAdminGUIManager = shopAdminGUIManager; // Atama yapıldı
-}
+    public ShopListener(SkyBlockProject plugin,
+                        ShopManager shopManager,
+                        ShopSetupGUIManager shopSetupGUIManager,
+                        IslandDataHandler islandDataHandler,
+                        ShopVisitGUIManager shopVisitGUIManager,
+                        ShopAdminGUIManager shopAdminGUIManager) { // Added to constructor
+        this.plugin = plugin;
+        this.shopManager = shopManager;
+        this.shopSetupGUIManager = shopSetupGUIManager;
+        this.islandDataHandler = islandDataHandler;
+        this.shopVisitGUIManager = shopVisitGUIManager;
+        this.shopAdminGUIManager = shopAdminGUIManager; // Assignment done
+    }
 
-@EventHandler
+    @EventHandler
 public void onPlayerInteract(PlayerInteractEvent event) {
     if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
         return;
@@ -64,10 +65,11 @@ public void onPlayerInteract(PlayerInteractEvent event) {
     Player player = event.getPlayer();
     Location chestLocation = clickedBlock.getLocation();
 
-    if (player.isSneaking()) { // Shift + Sağ Tık
+    if (player.isSneaking()) { // Shift + Right Click
         // event.setCancelled(true); // Already done by previous logic if it's an existing shop of theirs
 
         // Check if player is already in a shop creation process
+        // TODO: Ensure getPlayerChoosingShopMode() is implemented in SkyBlockProject.java, returning a Map<UUID, Location>
         if (plugin.getPlayerShopSetupState().containsKey(player.getUniqueId()) || plugin.getPlayerChoosingShopMode().containsKey(player.getUniqueId())) {
             player.sendMessage(ChatColor.YELLOW + "You are already in a shop creation process. Type 'cancel' to abort.");
             event.setCancelled(true);
@@ -84,13 +86,30 @@ public void onPlayerInteract(PlayerInteractEvent event) {
         // Location Check (Island Ownership/Membership)
         Island island = plugin.getIslandDataHandler().getIslandAt(chestLocation);
         boolean canCreateHere = false;
-        if (island != null && (island.isOwner(player.getUniqueId()) || island.isMember(player.getUniqueId()))) {
-            canCreateHere = true;
-        }
+
         if (player.hasPermission("skyblock.admin.createshopanywhere")) {
+            // Admin can create anywhere, but we still log if island is null,
+            // as it might be unexpected depending on the location.
+            if (island == null) {
+                plugin.getLogger().info("Admin " + player.getName() + " is creating a shop at location " + chestLocation.toString() + " where no island is present (this is allowed for admins).");
+            }
             canCreateHere = true;
+        } else {
+            // Non-admins MUST have an island at the location
+            if (island == null) {
+                player.sendMessage(ChatColor.RED + "You cannot create a shop here as there is no island at this location.");
+                plugin.getLogger().warning("Player " + player.getName() + " (UUID: " + player.getUniqueId() + ") tried to create a shop at " + chestLocation.toString() + " but no island was found (getIslandAt returned null).");
+                event.setCancelled(true);
+                return;
+            }
+            // If an island exists, check for ownership/membership
+            if (island.isOwner(player.getUniqueId()) || island.isMember(player.getUniqueId())) {
+                canCreateHere = true;
+            }
         }
 
+        // This secondary check for canCreateHere handles the case where a non-admin player is not on their island / member island.
+        // For admins, canCreateHere would already be true.
         if (!canCreateHere) {
             player.sendMessage(ChatColor.RED + "You can only create shops on your island or an island you are a member of.");
             event.setCancelled(true);
@@ -140,7 +159,7 @@ public void onPlayerInteract(PlayerInteractEvent event) {
                 plugin.getPlayerViewingShopLocation().put(player.getUniqueId(), chestLocation);
                 shopVisitGUIManager.openShopVisitMenu(player, activeShop);
             } else {
-                event.setCancelled(false); // Kendi dükkanı, sandığı açsın
+                event.setCancelled(false); // Their own shop, let them open the chest
             }
         } else {
             Shop pendingShop = shopManager.getPendingShop(chestLocation);
@@ -174,8 +193,10 @@ public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
     Player player = event.getPlayer();
     UUID playerId = player.getUniqueId();
 
+    // TODO: Ensure getPlayerChoosingShopMode() is implemented in SkyBlockProject.java, returning a Map<UUID, Location>
     if (plugin.getPlayerChoosingShopMode().containsKey(playerId)) {
         event.setCancelled(true);
+        // TODO: Ensure getPlayerChoosingShopMode() is implemented in SkyBlockProject.java, returning a Map<UUID, Location>
         Location chestLocation = plugin.getPlayerChoosingShopMode().get(playerId);
         String message = event.getMessage().toLowerCase().trim();
         ShopMode selectedMode = null;
@@ -185,6 +206,7 @@ public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
         } else if (message.equals("bank")) {
             selectedMode = ShopMode.BANK_CHEST;
         } else if (message.equals("cancel")) {
+            // TODO: Ensure getPlayerChoosingShopMode() is implemented in SkyBlockProject.java, returning a Map<UUID, Location>
             plugin.getPlayerChoosingShopMode().remove(playerId);
             player.sendMessage(ChatColor.YELLOW + "Shop creation cancelled.");
             return;
@@ -194,6 +216,7 @@ public void onAsyncPlayerChat(AsyncPlayerChatEvent event) {
         }
 
         final ShopMode finalSelectedMode = selectedMode;
+        // TODO: Ensure getPlayerChoosingShopMode() is implemented in SkyBlockProject.java, returning a Map<UUID, Location>
         plugin.getPlayerChoosingShopMode().remove(playerId); // Remove before task to prevent re-entry
 
         new BukkitRunnable() {
@@ -238,44 +261,44 @@ public void onInventoryClick(InventoryClickEvent event) {
     Inventory topInventory = event.getView().getTopInventory();
     if (topInventory == null) return;
 
-    // Önceki GUI başlık kontrolleriniz burada kalabilir (ShopSetupGUIManager vs.)
+    // Your previous GUI title checks can remain here (ShopSetupGUIManager etc.)
     // ...
 
-    // Yeni Shop Admin GUI tıklama yönetimi
-    if (event.getView().title().equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
+    // New Shop Admin GUI click management
+    if (event.getView().getTitle().equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
         event.setCancelled(true);
         ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
         Location shopLocation = plugin.getPlayerAdministeringShop().get(player.getUniqueId());
         if (shopLocation == null) {
-            player.sendMessage(ChatColor.RED + "Hata: Yönetilecek mağaza bilgisi bulunamadı.");
+            player.sendMessage(ChatColor.RED + "Error: Could not find shop information to manage.");
             player.closeInventory();
             return;
         }
         Shop shop = shopManager.getActiveShop(shopLocation);
         if (shop == null || !shop.getOwnerUUID().equals(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Hata: Mağaza bulunamadı veya bu mağazayı yönetme yetkiniz yok.");
+            player.sendMessage(ChatColor.RED + "Error: Shop not found or you do not have permission to manage this shop.");
             player.closeInventory();
-            plugin.getPlayerAdministeringShop().remove(player.getUniqueId()); // State'i temizle
+            plugin.getPlayerAdministeringShop().remove(player.getUniqueId()); // Clear state
             return;
         }
 
-        // ShopAdminGUIManager'daki slot numaralarına göre kontrol
-        // Bu slot numaralarını ShopAdminGUIManager sınıfından statik olarak almak daha iyi olurdu.
-        // Şimdilik varsayılan değerleri (11 ve 13) kullanalım.
-        // Gerçek slotları ShopAdminGUIManager.DISPLAY_NAME_SLOT ve ShopAdminGUIManager.PRICE_SLOT ile eşleştirin.
-        int displayNameSlot = 11; // ShopAdminGUIManager'daki DISPLAY_NAME_SLOT ile eşleşmeli
-        int priceSlot = 13;       // ShopAdminGUIManager'daki PRICE_SLOT ile eşleşmeli
+        // Control based on slot numbers in ShopAdminGUIManager
+        // It would be better to get these slot numbers statically from the ShopAdminGUIManager class.
+        // For now, let's use default values (11 and 13).
+        // Match the actual slots with ShopAdminGUIManager.DISPLAY_NAME_SLOT and ShopAdminGUIManager.PRICE_SLOT.
+        int displayNameSlot = 11; // Should match DISPLAY_NAME_SLOT in ShopAdminGUIManager
+        int priceSlot = 13;       // Should match PRICE_SLOT in ShopAdminGUIManager
 
         if (event.getRawSlot() == displayNameSlot) {
             shopAdminGUIManager.initiateDisplayNameChange(player, shop);
         } else if (event.getRawSlot() == priceSlot) {
             shopAdminGUIManager.initiatePriceChange(player, shop);
         }
-        // Gelecekte eklenecek diğer yönetim butonları için buraya else if blokları eklenebilir.
+        // Else if blocks can be added here for other management buttons to be added in the future.
     }
-    // Diğer GUI'ler için tıklama yönetimi (ShopSetupListener vb. kendi event handler'larında yönetiyor olmalı)
+    // Click management for other GUIs (ShopSetupListener etc. should be managed in their own event handlers)
 }
 
 @EventHandler
@@ -284,22 +307,22 @@ public void onInventoryClose(InventoryCloseEvent event) {
     Player player = (Player) event.getPlayer();
     UUID playerId = player.getUniqueId();
 
-    // ShopVisitGUI kapatıldığında state'i temizle
-    if (event.getView().title().equals(ShopVisitGUIManager.SHOP_VISIT_TITLE)) {
+    // Clear state when ShopVisitGUI is closed
+    if (event.getView().getTitle().equals(ShopVisitGUIManager.SHOP_VISIT_TITLE)) {
         if (plugin.getPlayerViewingShopLocation().containsKey(playerId)) {
             plugin.getPlayerViewingShopLocation().remove(playerId);
         }
     }
-    // ShopAdminGUI kapatıldığında ilgili state'leri temizle
-    else if (event.getView().title().equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
+    // Clear relevant states when ShopAdminGUI is closed
+    else if (event.getView().getTitle().equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
         plugin.getPlayerAdministeringShop().remove(playerId);
-        // Eğer oyuncu chat'e bir şey yazmak üzereyken GUI'yi kapattıysa,
-        // beklenen input durumunu da temizle ve bir mesaj gönder.
+        // If the player closed the GUI while about to type something in chat,
+        // also clear the expected input state and send a message.
         ShopAdminGUIManager.AdminInputType expectedInput = plugin.getPlayerWaitingForAdminInput().remove(playerId);
         if (expectedInput != null) {
-            player.sendMessage(ChatColor.YELLOW + "Mağaza ayarı girişi iptal edildi.");
+            player.sendMessage(ChatColor.YELLOW + "Shop setting input cancelled.");
         }
     }
-    // ShopSetupGUI'ler için state temizliği ShopSetupListener içinde yapılmalı.
+    // State cleaning for ShopSetupGUIs should be done within ShopSetupListener.
 }
 }

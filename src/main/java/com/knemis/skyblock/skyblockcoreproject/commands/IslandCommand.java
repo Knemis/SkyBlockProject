@@ -238,34 +238,36 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleHomeCommand(Player player, String[] args) {
-        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId()); //
+        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Önce bir ada oluşturmalısın: " + ChatColor.GOLD + "/island create"); //
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleHomeCommand");
             return;
         }
-        if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("spawn"))) { //
-            this.islandTeleportManager.teleportPlayerToIslandSpawn(player); //
+        if (args.length == 1 || (args.length == 2 && args[1].equalsIgnoreCase("spawn"))) {
+            this.islandTeleportManager.teleportPlayerToIslandSpawn(player);
         } else if (args.length == 2) {
-            if (args[1].equalsIgnoreCase("list")) { //
-                List<String> homes = island.getHomeNames(); //
-                int currentIslandMaxHomes = island.getMaxHomesLimit(); // GÜNCELLENDİ: Adaya özel limitten al
-                if (homes.isEmpty()) { //
-                    player.sendMessage(ChatColor.YELLOW + "Ayarlanmış hiç ev noktan yok. " + ChatColor.GRAY + "(Maks: " + currentIslandMaxHomes + ")"); //
+            if (args[1].equalsIgnoreCase("list")) {
+                List<String> homes = island.getHomeNames();
+                int currentIslandMaxHomes = island.getMaxHomesLimit();
+                if (homes.isEmpty()) {
+                    player.sendMessage(ChatColor.YELLOW + "Ayarlanmış hiç ev noktan yok. " + ChatColor.GRAY + "(Maks: " + currentIslandMaxHomes + ")");
                 } else {
-                    player.sendMessage(ChatColor.GREEN + "Ev Noktaların (" + homes.size() + "/" + currentIslandMaxHomes + "): " + ChatColor.GOLD + String.join(ChatColor.GRAY + ", " + ChatColor.GOLD, homes)); //
+                    player.sendMessage(ChatColor.GREEN + "Ev Noktaların (" + homes.size() + "/" + currentIslandMaxHomes + "): " + ChatColor.GOLD + String.join(ChatColor.GRAY + ", " + ChatColor.GOLD, homes));
                 }
             } else {
-                this.islandTeleportManager.teleportPlayerToNamedHome(player, args[1]); //
+                this.islandTeleportManager.teleportPlayerToNamedHome(player, args[1]);
             }
         } else {
-            player.sendMessage(ChatColor.RED + "Kullanım: /island home [isim|list|spawn]"); //
+            player.sendMessage(ChatColor.RED + "Kullanım: /island home [isim|list|spawn]");
         }
     }
-    // YENİ METOD: handleLevelCommand
+
     private void handleLevelCommand(Player player, String[] args) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Bu komutu kullanmak için bir adan olmalı.");
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleLevelCommand");
             return;
         }
 
@@ -286,26 +288,29 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSetHomeCommand(Player player, String[] args) {
-        // ... (metod aynı, önceki düzeltmelerle) ...
         double setHomeCost = plugin.getConfig().getDouble("commands.sethome.cost", 50.0);
+        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
+
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleSetHomeCommand");
+            return;
+        }
+
         if (this.economy != null && setHomeCost > 0) {
             if (economy.getBalance(player) < setHomeCost) {
                 player.sendMessage(ChatColor.RED + "/island sethome kullanmak için yeterli paran yok! Gereken: " + economy.format(setHomeCost));
-                return; // Para yoksa işlemi burada sonlandır
+                return;
             }
             EconomyResponse r = economy.withdrawPlayer(player, setHomeCost);
             if (r.transactionSuccess()) {
                 player.sendMessage(ChatColor.AQUA + economy.format(setHomeCost) + " sethome kullanım ücreti olarak hesabından çekildi.");
             } else {
                 player.sendMessage(ChatColor.RED + "SetHome ücreti çekilirken bir hata oluştu: " + r.errorMessage);
-                return; // Para çekilemezse işlemi burada sonlandır
+                return;
             }
         }
-        Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
-        if (island == null) {
-            player.sendMessage(ChatColor.RED + "Ev noktanı ayarlayabileceğin bir adan yok!");
-            return;
-        }
+
         if (args.length < 2) {
             player.sendMessage(ChatColor.RED + "Kullanım: /island sethome <ev_ismi>");
             return;
@@ -342,11 +347,11 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         player.sendMessage(ChatColor.GREEN + "'" + homeNameToSet + "' adlı ev noktan ayarlandı!");
     }
 
-    // YENİ METOD: handleUpgradeCommand
     private void handleUpgradeCommand(Player player, String[] args) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Yükseltme yapabileceğin bir adan yok!");
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleUpgradeCommand");
             return;
         }
 
@@ -405,10 +410,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         }
     }
     private void handleDelHomeCommand(Player player, String[] args) {
-        // ... (metod aynı) ...
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Ev silebilmek için önce bir adanız olmalı!");
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleDelHomeCommand");
             return;
         }
         if (args.length < 2) {
@@ -494,8 +499,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleFlagsCommand(Player player) {
-        if (!this.islandDataHandler.playerHasIsland(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Bayraklarını düzenleyebileceğin bir adan yok!");
+        Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleFlagsCommand");
             return;
         }
         this.flagGUIManager.openFlagsGUI(player);
@@ -505,26 +512,25 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     private void handleInfoCommand(Player player, String[] args) {
         Island islandToInfo;
         String islandOwnerName;
-        OfflinePlayer ownerToDisplay; // Ada sahibini göstermek için
-
 
         if (args.length == 1) {
             islandToInfo = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
             if (islandToInfo == null) {
-                player.sendMessage(ChatColor.RED + "Görüntülenecek bir adan yok. Oluşturmak için: " + ChatColor.GOLD + "/island create");
+                player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+                plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleInfoCommand (self)");
                 return;
             }
             islandOwnerName = player.getName();
         } else if (args.length == 2) {
-            OfflinePlayer targetOwner = Bukkit.getOfflinePlayer(args[1]); // Deprecated
-            // DÜZELTME: OfflinePlayer null ve UUID null kontrolü basitleştirildi/iyileştirildi
-            if (targetOwner == null || targetOwner.getUniqueId() == null) { // Eğer UUID yoksa, oyuncu geçerli sayılmaz
+            OfflinePlayer targetOwner = Bukkit.getOfflinePlayer(args[1]);
+            if (targetOwner == null || targetOwner.getUniqueId() == null) {
                 player.sendMessage(ChatColor.RED + "'" + args[1] + "' adında geçerli bir oyuncu profili bulunamadı.");
                 return;
             }
             islandToInfo = this.islandDataHandler.getIslandByOwner(targetOwner.getUniqueId());
             if (islandToInfo == null) {
                 player.sendMessage(ChatColor.RED + "'" + (targetOwner.getName() != null ? targetOwner.getName() : args[1]) + "' adlı oyuncunun bir adası bulunmuyor.");
+                // No need to log here as it's a valid case (target player simply has no island)
                 return;
             }
             islandOwnerName = targetOwner.getName() != null ? targetOwner.getName() : args[1];
@@ -558,13 +564,12 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleSettingsCommand(Player player, String[] args) {
-        // ... (metodun başı aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Ayarlarını düzenleyebileceğin bir adan yok!");
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleSettingsCommand");
             return;
         }
-
 
         if (args.length < 2) {
             player.sendMessage(ChatColor.RED + "Kullanım: /island settings <name|visibility|boundary> [değer]");
@@ -651,12 +656,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
     @SuppressWarnings("deprecation") // Bukkit.getOfflinePlayer(String) kullanımı için
     private void handleTeamCommand(Player player, String[] args) {
-        // ... (metodun başı aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
-        if (island == null && !(args.length > 1 && (args[1].equalsIgnoreCase("accept") || args[1].equalsIgnoreCase("deny")) ) ) {
-            player.sendMessage(ChatColor.RED + "Takım komutlarını kullanabilmek için bir adanız olmalı.");
-            return;
-        }
+        // Null check for island is deferred until after specific subcommands like "accept" or "deny"
+        // which might not require an island. For other subcommands, it will be checked.
 
         if (args.length < 2) {
             player.sendMessage(ChatColor.RED + "Kullanım: /island team <add|remove|list>");
@@ -667,7 +669,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             case "add":
             case "ekle":
                 if (island == null) {
-                    player.sendMessage(ChatColor.RED + "Üye eklemek için ada sahibi olmalısınız."); return;
+                    player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+                    plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleTeamCommand (add)");
+                    return;
                 }
                 if (args.length < 3) {
                     player.sendMessage(ChatColor.RED + "Kullanım: /island team add <oyuncu_adı>");
@@ -686,7 +690,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             case "at":
             case "çıkar":
                 if (island == null) {
-                    player.sendMessage(ChatColor.RED + "Üye çıkarmak için ada sahibi olmalısınız."); return;
+                    player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+                    plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleTeamCommand (remove)");
+                    return;
                 }
                 if (args.length < 3) {
                     player.sendMessage(ChatColor.RED + "Kullanım: /island team remove <oyuncu_adı>");
@@ -702,9 +708,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 break;
             case "list":
             case "liste":
-                // ... (liste kısmı aynı) ...
                 if (island == null) {
-                    player.sendMessage(ChatColor.RED + "Listelenecek bir adan yok.");
+                    player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+                    plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleTeamCommand (list)");
                     return;
                 }
                 List<OfflinePlayer> members = this.islandMemberManager.getIslandMembers(island);
@@ -725,7 +731,6 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
     @SuppressWarnings("deprecation") // Bukkit.getOfflinePlayer(String) kullanımı için
     private void handleVisitCommand(Player player, String[] args) {
-        // ... (metod aynı, önceki isBanned düzeltmesiyle) ...
         if (args.length < 2) {
             player.sendMessage(ChatColor.RED + "Kullanım: /island visit <oyuncu_adı>");
             return;
@@ -740,6 +745,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
         Island targetIsland = this.islandDataHandler.getIslandByOwner(targetOwner.getUniqueId());
         if (targetIsland == null) {
             player.sendMessage(ChatColor.RED + "'" + (targetOwner.getName() != null ? targetOwner.getName() : ownerName) + "' adlı oyuncunun bir adası bulunmuyor.");
+            // No need to log here as it's a valid case (target player simply has no island)
             return;
         }
 
@@ -756,10 +762,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleBiomeCommand(Player player, String[] args) {
-        // ... (metod aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Bu komutu kullanmak için bir adanız olmalı.");
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleBiomeCommand");
             return;
         }
 
@@ -816,10 +822,10 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleWelcomeCommand(Player player, String[] args) {
-        // ... (metod aynı) ...
         Island island = this.islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Bu komutu kullanmak için bir adanız olmalı.");
+            player.sendMessage(ChatColor.RED + "Ada verilerin bulunamadı. Lütfen tekrar dene veya sorun devam ederse bir yetkiliye bildir.");
+            plugin.getLogger().warning("Island object was null for player UUID: " + player.getUniqueId() + " in IslandCommand.handleWelcomeCommand");
             return;
         }
 
@@ -889,7 +895,7 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
             String arg1Lower = args[1].toLowerCase(); // Tanımlama burada
             if (subCmd.equals("home") || subCmd.equals("delhome") || subCmd.equals("sethome")) {
                 Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
-                if (island != null) {
+                if (island != null) { // Null check added
                     List<String> homes = new ArrayList<>(island.getHomeNames());
                     if (subCmd.equals("home")) homes.add("list");
                     for (String home : homes) {
