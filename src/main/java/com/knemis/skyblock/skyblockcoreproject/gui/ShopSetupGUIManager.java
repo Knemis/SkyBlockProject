@@ -30,7 +30,6 @@ public class ShopSetupGUIManager {
     // private final ShopManager shopManager; // Direkt olarak bu sınıfta kullanılmıyor gibi, kaldırılabilir
 
     // GUI Başlıkları
-    public static final Component SHOP_TYPE_TITLE = Component.text("Mağaza Türünü Belirle", Style.style(NamedTextColor.DARK_AQUA, TextDecoration.BOLD));
     public static final Component ITEM_SELECT_TITLE = Component.text("Satılacak Eşyayı Seç", Style.style(NamedTextColor.BLUE, TextDecoration.BOLD));
     public static final Component QUANTITY_INPUT_TITLE = Component.text("Paket Miktarını Belirle", Style.style(NamedTextColor.GREEN, TextDecoration.BOLD));
 
@@ -71,65 +70,9 @@ public class ShopSetupGUIManager {
         }
     }
 
-    public void openShopTypeSelectionMenu(Player player, Location chestLocation) {
-        Inventory gui = Bukkit.createInventory(null, 27, SHOP_TYPE_TITLE);
-
-        // PLAYER_SELL_SHOP (Players buy from owner)
-        ItemStack sellShopItem = new ItemStack(Material.CHEST);
-        ItemMeta sellMeta = sellShopItem.getItemMeta();
-        if (sellMeta != null) {
-            sellMeta.displayName(Component.text("Sell Shop (Players Buy From You)", NamedTextColor.GOLD, TextDecoration.BOLD));
-            List<Component> sellLore = new ArrayList<>();
-            sellLore.add(Component.text("Players will buy items that you stock", NamedTextColor.YELLOW));
-            sellLore.add(Component.text("in this shop.", NamedTextColor.YELLOW));
-            sellLore.add(Component.text("You set the price for items you sell.", NamedTextColor.GRAY));
-            sellMeta.lore(sellLore);
-            sellShopItem.setItemMeta(sellMeta);
-        }
-
-        // PLAYER_BUY_SHOP (Players sell to owner)
-        ItemStack buyShopItem = new ItemStack(Material.HOPPER);
-        ItemMeta buyMeta = buyShopItem.getItemMeta();
-        if (buyMeta != null) {
-            buyMeta.displayName(Component.text("Buy Shop (Players Sell To You)", NamedTextColor.AQUA, TextDecoration.BOLD));
-            List<Component> buyLore = new ArrayList<>();
-            buyLore.add(Component.text("Players will sell items to this shop.", NamedTextColor.YELLOW));
-            buyLore.add(Component.text("You set the price for items you buy.", NamedTextColor.GRAY));
-            buyLore.add(Component.text("Ensure your island has funds for purchases.", NamedTextColor.LIGHT_PURPLE));
-            buyMeta.lore(buyLore);
-            buyShopItem.setItemMeta(buyMeta);
-        }
-
-        // PLAYER_BUY_SELL_SHOP (Two-way shop)
-        ItemStack buySellShopItem = new ItemStack(Material.REPEATER); // Or another suitable icon like OBSERVER
-        ItemMeta buySellMeta = buySellShopItem.getItemMeta();
-        if (buySellMeta != null) {
-            buySellMeta.displayName(Component.text("Two-Way Shop (Buy & Sell)", NamedTextColor.LIGHT_PURPLE, TextDecoration.BOLD));
-            List<Component> buySellLore = new ArrayList<>();
-            buySellLore.add(Component.text("This shop allows players to both buy", NamedTextColor.YELLOW));
-            buySellLore.add(Component.text("items from you and sell items to you.", NamedTextColor.YELLOW));
-            buySellLore.add(Component.text("You set both buy and sell prices.", NamedTextColor.GRAY));
-            buySellMeta.lore(buySellLore);
-            buySellShopItem.setItemMeta(buySellMeta);
-        }
-
-        // Slot placements for three items (e.g., 10, 13, 16 for center row)
-        int sellShopSlot = 10;
-        int buySellShopSlot = 13;
-        int buyShopSlot = 16;
-
-        fillGuiBackground(gui, PLACEHOLDER_ITEM_GRAY, sellShopSlot, buySellShopSlot, buyShopSlot);
-        gui.setItem(sellShopSlot, sellShopItem);
-        gui.setItem(buySellShopSlot, buySellShopItem);
-        gui.setItem(buyShopSlot, buyShopItem);
-
-        plugin.getPlayerShopSetupState().put(player.getUniqueId(), chestLocation);
-        player.openInventory(gui);
-    }
-
     public void openItemSelectionMenu(Player player, Shop shop) {
-        if (shop == null || shop.getShopType() == null) {
-            player.sendMessage(ChatColor.RED + "Önce mağaza türü seçilmelidir!");
+        if (shop == null || shop.getShopMode() == null) {
+            player.sendMessage(ChatColor.RED + "Mağaza modu ayarlanırken bir sorun oluştu!"); // Updated message
             player.closeInventory();
             plugin.getPlayerShopSetupState().remove(player.getUniqueId());
             return;
@@ -235,7 +178,7 @@ public class ShopSetupGUIManager {
     }
 
     public void promptForPrice(Player player, Shop shop) {
-        if (shop.getTemplateItemStack() == null || shop.getTemplateItemStack().getType() == Material.AIR || shop.getItemQuantityForPrice() <= 0) {
+        if (shop.getTemplateItemStack() == null || shop.getTemplateItemStack().getType() == Material.AIR || shop.getBundleAmount() <= 0) { // Replaced getItemQuantityForPrice with getBundleAmount
             player.sendMessage(ChatColor.RED + "Hata: Önce satılacak eşya ve paket miktarı doğru şekilde belirlenmeli!");
             player.closeInventory();
             plugin.getPlayerShopSetupState().remove(player.getUniqueId());
@@ -249,31 +192,26 @@ public class ShopSetupGUIManager {
 
         player.sendMessage(ChatColor.GOLD + "===== Price Setup =====");
         player.sendMessage(ChatColor.YELLOW + "Item: " + ChatColor.AQUA + itemName);
-        player.sendMessage(ChatColor.YELLOW + "Quantity per transaction: " + ChatColor.AQUA + shop.getItemQuantityForPrice());
+        player.sendMessage(ChatColor.YELLOW + "Bundle Size (quantity per transaction): " + ChatColor.AQUA + shop.getBundleAmount()); // Use getBundleAmount()
 
-        switch (shop.getShopType()) {
-            case PLAYER_SELL_SHOP:
-                player.sendMessage(ChatColor.GREEN + "Please enter the price players will pay to buy this package.");
-                player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "100.50" + ChatColor.GRAY + " or " + ChatColor.WHITE + "50");
-                break;
-            case PLAYER_BUY_SHOP:
-                player.sendMessage(ChatColor.GREEN + "Please enter the price you will pay players for this package.");
-                player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "80.00" + ChatColor.GRAY + " or " + ChatColor.WHITE + "75");
-                break;
-            case PLAYER_BUY_SELL_SHOP:
-                player.sendMessage(ChatColor.GREEN + "Enter prices as 'YOUR_BUY_PRICE:YOUR_SELL_PRICE'.");
-                player.sendMessage(ChatColor.GRAY + "YOUR_BUY_PRICE is what players pay you (e.g., you sell for 100).");
-                player.sendMessage(ChatColor.GRAY + "YOUR_SELL_PRICE is what you pay players (e.g., you buy for 80).");
-                player.sendMessage(ChatColor.GRAY + "Example: " + ChatColor.WHITE + "100:80");
-                player.sendMessage(ChatColor.GRAY + "If you only want to sell, use a sell price of -1 (e.g., '100:-1').");
-                player.sendMessage(ChatColor.GRAY + "If you only want to buy, use a buy price of -1 (e.g., '-1:80').");
-                break;
-            default:
-                player.sendMessage(ChatColor.RED + "Error: Unknown shop type! Please restart setup.");
-                plugin.getPlayerShopSetupState().remove(player.getUniqueId());
-                plugin.getPlayerInitialShopStockItem().remove(player.getUniqueId()); // Clean up potential stock
-                return;
-        }
+        player.sendMessage(ChatColor.GREEN + "You will now set two prices for this bundle:");
+        player.sendMessage(ChatColor.YELLOW + "1. Player Buy Price: " + ChatColor.GRAY + "What players pay to buy ONE bundle from your shop.");
+        player.sendMessage(ChatColor.YELLOW + "   (Enter a positive number, or -1 if your shop will NOT SELL this item).");
+        player.sendMessage(ChatColor.YELLOW + "2. Player Sell Price: " + ChatColor.GRAY + "What your shop pays players for ONE bundle they sell to it.");
+        player.sendMessage(ChatColor.YELLOW + "   (Enter a positive number, or -1 if your shop will NOT BUY this item).");
+
+        player.sendMessage(ChatColor.GREEN + "Please enter these prices in the format: " + ChatColor.WHITE + "PLAYER_BUY_PRICE:PLAYER_SELL_PRICE");
+        player.sendMessage(ChatColor.GRAY + "Example for selling at 100 and buying at 80: " + ChatColor.WHITE + "100:80");
+        player.sendMessage(ChatColor.GRAY + "Example for selling at 50.25, not buying (shop won't buy): " + ChatColor.WHITE + "50.25:-1");
+        player.sendMessage(ChatColor.GRAY + "Example for not selling (shop won't sell), buying at 75: " + ChatColor.WHITE + "-1:75");
+        player.sendMessage(ChatColor.GRAY + "If your shop will neither buy nor sell (e.g. display only), you could use: " + ChatColor.WHITE + "-1:-1");
+
+
+        // The ShopMode (MARKET_CHEST or BANK_CHEST) is already set and primarily affects
+        // how quantities are handled (custom vs bundle) and interaction style,
+        // not the fundamental ability to set buy/sell prices.
+        // So, no switch on shop.getShopMode() is needed here for price prompting.
+
         player.sendMessage(ChatColor.GRAY + "To cancel, type '" + ChatColor.RED + "iptal" + ChatColor.GRAY + "'.");
     }
 }

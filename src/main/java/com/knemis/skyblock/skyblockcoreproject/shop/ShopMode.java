@@ -1,4 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.shop;
 
-public class ShopMode {
+public enum ShopMode {
+    MARKET_CHEST,
+    BANK_CHEST
 }

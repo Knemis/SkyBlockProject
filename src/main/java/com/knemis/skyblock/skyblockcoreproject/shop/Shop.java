@@ -5,40 +5,40 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.configuration.serialization.ConfigurationSerializable; // ItemStack kaydetmek için
+import org.bukkit.configuration.serialization.ConfigurationSerializable; // To save ItemStack
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-public class Shop implements ConfigurationSerializable { // ConfigurationSerializable eklendi
+public class Shop implements ConfigurationSerializable { // ConfigurationSerializable added
 
-    private final Location location; // Mağaza sandığının konumu (final olmalı)
-    private final UUID ownerUUID;    // Mağaza sahibinin UUID'si (final olmalı)
+    private final Location location; // Shop chest location (should be final)
+    private final UUID ownerUUID;    // Shop owner's UUID (should be final)
     private ShopMode shopMode;       // Defines interaction model (MARKET_CHEST, BANK_CHEST)
 
-    // Geliştirilmiş Eşya Tanımlaması
+    // Enhanced Item Definition
     // templateItemStack.getAmount() now represents the bundleAmount for the buyPrice
-    private ItemStack templateItemStack; // Satılacak eşyanın tam bir kopyası (NBT dahil), amount is bundle size.
+    private ItemStack templateItemStack; // A full copy of the item to be sold (including NBT), amount is bundle size.
     private double buyPrice;           // Total price for the bundle defined by templateItemStack.getAmount()
-    private double sellPrice;          // Oyuncunun eşyayı satmak için alacağı fiyat (dükkan ALIYOR), -1 ise alım yok
+    private double sellPrice;          // Price player receives for selling the item (shop BUYS), -1 if not buying
 
-    private boolean setupComplete;     // Kurulum tamamlandı mı?
-    private boolean isAdminShop;       // Bu bir admin mağazası mı?
+    private boolean setupComplete;     // Is setup complete?
+    private boolean isAdminShop;       // Is this an admin shop?
 
-    // İstatistikler
+    // Statistics
     private long totalItemsSold;    // Items sold by the shop to players
     private double totalEarnings;   // Money earned by the shop from players
     private long totalItemsBought;  // Items bought by the shop from players
     private double totalMoneySpent; // Money spent by the shop to buy from players
 
-    // Opsiyonel Geliştirmeler
-    private String shopDisplayName;    // Oyuncunun mağazaya verdiği özel isim
-    private long lastActivityTimestamp; // Son işlem veya güncelleme zamanı
+    // Optional Enhancements
+    private String shopDisplayName;    // Custom name given to the shop by the player
+    private long lastActivityTimestamp; // Time of the last transaction or update
 
     /**
-     * Yeni bir mağaza kurulumu için (geçici) constructor.
+     * Constructor for a new shop setup (temporary).
      * @param location Shop location.
      * @param ownerUUID Shop owner's UUID.
      * @param initialShopMode The initial mode of the shop.
@@ -105,7 +105,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         this.lastActivityTimestamp = lastActivityTimestamp;
     }
 
-    // --- Getter Metodları ---
+    // --- Getter Methods ---
     public Location getLocation() { return location.clone(); }
     public UUID getOwnerUUID() { return ownerUUID; }
     public ShopMode getShopMode() { return shopMode; }
@@ -134,7 +134,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         return -1.0; // Or throw exception, or handle as error state
     }
 
-    // --- Setter Metodları (Kurulum ve İşlem Sırasında Kullanılır) ---
+    // --- Setter Methods (Used During Setup and Transactions) ---
     public void setShopMode(ShopMode shopMode) {
         if (shopMode == null) throw new IllegalArgumentException("Shop mode cannot be null.");
         this.shopMode = shopMode;
@@ -187,7 +187,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
     }
 
     public void setShopDisplayName(String shopDisplayName) {
-        this.shopDisplayName = shopDisplayName; // Null veya boş olabilir
+        this.shopDisplayName = shopDisplayName; // Can be null or empty
         updateLastActivity();
     }
 
@@ -195,14 +195,14 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         this.lastActivityTimestamp = System.currentTimeMillis();
     }
 
-    // --- İşlem Metodları ---
+    // --- Transaction Methods ---
     /**
-     * Bir satış işlemi gerçekleştiğinde çağrılır. İstatistikleri günceller.
-     * @param quantitySold Satılan eşya (bundle değil, tekil eşya) sayısı.
-     * @param transactionPrice Bu işlemden elde edilen toplam fiyat.
+     * Called when a sale transaction occurs. Updates statistics.
+     * @param quantitySold Number of items (individual, not bundles) sold.
+     * @param transactionPrice Total price obtained from this transaction.
      */
     public void recordTransaction(int quantitySold, double transactionPrice) {
-        if (quantitySold <= 0 || transactionPrice < 0) return; // Geçersiz işlem
+        if (quantitySold <= 0 || transactionPrice < 0) return; // Invalid transaction
         this.totalItemsSold += quantitySold;
         this.totalEarnings += transactionPrice;
         updateLastActivity();
@@ -220,7 +220,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         updateLastActivity();
     }
 
-    // --- ConfigurationSerializable Metodları (ItemStack'i YAML'a kaydetmek için) ---
+    // --- ConfigurationSerializable Methods (To save ItemStack to YAML) ---
     @Override
     public Map<String, Object> serialize() {
         Map<String, Object> map = new HashMap<>();
@@ -246,7 +246,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         return map;
     }
 
-    @SuppressWarnings("unchecked") // ItemStack deserileştirme için
+    @SuppressWarnings("unchecked") // For ItemStack deserialization
     public static Shop deserialize(Map<String, Object> map) {
         UUID owner = UUID.fromString((String) map.get("ownerUUID"));
         Location loc = stringToLocation((String) map.get("location"));
@@ -289,7 +289,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
                     shop.templateItemStack = ItemStack.deserialize((Map<String, Object>) itemStackData);
                 } catch (Exception e) {
                     Bukkit.getLogger().warning("[Shop Deserialization] Failed to deserialize templateItemStack for shop at " + loc + ": " + e.getMessage());
-                    shop.templateItemStack = new ItemStack(Material.STONE, 1); // Fallback with amount 1
+                    shop.templateItemStack = new ItemStack(Material.STONE, 1); // Fallback with amount 1 as bundle size
                 }
             }
         }
@@ -340,10 +340,10 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         return shop;
     }
 
-    // --- Yardımcı Konum Serileştirme Metodları ---
+    // --- Helper Location Serialization Methods ---
     public static String locationToString(Location loc) {
         if (loc == null || loc.getWorld() == null) return "";
-        // Dünya ismini UUID yerine isim olarak kaydetmek daha taşınabilir.
+        // Saving world by name instead of UUID is more portable.
         return loc.getWorld().getName() + ";" + loc.getBlockX() + ";" + loc.getBlockY() + ";" + loc.getBlockZ();
     }
 
@@ -351,7 +351,7 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         if (locString == null || locString.isEmpty()) return null;
         String[] parts = locString.split(";");
         if (parts.length != 4) return null;
-        org.bukkit.World world = Bukkit.getWorld(parts[0]); // Dünya ismiyle yükle
+        org.bukkit.World world = Bukkit.getWorld(parts[0]); // Load by world name
         if (world == null) return null;
         try {
             return new Location(world, Integer.parseInt(parts[1]), Integer.parseInt(parts[2]), Integer.parseInt(parts[3]));
@@ -360,13 +360,13 @@ public class Shop implements ConfigurationSerializable { // ConfigurationSeriali
         }
     }
 
-    // --- Eşitlik ve HashCode ---
+    // --- Equality and HashCode ---
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Shop shop = (Shop) o;
-        return location.equals(shop.location); // Mağazalar konumlarına göre benzersizdir
+        return location.equals(shop.location); // Shops are unique by their location
     }
 
     @Override

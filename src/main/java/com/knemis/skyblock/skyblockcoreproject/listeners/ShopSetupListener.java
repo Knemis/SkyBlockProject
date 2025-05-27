@@ -460,69 +460,55 @@ public class ShopSetupListener implements Listener {
                 return;
             }
 
-            ShopType shopType = pendingShop.getShopType();
-            double buyPrice = -1;  // Price players pay to buy from shop owner
-            double sellPrice = -1; // Price players get for selling to shop owner
+            // ShopType is no longer used to determine price input style.
+            // All shops now use BUY_PRICE:SELL_PRICE format.
             ItemStack actualInitialStock = plugin.getPlayerInitialShopStockItem().get(playerId); // Get, don't remove yet
 
             try {
-                switch (shopType) {
-                    case PLAYER_SELL_SHOP:
-                        buyPrice = Double.parseDouble(message);
-                        if (buyPrice < 0) {
-                            player.sendMessage(ChatColor.RED + "Buy price cannot be negative. Please enter a valid price or 'iptal'.");
-                            return;
-                        }
-                        pendingShop.setBuyPrice(buyPrice);
-                        pendingShop.setSellPrice(-1); // Explicitly not a buy-from-player shop
-                        break;
-                    case PLAYER_BUY_SHOP:
-                        sellPrice = Double.parseDouble(message);
-                        if (sellPrice < 0) {
-                            player.sendMessage(ChatColor.RED + "Sell price cannot be negative. Please enter a valid price or 'iptal'.");
-                            return;
-                        }
-                        pendingShop.setSellPrice(sellPrice);
-                        pendingShop.setBuyPrice(-1); // Explicitly not a sell-to-player shop
-                        actualInitialStock = null; // No initial stock for pure buy shops
-                        plugin.getPlayerInitialShopStockItem().remove(playerId); // Clear it if it was there
-                        break;
-                    case PLAYER_BUY_SELL_SHOP:
-                        String[] prices = message.split(":");
-                        if (prices.length != 2) {
-                            player.sendMessage(ChatColor.RED + "Invalid format. Use 'BUY_PRICE:SELL_PRICE' (e.g., 100:80 or 100:-1 or -1:80). Or type 'iptal'.");
-                            return;
-                        }
-                        buyPrice = Double.parseDouble(prices[0].trim());
-                        sellPrice = Double.parseDouble(prices[1].trim());
-
-                        if (buyPrice < 0 && buyPrice != -1) {
-                            player.sendMessage(ChatColor.RED + "Invalid buy price. Must be positive or -1 (to disable buying from shop). Try again or 'iptal'.");
-                            return;
-                        }
-                        if (sellPrice < 0 && sellPrice != -1) {
-                            player.sendMessage(ChatColor.RED + "Invalid sell price. Must be positive or -1 (to disable selling to shop). Try again or 'iptal'.");
-                            return;
-                        }
-                        if (buyPrice == -1 && sellPrice == -1) {
-                            player.sendMessage(ChatColor.RED + "Both buy and sell prices cannot be -1. At least one must be active. Try again or 'iptal'.");
-                            return;
-                        }
-                        pendingShop.setBuyPrice(buyPrice);
-                        pendingShop.setSellPrice(sellPrice);
-                        if (buyPrice == -1) { // If shop is only buying from players, no initial stock needed from owner.
-                            actualInitialStock = null;
-                            plugin.getPlayerInitialShopStockItem().remove(playerId);
-                        }
-                        break;
-                    default:
-                        player.sendMessage(ChatColor.RED + "Internal error: Unknown shop type during price setup. Please cancel and restart.");
-                        return;
+                String[] priceParts = message.split(":");
+                if (priceParts.length != 2) {
+                    player.sendMessage(ChatColor.RED + "Invalid format. Please enter prices as YOUR_BUY_PRICE:YOUR_SELL_PRICE (e.g., 100:80 or 50:-1, or -1:70). Or type 'iptal'.");
+                    return;
                 }
+
+                double buyPrice = Double.parseDouble(priceParts[0].trim());
+                double sellPrice = Double.parseDouble(priceParts[1].trim());
+
+                // Validate prices
+                if (buyPrice < 0 && buyPrice != -1) {
+                    player.sendMessage(ChatColor.RED + "Invalid Player Buy Price. Must be a positive number or -1 to disable your shop selling this item. Try again or 'iptal'.");
+                    return;
+                }
+                if (sellPrice < 0 && sellPrice != -1) {
+                    player.sendMessage(ChatColor.RED + "Invalid Player Sell Price. Must be a positive number or -1 to disable your shop buying this item. Try again or 'iptal'.");
+                    return;
+                }
+                if (buyPrice == -1 && sellPrice == -1) {
+                    player.sendMessage(ChatColor.RED + "A shop must either allow players to buy from it, or sell to it (or both). You cannot set both prices to -1. Try again or 'iptal'.");
+                    return;
+                }
+
+                pendingShop.setBuyPrice(buyPrice);
+                pendingShop.setSellPrice(sellPrice);
+
+                // Adjust initial stock based on if the shop will sell items.
+                // If buyPrice is -1, the shop does not sell, so no initial stock is needed from the owner.
+                if (buyPrice == -1) {
+                    actualInitialStock = null;
+                    plugin.getPlayerInitialShopStockItem().remove(playerId); // Clear it if it was there
+                }
+                // If buyPrice is not -1, actualInitialStock will be the item from getPlayerInitialShopStockItem()
+                // or null if nothing was there (which shouldn't happen if template item was set).
+
+                player.sendMessage(ChatColor.GREEN + "Prices accepted. Player Buy Price: " + (buyPrice == -1 ? "Disabled" : String.format("%.2f", buyPrice)) +
+                        ", Player Sell Price: " + (sellPrice == -1 ? "Disabled" : String.format("%.2f", sellPrice)));
 
                 // Finalize: Remove states and call ShopManager
                 plugin.getPlayerShopSetupState().remove(playerId);
-                plugin.getPlayerInitialShopStockItem().remove(playerId); // Remove now that we've decided on actualInitialStock
+                // Remove initial stock from map only if it wasn't cleared above (i.e., if buyPrice != -1)
+                // or if it was already null. Effectively, always remove it as its fate is decided.
+                plugin.getPlayerInitialShopStockItem().remove(playerId);
+
 
                 // Make a final copy for the runnable
                 final ItemStack finalInitialStock = actualInitialStock;
@@ -531,21 +517,16 @@ public class ShopSetupListener implements Listener {
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        // Template item and quantity should already be set on finalPendingShop
-                        // The Shop object (finalPendingShop) should already have its buyPrice and sellPrice set
-                        // by the logic within this onPlayerChatForPrice method before this runnable.
-                        // The template item and quantity are also already set on finalPendingShop.
-                        // ShopManager.finalizeShopSetup will now retrieve these from the pendingShop via location.
                         shopManager.finalizeShopSetup(
                                 chestLocation,
                                 player,
-                                finalInitialStock // This will be null if not applicable for the shop type
+                                finalInitialStock // This will be null if buyPrice is -1 (shop doesn't sell)
                         );
                     }
                 }.runTask(plugin);
 
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Invalid price format. Please enter numbers (e.g., 10.5 or 100:80) or 'iptal'.");
+                player.sendMessage(ChatColor.RED + "Invalid number format for prices. Please use numbers (e.g., 100.50 or -1). Example: 10.5:8.0 or 50:-1 or -1:20.25. Or type 'iptal'.");
                 // State'i koru, oyuncu tekrar denesin.
             }
         }
