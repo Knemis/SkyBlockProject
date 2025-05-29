@@ -23,13 +23,19 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+// Import the new session class
+import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession;
 
 public class ShopSetupGUIManager {
 
     private final SkyBlockProject plugin;
-    private final ShopManager shopManager; // ShopManager referansı eklendi
+    private final ShopManager shopManager; 
+    private final Map<UUID, ShopSetupSession> activeSetupSessions = new HashMap<>();
 
     public static final Component ITEM_SELECT_TITLE = Component.text("Mağaza İçin Eşya Seç", Style.style(NamedTextColor.DARK_GREEN, TextDecoration.BOLD));
     public static final Component QUANTITY_INPUT_TITLE = Component.text("Miktar Belirle (Birim Başına)", Style.style(NamedTextColor.BLUE, TextDecoration.BOLD));
@@ -40,17 +46,48 @@ public class ShopSetupGUIManager {
 
     public ShopSetupGUIManager(SkyBlockProject plugin, ShopManager shopManager) { // shopManager parametresi eklendi
         this.plugin = plugin;
-        this.shopManager = shopManager; // shopManager ataması yapıldı
+        this.shopManager = shopManager; 
     }
 
+    // Session Management Methods
+    public ShopSetupSession getPlayerSession(UUID playerId) {
+        return activeSetupSessions.get(playerId);
+    }
+
+    public ShopSetupSession createSession(Player player, Location chestLocation, Shop pendingShop, ItemStack initialStockItem) {
+        ShopSetupSession session = new ShopSetupSession(player.getUniqueId(), chestLocation, pendingShop, initialStockItem);
+        activeSetupSessions.put(player.getUniqueId(), session);
+        plugin.getLogger().info("ShopSetupSession created for player " + player.getName() + " at " + chestLocation);
+        return session;
+    }
+
+    public void removeSession(UUID playerId) {
+        ShopSetupSession removedSession = activeSetupSessions.remove(playerId);
+        if (removedSession != null) {
+            plugin.getLogger().info("ShopSetupSession removed for player " + playerId + " from location " + removedSession.getChestLocation());
+        } else {
+            plugin.getLogger().warning("Attempted to remove a ShopSetupSession for player " + playerId + ", but no active session was found.");
+        }
+    }
+
+    // Updated getPendingShop methods
     public Shop getPendingShop(Player player) {
-        return plugin.getShopManager().getPendingShop(player.getUniqueId());
-    }
-    public Shop getPendingShop(UUID playerId) {
-        return plugin.getShopManager().getPendingShop(playerId);
+        if (player == null) return null;
+        ShopSetupSession session = getPlayerSession(player.getUniqueId());
+        return (session != null) ? session.getPendingShop() : null;
     }
 
+    public Shop getPendingShop(UUID playerId) {
+        if (playerId == null) return null;
+        ShopSetupSession session = getPlayerSession(playerId);
+        return (session != null) ? session.getPendingShop() : null;
+    }
+    
+    // GUI Opening Methods
     public void openShopTypeSelectionMenu(Player player) {
+        // When opening the first menu in a potential setup, ensure no old session is lingering
+        // or rely on the calling context (e.g. ShopListener) to manage session creation appropriately.
+        // For now, this method doesn't directly interact with sessions itself, ShopListener will.
         Inventory gui = Bukkit.createInventory(player, 9, SHOP_TYPE_TITLE);
 
         ItemStack buyShopItem = new ItemStack(Material.GOLD_INGOT);
@@ -91,18 +128,33 @@ public class ShopSetupGUIManager {
     }
 
     public void openItemSelectionMenu(Player player, Shop pendingShop) {
+        ShopSetupSession session = getPlayerSession(player.getUniqueId());
+        if (session == null) {
+            plugin.getLogger().severe("Cannot open item selection menu for " + player.getName() + ": No setup session found.");
+            player.sendMessage(ChatColor.RED + "Kurulum oturumu bulunamadı. Lütfen tekrar deneyin.");
+            return;
+        }
+        session.setCurrentGuiTitle(ITEM_SELECT_TITLE.toString()); // Optional: track current GUI
         Inventory gui = Bukkit.createInventory(player, 54, ITEM_SELECT_TITLE);
         player.openInventory(gui);
     }
 
     public void openQuantityInputMenu(Player player, Shop pendingShop) {
+        ShopSetupSession session = getPlayerSession(player.getUniqueId());
+        if (session == null) {
+            plugin.getLogger().severe("Cannot open quantity input menu for " + player.getName() + ": No setup session found.");
+            player.sendMessage(ChatColor.RED + "Kurulum oturumu bulunamadı. Lütfen tekrar deneyin.");
+            return;
+        }
+        session.setCurrentGuiTitle(QUANTITY_INPUT_TITLE.toString());
+        // session.setExpectedInputType(InputType.QUANTITY); // Set if direct input is expected, or rely on click/close events.
+
         Inventory gui = Bukkit.createInventory(player, 27, QUANTITY_INPUT_TITLE);
         ItemStack templateItem = pendingShop.getTemplateItemStack();
 
         if (templateItem == null) {
             player.sendMessage(ChatColor.RED + "Önce bir eşya seçmelisiniz! Kurulum iptal ediliyor.");
-            // plugin.getShopManager().cancelShopSetup(player.getUniqueId()); // SkyBlockProject.getPlayerWaitingForSetupInput() kullanılmalı
-            plugin.getShopManager().cancelShopSetup(player.getUniqueId());
+            shopManager.cancelShopSetup(player.getUniqueId()); // Use shopManager instance
             return;
         }
 
@@ -155,16 +207,44 @@ public class ShopSetupGUIManager {
 
         player.sendMessage(ChatColor.YELLOW + "Satılacak Eşya: " + ChatColor.WHITE + itemName +
                 ChatColor.YELLOW + " (Paket Miktarı: " + ChatColor.WHITE + bundleAmount + " adet" + ChatColor.YELLOW + ")");
-        player.sendMessage(ChatColor.GRAY + "Lütfen bu paket için alış ve satış fiyatlarını chat'e girin.");
-        player.sendMessage(ChatColor.GRAY + "Format: <oyuncunun_satin_alma_fiyati>:<oyuncunun_satis_fiyati>");
-        player.sendMessage(ChatColor.GRAY + "Örnek: " + ChatColor.WHITE + "100:80" +
-                ChatColor.GRAY + " (Oyuncular 100'e alır, 80'e satar)");
-        player.sendMessage(ChatColor.GRAY + "Sadece satış (oyuncu alamaz): " + ChatColor.WHITE + "-1:80");
-        player.sendMessage(ChatColor.GRAY + "Sadece alış (oyuncu satamaz): " + ChatColor.WHITE + "100:-1");
-        player.sendMessage(ChatColor.GRAY + "Ne alım ne satım (sadece sergi): " + ChatColor.WHITE + "-1:-1");
-        player.sendMessage(ChatColor.YELLOW + "Kurulumu iptal etmek için '" + ChatColor.RED + "iptal" + ChatColor.YELLOW + "' yazın.");
 
-        plugin.getPlayerWaitingForSetupInput().put(player.getUniqueId(), ShopSetupGUIManager.InputType.PRICE); // playerWaitingForSetupInput kullanıldı
+        ShopSetupSession session = getPlayerSession(player.getUniqueId());
+        if (session == null) {
+            plugin.getLogger().severe("Could not find setup session for " + player.getName() + " when prompting for price.");
+            player.sendMessage(ChatColor.RED + "Oturum hatası, fiyat girilemiyor.");
+            // Attempt to cancel via ShopManager if possible, though without a session, it might be limited.
+            // If ShopManager's cancelShopSetup now relies on session, this becomes problematic.
+            // However, ShopSetupListener should ensure session exists before calling this.
+            shopManager.cancelShopSetup(player.getUniqueId()); 
+            return;
+        }
+
+        if (session.isIntentToAllowPlayerBuy() && session.isIntentToAllowPlayerSell()) {
+            player.sendMessage(ChatColor.GRAY + "Lütfen bu paket için ALIŞ ve SATIŞ fiyatlarını chat'e girin.");
+            player.sendMessage(ChatColor.GRAY + "Format: <oyuncunun_ALIŞ_fiyati>:<oyuncunun_SATIŞ_fiyati>");
+            player.sendMessage(ChatColor.GRAY + "Örnek: " + ChatColor.WHITE + "100:80" + ChatColor.GRAY + " (Oyuncular 100'e alır, 80'e satar)");
+            player.sendMessage(ChatColor.GRAY + "Sadece satış (oyuncu alamaz): " + ChatColor.WHITE + "-1:80");
+            player.sendMessage(ChatColor.GRAY + "Sadece alış (oyuncu satamaz): " + ChatColor.WHITE + "100:-1");
+        } else if (session.isIntentToAllowPlayerBuy()) {
+            player.sendMessage(ChatColor.GRAY + "Lütfen bu paket için oyuncuların sizden SATIN ALACAĞI fiyatı girin.");
+            player.sendMessage(ChatColor.GRAY + "Örnek: " + ChatColor.WHITE + "100");
+            player.sendMessage(ChatColor.GRAY + "Bu dükkan oyunculara satış yapmayacak.");
+        } else if (session.isIntentToAllowPlayerSell()) {
+            player.sendMessage(ChatColor.GRAY + "Lütfen bu paket için oyuncuların size SATACAĞI fiyatı girin.");
+            player.sendMessage(ChatColor.GRAY + "Örnek: " + ChatColor.WHITE + "80");
+            player.sendMessage(ChatColor.GRAY + "Bu dükkan oyunculardan ürün almayacak.");
+        } else {
+            // This case should ideally not be reached if session intents are set correctly from type selection.
+            player.sendMessage(ChatColor.RED + "Dükkanın alış veya satış amacı belirlenmemiş. Kurulum iptal ediliyor.");
+            shopManager.cancelShopSetup(player.getUniqueId());
+            return;
+        }
+
+        player.sendMessage(ChatColor.YELLOW + "Kurulumu iptal etmek için '" + ChatColor.RED + "iptal" + ChatColor.YELLOW + "' yazın.");
+        
+        session.setExpectedInputType(InputType.PRICE);
+        session.setCurrentGuiTitle(null); // Chat input, no specific GUI title
+        plugin.getLogger().info("Player " + player.getName() + " is now expected to input PRICE. Session updated with intents: Buy=" + session.isIntentToAllowPlayerBuy() + ", Sell=" + session.isIntentToAllowPlayerSell());
     }
 
     public enum InputType {
@@ -172,6 +252,15 @@ public class ShopSetupGUIManager {
     }
 
     public void openConfirmationMenu(Player player, Shop pendingShop, double buyPrice, double sellPrice) {
+        ShopSetupSession session = getPlayerSession(player.getUniqueId());
+        if (session == null) {
+            plugin.getLogger().severe("Cannot open confirmation menu for " + player.getName() + ": No setup session found.");
+            player.sendMessage(ChatColor.RED + "Kurulum oturumu bulunamadı. Lütfen tekrar deneyin.");
+            return;
+        }
+        session.setCurrentGuiTitle(CONFIRMATION_TITLE.toString());
+        session.setExpectedInputType(null); // No further direct input expected after this GUI, interaction is via clicks.
+
         Inventory gui = Bukkit.createInventory(player, 27, CONFIRMATION_TITLE);
         ItemStack templateItem = pendingShop.getTemplateItemStack().clone();
         int bundleAmount = pendingShop.getBundleAmount();

@@ -237,11 +237,18 @@ public class ShopListener implements Listener {
                     if (newShop != null) {
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) selected shop mode '%s' for chest at %s. Shop initiated.",
                                 player.getName(), playerId, finalSelectedMode.name(), chestLocation));
+                        
+                        // Create the setup session
+                        // Assuming initialStockItem is not handled at this stage of interaction.
+                        // If the chest had items, that logic would need to be added before or during initiateShopCreation.
+                        // For now, passing null for initialStockItem.
+                        plugin.getShopSetupGUIManager().createSession(player, chestLocation, newShop, null);
+
                         if (plugin.getShopSetupGUIManager() != null) {
-                            plugin.getPlayerShopSetupState().put(playerId, chestLocation);
+                            // plugin.getPlayerShopSetupState().put(playerId, chestLocation); // This state is now in the session
                             plugin.getShopSetupGUIManager().openItemSelectionMenu(player, newShop);
                             player.sendMessage(ChatColor.GREEN + "Shop mode '" + finalSelectedMode.name() + "' selected. Now, please select the item for your shop.");
-                            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop at %s with mode %s. Opening item selection. (Internal ID: %s)",
+                            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop at %s with mode %s. Session created. Opening item selection. (Internal ID: %s)",
                                     player.getName(), playerId, Shop.locationToString(newShop.getLocation()), finalSelectedMode.name(), newShop.getShopId()));
                         } else {
                             plugin.getLogger().severe("ShopSetupGUIManager is null! Cannot open item selection menu for " + player.getName());

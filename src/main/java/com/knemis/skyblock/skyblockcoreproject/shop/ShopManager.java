@@ -2,7 +2,8 @@
 package com.knemis.skyblock.skyblockcoreproject.shop;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-// import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager; // SkyBlockProject'ten enum almak için gerekebilir
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession; // Import ShopSetupSession
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -40,22 +41,26 @@ public class ShopManager {
     private final ShopStorage shopStorage;
     private final Map<Location, Shop> activeShops;
     private final Map<Location, Shop> pendingShops;
+    private final ShopSignManager shopSignManager; 
+    private final ShopTransactionManager shopTransactionManager; // New field
 
     public ShopManager(SkyBlockProject plugin) {
-        System.out.println("[TRACE] In ShopManager constructor. Plugin is " + (plugin == null ? "null" : "not null"));
         this.plugin = plugin;
         this.shopStorage = new ShopStorage(plugin);
-        this.activeShops = this.shopStorage.loadShops(); // ShopStorage.loadShops() should handle its own logging for load count/failures
+        this.activeShops = this.shopStorage.loadShops();
         this.pendingShops = new HashMap<>();
-        if (this.activeShops != null) { // activeShops can be an empty map from loadShops, not null
+        this.shopSignManager = new ShopSignManager(plugin); 
+        this.shopTransactionManager = new ShopTransactionManager(plugin, this); // Initialize ShopTransactionManager
+        if (this.activeShops != null) {
             plugin.getLogger().info(String.format("[ShopManager] Initialized with %d active shops from storage.", this.activeShops.size()));
         } else {
-            // This case should ideally not happen if loadShops returns an empty map on failure instead of null.
-            // However, if it can be null due to a deeper issue in ShopStorage:
             plugin.getLogger().severe("[ShopManager] Initialization failed: activeShops is null after attempting to load from ShopStorage.");
-            // Consider initializing activeShops to a new HashMap to prevent NullPointerExceptions later.
-            // this.activeShops = new HashMap<>();
         }
+    }
+
+    // Getter for ShopSignManager to be used by ShopTransactionManager
+    public ShopSignManager getShopSignManager() {
+        return shopSignManager;
     }
 
     public Shop initiateShopCreation(Location location, Player player, ShopMode initialShopMode) {
@@ -100,39 +105,72 @@ public class ShopManager {
     }
 
     public Shop getPendingShop(UUID playerId) {
-        Location shopLocation = plugin.getPlayerShopSetupState().get(playerId);
-        if (shopLocation != null) {
-            return pendingShops.get(shopLocation);
+        // This specific override might become less relevant if all pending shop access goes via session.
+        // For now, it can try to get from session if ShopSetupGUIManager is available.
+        if (plugin.getShopSetupGUIManager() != null) {
+            ShopSetupSession session = plugin.getShopSetupGUIManager().getPlayerSession(playerId);
+            if (session != null) {
+                return session.getPendingShop();
+            }
         }
-        return null;
+        // Fallback or alternative logic if no session (e.g. if there's a way to have pending shops outside sessions)
+        // This part depends on whether all pending shops are exclusively managed by sessions.
+        // For this refactor, we assume sessions are the primary way for setup.
+        // If direct access to pendingShops by playerId is needed elsewhere without a session,
+        // that implies a different state management path.
+        plugin.getLogger().fine("getPendingShop(UUID) called but no session found for player " + playerId + ". This might be okay if not in active setup.");
+        return null; // Or look up in pendingShops via a custom map if that's a separate flow.
     }
 
-
-    public void finalizeShopSetup(Location location, Player actor, ItemStack initialStockItem) {
-        System.out.println("[TRACE] In ShopManager.finalizeShopSetup for player " + (actor != null ? actor.getName() : "null") + " at " + Shop.locationToString(location) + " with stock " + (initialStockItem != null ? initialStockItem.getType().name() : "null"));
-        String locStr = Shop.locationToString(location);
-        plugin.getLogger().info(String.format("[ShopManager] Attempting to finalize shop setup at %s for player %s (UUID: %s). Initial stock: %s",
-                locStr, actor.getName(), actor.getUniqueId(), initialStockItem != null ? initialStockItem.toString() : "null"));
-
-        if (location == null || actor == null) {
-            plugin.getLogger().severe(String.format("[ShopManager] finalizeShopSetup failed: Location (%s) or actor (%s) is null!", locStr, actor));
-            if (actor != null) actor.sendMessage(ChatColor.RED + "Dükkan kurulumu bir iç hata nedeniyle başarısız oldu (null parametreler).");
-            if (location != null) pendingShops.remove(location); // Clean up pending shop if location is known
+    public void finalizeShopSetup(UUID playerId) {
+        ShopSetupGUIManager shopSetupGUIManager = plugin.getShopSetupGUIManager();
+        if (shopSetupGUIManager == null) {
+            plugin.getLogger().severe("[ShopManager] finalizeShopSetup called but ShopSetupGUIManager is null!");
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) player.sendMessage(ChatColor.RED + "Kritik bir hata oluştu (GUI Manager eksik). Kurulum tamamlanamadı.");
             return;
         }
 
-        Shop pendingShop = pendingShops.get(location);
-        if (pendingShop == null) {
-            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed: No pending shop found at %s for player %s.", locStr, actor.getName()));
-            actor.sendMessage(ChatColor.RED + "Dükkan kurulum bilgisi bulunamadı. Lütfen baştan başlayın.");
+        ShopSetupSession session = shopSetupGUIManager.getPlayerSession(playerId);
+        if (session == null) {
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed: No setup session found for player %s.", playerId));
+            Player player = Bukkit.getPlayer(playerId);
+            if (player != null) player.sendMessage(ChatColor.RED + "Dükkan kurulum oturumu bulunamadı. Lütfen baştan başlayın.");
+            return;
+        }
+
+        Player actor = Bukkit.getPlayer(playerId);
+        if (actor == null || !actor.isOnline()) {
+            plugin.getLogger().severe(String.format("[ShopManager] finalizeShopSetup failed: Player %s is not online!", playerId));
+            shopSetupGUIManager.removeSession(playerId); // Clean up session
+            return;
+        }
+
+        Shop pendingShop = session.getPendingShop();
+        Location location = session.getChestLocation();
+        ItemStack initialStockItem = session.getInitialStockItem(); // Get from session
+        String locStr = Shop.locationToString(location);
+
+        plugin.getLogger().info(String.format("[ShopManager] Attempting to finalize shop setup at %s for player %s (UUID: %s) via session. Initial stock: %s",
+                locStr, actor.getName(), playerId, initialStockItem != null ? initialStockItem.toString() : "null"));
+
+        if (pendingShop == null) { // Should be caught by session check, but good to have
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed: No pending shop in session for player %s at %s.", actor.getName(), locStr));
+            actor.sendMessage(ChatColor.RED + "Dükkan kurulum bilgisi oturumda bulunamadı.");
+            shopSetupGUIManager.removeSession(playerId);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
+        
+        // Ensure the pendingShop from the session is also removed from the direct pendingShops map if it was added there.
+        // This covers cases where initiateShopCreation might have added to pendingShops map before session was fully utilized.
+        pendingShops.remove(location);
+
 
         if (pendingShop.getShopMode() == null) {
             plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Shop mode not set.", locStr, actor.getName()));
             actor.sendMessage(ChatColor.RED + "Dükkan modu seçilmedi! Kurulum iptal edildi.");
-            pendingShops.remove(location); // Clean up
+            shopSetupGUIManager.removeSession(playerId);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
@@ -141,7 +179,7 @@ public class ShopManager {
         if (templateItem == null || templateItem.getType() == Material.AIR) {
             plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Template item not set.", locStr, actor.getName()));
             actor.sendMessage(ChatColor.RED + "Satılacak/alınacak eşya ayarlanmadı! Kurulum iptal edildi.");
-            pendingShops.remove(location);
+            shopSetupGUIManager.removeSession(playerId);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
@@ -150,7 +188,7 @@ public class ShopManager {
             plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Invalid bundle amount %d.",
                     locStr, actor.getName(), pendingShop.getBundleAmount()));
             actor.sendMessage(ChatColor.RED + "İşlem için geçersiz paket miktarı! Kurulum iptal edildi.");
-            pendingShops.remove(location);
+            shopSetupGUIManager.removeSession(playerId);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
@@ -162,15 +200,13 @@ public class ShopManager {
             plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Neither buy nor sell price is valid. Buy: %.2f, Sell: %.2f",
                     locStr, actor.getName(), pendingShop.getBuyPrice(), pendingShop.getSellPrice()));
             actor.sendMessage(ChatColor.RED + "Alış veya satış için geçerli bir fiyat belirlenmedi! Kurulum iptal edildi.");
-            pendingShops.remove(location);
+            shopSetupGUIManager.removeSession(playerId);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
 
-        String shopId = pendingShop.getShopId(); // Get ID before removing from pending
-        pendingShops.remove(location);
         pendingShop.setSetupComplete(true);
-        saveShop(pendingShop); // This will log the save operation
+        saveShop(pendingShop); 
 
         boolean needsStocking = initialStockItem != null && initialStockItem.getType() != Material.AIR;
         boolean canBeStockedByPlayerBuying = pendingShop.getBuyPrice() != -1; // Shop sells to player (player buys)
@@ -194,47 +230,83 @@ public class ShopManager {
         plugin.getLogger().info(String.format("[ShopManager] Shop setup finalized: Location %s by %s. Item: %s, QtyPerBundle: %d, BuyPrice: %.2f, SellPrice: %.2f, Mode: %s. Stocked: %b",
                 locStr, actor.getName(), templateItem.getType(), pendingShop.getBundleAmount(),
                 pendingShop.getBuyPrice(), pendingShop.getSellPrice(), pendingShop.getShopMode(), (needsStocking && canBeStockedByPlayerBuying)));
+        
+        shopSetupGUIManager.removeSession(playerId); // Clean up session after successful finalization
         actor.sendMessage(ChatColor.GREEN + "Dükkanınız başarıyla kuruldu!");
     }
 
     public void saveShop(Shop shop) {
-        System.out.println("[TRACE] In ShopManager.saveShop for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
+        // System.out.println("[TRACE] In ShopManager.saveShop for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
         if (shop == null || shop.getLocation() == null) {
             plugin.getLogger().warning("[ShopManager] saveShop called but shop or its location is null. Shop object: " + shop);
             return;
         }
         activeShops.put(shop.getLocation(), shop);
-        shopStorage.saveShop(shop); 
-        updateAttachedSign(shop); 
+        shopStorage.saveShop(shop);
+        this.shopSignManager.updateAttachedSign(shop, this.getCurrencySymbol()); // Use ShopSignManager
         plugin.getLogger().info(String.format("[ShopManager] Shop at %s (Owner: %s) saved/updated in activeShops and persistent storage requested.",
                  Shop.locationToString(shop.getLocation()), shop.getOwnerUUID()));
     }
 
     public void cancelShopSetup(UUID playerId) {
-        System.out.println("[TRACE] In ShopManager.cancelShopSetup for player UUID " + playerId);
+        // System.out.println("[TRACE] In ShopManager.cancelShopSetup for player UUID " + playerId);
         if (playerId == null) {
             plugin.getLogger().warning("[ShopManager] cancelShopSetup called with null playerId.");
             return;
         }
 
-        Location chestLocation = plugin.getPlayerShopSetupState().remove(playerId);
-        plugin.getPlayerWaitingForSetupInput().remove(playerId); 
-        ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
-        String locStr = Shop.locationToString(chestLocation); // May be "UNKNOWN_LOCATION" if chestLocation is null
+        ShopSetupGUIManager shopSetupGUIManager = plugin.getShopSetupGUIManager();
+        if (shopSetupGUIManager == null) {
+            plugin.getLogger().severe("[ShopManager] cancelShopSetup called but ShopSetupGUIManager is null! Cannot remove session for " + playerId);
+            // Try to remove from pendingShops directly if possible, though this indicates a larger issue.
+            // This path should ideally not be hit if GUIManager is always available.
+            return;
+        }
+
+        ShopSetupSession session = shopSetupGUIManager.getPlayerSession(playerId);
+        Location chestLocation = null;
+        ItemStack initialStock = null;
+        UUID ownerIdFromSession = null;
+
+        if (session != null) {
+            chestLocation = session.getChestLocation();
+            initialStock = session.getInitialStockItem();
+            if(session.getPendingShop() != null) {
+                 ownerIdFromSession = session.getPendingShop().getOwnerUUID();
+            }
+             // Remove session first
+            shopSetupGUIManager.removeSession(playerId);
+        } else {
+            // If no session, attempt to retrieve from old maps as a fallback (though these should be removed later)
+            // This part is for graceful transition. Once old maps are gone, this else might be an error or no-op.
+            // chestLocation = plugin.getPlayerShopSetupState().remove(playerId);
+            // plugin.getPlayerWaitingForSetupInput().remove(playerId);
+            // initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
+             plugin.getLogger().warning("[ShopManager] cancelShopSetup called for player " + playerId + " but no active session found. Old map removal would occur here if they were still in use.");
+        }
+        
+        String locStr = Shop.locationToString(chestLocation);
 
         if (chestLocation != null) {
-            Shop pending = pendingShops.remove(chestLocation);
-            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s. Pending shop (Owner: %s) removed.",
-                    playerId, locStr, (pending != null ? pending.getOwnerUUID() : "N/A")));
+            Shop pending = pendingShops.remove(chestLocation); // Remove from manager's direct pendingShops map
+            if (pending != null) {
+                 plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s. Pending shop (Owner: %s) removed from map.",
+                    playerId, locStr, pending.getOwnerUUID()));
+            } else if (ownerIdFromSession != null) {
+                 plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s. No pending shop in map, but session existed (Owner from session: %s).",
+                    playerId, locStr, ownerIdFromSession));
+            } else {
+                 plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s (from session). No pending shop in map or session owner info.", playerId, locStr));
+            }
         } else {
-            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancellation for player %s (no specific location found in state, possibly already cleaned or state error).", playerId));
+            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancellation for player %s (no specific location found in session or old state).", playerId));
         }
 
         if (initialStock != null && initialStock.getType() != Material.AIR) {
             Player player = Bukkit.getPlayer(playerId);
             if (player != null && player.isOnline()) {
                 player.getInventory().addItem(initialStock.clone());
-                player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock, 15) + ChatColor.YELLOW + ") envanterinize iade edildi.");
+                player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + this.shopSignManager.getItemNameForMessages(initialStock, 15) + ChatColor.YELLOW + ") envanterinize iade edildi.");
                 plugin.getLogger().info(String.format("[ShopManager] Initial stock %s returned to player %s after setup cancellation for location %s.",
                         initialStock.toString(), player.getName(), locStr));
             } else {
@@ -242,6 +314,10 @@ public class ShopManager {
                         initialStock.toString(), playerId, locStr));
             }
         }
+         // Ensure old maps are cleared if they were somehow still populated (transitional)
+        // plugin.getPlayerShopSetupState().remove(playerId);
+        // plugin.getPlayerWaitingForSetupInput().remove(playerId); 
+        // plugin.getPlayerInitialShopStockItem().remove(playerId);
     }
 
     public boolean isActiveShop(Location location) {
@@ -285,7 +361,7 @@ public class ShopManager {
         if (!wasPending) {
             activeShops.remove(location);
             shopStorage.removeShop(location);
-            clearAttachedSign(location);
+            this.shopSignManager.clearAttachedSign(location); // Use ShopSignManager
             player.sendMessage(ChatColor.GREEN + "Dükkan başarıyla kaldırıldı.");
             plugin.getLogger().info("Aktif dükkan kaldırıldı (" + Shop.locationToString(location) + ") tarafından " + player.getName());
         } else {
@@ -293,222 +369,35 @@ public class ShopManager {
             player.sendMessage(ChatColor.GREEN + "Dükkan kurulumu başarıyla iptal edildi.");
             plugin.getLogger().info("Bekleyen dükkan kurulumu iptal edildi (" + Shop.locationToString(location) + ") tarafından " + player.getName());
             plugin.getPlayerShopSetupState().remove(shopToRemove.getOwnerUUID());
-            // **** DÜZELTME: getPlayerWaitingForSetupInput kullanıldı ****
-            plugin.getPlayerWaitingForSetupInput().remove(shopToRemove.getOwnerUUID());
-            ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(shopToRemove.getOwnerUUID());
-            if (initialStock != null && initialStock.getType() != Material.AIR && player.isOnline()) {
-                player.getInventory().addItem(initialStock.clone());
-                player.sendMessage(ChatColor.YELLOW + "Kurulumdaki eşyalarınız iade edildi.");
-            }
-        }
-    }
-
-    public String shortenFormattedString(String text, int maxLength) {
-        if (text == null) return "";
-        if (maxLength < 3) maxLength = 3;
-        String cleanText = ChatColor.stripColor(text);
-        if (cleanText.length() <= maxLength) {
-            return text;
-        }
-        return cleanText.substring(0, maxLength - 3) + "...";
-    }
-
-    public String shortenItemName(String name) {
-        return shortenFormattedString(name, 15);
-    }
-
-    public String getItemNameForMessages(ItemStack itemStack, int maxLength) {
-        if (itemStack == null || itemStack.getType() == Material.AIR) return "Bilinmeyen";
-        ItemMeta meta = itemStack.getItemMeta();
-        if (meta != null && meta.hasDisplayName()) {
-            try {
-                Component displayNameComponent = meta.displayName();
-                if (displayNameComponent != null) {
-                    return shortenFormattedString(LegacyComponentSerializer.legacySection().serialize(displayNameComponent), maxLength);
-                }
-            } catch (NoSuchMethodError e) { // API < 1.16.5 (or no Adventure support)
-                return shortenFormattedString(meta.getDisplayName(), maxLength); // Bukkit's String display name
-            }
-        }
-        String name = itemStack.getType().toString().toLowerCase().replace("_", " ");
-        if (!name.isEmpty()) {
-            String[] parts = name.split(" ");
-            StringBuilder capitalizedName = new StringBuilder();
-            for (String part : parts) {
-                if (part.length() > 0) {
-                    capitalizedName.append(Character.toUpperCase(part.charAt(0)))
-                            .append(part.substring(1).toLowerCase()).append(" ");
-                }
-            }
-            return shortenFormattedString(capitalizedName.toString().trim(), maxLength);
-        }
-        return "Eşya";
-    }
-
-    public void updateAttachedSign(Shop shop) {
-        System.out.println("[TRACE] In ShopManager.updateAttachedSign for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
-        if (shop == null || !shop.isSetupComplete() || shop.getLocation() == null || shop.getTemplateItemStack() == null) {
-            return;
-        }
-        Block chestBlock = shop.getLocation().getBlock();
-        if (chestBlock.getType() != Material.CHEST && chestBlock.getType() != Material.TRAPPED_CHEST) {
-            return;
-        }
-        Sign signState = findOrCreateAttachedSign(chestBlock);
-        if (signState == null) {
-            plugin.getLogger().fine("Dükkan için uygun tabela bulunamadı/oluşturulamadı (" + Shop.locationToString(shop.getLocation()) + ").");
-            return;
-        }
-
-        OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
-        String ownerName = owner.getName() != null ? shortenFormattedString(owner.getName(), 14) : "Bilinmeyen";
-        String itemName = getItemNameForMessages(shop.getTemplateItemStack(), 15);
-        String currencySymbol = getCurrencySymbol();
-        String priceString;
-        boolean canPlayerBuy = shop.getBuyPrice() >= 0;
-        boolean canPlayerSell = shop.getSellPrice() >= 0;
-
-        if (canPlayerBuy && canPlayerSell) {
-            priceString = String.format("Al:%.0f Sat:%.0f", shop.getBuyPrice(), shop.getSellPrice());
-        } else if (canPlayerBuy) {
-            priceString = String.format("Fiyat: %.0f", shop.getBuyPrice());
-        } else if (canPlayerSell) {
-            priceString = String.format("Ödeme: %.0f", shop.getSellPrice());
-        } else {
-            priceString = "Fiyat Yok";
-        }
-
-        String bundleInfo = shop.getBundleAmount() + " adet";
-        String fullPriceLine = bundleInfo + " / " + priceString;
-
-        if (ChatColor.stripColor(fullPriceLine).length() > 15) {
-            fullPriceLine = shop.getBundleAmount() + "/" + priceString;
-            if (ChatColor.stripColor(fullPriceLine).length() > 15) {
-                if (canPlayerBuy && canPlayerSell) priceString = String.format("A:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
-                else if (canPlayerBuy) priceString = String.format("F:%.0f", shop.getBuyPrice());
-                else if (canPlayerSell) priceString = String.format("Ö:%.0f", shop.getSellPrice());
-                fullPriceLine = shop.getBundleAmount() + "/" + priceString;
-            }
-        }
-
-        signState.line(0, Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD));
-        signState.line(1, Component.text(itemName, NamedTextColor.BLACK));
-        signState.line(2, Component.text(fullPriceLine, NamedTextColor.DARK_GREEN));
-        signState.line(3, Component.text(ownerName, NamedTextColor.DARK_PURPLE));
-        try {
-            signState.update(true);
-        } catch (Exception e) {
-            plugin.getLogger().log(Level.WARNING, "Tabela güncellenirken hata oluştu: " + Shop.locationToString(shop.getLocation()), e);
-        }
-    }
-
-    private Sign findOrCreateAttachedSign(Block chestBlock) {
-        BlockFace[] facesToTry = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-        Material signMaterial = Material.OAK_WALL_SIGN;
-
-        for (BlockFace face : facesToTry) {
-            Block relative = chestBlock.getRelative(face);
-            if (Tag.WALL_SIGNS.isTagged(relative.getType()) && relative.getState() instanceof Sign) {
-                if (relative.getBlockData() instanceof WallSign) {
-                    WallSign wallSignData = (WallSign) relative.getBlockData();
-                    if (wallSignData.getFacing().getOppositeFace() == face) {
-                        Sign sign = (Sign) relative.getState();
-                        if (sign.line(0).equals(Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) {
-                            return sign;
-                        }
-                    }
-                }
-            }
-        }
-        for (BlockFace face : facesToTry) {
-            Block potentialSignBlock = chestBlock.getRelative(face);
-            if (potentialSignBlock.getType() == Material.AIR) {
-                potentialSignBlock.setType(signMaterial, false);
-                if (potentialSignBlock.getBlockData() instanceof WallSign) {
-                    WallSign wallSignData = (WallSign) potentialSignBlock.getBlockData();
-                    wallSignData.setFacing(face.getOppositeFace());
-                    potentialSignBlock.setBlockData(wallSignData, true);
-                    return (Sign) potentialSignBlock.getState();
-                } else {
-                    potentialSignBlock.setType(Material.AIR);
-                }
-            }
-        }
-        return null;
-    }
-
-    private void clearAttachedSign(Location chestLocation) {
-        if (chestLocation == null) return;
-        Block chestBlock = chestLocation.getBlock();
-        BlockFace[] facesToTry = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-
-        for (BlockFace face : facesToTry) {
-            Block signBlock = chestBlock.getRelative(face);
-            if (Tag.WALL_SIGNS.isTagged(signBlock.getType()) && signBlock.getBlockData() instanceof WallSign) {
-                WallSign wallSignData = (WallSign) signBlock.getBlockData();
-                if (wallSignData.getFacing().getOppositeFace() == face) {
-                    Sign signState = (Sign) signBlock.getState();
-                    if (signState.line(0).equals(Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) {
-                        signBlock.setType(Material.AIR);
-                        plugin.getLogger().info("Dükkan tabelası temizlendi: " + Shop.locationToString(chestLocation));
-                        return;
+            // If a pending shop is removed, also remove its session if it exists
+            if (plugin.getShopSetupGUIManager() != null) {
+                ShopSetupSession session = plugin.getShopSetupGUIManager().getPlayerSession(shopToRemove.getOwnerUUID());
+                if (session != null && session.getChestLocation().equals(location)) {
+                    ItemStack initialStockFromSession = session.getInitialStockItem();
+                    plugin.getShopSetupGUIManager().removeSession(shopToRemove.getOwnerUUID());
+                     plugin.getLogger().info("Pending shop removal also cleared active setup session for player " + shopToRemove.getOwnerUUID() + " at " + location);
+                    if (initialStockFromSession != null && initialStockFromSession.getType() != Material.AIR && player.isOnline()) {
+                        player.getInventory().addItem(initialStockFromSession.clone());
+                        player.sendMessage(ChatColor.YELLOW + "Kurulumdaki eşyalarınız iade edildi.");
                     }
                 }
             }
         }
     }
 
-    public boolean hasEnoughSpace(Player player, ItemStack itemToReceive) {
-        Inventory inv = player.getInventory();
-        if (itemToReceive == null || itemToReceive.getType() == Material.AIR || itemToReceive.getAmount() <= 0) return true;
-        int amountNeeded = itemToReceive.getAmount();
-        for (ItemStack slotItem : inv.getStorageContents()) {
-            if (amountNeeded <= 0) break;
-            if (slotItem == null || slotItem.getType() == Material.AIR) {
-                amountNeeded -= itemToReceive.getMaxStackSize();
-            } else if (slotItem.isSimilar(itemToReceive)) {
-                amountNeeded -= (Math.max(0, itemToReceive.getMaxStackSize() - slotItem.getAmount()));
-            }
-        }
-        return amountNeeded <= 0;
-    }
+    // getItemNameForMessages is now in ShopSignManager
+    // shortenFormattedString and shortenItemName are now in ShopSignManager
+    // updateAttachedSign is now in ShopSignManager
+    // findOrCreateAttachedSign is now in ShopSignManager
+    // clearAttachedSign is now in ShopSignManager
 
-    public boolean removeItemsFromChest(Chest chest, ItemStack templateItemToRemove, int amountToRemove) {
-        if (chest == null || templateItemToRemove == null || templateItemToRemove.getType() == Material.AIR || amountToRemove <= 0) return false;
-        Inventory chestInventory = chest.getInventory();
-        if (countItemsInChest(chest, templateItemToRemove) < amountToRemove) {
-            return false;
-        }
-        int removedCount = 0;
-        ItemStack[] contents = chestInventory.getContents();
-        for (int i = 0; i < contents.length; i++) {
-            ItemStack itemInSlot = contents[i];
-            if (itemInSlot != null && itemInSlot.isSimilar(templateItemToRemove)) {
-                int amountInSlot = itemInSlot.getAmount();
-                int canRemoveFromSlot = Math.min(amountToRemove - removedCount, amountInSlot);
-                itemInSlot.setAmount(amountInSlot - canRemoveFromSlot);
-                removedCount += canRemoveFromSlot;
-                if (itemInSlot.getAmount() <= 0) {
-                    contents[i] = null;
-                }
-                if (removedCount >= amountToRemove) break;
-            }
-        }
-        chestInventory.setContents(contents);
-        return removedCount >= amountToRemove;
-    }
-
-    public int countItemsInChest(Chest chest, ItemStack templateItemToMatch) {
-        int count = 0;
-        if (chest == null || templateItemToMatch == null || templateItemToMatch.getType() == Material.AIR) return 0;
-        Inventory chestInventory = chest.getInventory();
-        for (ItemStack itemInSlot : chestInventory.getContents()) {
-            if (itemInSlot != null && itemInSlot.isSimilar(templateItemToMatch)) {
-                count += itemInSlot.getAmount();
-            }
-        }
-        return count;
-    }
+    // The following methods were moved to ShopInventoryManager as static methods
+    // hasEnoughSpace(Player player, ItemStack itemToReceive)
+    // removeItemsFromChest(Chest chest, ItemStack templateItemToRemove, int amountToRemove)
+    // countItemsInChest(Chest chest, ItemStack templateItemToMatch)
+    // countItemsInInventory(Player player, ItemStack templateItem)
+    // removeItemsFromInventory(Player player, ItemStack templateItem, int amountToRemove)
+    // hasEnoughSpaceInChest(Chest chest, ItemStack itemToAdd, int quantityToAdd)
 
     public ShopStorage getShopStorage() {
         return this.shopStorage;
@@ -521,7 +410,7 @@ public class ShopManager {
             return new ArrayList<>();
         }
         return activeShops.values().stream()
-                .filter(shop -> shop != null && shop.getOwnerUUID().equals(ownerUUID))
+                .filter(s -> s != null && s.getOwnerUUID().equals(ownerUUID))
                 .collect(Collectors.toList());
     }
 
@@ -529,142 +418,8 @@ public class ShopManager {
         return activeShops != null ? activeShops.size() : 0;
     }
 
-    public int countItemsInInventory(Player player, ItemStack templateItem) {
-        if (player == null || templateItem == null || templateItem.getType() == Material.AIR) return 0;
-        int count = 0;
-        for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null && item.isSimilar(templateItem)) {
-                count += item.getAmount();
-            }
-        }
-        return count;
-    }
-
-    public boolean removeItemsFromInventory(Player player, ItemStack templateItem, int amountToRemove) {
-        if (player == null || templateItem == null || templateItem.getType() == Material.AIR || amountToRemove <= 0) return false;
-
-        ItemStack itemToRemoveCloned = templateItem.clone();
-        itemToRemoveCloned.setAmount(amountToRemove);
-
-        HashMap<Integer, ItemStack> didNotRemove = player.getInventory().removeItem(itemToRemoveCloned);
-
-        return didNotRemove.isEmpty();
-    }
-
-    public boolean hasEnoughSpaceInChest(Chest chest, ItemStack itemToAdd, int quantityToAdd) {
-        if (chest == null || itemToAdd == null || itemToAdd.getType() == Material.AIR || quantityToAdd <= 0) return false;
-
-        Inventory chestInventory = chest.getInventory();
-        int maxStackSize = itemToAdd.getMaxStackSize();
-        int remainingToAdd = quantityToAdd;
-
-        for (ItemStack slotItem : chestInventory.getStorageContents()) {
-            if (remainingToAdd <= 0) break;
-
-            if (slotItem == null || slotItem.getType() == Material.AIR) {
-                remainingToAdd -= maxStackSize;
-            } else if (slotItem.isSimilar(itemToAdd)) {
-                int spaceInSlot = maxStackSize - slotItem.getAmount();
-                remainingToAdd -= spaceInSlot;
-            }
-        }
-        return remainingToAdd <= 0;
-    }
-
     public boolean executePurchase(Player buyer, Shop shop, int bundlesToBuy) {
-        if (shop == null || !shop.isSetupComplete() || buyer == null || bundlesToBuy <= 0 || shop.getTemplateItemStack() == null) {
-            plugin.getLogger().warning("[ShopManager-Purchase] Invalid parameters or shop state for purchase attempt by " + (buyer != null ? buyer.getName() : "UnknownPlayer"));
-            if (buyer != null) buyer.sendMessage(ChatColor.RED + "Satın alma işlemi sırasında bir hata oluştu.");
-            return false;
-        }
-
-        int itemsPerBundle = shop.getBundleAmount();
-        int totalItemsToBuy = bundlesToBuy * itemsPerBundle;
-
-        if (shop.getBuyPrice() < 0) {
-            buyer.sendMessage(ChatColor.RED + "Bu dükkan şu anda ürün satmıyor.");
-            return false;
-        }
-        double totalCost = bundlesToBuy * shop.getBuyPrice();
-        ItemStack templateItem = shop.getTemplateItemStack();
-
-        if (totalItemsToBuy <= 0 || totalCost < 0) {
-            plugin.getLogger().warning("[ShopManager-Purchase] Geçersiz hesaplanmış miktar veya fiyat. Dükkan: " + Shop.locationToString(shop.getLocation()));
-            buyer.sendMessage(ChatColor.RED + "Dükkan ayarlarında bir sorun var.");
-            return false;
-        }
-
-        String formattedItemName = getItemNameForMessages(templateItem, 30);
-        String currencySymbol = getCurrencySymbol();
-
-        // **** DÜZELTME: EconomyManager çağrılarından plugin parametresi kaldırıldı ****
-        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Checking EconomyManager.isEconomyAvailable()");
-        if (!EconomyManager.isEconomyAvailable()) { // plugin parametresi kaldırıldı
-            buyer.sendMessage(ChatColor.RED + "Ekonomi sistemi mevcut değil.");
-            return false;
-        }
-        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Checking EconomyManager.getBalance()");
-        if (EconomyManager.getBalance(buyer) < totalCost) { // plugin parametresi kaldırıldı
-            buyer.sendMessage(ChatColor.RED + "Yetersiz bakiye! Gereken: " + String.format("%.2f%s", totalCost, currencySymbol));
-            return false;
-        }
-
-        Block shopBlock = shop.getLocation().getBlock();
-        if (!(shopBlock.getState() instanceof Chest)) {
-            buyer.sendMessage(ChatColor.RED + "Dükkan sandığı bulunamadı!");
-            return false;
-        }
-        Chest chest = (Chest) shopBlock.getState();
-        if (countItemsInChest(chest, templateItem) < totalItemsToBuy) {
-            buyer.sendMessage(ChatColor.RED + "Dükkanda yeterli stok yok (" + totalItemsToBuy + " " + formattedItemName + " gerekli).");
-            updateAttachedSign(shop);
-            return false;
-        }
-
-        ItemStack itemsToReceive = templateItem.clone();
-        itemsToReceive.setAmount(totalItemsToBuy);
-        if (!hasEnoughSpace(buyer, itemsToReceive)) {
-            buyer.sendMessage(ChatColor.RED + "Envanterinizde " + totalItemsToBuy + " " + formattedItemName + " için yeterli yer yok!");
-            return false;
-        }
-
-        OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
-
-        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.withdraw from buyer");
-        if (!EconomyManager.withdraw(buyer, totalCost)) { // plugin parametresi kaldırıldı
-            buyer.sendMessage(ChatColor.RED + "Ödeme çekme işlemi başarısız oldu.");
-            return false;
-        }
-
-        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.deposit to owner " + owner.getName());
-        if (!EconomyManager.deposit(owner, totalCost)) { // plugin parametresi kaldırıldı
-            System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Owner deposit failed. Attempting refund to buyer.");
-            EconomyManager.deposit(buyer, totalCost); // Alıcıya iade et // plugin parametresi kaldırıldı
-            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Satıcıya para transfer edilemedi. Paranız iade edildi!");
-            plugin.getLogger().severe("[ShopManager-Purchase] KRİTİK: Para sahibi " + (owner.getName() != null ? owner.getName() : owner.getUniqueId()) + " hesabına yatırılamadı. Alıcı " + buyer.getName() + " iade edildi.");
-            return false;
-        }
-
-        if (!removeItemsFromChest(chest, templateItem, totalItemsToBuy)) {
-            System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Failed to remove items from chest. Attempting to revert transactions.");
-            EconomyManager.withdraw(owner, totalCost); // Satıcıdan geri al // plugin parametresi kaldırıldı
-            EconomyManager.deposit(buyer, totalCost);  // Alıcıya iade et // plugin parametresi kaldırıldı
-            buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Dükkandan ürünler alınamadı. Paranız iade edildi!");
-            plugin.getLogger().severe("[ShopManager-Purchase] KRİTİK: Sandıktan ürünler çekilemedi. Para transferleri geri alındı. Dükkan: " + Shop.locationToString(shop.getLocation()));
-            return false;
-        }
-
-        buyer.getInventory().addItem(itemsToReceive.clone());
-        shop.recordTransaction(totalItemsToBuy, totalCost);
-        saveShop(shop);
-
-        buyer.sendMessage(ChatColor.GREEN + "Başarıyla " + ChatColor.AQUA + totalItemsToBuy + " " + ChatColor.LIGHT_PURPLE + formattedItemName + ChatColor.GREEN + " satın aldınız, fiyat: " + ChatColor.GOLD + String.format("%.2f%s", totalCost, currencySymbol) + ChatColor.GREEN + ".");
-        if (owner.isOnline() && owner.getPlayer() != null) {
-            owner.getPlayer().sendMessage(ChatColor.GOLD + buyer.getName() + ChatColor.YELLOW + " dükkanınızdan " +
-                    ChatColor.AQUA + totalItemsToBuy + " " + ChatColor.LIGHT_PURPLE + formattedItemName + ChatColor.YELLOW + " satın aldı.");
-        }
-        updateAttachedSign(shop);
-        return true;
+        return this.shopTransactionManager.executePurchase(buyer, shop, bundlesToBuy);
     }
 
     public String getCurrencySymbol() {
@@ -684,104 +439,6 @@ public class ShopManager {
     }
 
     public boolean executeSellToShop(Player seller, Shop shop, int bundlesToSell) {
-        if (shop == null || !shop.isSetupComplete() || seller == null || bundlesToSell <= 0 || shop.getTemplateItemStack() == null) {
-            plugin.getLogger().warning("[ShopManager-SellToShop] Geçersiz parametreler veya dükkan durumu.");
-            if (seller != null) seller.sendMessage(ChatColor.RED + "Satış işlemi sırasında bir sorun oluştu.");
-            return false;
-        }
-
-        if (shop.getSellPrice() < 0) {
-            seller.sendMessage(ChatColor.RED + "Bu dükkan şu anda ürün almıyor.");
-            return false;
-        }
-
-        int itemsPerBundle = shop.getItemQuantityForPrice();
-        int totalItemsToSell = bundlesToSell * itemsPerBundle;
-        double totalPaymentToPlayer = bundlesToSell * shop.getSellPrice();
-        ItemStack templateItem = shop.getTemplateItemStack();
-        String formattedItemName = getItemNameForMessages(templateItem, 30);
-        String currencySymbol = getCurrencySymbol();
-
-        if (totalItemsToSell <= 0 || totalPaymentToPlayer < 0) {
-            plugin.getLogger().warning("[ShopManager-SellToShop] Geçersiz hesaplanmış miktar veya ödeme. Dükkan: " + Shop.locationToString(shop.getLocation()));
-            seller.sendMessage(ChatColor.RED + "Bu ürün için dükkan yapılandırma hatası.");
-            return false;
-        }
-
-        if (countItemsInInventory(seller, templateItem) < totalItemsToSell) {
-            seller.sendMessage(ChatColor.RED + "Satmak için yeterli " + ChatColor.AQUA + formattedItemName + ChatColor.RED + " ürününüz yok. " + totalItemsToSell + " adet gerekli.");
-            return false;
-        }
-
-        Block shopBlock = shop.getLocation().getBlock();
-        if (!(shopBlock.getState() instanceof Chest)) {
-            seller.sendMessage(ChatColor.RED + "Dükkan sandığı bulunamadı!");
-            plugin.getLogger().severe("[ShopManager-SellToShop] Dükkan bloğu (" + Shop.locationToString(shop.getLocation()) + ") sandık değil.");
-            return false;
-        }
-        Chest chest = (Chest) shopBlock.getState();
-        if (!hasEnoughSpaceInChest(chest, templateItem, totalItemsToSell)) {
-            seller.sendMessage(ChatColor.RED + "Dükkanda " + ChatColor.AQUA + totalItemsToSell + " " + formattedItemName + ChatColor.RED + " için yeterli yer yok.");
-            return false;
-        }
-
-        OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
-        // **** DÜZELTME: EconomyManager çağrılarından plugin parametresi kaldırıldı ****
-        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Checking EconomyManager.isEconomyAvailable()");
-        if (!EconomyManager.isEconomyAvailable()) { // plugin parametresi kaldırıldı
-            seller.sendMessage(ChatColor.RED + "Ekonomi sistemi mevcut değil.");
-            return false;
-        }
-        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Checking owner " + owner.getName() + " balance with EconomyManager.getBalance()");
-        if (EconomyManager.getBalance(owner) < totalPaymentToPlayer) { // plugin parametresi kaldırıldı
-            seller.sendMessage(ChatColor.RED + "Dükkan sahibinin ürünlerinizi alacak kadar parası yok.");
-            if (owner.isOnline() && owner.getPlayer() != null) {
-                owner.getPlayer().sendMessage(ChatColor.RED + Shop.locationToString(shop.getLocation()) + " konumundaki dükkanınız, " + seller.getName() + " adlı oyuncudan " + totalItemsToSell + " " + formattedItemName + " alacak kadar paraya sahip değildi.");
-            }
-            return false;
-        }
-
-        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.withdraw from owner " + owner.getName());
-        if (!EconomyManager.withdraw(owner, totalPaymentToPlayer)) { // plugin parametresi kaldırıldı
-            seller.sendMessage(ChatColor.RED + "Dükkan sahibinden ödeme işlenirken hata oluştu. Lütfen tekrar deneyin.");
-            plugin.getLogger().severe("[ShopManager-SellToShop] Sahip " + owner.getName() + " hesabından " + totalPaymentToPlayer + " çekilemedi. Dükkan: " + Shop.locationToString(shop.getLocation()));
-            return false;
-        }
-
-        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.deposit to seller " + seller.getName());
-        if (!EconomyManager.deposit(seller, totalPaymentToPlayer)) { // plugin parametresi kaldırıldı
-            System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Seller deposit failed. Attempting refund to owner.");
-            EconomyManager.deposit(owner, totalPaymentToPlayer); // Sahibine iade et // plugin parametresi kaldırıldı
-            seller.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Hesabınıza para yatırılamadı. Sahip iade edildi.");
-            plugin.getLogger().severe("[ShopManager-SellToShop] KRİTİK: Satıcı " + seller.getName() + " hesabına " + totalPaymentToPlayer + " yatırılamadı. Sahip " + owner.getName() + " iade edildi. Dükkan: " + Shop.locationToString(shop.getLocation()));
-            return false;
-        }
-
-        if (!removeItemsFromInventory(seller, templateItem, totalItemsToSell)) {
-            System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Failed to remove items from seller inventory. Attempting to revert transactions.");
-            EconomyManager.withdraw(seller, totalPaymentToPlayer); // Satıcıdan parayı geri al // plugin parametresi kaldırıldı
-            EconomyManager.deposit(owner, totalPaymentToPlayer);   // Sahibine iade et // plugin parametresi kaldırıldı
-            seller.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Envanterinizden ürünler kaldırılamadı. İşlem geri alındı.");
-            plugin.getLogger().severe("[ShopManager-SellToShop] KRİTİK: " + seller.getName() + " envanterinden " + totalItemsToSell + " adet " + templateItem.getType() + " kaldırılamadı. İşlem geri alındı. Dükkan: " + Shop.locationToString(shop.getLocation()));
-            return false;
-        }
-
-        ItemStack itemsToAdd = templateItem.clone();
-        itemsToAdd.setAmount(totalItemsToSell);
-        chest.getInventory().addItem(itemsToAdd.clone());
-
-        shop.recordPlayerSaleToShop(totalItemsToSell, totalPaymentToPlayer);
-        saveShop(shop);
-
-        seller.sendMessage(ChatColor.GREEN + "Başarıyla " + ChatColor.AQUA + totalItemsToSell + " " + formattedItemName +
-                ChatColor.GREEN + " dükkana sattınız, kazanç: " + ChatColor.GOLD + String.format("%.2f%s", totalPaymentToPlayer, currencySymbol) + ChatColor.GREEN + ".");
-        if (owner.isOnline() && owner.getPlayer() != null) {
-            owner.getPlayer().sendMessage(ChatColor.YELLOW + Shop.locationToString(shop.getLocation()) + " konumundaki dükkanınız " +
-                    ChatColor.GOLD + seller.getName() + ChatColor.YELLOW + " adlı oyuncudan " +
-                    ChatColor.AQUA + totalItemsToSell + " " + formattedItemName +
-                    ChatColor.YELLOW + " satın aldı, ödenen: " + ChatColor.GOLD + String.format("%.2f%s", totalPaymentToPlayer, currencySymbol) + ChatColor.YELLOW + ".");
-        }
-        updateAttachedSign(shop);
-        return true;
+        return this.shopTransactionManager.executeSellToShop(seller, shop, bundlesToSell);
     }
 }

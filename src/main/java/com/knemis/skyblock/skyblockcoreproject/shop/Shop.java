@@ -31,8 +31,7 @@ public class Shop implements ConfigurationSerializable {
     private String shopDisplayName;
     private long lastActivityTimestamp;
 
-    // YENİ EKLENEN ALAN (ShopSetupListener uyumluluğu için)
-    private com.knemis.skyblock.skyblockcoreproject.shop.ShopType shopType;
+    // private com.knemis.skyblock.skyblockcoreproject.shop.ShopType shopType; // Removed
 
 
     public Shop(Location location, UUID ownerUUID, ShopMode initialShopMode) {
@@ -132,17 +131,15 @@ public class Shop implements ConfigurationSerializable {
         return getBuyPrice();
     }
 
-    // YENİ EKLENEN METOTLAR (ShopSetupListener uyumluluğu için)
-    public com.knemis.skyblock.skyblockcoreproject.shop.ShopType getShopType() {
-        // İPUCU: Eğer ShopMode ve ShopType arasında bir dönüşüm mantığı varsa, burada eklenebilir.
-        // Örneğin: if (this.shopMode == ShopMode.MARKET_CHEST && this.buyPrice >=0 && this.sellPrice < 0) return ShopType.PLAYER_BUY_SHOP;
-        return shopType;
-    }
+    // YENİ EKLENEN METOTLAR (ShopSetupListener uyumluluğu için) - REMOVED
+    // public com.knemis.skyblock.skyblockcoreproject.shop.ShopType getShopType() {
+    //     return shopType;
+    // }
 
-    public void setShopType(com.knemis.skyblock.skyblockcoreproject.shop.ShopType shopType) {
-        this.shopType = shopType;
-        updateLastActivity(); // Aktiviteyi güncelle (uygunsa)
-    }
+    // public void setShopType(com.knemis.skyblock.skyblockcoreproject.shop.ShopType shopType) {
+    //     this.shopType = shopType;
+    //     updateLastActivity(); 
+    // }
 
     /**
      * Fiyat başına ürün miktarını (paket boyutunu) ayarlar.

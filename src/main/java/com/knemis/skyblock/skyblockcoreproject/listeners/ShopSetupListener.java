@@ -7,6 +7,7 @@ import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopType;
+import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession; // Import session
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -40,8 +41,8 @@ public class ShopSetupListener implements Listener {
     private static final int PLAYER_SELL_SHOP_SLOT = 4;
     private static final int PLAYER_BUY_SELL_SHOP_SLOT = 6;
 
-    private static final int ITEM_SELECT_PLACEMENT_SLOT = 13; 
-    private static final int QUANTITY_PLACEMENT_SLOT = 22;    
+    private static final int ITEM_SELECT_PLACEMENT_SLOT = 13;
+    private static final int QUANTITY_PLACEMENT_SLOT = 22;
     private static final int CONFIRM_BUTTON_SLOT_QUANTITY = 31;
 
     public ShopSetupListener(SkyBlockProject plugin, ShopManager shopManager, ShopSetupGUIManager shopSetupGUIManager) {
@@ -55,6 +56,7 @@ public class ShopSetupListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player)) return;
 
         Player player = (Player) event.getWhoClicked();
+        UUID playerId = player.getUniqueId();
         Inventory topInventory = event.getView().getTopInventory();
         if (topInventory == null) return;
 
@@ -65,159 +67,202 @@ public class ShopSetupListener implements Listener {
                                  LegacyComponentSerializer.legacySection().serialize(clickedItem.getItemMeta().displayName()) :
                                  (clickedItem != null ? clickedItem.getType().name() : "null");
 
+        ShopSetupSession session = shopSetupGUIManager.getPlayerSession(playerId);
+
         if (viewTitleComponent.equals(ShopSetupGUIManager.SHOP_TYPE_TITLE)) {
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) clicked in Shop Setup GUI: '%s', Slot: %d, Item: %s",
-                    player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), clickedItemName));
+                    player.getName(), playerId, viewTitle, event.getRawSlot(), clickedItemName));
             event.setCancelled(true);
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-            int rawSlot = event.getRawSlot();
-            Location chestLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
-            if (chestLocation == null) {
-                player.sendMessage(ChatColor.RED + "Mağaza kurulum hatası! Lütfen tekrar deneyin.");
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in GUI '%s', but chestLocation is null. State error.",
-                        player.getName(), player.getUniqueId(), viewTitle));
+            if (session == null) {
+                player.sendMessage(ChatColor.RED + "Shop setup session not found. Please start over.");
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s in SHOP_TYPE_TITLE but no session found.", player.getName()));
                 player.closeInventory();
                 return;
             }
-            Shop pendingShop = shopManager.getPendingShop(chestLocation);
-            if (pendingShop == null) {
+            Location chestLocation = session.getChestLocation();
+            Shop pendingShop = session.getPendingShop();
+
+            if (pendingShop == null) { // Should not happen if session exists and is managed correctly
                 player.sendMessage(ChatColor.RED + "Mağaza kurulum bilgisi bulunamadı. Lütfen tekrar deneyin.");
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in GUI '%s', but pendingShop is null for location %s. State error.",
-                        player.getName(), player.getUniqueId(), viewTitle, Shop.locationToString(chestLocation)));
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in GUI '%s', but pendingShop is null in session for location %s.",
+                        player.getName(), playerId, viewTitle, Shop.locationToString(chestLocation)));
                 player.closeInventory();
+                shopManager.cancelShopSetup(playerId); // Cancel to clean up session
                 return;
             }
 
-            ShopType selectedType = null;
-            if (rawSlot == PLAYER_BUY_SHOP_SLOT) selectedType = ShopType.PLAYER_BUY_SHOP;
-            else if (rawSlot == PLAYER_SELL_SHOP_SLOT) selectedType = ShopType.PLAYER_SELL_SHOP;
-            else if (rawSlot == PLAYER_BUY_SELL_SHOP_SLOT) selectedType = ShopType.PLAYER_BUY_SELL_SHOP;
+            int rawSlot = event.getRawSlot();
+            // ShopType selectedType = null; // Removed ShopType
+            boolean intentSet = false;
+            if (rawSlot == PLAYER_BUY_SHOP_SLOT) {
+                session.setIntentToAllowPlayerBuy(true);
+                session.setIntentToAllowPlayerSell(false);
+                intentSet = true;
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s set intent: BUY_ONLY for shop at %s.", player.getName(), Shop.locationToString(chestLocation)));
+            } else if (rawSlot == PLAYER_SELL_SHOP_SLOT) {
+                session.setIntentToAllowPlayerBuy(false);
+                session.setIntentToAllowPlayerSell(true);
+                intentSet = true;
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s set intent: SELL_ONLY for shop at %s.", player.getName(), Shop.locationToString(chestLocation)));
+            } else if (rawSlot == PLAYER_BUY_SELL_SHOP_SLOT) {
+                session.setIntentToAllowPlayerBuy(true);
+                session.setIntentToAllowPlayerSell(true);
+                intentSet = true;
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s set intent: BUY_AND_SELL for shop at %s.", player.getName(), Shop.locationToString(chestLocation)));
+            }
 
-            if (selectedType != null) {
-                pendingShop.setShopType(selectedType);
+            if (intentSet) {
+                // pendingShop.setShopType(selectedType); // Removed ShopType
+                session.setCurrentGuiTitle(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString()); 
                 shopSetupGUIManager.openItemSelectionMenu(player, pendingShop);
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) selected shop type %s for shop at %s.",
-                        player.getName(), player.getUniqueId(), selectedType.name(), Shop.locationToString(chestLocation)));
             } else {
                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) clicked invalid slot %d in SHOP_TYPE_TITLE GUI for shop %s.",
-                        player.getName(), player.getUniqueId(), rawSlot, Shop.locationToString(chestLocation)));
+                        player.getName(), playerId, rawSlot, Shop.locationToString(chestLocation)));
             }
         }
-        else if (viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE)) {
-            handleItemSelectionGuiClickLogic(event, player, topInventory);
+        else if (viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString())) { // Compare string with string
+            if (session == null) {
+                player.sendMessage(ChatColor.RED + "Shop setup session not found. Please start over.");
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s in ITEM_SELECT_TITLE but no session found.", player.getName()));
+                event.setCancelled(true); player.closeInventory(); return;
+            }
+            handleItemSelectionGuiClickLogic(event, player, topInventory, session);
         }
-        else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
-            handleQuantityInputGuiClickLogic(event, player, topInventory);
+        else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE.toString())) { // Compare string with string
+            if (session == null) {
+                player.sendMessage(ChatColor.RED + "Shop setup session not found. Please start over.");
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s in QUANTITY_INPUT_TITLE but no session found.", player.getName()));
+                event.setCancelled(true); player.closeInventory(); return;
+            }
+            handleQuantityInputGuiClickLogic(event, player, topInventory, session);
         }
-        else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE)) {
+        else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE.toString())) { // Compare string with string
+             if (session == null) {
+                player.sendMessage(ChatColor.RED + "Shop setup session not found. Please start over.");
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s in CONFIRMATION_TITLE but no session found.", player.getName()));
+                event.setCancelled(true); player.closeInventory(); return;
+            }
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) clicked in Shop Setup GUI: '%s', Slot: %d, Item: %s",
-                    player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), clickedItemName));
+                    player.getName(), playerId, viewTitle, event.getRawSlot(), clickedItemName));
             event.setCancelled(true);
-            Location chestLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
-            Shop pendingShop = (chestLocation != null) ? shopManager.getPendingShop(chestLocation) : null;
 
-            if (pendingShop == null || !plugin.getPlayerWaitingForSetupInput().containsKey(player.getUniqueId()) ||
-                    plugin.getPlayerWaitingForSetupInput().get(player.getUniqueId()) != ShopSetupGUIManager.InputType.PRICE) {
-                player.sendMessage(ChatColor.RED + "Onaylama hatası. Kurulum bilgileri eksik.");
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in confirmation GUI for %s, but state error. PendingShop: %s, InputState: %s",
-                        player.getName(), player.getUniqueId(), Shop.locationToString(chestLocation), pendingShop, plugin.getPlayerWaitingForSetupInput().get(player.getUniqueId())));
+            Shop pendingShop = session.getPendingShop();
+            Location chestLocation = session.getChestLocation(); // From session
+
+            if (pendingShop == null || session.getExpectedInputType() != ShopSetupGUIManager.InputType.PRICE) {
+                player.sendMessage(ChatColor.RED + "Onaylama hatası. Kurulum bilgileri eksik veya yanlış adım.");
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in confirmation GUI for %s, but state error. PendingShop: %s, ExpectedInput: %s",
+                        player.getName(), playerId, Shop.locationToString(chestLocation), pendingShop, session.getExpectedInputType()));
                 player.closeInventory();
-                shopManager.cancelShopSetup(player.getUniqueId()); 
+                shopManager.cancelShopSetup(playerId);
                 return;
             }
 
             if (event.getCurrentItem() != null) {
                 Material itemTypeForLog = pendingShop.getTemplateItemStack() != null ? pendingShop.getTemplateItemStack().getType() : Material.AIR;
-                double priceForLog = pendingShop.getBuyPrice() != -1 ? pendingShop.getBuyPrice() : pendingShop.getSellPrice();
+                double buyPriceForLog = pendingShop.getBuyPrice();
+                double sellPriceForLog = pendingShop.getSellPrice();
                 int quantityForLog = pendingShop.getBundleAmount();
-                ShopType typeForLog = pendingShop.getShopType();
+                // ShopType typeForLog = pendingShop.getShopType(); // Removed ShopType
 
                 if (event.getCurrentItem().getType() == Material.GREEN_WOOL) {
-                    shopManager.finalizeShopSetup(
-                            chestLocation,
-                            player,
-                            plugin.getPlayerInitialShopStockItem().get(player.getUniqueId())
-                    );
-                    plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) CONFIRMED shop setup for item %s at %s. Price: %.2f, Quantity: %d, Type: %s.",
-                            player.getName(), player.getUniqueId(), itemTypeForLog, Shop.locationToString(chestLocation), priceForLog, quantityForLog, typeForLog));
+                    shopManager.finalizeShopSetup(playerId); 
+                    plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) CONFIRMED shop setup for item %s at %s. BuyPrice: %.2f, SellPrice: %.2f, Quantity: %d. Intents: Buy=%b, Sell=%b",
+                            player.getName(), playerId, itemTypeForLog, Shop.locationToString(chestLocation), buyPriceForLog, sellPriceForLog, quantityForLog, session.isIntentToAllowPlayerBuy(), session.isIntentToAllowPlayerSell()));
                 } else if (event.getCurrentItem().getType() == Material.RED_WOOL) {
                     player.sendMessage(ChatColor.YELLOW + "Mağaza kurulumu iptal edildi.");
-                    shopManager.cancelShopSetup(player.getUniqueId());
-                    plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) CANCELLED shop setup for location %s via confirmation GUI (red wool). Pending shop at: %s",
-                            player.getName(), player.getUniqueId(), Shop.locationToString(chestLocation), Shop.locationToString(chestLocation))); // Changed shopIdForLog to location
+                    shopManager.cancelShopSetup(playerId);
+                    plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) CANCELLED shop setup for location %s via confirmation GUI (red wool).",
+                            player.getName(), playerId, Shop.locationToString(chestLocation)));
                 }
-                player.closeInventory();
+                player.closeInventory(); // Close after processing
             }
         }
     }
 
-    private void handleItemSelectionGuiClickLogic(InventoryClickEvent event, Player player, Inventory guiInventory) {
+    private void handleItemSelectionGuiClickLogic(InventoryClickEvent event, Player player, Inventory guiInventory, ShopSetupSession session) {
         Inventory clickedInventory = event.getClickedInventory();
-        Location shopLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
-        System.out.println("[TRACE] handleItemSelectionGuiClickLogic: Player " + player.getName() + ", Action: " + event.getAction().name() + ", Slot: " + event.getRawSlot() + ", Cursor: " + event.getCursor() + ", CurrentItem: " + event.getCurrentItem());
-
+        Location shopLocation = session.getChestLocation();
+        String locStr = Shop.locationToString(shopLocation);
 
         if (clickedInventory != null && clickedInventory.equals(player.getOpenInventory().getBottomInventory())) {
             if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
-                event.setCancelled(true);
                 ItemStack itemToMove = event.getCurrentItem();
                 if (itemToMove != null && itemToMove.getType() != Material.AIR) {
                     if (guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT) == null || guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT).getType() == Material.AIR) {
                         guiInventory.setItem(ITEM_SELECT_PLACEMENT_SLOT, itemToMove.clone());
                         event.setCurrentItem(null);
                         player.updateInventory();
-                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) moved item %s to item selection slot for shop at %s.",
-                                player.getName(), player.getUniqueId(), itemToMove.getType(), Shop.locationToString(shopLocation)));
+                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) shift-clicked item %s into ITEM_SELECT_PLACEMENT_SLOT for shop at %s.",
+                                player.getName(), player.getUniqueId(), itemToMove.getType(), locStr));
                     } else {
                         player.sendMessage(ChatColor.YELLOW + "Eşya seçme yuvası zaten dolu. Lütfen önce mevcut eşyayı alın.");
-                        plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) failed to move item %s to item selection slot (full) for shop at %s.",
-                                player.getName(), player.getUniqueId(), itemToMove.getType(), Shop.locationToString(shopLocation)));
+                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) tried to shift-click item %s into occupied ITEM_SELECT_PLACEMENT_SLOT for shop at %s.",
+                                player.getName(), player.getUniqueId(), itemToMove.getType(), locStr));
                     }
                 }
+                event.setCancelled(true);
             } else {
-                event.setCancelled(false); 
+                event.setCancelled(false);
             }
             return;
         }
 
         if (clickedInventory != null && clickedInventory.equals(guiInventory)) {
             if (event.getRawSlot() == ITEM_SELECT_PLACEMENT_SLOT) {
-                System.out.println("[TRACE] handleItemSelectionGuiClickLogic: Clicked ITEM_SELECT_PLACEMENT_SLOT. Action: " + event.getAction().name() + ", Slot: " + event.getRawSlot() + ", Cursor: " + event.getCursor() + ", CurrentItem: " + event.getCurrentItem());
-                // Allow player to place, pick up, or swap item in this specific slot
-                if (event.getAction().name().startsWith("PICKUP_") ||
-                    event.getAction().name().startsWith("PLACE_") ||
-                    event.getAction() == InventoryAction.SWAP_WITH_CURSOR ||
-                    event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) { // MOVE_TO_OTHER_INVENTORY from this slot to player inventory
+                InventoryAction action = event.getAction();
+                ItemStack cursorItem = event.getCursor();
+                ItemStack currentItemInSlot = event.getCurrentItem();
+
+                if (action == InventoryAction.PLACE_ONE || action == InventoryAction.PLACE_ALL || action == InventoryAction.PLACE_SOME ||
+                    action == InventoryAction.PICKUP_ONE || action == InventoryAction.PICKUP_ALL || action == InventoryAction.PICKUP_SOME || action == InventoryAction.PICKUP_HALF ||
+                    action == InventoryAction.SWAP_WITH_CURSOR) {
                     event.setCancelled(false);
-                } else {
-                    // For other actions on this slot, you might want to cancel them
-                    System.out.println("[TRACE] handleItemSelectionGuiClickLogic: Other action " + event.getAction().name() + " on ITEM_SELECT_PLACEMENT_SLOT. Explicitly cancelling.");
-                    event.setCancelled(true); 
+                    if ((action == InventoryAction.PLACE_ONE || action == InventoryAction.PLACE_ALL || action == InventoryAction.PLACE_SOME) && cursorItem != null && cursorItem.getType() != Material.AIR) {
+                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) placed item %s into ITEM_SELECT_PLACEMENT_SLOT for shop at %s.",
+                                player.getName(), player.getUniqueId(), cursorItem.getType(), locStr));
+                    } else if (action.name().startsWith("PICKUP_") && currentItemInSlot != null && currentItemInSlot.getType() != Material.AIR) {
+                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) picked up item %s from ITEM_SELECT_PLACEMENT_SLOT for shop at %s.",
+                                player.getName(), player.getUniqueId(), currentItemInSlot.getType(), locStr));
+                    } else if (action == InventoryAction.SWAP_WITH_CURSOR) {
+                         plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) swapped item in cursor (%s) with item in slot (%s) in ITEM_SELECT_PLACEMENT_SLOT for shop at %s.",
+                                player.getName(), player.getUniqueId(), cursorItem != null ? cursorItem.getType() : "EMPTY", currentItemInSlot != null ? currentItemInSlot.getType() : "EMPTY", locStr));
+                    }
+                } else if (action == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                    if (currentItemInSlot != null && currentItemInSlot.getType() != Material.AIR) {
+                         plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) shift-clicked item %s out of ITEM_SELECT_PLACEMENT_SLOT for shop at %s.",
+                                player.getName(), player.getUniqueId(), currentItemInSlot.getType(), locStr));
+                    }
+                    event.setCancelled(false);
+                }
+                else {
+                    event.setCancelled(true);
                 }
             } else {
-                event.setCancelled(true); 
-                plugin.getLogger().finer(String.format("ShopSetupListener: Player %s (UUID: %s) clicked non-interactive slot %d in ITEM_SELECT_TITLE GUI for shop %s.",
-                        player.getName(), player.getUniqueId(), event.getRawSlot(), Shop.locationToString(shopLocation)));
+                event.setCancelled(true);
+                plugin.getLogger().finer(String.format("ShopSetupListener: Player %s (UUID: %s) clicked non-interactive GUI slot %d in ITEM_SELECT_TITLE for shop %s. Action: %s. Cancelled.",
+                        player.getName(), player.getUniqueId(), event.getRawSlot(), locStr, event.getAction().name()));
             }
-        } else {
-            if (clickedInventory != null) event.setCancelled(true); 
+        } else if (clickedInventory == null && event.getAction() == InventoryAction.DROP) {
+             event.setCancelled(true);
         }
     }
 
-    private void handleQuantityInputGuiClickLogic(InventoryClickEvent event, Player player, Inventory guiInventory) {
+    private void handleQuantityInputGuiClickLogic(InventoryClickEvent event, Player player, Inventory guiInventory, ShopSetupSession session) {
         Inventory clickedInventory = event.getClickedInventory();
-        Location chestLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
+        Location chestLocation = session.getChestLocation();
+        Shop pendingShop = session.getPendingShop();
         String locStr = Shop.locationToString(chestLocation);
-        Shop pendingShop = (chestLocation != null) ? shopManager.getPendingShop(chestLocation) : null;
 
         if (pendingShop == null || pendingShop.getTemplateItemStack() == null) {
             player.sendMessage(ChatColor.RED + "Kurulum hatası: Satılacak eşya şablonu bulunamadı. Lütfen baştan başlayın.");
-            plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in quantity GUI for shop %s, but pendingShop or templateItem is null. Cancelling.",
+            plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) in quantity GUI for shop %s, but pendingShop or templateItem is null in session. Cancelling.",
                     player.getName(), player.getUniqueId(), locStr));
             player.closeInventory();
             event.setCancelled(true);
-            if (player != null) shopManager.cancelShopSetup(player.getUniqueId()); 
+            shopManager.cancelShopSetup(player.getUniqueId());
             return;
         }
         ItemStack templateItem = pendingShop.getTemplateItemStack();
@@ -227,9 +272,11 @@ public class ShopSetupListener implements Listener {
             ItemStack quantityItemStack = guiInventory.getItem(QUANTITY_PLACEMENT_SLOT);
             if (quantityItemStack != null && quantityItemStack.isSimilar(templateItem) && quantityItemStack.getAmount() > 0) {
                 pendingShop.setItemQuantityForPrice(quantityItemStack.getAmount());
-                shopSetupGUIManager.openPriceInputPrompt(player, pendingShop);
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) confirmed quantity %d for item %s for shop at %s. Proceeding to price input.",
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) confirmed quantity %d for item %s for shop at %s. Transitioning to price input.",
                         player.getName(), player.getUniqueId(), quantityItemStack.getAmount(), templateItem.getType(), locStr));
+                session.setCurrentGuiTitle(ShopSetupGUIManager.PRICE_INPUT_TITLE.toString()); // Update state
+                session.setExpectedInputType(ShopSetupGUIManager.InputType.PRICE); // Update state
+                shopSetupGUIManager.openPriceInputPrompt(player, pendingShop);
             } else {
                 player.sendMessage(ChatColor.RED + "Lütfen miktar yuvasına doğru türde (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") ve geçerli miktarda eşya koyun.");
                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) clicked confirm in quantity GUI for shop %s, but item/quantity was invalid. ItemInSlot: %s, Template: %s",
@@ -237,10 +284,11 @@ public class ShopSetupListener implements Listener {
             }
             return;
         }
-
-        if (clickedInventory != null && clickedInventory.equals(player.getOpenInventory().getBottomInventory())) { 
-            if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) { 
-                event.setCancelled(true);
+        // ... (rest of the logic for player inventory and GUI interactions, ensuring event.setCancelled as appropriate)
+        // This part largely remains the same but relies on `templateItem` from `pendingShop` (from session)
+        if (clickedInventory != null && clickedInventory.equals(player.getOpenInventory().getBottomInventory())) {
+            if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                event.setCancelled(true); // Manage manually
                 ItemStack itemToMove = event.getCurrentItem();
                 if (itemToMove != null && itemToMove.isSimilar(templateItem)) {
                     ItemStack currentItemInSlot = guiInventory.getItem(QUANTITY_PLACEMENT_SLOT);
@@ -261,17 +309,15 @@ public class ShopSetupListener implements Listener {
                     player.updateInventory();
                 } else if (itemToMove != null && itemToMove.getType() != Material.AIR) {
                     player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") türünde eşya koyabilirsiniz!");
-                    plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) tried to shift-click non-template item %s to quantity slot for shop %s (Template: %s).",
-                            player.getName(), player.getUniqueId(), itemToMove.getType(), locStr, templateItem.getType()));
                 }
             } else {
-                event.setCancelled(false); 
+                event.setCancelled(false); // Default player inv interactions
             }
             return;
         }
 
-        if (clickedInventory != null && clickedInventory.equals(guiInventory)) { 
-            if (event.getRawSlot() == QUANTITY_PLACEMENT_SLOT) { 
+        if (clickedInventory != null && clickedInventory.equals(guiInventory)) {
+            if (event.getRawSlot() == QUANTITY_PLACEMENT_SLOT) {
                 ItemStack cursorItem = event.getCursor();
                 if (event.getAction().name().startsWith("PLACE_")) {
                     if (cursorItem != null && cursorItem.getType() != Material.AIR) {
@@ -281,28 +327,29 @@ public class ShopSetupListener implements Listener {
                             player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") türünde eşya koyabilirsiniz!");
                             event.setCancelled(true);
                         }
-                    } else {
-                        event.setCancelled(false); 
+                    } else { // Placing AIR (removing item)
+                        event.setCancelled(false);
                     }
                 } else if (event.getAction().name().startsWith("PICKUP_") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR) {
                     if (event.getAction() == InventoryAction.SWAP_WITH_CURSOR && cursorItem != null && cursorItem.getType() != Material.AIR && !cursorItem.isSimilar(templateItem)) {
                         player.sendMessage(ChatColor.RED + "Bu yuvayla sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") türünde eşya değiştirebilirsiniz!");
                         event.setCancelled(true);
                     } else {
-                        event.setCancelled(false); 
+                        event.setCancelled(false);
                     }
-                } else if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) { 
-                    event.setCancelled(false);
+                } else if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                    event.setCancelled(false); // Allow shift-click out
+                } else {
+                    event.setCancelled(true); // Other actions on this slot
                 }
-                else event.setCancelled(true); 
-            }
-            else if (event.getRawSlot() != CONFIRM_BUTTON_SLOT_QUANTITY) { 
+            } else if (event.getRawSlot() != CONFIRM_BUTTON_SLOT_QUANTITY) { // Any other slot in GUI that is not confirm
                 event.setCancelled(true);
-                 plugin.getLogger().finer(String.format("ShopSetupListener: Player %s (UUID: %s) clicked non-interactive slot %d in QUANTITY_INPUT_TITLE GUI for shop %s.",
+                plugin.getLogger().finer(String.format("ShopSetupListener: Player %s (UUID: %s) clicked non-interactive slot %d in QUANTITY_INPUT_TITLE GUI for shop %s.",
                         player.getName(), player.getUniqueId(), event.getRawSlot(), locStr));
             }
+            // Click on confirm button is handled at the start of the method
         } else {
-            if(clickedInventory != null) event.setCancelled(true);
+            if(clickedInventory != null) event.setCancelled(true); // Clicked outside GUI but not in player inventory
         }
     }
 
@@ -311,105 +358,137 @@ public class ShopSetupListener implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player)) return;
         Player player = (Player) event.getPlayer();
-        Component viewTitleComponent = event.getView().title();
-        String viewTitle = LegacyComponentSerializer.legacySection().serialize(viewTitleComponent);
         UUID playerId = player.getUniqueId();
+        ShopSetupSession session = shopSetupGUIManager.getPlayerSession(playerId);
 
-        Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
-        String locStr = Shop.locationToString(chestLocation); 
-
-        if (chestLocation == null) {
-            ShopAdminGUIManager.AdminInputType adminInputType = plugin.getPlayerWaitingForAdminInput().get(playerId);
-            if (adminInputType != null && viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
-                 // ShopListener handles this
+        if (session == null) {
+            // Not in a shop setup session, or session was already cleaned up.
+            // Check if it's an admin GUI close that needs specific handling from ShopListener
+            Component viewTitleComponentAdmin = event.getView().title();
+            String viewTitleAdmin = LegacyComponentSerializer.legacySection().serialize(viewTitleComponentAdmin);
+            if (viewTitleAdmin.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE) || viewTitleAdmin.equals(ShopVisitGUIManager.SHOP_VISIT_TITLE.toString())) {
+                // These are handled by ShopListener's onInventoryClose, so just return.
+                return;
             }
+            plugin.getLogger().finer("ShopSetupListener: onInventoryClose for " + player.getName() + ", but no active setup session. GUI: " + viewTitleAdmin);
             return;
         }
 
-        Shop pendingShop = shopManager.getPendingShop(chestLocation);
+        Location chestLocation = session.getChestLocation();
+        Shop pendingShop = session.getPendingShop();
+        String locStr = Shop.locationToString(chestLocation);
+        String currentSessionGuiTitle = session.getCurrentGuiTitle(); // Get title from session
+        String closedViewTitle = LegacyComponentSerializer.legacySection().serialize(event.getView().title());
 
-        boolean isStillInSetupChain = plugin.getPlayerWaitingForSetupInput().containsKey(playerId);
+        // Only proceed if the closed GUI matches what the session thought was open,
+        // or if currentSessionGuiTitle is null (e.g. after chat input).
+        if (currentSessionGuiTitle != null && !currentSessionGuiTitle.equals(closedViewTitle)) {
+            plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed GUI '%s' but session expected '%s'. Ignoring close for this specific logic, might be handled by another listener or subsequent GUI open.",
+                                                   player.getName(), closedViewTitle, currentSessionGuiTitle));
+            return;
+        }
 
-        if (viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE)) {
+        boolean isStillInSetupChain = true; // Assume still in chain unless explicitly cancelled
+
+        if (closedViewTitle.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString())) {
+            if (pendingShop == null) {
+                plugin.getLogger().severe(String.format("ShopSetupListener: Player %s (UUID: %s) closed ITEM_SELECT_TITLE for shop %s, but pendingShop is NULL in session. Cancelling.",
+                        player.getName(), playerId, locStr));
+                shopManager.cancelShopSetup(playerId); // This will remove session
+                return;
+            }
             ItemStack itemInSlot = event.getInventory().getItem(ITEM_SELECT_PLACEMENT_SLOT);
             if (itemInSlot != null && itemInSlot.getType() != Material.AIR) {
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) closed ITEM_SELECT_TITLE for shop %s. Item %s was in slot. Setup proceeds.",
-                        player.getName(), playerId, locStr, itemInSlot.getType()));
+                pendingShop.setTemplateItemStack(itemInSlot.clone());
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) selected item %s for shop %s. Transitioning to quantity selection.",
+                        player.getName(), playerId, itemInSlot.getType(), locStr));
+                final Shop finalPendingShop = pendingShop;
+                final Player finalPlayer = player;
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        // Re-fetch session in case it was invalidated or changed
+                        ShopSetupSession currentSession = shopSetupGUIManager.getPlayerSession(finalPlayer.getUniqueId());
+                        if (currentSession != null && currentSession.getPendingShop() == finalPendingShop) {
+                             shopSetupGUIManager.openQuantityInputMenu(finalPlayer, finalPendingShop);
+                        } else {
+                            plugin.getLogger().warning("ShopSetupListener: Session changed or invalidated before opening quantity menu for " + finalPlayer.getName());
+                        }
+                    }
+                }.runTask(plugin);
             } else {
                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed ITEM_SELECT_TITLE for shop %s with no item selected. Cancelling setup.",
                         player.getName(), playerId, locStr));
-                shopManager.cancelShopSetup(playerId); 
-                isStillInSetupChain = false; 
-            }
-        } else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
-            if (pendingShop != null && pendingShop.getBundleAmount() <= 0) { 
-                ItemStack itemInQuantitySlot = event.getInventory().getItem(QUANTITY_PLACEMENT_SLOT);
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed QUANTITY_INPUT_TITLE for shop %s. Quantity not confirmed. Cancelling. Item in slot: %s",
-                        player.getName(), playerId, locStr, itemInQuantitySlot != null ? itemInQuantitySlot.toString() : "null"));
                 shopManager.cancelShopSetup(playerId);
                 isStillInSetupChain = false;
-            } else if (pendingShop != null) { 
-                isStillInSetupChain = plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE;
-                 plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) closed QUANTITY_INPUT_TITLE for shop %s. Quantity %d confirmed. Expecting price input: %s",
-                        player.getName(), playerId, locStr, pendingShop.getBundleAmount(), isStillInSetupChain));
-            } else { 
-                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed QUANTITY_INPUT_TITLE for shop %s, but pendingShop is null. Setup likely cancelled earlier.",
-                        player.getName(), playerId, locStr));
+            }
+        } else if (closedViewTitle.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE.toString())) {
+            if (pendingShop == null) {
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s closed QUANTITY_INPUT_TITLE for shop %s, but pendingShop is null in session. Cancelling.", player.getName(), locStr));
+                shopManager.cancelShopSetup(playerId);
+                isStillInSetupChain = false;
+                return;
+            }
+            if (pendingShop.getBundleAmount() <= 0 && session.getExpectedInputType() != ShopSetupGUIManager.InputType.PRICE) {
+                ItemStack itemInQuantitySlot = event.getInventory().getItem(QUANTITY_PLACEMENT_SLOT);
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s closed QUANTITY_INPUT_TITLE for shop %s. Quantity not set/confirmed (Bundle: %d). Cancelling. Item in slot: %s",
+                        player.getName(), playerId, locStr, pendingShop.getBundleAmount(), itemInQuantitySlot != null ? itemInQuantitySlot.toString() : "null"));
+                shopManager.cancelShopSetup(playerId);
+                isStillInSetupChain = false;
+            } else if (session.getExpectedInputType() == ShopSetupGUIManager.InputType.PRICE) {
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed QUANTITY_INPUT_TITLE for shop %s. Quantity %d was confirmed. Proceeding with price input.",
+                        player.getName(), playerId, locStr, pendingShop.getBundleAmount()));
+            } else if (pendingShop.getBundleAmount() > 0) {
+                 plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed QUANTITY_INPUT_TITLE for shop %s. Quantity %d set. Awaiting price input or confirmation.",
+                        player.getName(), playerId, locStr, pendingShop.getBundleAmount()));
+            } else {
+                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s closed QUANTITY_INPUT_TITLE for shop %s in unhandled state. Bundle: %d, ExpectedInput: %s. Cancelling.",
+                        player.getName(), playerId, locStr, pendingShop.getBundleAmount(), session.getExpectedInputType()));
+                shopManager.cancelShopSetup(playerId);
                 isStillInSetupChain = false;
             }
-        }
-        else if (viewTitleComponent.equals(ShopSetupGUIManager.SHOP_TYPE_TITLE)) {
-            if (pendingShop != null && pendingShop.getShopType() == null) {
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed SHOP_TYPE_TITLE for shop %s. Type not selected. Cancelling setup.",
+        } else if (closedViewTitle.equals(ShopSetupGUIManager.SHOP_TYPE_TITLE.toString())) { // Compare string with string
+            // Check if intent flags were set. If not, it means player closed GUI without selecting type.
+            if (pendingShop != null && !session.isIntentToAllowPlayerBuy() && !session.isIntentToAllowPlayerSell()) {
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE for shop %s. No buy/sell intent selected. Cancelling.",
                         player.getName(), playerId, locStr));
                 shopManager.cancelShopSetup(playerId);
                 isStillInSetupChain = false;
             } else if (pendingShop != null) {
-                 plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) closed SHOP_TYPE_TITLE for shop %s. Type %s selected. Proceeding.",
-                        player.getName(), playerId, locStr, pendingShop.getShopType()));
-                isStillInSetupChain = true; 
-            } else {
-                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed SHOP_TYPE_TITLE for shop %s, but pendingShop is null. Setup likely cancelled earlier.",
+                 plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE for shop %s. Intents: Buy=%b, Sell=%b. Proceeding.",
+                        player.getName(), playerId, locStr, session.isIntentToAllowPlayerBuy(), session.isIntentToAllowPlayerSell()));
+            } else { // pendingShop is null
+                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE for shop %s, but pendingShop is null in session. Cancelling.",
                         player.getName(), playerId, locStr));
+                shopManager.cancelShopSetup(playerId);
                 isStillInSetupChain = false;
             }
-        } else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE)) {
-            // if (shopManager.getPendingShop(chestLocation) != null) { // This check might be too simple
-            // Check if the player was genuinely expected to be in confirmation state for this shop
-            Shop currentPendingShop = shopManager.getPendingShop(chestLocation);
-            boolean wasAwaitingPriceConfirmation = plugin.getPlayerWaitingForSetupInput().containsKey(playerId) && // Check key exists before getting
-                                                 plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE && 
-                                                 currentPendingShop != null;
-            System.out.println("[TRACE] ShopSetupListener.onInventoryClose: CONFIRMATION_TITLE closed by " + player.getName() + ". Was awaiting price confirmation: " + wasAwaitingPriceConfirmation);
-
-
-            if (wasAwaitingPriceConfirmation) {
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) closed CONFIRMATION_TITLE for shop %s without confirming/cancelling. Cancelling setup.",
+        } else if (closedViewTitle.equals(ShopSetupGUIManager.CONFIRMATION_TITLE.toString())) {
+            // If confirmation GUI is closed without clicking green/red wool, it implies cancellation
+            // if the setup hasn't been finalized or explicitly cancelled by button click yet.
+            if (session.getExpectedInputType() == ShopSetupGUIManager.InputType.PRICE || pendingShop != null && !pendingShop.isSetupComplete()) {
+                  plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed CONFIRMATION_TITLE for shop %s before final confirmation. Cancelling setup.",
                         player.getName(), playerId, locStr));
-                shopManager.cancelShopSetup(playerId); // This should handle all necessary state cleanup
-                // plugin.getPlayerWaitingForSetupInput().remove(playerId); // cancelShopSetup should handle this if it removes playerShopSetupState
+                shopManager.cancelShopSetup(playerId); // This will remove the session.
             } else {
-                System.out.println("[TRACE] ShopSetupListener.onInventoryClose: Player " + player.getName() + " closed CONFIRMATION_TITLE, but was not in a state to be cancelled via this specific logic (e.g. already confirmed/cancelled, or different shop).");
+                 plugin.getLogger().finer(String.format("ShopSetupListener: Player %s closed CONFIRMATION_TITLE, but setup already finalized or cancelled. No action needed from here.", player.getName()));
             }
-            isStillInSetupChain = false; 
+            isStillInSetupChain = false;
         }
 
-        // This final check might be redundant if states are cleared correctly above, but acts as a fallback.
-        // If playerShopSetupState still exists but playerWaitingForSetupInput was cleared by a successful confirmation, this shouldn't trigger cancel.
-        if (!isStillInSetupChain && plugin.getPlayerShopSetupState().containsKey(playerId) && plugin.getPlayerWaitingForSetupInput().containsKey(playerId)) {
-             ShopSetupGUIManager.InputType currentInputState = plugin.getPlayerWaitingForSetupInput().get(playerId);
-            if (currentInputState == ShopSetupGUIManager.InputType.PRICE) {
-                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) was in PRICE input state for shop %s but is no longer in setup chain (e.g. closed chat or a GUI other than confirmation). Cancelling setup.",
-                        player.getName(), playerId, locStr));
-            } else if (currentInputState != null) { // Only log if there was an actual input state we are about to override by cancelling
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed setup GUI '%s' for shop %s. Current input state: %s. Ensuring cleanup by cancelling.",
-                        player.getName(), playerId, viewTitle, locStr, currentInputState));
-            } else { // playerShopSetupState exists but no specific input state - still should cancel to clean up playerShopSetupState
-                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed setup GUI '%s' for shop %s. No specific input state, but ensuring cleanup by cancelling.",
-                        player.getName(), playerId, viewTitle, locStr));
-            }
-            shopManager.cancelShopSetup(playerId); 
+        // If after all specific GUI logic, the session still exists but isStillInSetupChain is false,
+        // it means a specific handler decided to cancel, and cancelShopSetup (which removes session) was called.
+        // If session still exists AND isStillInSetupChain is true, but the current expected input is null
+        // (meaning not waiting for chat input like price), it might be an incomplete step.
+        if (isStillInSetupChain && shopSetupGUIManager.getPlayerSession(playerId) != null && session.getExpectedInputType() == null &&
+            !closedViewTitle.equals(ShopSetupGUIManager.CONFIRMATION_TITLE.toString()) && // Confirmation is the end, or handled by click
+            pendingShop != null && !pendingShop.isSetupComplete() // And shop not yet completed
+           ) {
+            plugin.getLogger().warning(String.format("ShopSetupListener: Player %s closed GUI '%s' for shop %s. Setup seems incomplete and no specific input is pending. Cancelling as fallback.",
+                    player.getName(), playerId, closedViewTitle, locStr));
+            shopManager.cancelShopSetup(playerId);
         }
+        session.setCurrentGuiTitle(null); // Clear current GUI from session as it's closed.
     }
 
 
@@ -417,56 +496,63 @@ public class ShopSetupListener implements Listener {
     public void onInventoryDrag(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
         Player player = (Player) event.getWhoClicked();
+        UUID playerId = player.getUniqueId();
+        ShopSetupSession session = shopSetupGUIManager.getPlayerSession(playerId);
+
+        if (session == null) {
+            // Not in a shop setup session this listener is concerned with
+            return;
+        }
+
         Inventory topInventory = event.getView().getTopInventory();
         if (topInventory == null) return;
 
         Component viewTitleComponent = event.getView().title();
         String viewTitle = LegacyComponentSerializer.legacySection().serialize(viewTitleComponent);
-        boolean isItemSelectGui = viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE);
-        boolean isQuantityGui = viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE);
-        Location shopLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId()); 
+        boolean isItemSelectGui = viewTitle.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString());
+        boolean isQuantityGui = viewTitle.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE.toString());
+        
+        if (!isItemSelectGui && !isQuantityGui) return; // Not a GUI we manage drags for here
+
+        Location shopLocation = session.getChestLocation();
+        Shop pendingShop = session.getPendingShop();
         String locStr = Shop.locationToString(shopLocation);
 
-        if (isItemSelectGui || isQuantityGui) {
-            int targetPlacementSlot = isItemSelectGui ? ITEM_SELECT_PLACEMENT_SLOT : (isQuantityGui ? QUANTITY_PLACEMENT_SLOT : -1);
-            boolean affectsOnlyPlacementSlot = true;
-            if (targetPlacementSlot != -1) {
-                for (int rawSlot : event.getRawSlots()) {
-                    if (rawSlot < topInventory.getSize()) { 
-                        if (rawSlot != targetPlacementSlot) {
-                            affectsOnlyPlacementSlot = false;
-                            break;
-                        }
-                    } else { 
-                    }
-                }
-            } else { 
-                affectsOnlyPlacementSlot = false;
-            }
+        int targetPlacementSlot = isItemSelectGui ? ITEM_SELECT_PLACEMENT_SLOT : (isQuantityGui ? QUANTITY_PLACEMENT_SLOT : -1);
+        boolean affectsOnlyPlacementSlot = true;
 
-            ItemStack draggedItem = event.getOldCursor(); 
-
-            if (!affectsOnlyPlacementSlot) {
-                event.setCancelled(true);
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) invalid drag (not to single placement slot) in GUI %s for shop %s. Cancelled. Dragged item: %s",
-                        player.getName(), player.getUniqueId(), viewTitle, locStr, (draggedItem != null ? draggedItem.getType().name() : "null")));
-            } else { 
-                if (isQuantityGui) {
-                    Shop pendingShop = shopManager.getPendingShop(shopLocation); 
-                    if (pendingShop != null && pendingShop.getTemplateItemStack() != null) {
-                        if (draggedItem != null && draggedItem.getType() != Material.AIR && !draggedItem.isSimilar(pendingShop.getTemplateItemStack())) {
-                            event.setCancelled(true);
-                            player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(pendingShop.getTemplateItemStack()) + ChatColor.RED + ") türünde eşya sürükleyebilirsiniz!");
-                            plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) invalid drag (item %s not similar to template %s) in QUANTITY_INPUT_TITLE GUI for shop %s. Cancelled.",
-                                    player.getName(), player.getUniqueId(), draggedItem.getType().name(), pendingShop.getTemplateItemStack().getType().name(), locStr));
-                        }
-                    } else { 
-                        event.setCancelled(true);
-                        plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) drag in QUANTITY_INPUT_TITLE for shop %s but pendingShop/templateItem is null. Cancelled. GUI: %s",
-                                player.getName(), player.getUniqueId(), locStr, viewTitle));
-                    }
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot < topInventory.getSize()) { // Drag involves top inventory
+                if (rawSlot != targetPlacementSlot) {
+                    affectsOnlyPlacementSlot = false;
+                    break;
                 }
             }
+        }
+
+        ItemStack draggedItem = event.getOldCursor(); // The item being dragged
+
+        if (!affectsOnlyPlacementSlot) {
+            event.setCancelled(true);
+            plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) invalid drag (not exclusively to placement slot or involves other GUI slots) in GUI %s for shop %s. Cancelled. Dragged item: %s",
+                    player.getName(), playerId, viewTitle, locStr, (draggedItem != null ? draggedItem.getType().name() : "null")));
+        } else { // Drag is exclusively to the target placement slot
+            if (isQuantityGui) {
+                if (pendingShop == null || pendingShop.getTemplateItemStack() == null) {
+                     event.setCancelled(true);
+                     plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) drag in QUANTITY_INPUT_TITLE for shop %s but pendingShop/templateItem is null in session. Cancelled.",
+                                player.getName(), playerId, locStr));
+                     return;
+                }
+                if (draggedItem != null && draggedItem.getType() != Material.AIR && !draggedItem.isSimilar(pendingShop.getTemplateItemStack())) {
+                    event.setCancelled(true);
+                    player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(pendingShop.getTemplateItemStack()) + ChatColor.RED + ") türünde eşya sürükleyebilirsiniz!");
+                    plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) invalid drag (item %s not similar to template %s) in QUANTITY_INPUT_TITLE GUI for shop %s. Cancelled.",
+                            player.getName(), playerId, draggedItem.getType().name(), pendingShop.getTemplateItemStack().getType().name(), locStr));
+                }
+                // If valid, event.setCancelled(false) is default - allow it.
+            }
+            // For item selection GUI, any item can be dragged into the slot, so no specific check beyond placement.
         }
     }
 
@@ -474,198 +560,133 @@ public class ShopSetupListener implements Listener {
     public void onPlayerChatForPrice(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
-        String message = event.getMessage(); 
+        ShopSetupSession session = shopSetupGUIManager.getPlayerSession(playerId);
 
-        if (plugin.getPlayerWaitingForAdminInput().containsKey(playerId)) {
-            ShopAdminGUIManager.AdminInputType inputType = plugin.getPlayerWaitingForAdminInput().get(playerId);
-            Location shopLocation = plugin.getPlayerAdministeringShop().get(playerId);
-            String locStr = Shop.locationToString(shopLocation); 
-            plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) providing chat input for %s for shop %s. Message: '%s'",
-                    player.getName(), playerId, inputType.name(), locStr, message)); 
-            event.setCancelled(true);
-
-
-            if (shopLocation == null) { 
-                player.sendMessage(ChatColor.RED + "Hata: Yönetilen dükkan bulunamadı.");
-                plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) was waiting for %s input, but shopLocation is null (locStr: %s).",
-                        player.getName(), playerId, inputType.name(), locStr));
-                plugin.getPlayerWaitingForAdminInput().remove(playerId);
-                plugin.getPlayerAdministeringShop().remove(playerId);
-                return;
+        if (session == null || session.getExpectedInputType() != ShopSetupGUIManager.InputType.PRICE) {
+            // Not our target for price input, or admin input which is handled in ShopListener
+            if (plugin.getPlayerWaitingForAdminInput().containsKey(playerId)) {
+                 // Admin input handling is separate and should remain in ShopListener if it uses its own map.
+                 // This check avoids interference if ShopListener's admin input logic is still active.
             }
-
-            if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
-                plugin.getPlayerWaitingForAdminInput().remove(playerId);
-                plugin.getPlayerAdministeringShop().remove(playerId); 
-                player.sendMessage(ChatColor.YELLOW + "Dükkan ayarı iptal edildi.");
-                plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) cancelled %s input for shop %s.",
-                        player.getName(), playerId, inputType.name(), locStr));
-                return;
-            }
-
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    Shop shop = shopManager.getActiveShop(shopLocation); 
-                    if (shop == null || !shop.getOwnerUUID().equals(playerId)) {
-                        player.sendMessage(ChatColor.RED + "Hata: Dükkan bulunamadı veya yönetme yetkiniz yok.");
-                         plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) chat input for %s, but shop at %s not found or not owner.",
-                                player.getName(), playerId, inputType.name(), locStr));
-                        plugin.getPlayerWaitingForAdminInput().remove(playerId);
-                        plugin.getPlayerAdministeringShop().remove(playerId);
-                        return;
-                    }
-
-                    boolean actionSuccess = false;
-                    if (inputType == ShopAdminGUIManager.AdminInputType.SHOP_DISPLAY_NAME) {
-                        int maxNameLength = plugin.getConfig().getInt("shop.max_display_name_length", 30);
-                        if (message.length() > 0 && message.length() <= maxNameLength) {
-                            shop.setShopDisplayName(ChatColor.translateAlternateColorCodes('&', message));
-                            actionSuccess = true;
-                            player.sendMessage(ChatColor.GREEN + "Dükkan adı: " + ChatColor.RESET + shop.getShopDisplayName());
-                        } else {
-                            player.sendMessage(ChatColor.RED + "Ad 1-" + maxNameLength + " karakter olmalı. Tekrar dene veya 'iptal' yaz.");
-                            plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) provided invalid display name (length %d) for shop %s: '%s'",
-                                    player.getName(), playerId, message.length(), locStr, message));
-                        }
-                    } else if (inputType == ShopAdminGUIManager.AdminInputType.SHOP_PRICE) {
-                        try {
-                            double newPrice = Double.parseDouble(message);
-                            if (newPrice >= 0) {
-                                shop.setBuyPrice(newPrice); 
-                                actionSuccess = true;
-                                player.sendMessage(ChatColor.GREEN + "Dükkan paket fiyatı: " + ChatColor.GOLD + String.format("%.2f", newPrice));
-                            } else {
-                                player.sendMessage(ChatColor.RED + "Fiyat negatif olamaz. Tekrar dene veya 'iptal' yaz.");
-                                plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) provided negative price for shop %s: '%s'",
-                                        player.getName(), playerId, locStr, message));
-                            }
-                        } catch (NumberFormatException e) {
-                            player.sendMessage(ChatColor.RED + "Geçersiz fiyat. Sayı girin (örn: 10.5) veya 'iptal' yaz.");
-                            plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) provided non-numeric price for shop %s: '%s'",
-                                    player.getName(), playerId, locStr, message));
-                        }
-                    }
-
-                    if (actionSuccess) {
-                        shopManager.saveShop(shop);
-                        plugin.getPlayerWaitingForAdminInput().remove(playerId);
-                        plugin.getPlayerAdministeringShop().remove(playerId); 
-                        plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) successfully set %s to '%s' for shop %s.",
-                                player.getName(), playerId, inputType.name(), (inputType == ShopAdminGUIManager.AdminInputType.SHOP_DISPLAY_NAME ? shop.getShopDisplayName() : String.format("%.2f", shop.getBuyPrice())), locStr));
-                    }
-                }
-            }.runTask(plugin);
-            return; 
+            return;
         }
 
-        if (plugin.getPlayerShopSetupState().containsKey(playerId) &&
-                plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE) {
-            Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
-            String locStr = Shop.locationToString(chestLocation); 
-            plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) providing price input for shop %s. Message: '%s'",
-                    player.getName(), playerId, locStr, message));
-            event.setCancelled(true);
-            Shop pendingShop = shopManager.getPendingShop(chestLocation);
+        Location chestLocation = session.getChestLocation();
+        Shop pendingShop = session.getPendingShop();
+        String locStr = Shop.locationToString(chestLocation);
+        String message = event.getMessage();
 
-            if (pendingShop == null || pendingShop.getTemplateItemStack() == null || pendingShop.getBundleAmount() <= 0) {
-                player.sendMessage(ChatColor.RED + "Mağaza kurulum hatası (eksik bilgi). Baştan başla.");
-                plugin.getLogger().warning(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s, but pendingShop/template/bundleAmount invalid. Pending: %s",
-                        player.getName(), playerId, locStr, pendingShop));
-                shopManager.cancelShopSetup(playerId);
-                return;
-            }
+        plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) providing price input for shop %s. Message: '%s'",
+                player.getName(), playerId, locStr, message));
+        event.setCancelled(true);
 
-            if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
-                shopManager.cancelShopSetup(playerId);
-                player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve dükkan kurulumu iptal edildi.");
-                 plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) cancelled price input for shop %s.",
-                        player.getName(), playerId, locStr));
-                return;
-            }
+        if (pendingShop == null || pendingShop.getTemplateItemStack() == null || pendingShop.getBundleAmount() <= 0) {
+            player.sendMessage(ChatColor.RED + "Mağaza kurulum hatası (eksik bilgi). Baştan başla.");
+            plugin.getLogger().warning(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s, but pendingShop/template/bundleAmount invalid in session. Pending: %s",
+                    player.getName(), playerId, locStr, pendingShop));
+            shopManager.cancelShopSetup(playerId);
+            return;
+        }
 
-            try {
+        if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
+            shopManager.cancelShopSetup(playerId);
+            player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve dükkan kurulumu iptal edildi.");
+            plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) cancelled price input for shop %s.",
+                    player.getName(), playerId, locStr));
+            return;
+        }
+
+        try {
+            double buyPrice = -1.0;
+            double sellPrice = -1.0;
+
+            if (session.isIntentToAllowPlayerBuy() && session.isIntentToAllowPlayerSell()) {
                 String[] priceParts = message.split(":");
                 if (priceParts.length != 2) {
                     player.sendMessage(ChatColor.RED + "Geçersiz format. Fiyatları ALIS_FIYATI:SATIS_FIYATI şeklinde girin (örn: 100:80 veya 50:-1). 'iptal' yazarak iptal edin.");
-                    plugin.getLogger().warning(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s, invalid price parts: '%s'",
-                            player.getName(), playerId, locStr, message));
                     return;
                 }
-
-                double buyPrice = Double.parseDouble(priceParts[0].trim());
-                double sellPrice = Double.parseDouble(priceParts[1].trim());
+                buyPrice = Double.parseDouble(priceParts[0].trim());
+                sellPrice = Double.parseDouble(priceParts[1].trim());
 
                 if ((buyPrice < 0 && buyPrice != -1) || (sellPrice < 0 && sellPrice != -1)) {
-                    player.sendMessage(ChatColor.RED + "Geçersiz fiyatlar. Fiyatlar pozitif olmalı veya -1 (devre dışı) olmalı. Tekrar deneyin veya 'iptal' yazın.");
-                    plugin.getLogger().warning(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s, invalid price values (negative but not -1): Buy:%.2f Sell:%.2f",
-                            player.getName(), playerId, locStr, buyPrice, sellPrice));
+                    player.sendMessage(ChatColor.RED + "Geçersiz fiyatlar. Fiyatlar pozitif olmalı veya -1 (devre dışı) olmalı.");
                     return;
                 }
-                if (buyPrice == -1 && sellPrice == -1 && pendingShop.getShopMode() != null ) { 
-                    player.sendMessage(ChatColor.RED + "Bir dükkan ya satış yapmalı ya da alış yapmalı (veya ikisi de). İki fiyatı da -1 yapamazsınız. Tekrar deneyin veya 'iptal' yazın.");
-                    plugin.getLogger().warning(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s, both prices -1. Buy:%.2f Sell:%.2f",
-                            player.getName(), playerId, locStr, buyPrice, sellPrice));
+                if (buyPrice == -1 && sellPrice == -1) {
+                    player.sendMessage(ChatColor.RED + "Bir dükkan ya satış yapmalı ya da alış yapmalı. İki fiyatı da -1 yapamazsınız.");
                     return;
                 }
-
-                pendingShop.setBuyPrice(buyPrice);
-                pendingShop.setSellPrice(sellPrice);
-                plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) set prices for shop %s. Buy: %.2f, Sell: %.2f. Proceeding to finalize.",
-                        player.getName(), playerId, locStr, buyPrice, sellPrice));
-
-                player.sendMessage(ChatColor.GREEN + "Fiyatlar kabul edildi. Oyuncu Alış Fiyatı: " +
-                        (buyPrice == -1 ? ChatColor.GRAY + "Devre Dışı" : ChatColor.GOLD + String.format("%.2f", buyPrice)) +
-                        ChatColor.GREEN + ", Oyuncu Satış Fiyatı: " +
-                        (sellPrice == -1 ? ChatColor.GRAY + "Devre Dışı" : ChatColor.GOLD + String.format("%.2f", sellPrice)));
-
-                plugin.getPlayerShopSetupState().remove(playerId);
-                plugin.getPlayerWaitingForSetupInput().remove(playerId);
-                ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
-
-                if (buyPrice == -1 && initialStock != null) { 
-                    player.getInventory().addItem(initialStock.clone());
-                    player.sendMessage(ChatColor.YELLOW + "Dükkanınız satış yapmayacağı için başlangıç stoğunuz iade edildi.");
-                    plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s. Buy price is -1, initial stock %s returned.",
-                            player.getName(), playerId, locStr, initialStock.getType()));
-                    initialStock = null;
+            } else if (session.isIntentToAllowPlayerBuy()) {
+                buyPrice = Double.parseDouble(message.trim());
+                if (buyPrice < 0) {
+                    player.sendMessage(ChatColor.RED + "Alış fiyatı pozitif bir değer olmalı.");
+                    return;
                 }
-
-                final ItemStack finalInitialStock = initialStock;
-
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        Shop currentPendingShopState = shopManager.getPendingShop(chestLocation);
-                        if (currentPendingShopState == null || !currentPendingShopState.getOwnerUUID().equals(playerId)){
-                             plugin.getLogger().severe(String.format("ShopSetupListener (PriceSetup-Runnable): Player %s (UUID: %s) for shop %s. Pending shop became null or owner changed before finalize. Critical error.",
-                                player.getName(), playerId, locStr));
-                             player.sendMessage(ChatColor.RED + "Kritik bir hata oluştu, dükkan kurulamadı. Lütfen yöneticiye bildirin.");
-                             shopManager.cancelShopSetup(playerId); 
-                             return;
-                        }
-                        shopManager.finalizeShopSetup(
-                                chestLocation,
-                                player,
-                                finalInitialStock
-                        );
-                    }
-                }.runTask(plugin);
-
-            } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Fiyatlar için geçersiz sayı formatı. Örn: 10.5 veya -1. Tekrar deneyin veya 'iptal' yazın.");
-                plugin.getLogger().warning(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) for shop %s, NumberFormatException for prices: '%s'",
-                        player.getName(), playerId, locStr, message));
+                sellPrice = -1.0; // Explicitly set sell price to disabled
+            } else if (session.isIntentToAllowPlayerSell()) {
+                sellPrice = Double.parseDouble(message.trim());
+                if (sellPrice < 0) {
+                    player.sendMessage(ChatColor.RED + "Satış fiyatı pozitif bir değer olmalı.");
+                    return;
+                }
+                buyPrice = -1.0; // Explicitly set buy price to disabled
+            } else {
+                // Should not happen if intents are set correctly
+                plugin.getLogger().severe("Price input requested but no buy/sell intent set for player " + playerId);
+                player.sendMessage(ChatColor.RED + "Fiyat giriş hatası: Dükkan türü belirlenmemiş.");
+                shopManager.cancelShopSetup(playerId);
+                return;
             }
+
+            pendingShop.setBuyPrice(buyPrice);
+            pendingShop.setSellPrice(sellPrice);
+            session.setExpectedInputType(null); 
+            session.setCurrentGuiTitle(ShopSetupGUIManager.CONFIRMATION_TITLE.toString()); 
+
+            plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) set prices for shop %s. Buy: %.2f, Sell: %.2f. Proceeding to confirmation.",
+                    player.getName(), playerId, locStr, buyPrice, sellPrice));
+            
+            String priceConfirmationMessage = ChatColor.GREEN + "Fiyatlar kabul edildi. ";
+            if(session.isIntentToAllowPlayerBuy() && session.isIntentToAllowPlayerSell()) {
+                 priceConfirmationMessage += "Alış: " + (buyPrice == -1 ? "Devre Dışı" : String.format("%.2f", buyPrice)) +
+                                          ", Satış: " + (sellPrice == -1 ? "Devre Dışı" : String.format("%.2f", sellPrice));
+            } else if (session.isIntentToAllowPlayerBuy()) {
+                priceConfirmationMessage += "Oyuncu Alış Fiyatı: " + String.format("%.2f", buyPrice);
+            } else if (session.isIntentToAllowPlayerSell()) {
+                priceConfirmationMessage += "Oyuncu Satış Fiyatı: " + String.format("%.2f", sellPrice);
+            }
+            player.sendMessage(priceConfirmationMessage);
+
+            final Player finalPlayer = player; 
+            final Shop finalPendingShop = pendingShop; // For runnable
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    ShopSetupSession currentSession = shopSetupGUIManager.getPlayerSession(finalPlayer.getUniqueId());
+                    if (currentSession == null || currentSession.getPendingShop() != finalPendingShop) {
+                        plugin.getLogger().warning("Session changed or ended before opening confirmation for " + finalPlayer.getName());
+                        return;
+                    }
+                    shopSetupGUIManager.openConfirmationMenu(finalPlayer, finalPendingShop, finalPendingShop.getBuyPrice(), finalPendingShop.getSellPrice());
+                }
+            }.runTask(plugin);
+
+        } catch (NumberFormatException e) {
+            player.sendMessage(ChatColor.RED + "Fiyatlar için geçersiz sayı formatı. Örn: 10.5 veya -1.");
         }
     }
 
     private String getItemNameForMessages(ItemStack itemStack) {
         if (itemStack == null || itemStack.getType() == Material.AIR) return "Bilinmeyen Eşya";
         ItemMeta meta = itemStack.getItemMeta();
-
         if (meta != null && meta.hasDisplayName()) {
-            return meta.getDisplayName();
+            try { // Paper Adventure Component
+                Component displayNameComponent = meta.displayName();
+                if (displayNameComponent != null) return LegacyComponentSerializer.legacySection().serialize(displayNameComponent);
+            } catch (NoSuchMethodError e) { // Older Bukkit String display name
+                 if (meta.hasDisplayName()) return meta.getDisplayName();
+            }
         }
         String name = itemStack.getType().toString().toLowerCase().replace("_", " ");
         if (!name.isEmpty()) {

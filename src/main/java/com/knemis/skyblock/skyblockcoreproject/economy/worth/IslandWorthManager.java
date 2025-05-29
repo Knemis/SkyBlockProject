@@ -211,6 +211,18 @@ public class IslandWorthManager {
                         requester.sendMessage(ChatColor.GREEN + "Ada Seviyen: " + ChatColor.GOLD + newLevel);
                     }
 
+                    // Update mission progress for ISLAND_LEVEL objectives
+                    Player islandOwner = Bukkit.getPlayer(island.getOwnerUUID());
+                    if (islandOwner != null && islandOwner.isOnline()) {
+                        if (plugin.getMissionManager() != null) {
+                            plugin.getMissionManager().updateIslandLevelProgress(islandOwner, newLevel);
+                            plugin.getLogger().info("[IslandWorth] Updated island level mission progress for player " + islandOwner.getName() + " to level " + newLevel);
+                        } else {
+                            plugin.getLogger().warning("[IslandWorth] MissionManager is null, cannot update island level objectives for " + islandOwner.getName());
+                        }
+                    }
+
+
                     if (newLevel > oldLevel) {
                         plugin.getLogger().info(island.getOwnerUUID() + " adası " + oldLevel + " seviyesinden " + newLevel + " seviyesine yükseldi!");
                         if (requester != null && requester.isOnline()) {
