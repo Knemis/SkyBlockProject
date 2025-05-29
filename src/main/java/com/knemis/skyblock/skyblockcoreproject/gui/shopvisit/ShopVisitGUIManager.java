@@ -3,6 +3,7 @@ package com.knemis.skyblock.skyblockcoreproject.gui.shopvisit;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject; // SkyBlockProject import (for plugin reference)
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
+import com.knemis.skyblock.skyblockcoreproject.shop.ShopInventoryManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager; // Added for stock information
 
 import net.kyori.adventure.text.Component;
@@ -65,7 +66,7 @@ public class ShopVisitGUIManager {
         if (meta != null) {
             // Keep existing displayName or assign a new one
             if (!meta.hasDisplayName()) {
-                meta.displayName(Component.text(shopManager.shortenItemName(templateItem.getType().toString()), NamedTextColor.AQUA)); // Corrected method call
+                meta.displayName(Component.text(this.shopManager.getShopSignManager().shortenItemName(templateItem.getType().toString()), NamedTextColor.AQUA)); // Corrected method call
                 // Default name
             }
             List<Component> lore = meta.hasLore() ? new ArrayList<>(meta.lore()) : new ArrayList<>();
@@ -85,7 +86,7 @@ public class ShopVisitGUIManager {
             int currentStock = 0;
             if (shop.getLocation().getBlock().getState() instanceof Chest) {
                 Chest chest = (Chest) shop.getLocation().getBlock().getState();
-                currentStock = shopManager.countItemsInChest(chest, templateItem); // Count stock with templateItem
+                currentStock = ShopInventoryManager.countItemsInChest(chest, templateItem); // Count stock with templateItem
             }
             lore.add(Component.text("Stock: ", NamedTextColor.GRAY).append(Component.text(currentStock + " units", currentStock > 0 ? NamedTextColor.GREEN : NamedTextColor.RED)));
             lore.add(Component.text(" "));

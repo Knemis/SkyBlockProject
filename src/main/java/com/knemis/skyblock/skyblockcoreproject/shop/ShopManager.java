@@ -368,14 +368,14 @@ public class ShopManager {
             pendingShops.remove(location);
             player.sendMessage(ChatColor.GREEN + "Dükkan kurulumu başarıyla iptal edildi.");
             plugin.getLogger().info("Bekleyen dükkan kurulumu iptal edildi (" + Shop.locationToString(location) + ") tarafından " + player.getName());
-            plugin.getPlayerShopSetupState().remove(shopToRemove.getOwnerUUID());
             // If a pending shop is removed, also remove its session if it exists
             if (plugin.getShopSetupGUIManager() != null) {
                 ShopSetupSession session = plugin.getShopSetupGUIManager().getPlayerSession(shopToRemove.getOwnerUUID());
-                if (session != null && session.getChestLocation().equals(location)) {
+                // Check if the session is for the shop being removed.
+                if (session != null && session.getChestLocation() != null && session.getChestLocation().equals(location)) {
                     ItemStack initialStockFromSession = session.getInitialStockItem();
                     plugin.getShopSetupGUIManager().removeSession(shopToRemove.getOwnerUUID());
-                     plugin.getLogger().info("Pending shop removal also cleared active setup session for player " + shopToRemove.getOwnerUUID() + " at " + location);
+                    plugin.getLogger().info("Also removed active setup session for player " + shopToRemove.getOwnerUUID() + " as their pending shop at " + location + " was removed.");
                     if (initialStockFromSession != null && initialStockFromSession.getType() != Material.AIR && player.isOnline()) {
                         player.getInventory().addItem(initialStockFromSession.clone());
                         player.sendMessage(ChatColor.YELLOW + "Kurulumdaki eşyalarınız iade edildi.");

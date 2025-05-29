@@ -8,6 +8,7 @@ import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
+import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession; // Added import
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -26,12 +27,14 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import java.util.UUID; // Added import
+import java.util.Map; // Added import
+import java.util.HashMap; // Added import
 
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopMode;
-import com.knemis.skyblock.skyblockcoreproject.shop.ShopType; // Keep for old finalizeShopSetup if needed by other parts, though ideally it's removed
 
 public class ShopListener implements Listener {
     private final SkyBlockProject plugin;
+    private final Map<UUID, Location> playerChoosingShopMode = new HashMap<>();
     private final ShopManager shopManager;
     private final ShopSetupGUIManager shopSetupGUIManager;
     private final IslandDataHandler islandDataHandler;
@@ -70,7 +73,10 @@ public class ShopListener implements Listener {
             plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) SHIFT+RIGHT_CLICKED block %s at %s to potentially create/administer shop.",
                     player.getName(), player.getUniqueId(), clickedBlock.getType(), chestLocation));
 
-            if (plugin.getPlayerShopSetupState().containsKey(player.getUniqueId()) || plugin.getPlayerChoosingShopMode().containsKey(player.getUniqueId())) {
+            ShopSetupSession existingSession = plugin.getShopSetupGUIManager().getPlayerSession(player.getUniqueId());
+            boolean inShopSetupState = existingSession != null && existingSession.getPendingShop() != null && existingSession.getCurrentGuiTitle() != null && (existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString()) || existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE.toString()) || existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.PRICE_INPUT_TITLE.toString()) || existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.CONFIRMATION_TITLE.toString()));
+            boolean inChoosingModeState = this.playerChoosingShopMode.containsKey(player.getUniqueId());
+            if (inShopSetupState || inChoosingModeState) {
                 player.sendMessage(ChatColor.YELLOW + "You are already in a shop creation process. Type 'cancel' to abort.");
                 event.setCancelled(true);
                 return;
@@ -128,7 +134,6 @@ public class ShopListener implements Listener {
                                 player.getName(), player.getUniqueId(), chestLocation));
                     } else {
                         player.sendMessage(ChatColor.YELLOW + "Resuming setup for this pending shop.");
-                        plugin.getPlayerShopSetupState().put(player.getUniqueId(), chestLocation);
                         shopSetupGUIManager.openItemSelectionMenu(player, existingShop);
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) is owner of existing pending shop at %s. Opening item selection menu to resume setup.",
                                 player.getName(), player.getUniqueId(), chestLocation));
@@ -143,7 +148,7 @@ public class ShopListener implements Listener {
                 return;
             }
 
-            plugin.getPlayerChoosingShopMode().put(player.getUniqueId(), chestLocation);
+            this.playerChoosingShopMode.put(player.getUniqueId(), chestLocation);
             player.sendMessage(ChatColor.GOLD + "------------------------------------------");
             player.sendMessage(ChatColor.YELLOW + "Choose a shop mode for this chest location:");
             player.sendMessage(ChatColor.GREEN + "Type 'market'" + ChatColor.GRAY + " - Players open chest, select custom amount.");
@@ -194,8 +199,8 @@ public class ShopListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
 
-        if (plugin.getPlayerChoosingShopMode().containsKey(playerId)) {
-            Location chestLocation = plugin.getPlayerChoosingShopMode().get(playerId); // Get before removing
+        if (this.playerChoosingShopMode.containsKey(playerId)) {
+            Location chestLocation = this.playerChoosingShopMode.get(playerId); // Get before removing
             String message = event.getMessage().toLowerCase().trim();
             plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) in shop mode selection chat state (Location: %s). Message: '%s'",
                     player.getName(), playerId, chestLocation, message));
@@ -208,7 +213,7 @@ public class ShopListener implements Listener {
             } else if (message.equals("bank")) {
                 selectedMode = ShopMode.BANK_CHEST;
             } else if (message.equals("cancel")) {
-                plugin.getPlayerChoosingShopMode().remove(playerId);
+                this.playerChoosingShopMode.remove(playerId);
                 player.sendMessage(ChatColor.YELLOW + "Shop creation cancelled.");
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) cancelled shop creation at mode selection for location %s.",
                         player.getName(), playerId, chestLocation));
@@ -221,7 +226,7 @@ public class ShopListener implements Listener {
             }
 
             final ShopMode finalSelectedMode = selectedMode;
-            plugin.getPlayerChoosingShopMode().remove(playerId);
+            this.playerChoosingShopMode.remove(playerId);
 
             new BukkitRunnable() {
                 @Override

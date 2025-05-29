@@ -4,9 +4,9 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager; // Added import
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
-import com.knemis.skyblock.skyblockcoreproject.shop.ShopType;
 import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession; // Import session
 
 import net.kyori.adventure.text.Component;
@@ -94,7 +94,6 @@ public class ShopSetupListener implements Listener {
             }
 
             int rawSlot = event.getRawSlot();
-            // ShopType selectedType = null; // Removed ShopType
             boolean intentSet = false;
             if (rawSlot == PLAYER_BUY_SHOP_SLOT) {
                 session.setIntentToAllowPlayerBuy(true);
@@ -114,7 +113,6 @@ public class ShopSetupListener implements Listener {
             }
 
             if (intentSet) {
-                // pendingShop.setShopType(selectedType); // Removed ShopType
                 session.setCurrentGuiTitle(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString()); 
                 shopSetupGUIManager.openItemSelectionMenu(player, pendingShop);
             } else {
@@ -245,7 +243,7 @@ public class ShopSetupListener implements Listener {
                 plugin.getLogger().finer(String.format("ShopSetupListener: Player %s (UUID: %s) clicked non-interactive GUI slot %d in ITEM_SELECT_TITLE for shop %s. Action: %s. Cancelled.",
                         player.getName(), player.getUniqueId(), event.getRawSlot(), locStr, event.getAction().name()));
             }
-        } else if (clickedInventory == null && event.getAction() == InventoryAction.DROP) {
+        } else if (clickedInventory == null && event.getAction().name().contains("DROP")) {
              event.setCancelled(true);
         }
     }
@@ -366,7 +364,7 @@ public class ShopSetupListener implements Listener {
             // Check if it's an admin GUI close that needs specific handling from ShopListener
             Component viewTitleComponentAdmin = event.getView().title();
             String viewTitleAdmin = LegacyComponentSerializer.legacySection().serialize(viewTitleComponentAdmin);
-            if (viewTitleAdmin.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE) || viewTitleAdmin.equals(ShopVisitGUIManager.SHOP_VISIT_TITLE.toString())) {
+            if (viewTitleAdmin.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE) || viewTitleAdmin.equals(LegacyComponentSerializer.legacySection().serialize(ShopVisitGUIManager.SHOP_VISIT_TITLE))) {
                 // These are handled by ShopListener's onInventoryClose, so just return.
                 return;
             }

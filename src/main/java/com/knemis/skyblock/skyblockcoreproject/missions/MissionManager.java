@@ -374,7 +374,7 @@ public class MissionManager {
 
         if (playerData.getActiveMissionProgress(missionId) != null) {
             playerData.removeActiveMission(missionId); // This removes the PlayerMissionProgress object
-            plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), playerData); // Save changes
+            plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), false); // Save changes
             player.sendMessage(ChatColor.YELLOW + "Mission '" + missionNameForLog + "' abandoned.");
             plugin.getLogger().info(String.format("[MissionManager] Player %s successfully abandoned mission '%s' (ID: %s).", 
                                     player.getName(), missionNameForLog, missionId));
@@ -564,7 +564,7 @@ public class MissionManager {
                 }
             }
             if (missionProgressMade) {
-                plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), playerData);
+                plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), false);
                 checkMissionCompletion(player, mission);
             }
         }
@@ -607,7 +607,7 @@ public class MissionManager {
                 }
             }
             if (missionProgressMade) {
-                plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), playerData);
+                plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), false);
                 checkMissionCompletion(player, mission);
             }
         }
@@ -658,7 +658,7 @@ public class MissionManager {
                 }
             }
             if (missionProgressMade) {
-                 plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), playerData);
+                 plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), false);
                 checkMissionCompletion(player, mission);
             }
         }
