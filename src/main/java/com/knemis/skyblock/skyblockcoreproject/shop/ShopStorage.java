@@ -116,6 +116,45 @@ public class ShopStorage {
         plugin.getLogger().fine("Shop (" + locString + ") saved/updated to shops.yml file.");
     }
 
+    public void saveAllShops(Map<Location, Shop> shopsToSave) {
+        if (shopsToSave == null) {
+            plugin.getLogger().warning("Attempted to save all shops, but the provided map was null.");
+            shopsConfig.set("shops", null); // Clear existing shops in config if map is null
+            saveConfigFile();
+            return;
+        }
+        if (shopsConfig == null) {
+            plugin.getLogger().severe("Cannot save all shops, shopsConfig is null!");
+            return;
+        }
+
+        // Clear the existing "shops" section before repopulating
+        // This ensures that shops removed from activeShops in memory are also removed from the file.
+        shopsConfig.set("shops", null);
+
+        if (shopsToSave.isEmpty()) {
+            plugin.getLogger().info("No active shops to save to shops.yml.");
+        } else {
+            plugin.getLogger().info("Saving " + shopsToSave.size() + " active shops to shops.yml...");
+            for (Shop shop : shopsToSave.values()) {
+                if (shop == null || shop.getLocation() == null) {
+                    plugin.getLogger().warning("Skipping save for a null shop or shop with null location during saveAllShops.");
+                    continue;
+                }
+                String locString = Shop.locationToString(shop.getLocation());
+                if (locString.isEmpty()) {
+                    plugin.getLogger().warning("Shop location could not be converted to string for shop owner: " + shop.getOwnerUUID() + ". Shop not saved.");
+                    continue;
+                }
+                String path = "shops." + locString;
+                shopsConfig.set(path, shop.serialize());
+            }
+            plugin.getLogger().info(shopsToSave.size() + " shops prepared for saving.");
+        }
+        saveConfigFile(); // Save all changes to disk
+    }
+
+
     @SuppressWarnings("unchecked") // For ItemStack deserialization
     public Map<Location, Shop> loadShops() {
         Map<Location, Shop> loadedShops = new HashMap<>();

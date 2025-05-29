@@ -7,6 +7,10 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
 
+
+import org.bukkit.entity.Player; // Player sınıfı için
+import org.bukkit.ChatColor;    // ChatColor için
+import org.bukkit.Bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;

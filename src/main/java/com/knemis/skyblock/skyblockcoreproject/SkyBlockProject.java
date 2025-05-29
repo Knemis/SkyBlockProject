@@ -1,10 +1,12 @@
+// com/knemis/skyblock/skyblockcoreproject/SkyBlockProject.java
 package com.knemis.skyblock.skyblockcoreproject;
 
 import com.knemis.skyblock.skyblockcoreproject.commands.IslandCommand;
+import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand;
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // New addition
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager; // InputType enum'ı için
 import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandLifecycleManager;
@@ -16,18 +18,17 @@ import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener; // Added import
-import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener; // Added import
+import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionPlayerDataManager;
-import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Statik metotlar için
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
-import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand; // Added import
+import com.knemis.skyblock.skyblockcoreproject.shop.Shop; // **** YENİ EKLENEN IMPORT ****
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
@@ -40,6 +41,7 @@ import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -67,7 +69,7 @@ public final class SkyBlockProject extends JavaPlugin {
     private ShopManager shopManager;
     private ShopSetupGUIManager shopSetupGUIManager;
     private ShopVisitGUIManager shopVisitGUIManager;
-    private ShopAdminGUIManager shopAdminGUIManager; // New addition
+    private ShopAdminGUIManager shopAdminGUIManager;
 
     // GUI Managers
     private FlagGUIManager flagGUIManager;
@@ -75,21 +77,29 @@ public final class SkyBlockProject extends JavaPlugin {
     // Missions System
     private MissionManager missionManager;
     private MissionPlayerDataManager missionPlayerDataManager;
-    private MissionGUIManager missionGUIManager; // Added field
+    private MissionGUIManager missionGUIManager;
 
     // Other
     private int nextIslandX;
-    private WorldGuard worldGuardInstance;
+    private WorldGuard worldGuardInstance; // WorldGuard API örneği
     private LuckPerms luckPermsApi;
     private Economy vaultEconomy = null;
 
     // Player Status Tracking
     private final Map<UUID, Location> playerShopSetupState = new HashMap<>();
     private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
-    private final Map<UUID, Location> playerAdministeringShop = new HashMap<>(); // New addition: Which player is managing which shop
-    private final Map<UUID, ShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>(); // New addition: Expected admin input type from player
+    private final Map<UUID, Location> playerAdministeringShop = new HashMap<>();
+    private final Map<UUID, ShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>();
     private final Map<UUID, Location> playerChoosingShopMode = new HashMap<>();
     private final Map<UUID, ItemStack> playerInitialShopStockItem = new HashMap<>();
+
+    // Dükkan kurulumu sırasında oyuncudan hangi türde giriş beklendiğini tutar (örn: fiyat, miktar)
+    private final Map<UUID, ShopSetupGUIManager.InputType> playerWaitingForSetupInput = new HashMap<>();
+    // Oyuncunun dükkan ziyareti sırasında özel satın alma miktarı girdiği durumu takip eder
+    private final Map<UUID, Location> playerEnteringBuyQuantity = new HashMap<>();
+    // Oyuncunun dükkan ziyareti sırasında özel satış miktarı girdiği durumu takip eder
+    private final Map<UUID, Location> playerEnteringSellQuantity = new HashMap<>();
+
 
     @Override
     public void onEnable() {
@@ -98,10 +108,7 @@ public final class SkyBlockProject extends JavaPlugin {
         getConfig().options().copyDefaults(true);
         getConfig().addDefault("general.next-island-x", 0);
         getConfig().addDefault("skyblock-world-name", "skyblock_world");
-        getConfig().addDefault("island.worth.block_values.DIAMOND_BLOCK", 150.0);
-        getConfig().addDefault("island.worth.level_requirements.1", 0.0);
-        getConfig().addDefault("island.worth.level_up_rewards.2", "eco give {player} 250");
-        getConfig().addDefault("island.enforce-boundaries", true); // Added config option
+        // ... (diğer config ayarları) ...
         saveConfig();
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0);
@@ -115,7 +122,7 @@ public final class SkyBlockProject extends JavaPlugin {
             getLogger().severe("Could not set up economy system with Vault! Economy features will be disabled.");
         } else {
             getLogger().info("Economy system with Vault successfully set up!");
-            EconomyManager.setupEconomy();
+            EconomyManager.setupEconomy(); // Statik EconomyManager içindeki Vault Economy nesnesini ayarlar
         }
         if (!hookPlugin("WorldEdit") || !setupWorldGuard()) {
             getLogger().severe("Required dependencies (WorldEdit/WorldGuard) not found or not active! Disabling plugin.");
@@ -139,10 +146,10 @@ public final class SkyBlockProject extends JavaPlugin {
 
         // 6. Economy and Shop System Managers
         this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager);
-        this.shopManager = new ShopManager(this);
-        this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager);
+        this.shopManager = new ShopManager(this); // ShopManager plugin referansını alır
+        this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager); // ShopManager referansını da verir
         this.shopVisitGUIManager = new ShopVisitGUIManager(this, this.shopManager);
-        this.shopAdminGUIManager = new ShopAdminGUIManager(this, this.shopManager); // New addition: Initialization
+        this.shopAdminGUIManager = new ShopAdminGUIManager(this, this.shopManager);
 
         // 7. Other Island Managers
         this.islandMemberManager = new IslandMemberManager(this, this.islandDataHandler, this.islandLifecycleManager);
@@ -155,17 +162,16 @@ public final class SkyBlockProject extends JavaPlugin {
         // 8.5. Mission System
         this.missionManager = new MissionManager(this);
         this.missionPlayerDataManager = new MissionPlayerDataManager(this);
-        this.missionGUIManager = new MissionGUIManager(this); // Instantiate MissionGUIManager
+        this.missionGUIManager = new MissionGUIManager(this);
 
         // 9. Listener Registrations
         getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this);
         getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this);
-        // ShopListener constructor will be updated, so ShopAdminGUIManager is added
         getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.shopAdminGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
         getServer().getPluginManager().registerEvents(new MissionListener(this), this);
-        if (getConfig().getBoolean("island.enforce-boundaries", true)) { // Register PlayerBoundaryListener
+        if (getConfig().getBoolean("island.enforce-boundaries", true)) {
             getServer().getPluginManager().registerEvents(new PlayerBoundaryListener(this), this);
         }
 
@@ -190,7 +196,6 @@ public final class SkyBlockProject extends JavaPlugin {
             getLogger().severe("'missions' command not defined in plugin.yml!");
         }
 
-
         getLogger().info("SkyBlockProject Plugin Successfully Enabled!");
     }
 
@@ -199,9 +204,21 @@ public final class SkyBlockProject extends JavaPlugin {
         if (islandDataHandler != null) {
             islandDataHandler.saveAllIslandsToDisk();
         }
-        if (missionPlayerDataManager != null) { // Added save all player mission data
+        if (missionPlayerDataManager != null) {
             missionPlayerDataManager.saveAllPlayerData();
         }
+        // Dükkanları kaydetme bölümü güncellendi
+        if (shopManager != null && shopManager.getShopStorage() != null) {
+            Map<Location, Shop> allActiveShops = shopManager.getActiveShopsMap(); // Artık Shop tipi doğru import edildi
+            if (allActiveShops != null) {
+                shopManager.getShopStorage().saveAllShops(allActiveShops); // Bu çağrı artık doğru tiplerle çalışmalı
+                getLogger().info(allActiveShops.size() + " shops have been requested to be saved.");
+            } else {
+                getLogger().warning("Active shops map was null, could not save shops.");
+            }
+        }
+        getConfig().set("general.next-island-x", this.nextIslandX);
+        saveConfig();
         getLogger().info("SkyBlockProject Plugin Disabled.");
     }
 
@@ -268,26 +285,44 @@ public final class SkyBlockProject extends JavaPlugin {
     public ShopManager getShopManager() { return shopManager; }
     public ShopSetupGUIManager getShopSetupGUIManager() { return shopSetupGUIManager; }
     public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; }
-    public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; } // New addition
+    public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; }
     public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
     public MissionManager getMissionManager() { return missionManager; }
     public MissionPlayerDataManager getMissionPlayerDataManager() { return missionPlayerDataManager; }
-    public MissionGUIManager getMissionGUIManager() { return missionGUIManager; } // Added getter
+    public MissionGUIManager getMissionGUIManager() { return missionGUIManager; }
     public LuckPerms getLuckPermsApi() { return luckPermsApi; }
 
     public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; }
     public Map<UUID, Location> getPlayerViewingShopLocation() { return playerViewingShopLocation; }
-    public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; } // New addition: Which player is managing which shop
-    public Map<UUID, ShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; } // New addition: Expected admin input type from player
+    public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; }
+    public Map<UUID, ShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; }
     public Map<UUID, Location> getPlayerChoosingShopMode() { return playerChoosingShopMode; }
     public Map<UUID, ItemStack> getPlayerInitialShopStockItem() { return playerInitialShopStockItem; }
 
+    // Dükkan kurulumu için input bekleyen oyuncuları tutar
+    public Map<UUID, ShopSetupGUIManager.InputType> getPlayerWaitingForSetupInput() {
+        return playerWaitingForSetupInput;
+    }
+
+    // Dükkan ziyareti sırasında özel satın alma miktarı giren oyuncuları tutar
+    public Map<UUID, Location> getPlayerEnteringBuyQuantity() {
+        return playerEnteringBuyQuantity;
+    }
+
+    // Dükkan ziyareti sırasında özel satış miktarı giren oyuncuları tutar
+    public Map<UUID, Location> getPlayerEnteringSellQuantity() {
+        return playerEnteringSellQuantity;
+    }
+
+    // WorldGuard instance'ını döndürür
+    public WorldGuard getWorldGuardInstance() {
+        return worldGuardInstance;
+    }
 
     public int getNextIslandXAndIncrement() {
         int currentX = this.nextIslandX;
         this.nextIslandX += getConfig().getInt("island.spacing", 300);
-        getConfig().set("general.next-island-x", this.nextIslandX);
-        // saveConfig(); // It might be better to save onDisable or periodically instead of saving config on every X increment.
+        // getConfig().set("general.next-island-x", this.nextIslandX); // onDisable'da kaydetmek daha iyi
         return currentX;
     }
 

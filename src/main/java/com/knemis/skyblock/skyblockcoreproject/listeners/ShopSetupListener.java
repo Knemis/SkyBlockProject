@@ -2,7 +2,7 @@
 package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // ShopAdminGUIManager importu eklendi
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
@@ -24,9 +24,11 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.UUID;
+import java.util.logging.Level;
 
 public class ShopSetupListener implements Listener {
 
@@ -34,12 +36,18 @@ public class ShopSetupListener implements Listener {
     private final ShopManager shopManager;
     private final ShopSetupGUIManager shopSetupGUIManager;
 
-    // Updated slot constants for three shop types
-    private static final int PLAYER_SELL_SHOP_SLOT = 10;
-    private static final int PLAYER_BUY_SELL_SHOP_SLOT = 13;
-    private static final int PLAYER_BUY_SHOP_SLOT = 16;
+    private static final int PLAYER_BUY_SHOP_SLOT = 2;
+    private static final int PLAYER_SELL_SHOP_SLOT = 4;
+    private static final int PLAYER_BUY_SELL_SHOP_SLOT = 6;
 
-    private static final int ITEM_PLACEMENT_SLOT = 13; // This is for ITEM_SELECT_TITLE and QUANTITY_INPUT_TITLE GUIs
+    // ITEM_SELECT_TITLE için ortadaki slot (13), QUANTITY_INPUT_TITLE için miktar girme slotu (22) olmalı
+    // ShopSetupGUIManager.openQuantityInputMenu'deki tasarıma göre güncellenmeli.
+    // Şimdilik, her iki GUI için de farklı olabileceklerini varsayarak,
+    // handleQuantityInputGuiClickLogic'e slot parametresi eklemek yerine
+    // ITEM_PLACEMENT_SLOT'u genel bir yerleştirme slotu olarak düşünelim
+    // ve GUI tasarımına göre bu listener içindeki click logic'te doğru slotu kullanalım.
+    private static final int ITEM_SELECT_PLACEMENT_SLOT = 13; // Eşya seçimi GUI'sindeki yerleştirme slotu
+    private static final int QUANTITY_PLACEMENT_SLOT = 22;    // Miktar GUI'sindeki yerleştirme slotu
     private static final int CONFIRM_BUTTON_SLOT_QUANTITY = 31;
 
     public ShopSetupListener(SkyBlockProject plugin, ShopManager shopManager, ShopSetupGUIManager shopSetupGUIManager) {
@@ -64,9 +72,6 @@ public class ShopSetupListener implements Listener {
             if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
             int rawSlot = event.getRawSlot();
-            // Check against new slot constants
-            if (rawSlot != PLAYER_SELL_SHOP_SLOT && rawSlot != PLAYER_BUY_SELL_SHOP_SLOT && rawSlot != PLAYER_BUY_SHOP_SLOT) return;
-
             Location chestLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
             if (chestLocation == null) {
                 player.sendMessage(ChatColor.RED + "Mağaza kurulum hatası! Lütfen tekrar deneyin.");
@@ -81,12 +86,12 @@ public class ShopSetupListener implements Listener {
             }
 
             ShopType selectedType = null;
-            if (clickedItem.getType() == Material.CHEST && rawSlot == PLAYER_SELL_SHOP_SLOT) {
-                selectedType = ShopType.PLAYER_SELL_SHOP;
-            } else if (clickedItem.getType() == Material.REPEATER && rawSlot == PLAYER_BUY_SELL_SHOP_SLOT) { // Assuming REPEATER for BUY_SELL
-                selectedType = ShopType.PLAYER_BUY_SELL_SHOP;
-            } else if (clickedItem.getType() == Material.HOPPER && rawSlot == PLAYER_BUY_SHOP_SLOT) {
+            if (rawSlot == PLAYER_BUY_SHOP_SLOT) {
                 selectedType = ShopType.PLAYER_BUY_SHOP;
+            } else if (rawSlot == PLAYER_SELL_SHOP_SLOT) {
+                selectedType = ShopType.PLAYER_SELL_SHOP;
+            } else if (rawSlot == PLAYER_BUY_SELL_SHOP_SLOT) {
+                selectedType = ShopType.PLAYER_BUY_SELL_SHOP;
             }
 
             if (selectedType != null) {
@@ -100,19 +105,47 @@ public class ShopSetupListener implements Listener {
         else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
             handleQuantityInputGuiClickLogic(event, player, topInventory);
         }
+        else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE)) {
+            event.setCancelled(true);
+            Location chestLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
+            Shop pendingShop = (chestLocation != null) ? shopManager.getPendingShop(chestLocation) : null;
+
+            // **** DÜZELTME: getPlayerWaitingForInput yerine getPlayerWaitingForSetupInput kullanıldı ****
+            if (pendingShop == null || !plugin.getPlayerWaitingForSetupInput().containsKey(player.getUniqueId()) ||
+                    plugin.getPlayerWaitingForSetupInput().get(player.getUniqueId()) != ShopSetupGUIManager.InputType.PRICE) {
+                player.sendMessage(ChatColor.RED + "Onaylama hatası. Kurulum bilgileri eksik.");
+                player.closeInventory();
+                plugin.getShopManager().cancelShopSetup(player.getUniqueId());
+                return;
+            }
+
+            if (event.getCurrentItem() != null) {
+                if (event.getCurrentItem().getType() == Material.GREEN_WOOL) {
+                    shopManager.finalizeShopSetup(
+                            chestLocation,
+                            player,
+                            plugin.getPlayerInitialShopStockItem().get(player.getUniqueId())
+                    );
+                    // finalizeShopSetup zaten başarı mesajı veriyor.
+                } else if (event.getCurrentItem().getType() == Material.RED_WOOL) {
+                    player.sendMessage(ChatColor.YELLOW + "Mağaza kurulumu iptal edildi.");
+                    shopManager.cancelShopSetup(player.getUniqueId());
+                }
+                player.closeInventory();
+            }
+        }
     }
 
     private void handleItemSelectionGuiClickLogic(InventoryClickEvent event, Player player, Inventory guiInventory) {
         Inventory clickedInventory = event.getClickedInventory();
+
         if (clickedInventory != null && clickedInventory.equals(player.getOpenInventory().getBottomInventory())) {
             if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                 event.setCancelled(true);
                 ItemStack itemToMove = event.getCurrentItem();
                 if (itemToMove != null && itemToMove.getType() != Material.AIR) {
-                    ItemStack currentItemInPlacementSlot = guiInventory.getItem(ITEM_PLACEMENT_SLOT);
-                    if (currentItemInPlacementSlot == null || currentItemInPlacementSlot.getType() == Material.AIR) {
-                        ItemStack template = itemToMove.clone();
-                        guiInventory.setItem(ITEM_PLACEMENT_SLOT, template);
+                    if (guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT) == null || guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT).getType() == Material.AIR) {
+                        guiInventory.setItem(ITEM_SELECT_PLACEMENT_SLOT, itemToMove.clone());
                         event.setCurrentItem(null);
                         player.updateInventory();
                     } else {
@@ -124,11 +157,12 @@ public class ShopSetupListener implements Listener {
             }
             return;
         }
+
         if (clickedInventory != null && clickedInventory.equals(guiInventory)) {
-            if (event.getRawSlot() == ITEM_PLACEMENT_SLOT) {
+            if (event.getRawSlot() == ITEM_SELECT_PLACEMENT_SLOT) { // Sadece yerleştirme slotuyla etkileşime izin ver
                 event.setCancelled(false);
             } else {
-                event.setCancelled(true);
+                event.setCancelled(true); // Diğer GUI slotlarına tıklamayı engelle
             }
         } else {
             event.setCancelled(true);
@@ -144,19 +178,31 @@ public class ShopSetupListener implements Listener {
             player.sendMessage(ChatColor.RED + "Kurulum hatası: Satılacak eşya şablonu bulunamadı. Lütfen baştan başlayın.");
             player.closeInventory();
             event.setCancelled(true);
-            plugin.getPlayerShopSetupState().remove(player.getUniqueId());
+            if (player != null) plugin.getShopManager().cancelShopSetup(player.getUniqueId());
             return;
         }
         ItemStack templateItem = pendingShop.getTemplateItemStack();
+
+        if (event.getRawSlot() == CONFIRM_BUTTON_SLOT_QUANTITY && event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.GREEN_WOOL) {
+            event.setCancelled(true);
+            ItemStack quantityItemStack = guiInventory.getItem(QUANTITY_PLACEMENT_SLOT);
+            if (quantityItemStack != null && quantityItemStack.isSimilar(templateItem) && quantityItemStack.getAmount() > 0) {
+                pendingShop.setItemQuantityForPrice(quantityItemStack.getAmount());
+                shopSetupGUIManager.openPriceInputPrompt(player, pendingShop);
+            } else {
+                player.sendMessage(ChatColor.RED + "Lütfen miktar yuvasına doğru türde (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") ve geçerli miktarda eşya koyun.");
+            }
+            return;
+        }
 
         if (clickedInventory != null && clickedInventory.equals(player.getOpenInventory().getBottomInventory())) {
             if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                 event.setCancelled(true);
                 ItemStack itemToMove = event.getCurrentItem();
                 if (itemToMove != null && itemToMove.isSimilar(templateItem)) {
-                    ItemStack currentItemInSlot = guiInventory.getItem(ITEM_PLACEMENT_SLOT);
+                    ItemStack currentItemInSlot = guiInventory.getItem(QUANTITY_PLACEMENT_SLOT);
                     if (currentItemInSlot == null || currentItemInSlot.getType() == Material.AIR) {
-                        guiInventory.setItem(ITEM_PLACEMENT_SLOT, itemToMove.clone());
+                        guiInventory.setItem(QUANTITY_PLACEMENT_SLOT, itemToMove.clone());
                         event.setCurrentItem(null);
                     } else if (currentItemInSlot.isSimilar(itemToMove) && currentItemInSlot.getAmount() < currentItemInSlot.getMaxStackSize()) {
                         int canAdd = currentItemInSlot.getMaxStackSize() - currentItemInSlot.getAmount();
@@ -171,7 +217,7 @@ public class ShopSetupListener implements Listener {
                     }
                     player.updateInventory();
                 } else if (itemToMove != null && itemToMove.getType() != Material.AIR) {
-                    player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + templateItem.getType() + ChatColor.RED + ") türünde eşya koyabilirsiniz!");
+                    player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") türünde eşya koyabilirsiniz!");
                 }
             } else {
                 event.setCancelled(false);
@@ -180,32 +226,22 @@ public class ShopSetupListener implements Listener {
         }
 
         if (clickedInventory != null && clickedInventory.equals(guiInventory)) {
-            if (event.getRawSlot() == CONFIRM_BUTTON_SLOT_QUANTITY && event.getCurrentItem() != null && event.getCurrentItem().getType() == Material.GREEN_WOOL) {
-                event.setCancelled(true);
-                ItemStack quantityItemStack = guiInventory.getItem(ITEM_PLACEMENT_SLOT);
-                if (quantityItemStack != null && quantityItemStack.isSimilar(templateItem) && quantityItemStack.getAmount() > 0) {
-                    pendingShop.setItemQuantityForPrice(quantityItemStack.getAmount());
-                    shopSetupGUIManager.promptForPrice(player, pendingShop);
-                } else {
-                    player.sendMessage(ChatColor.RED + "Lütfen miktar yuvasına doğru türde (" + templateItem.getType() + ") ve geçerli miktarda eşya koyun.");
-                }
-            }
-            else if (event.getRawSlot() == ITEM_PLACEMENT_SLOT) {
+            if (event.getRawSlot() == QUANTITY_PLACEMENT_SLOT) {
                 ItemStack cursorItem = event.getCursor();
                 if (event.getAction().name().startsWith("PLACE_")) {
                     if (cursorItem != null && cursorItem.getType() != Material.AIR) {
                         if (cursorItem.isSimilar(templateItem)) {
                             event.setCancelled(false);
                         } else {
-                            player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + templateItem.getType() + ChatColor.RED + ") türünde eşya koyabilirsiniz!");
+                            player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") türünde eşya koyabilirsiniz!");
                             event.setCancelled(true);
                         }
                     } else {
-                        event.setCancelled(true);
+                        event.setCancelled(false);
                     }
                 } else if (event.getAction().name().startsWith("PICKUP_") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR) {
                     if (event.getAction() == InventoryAction.SWAP_WITH_CURSOR && cursorItem != null && cursorItem.getType() != Material.AIR && !cursorItem.isSimilar(templateItem)) {
-                        player.sendMessage(ChatColor.RED + "Bu yuvayla sadece şablondaki (" + ChatColor.AQUA + templateItem.getType() + ChatColor.RED + ") türünde eşya değiştirebilirsiniz!");
+                        player.sendMessage(ChatColor.RED + "Bu yuvayla sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(templateItem) + ChatColor.RED + ") türünde eşya değiştirebilirsiniz!");
                         event.setCancelled(true);
                     } else {
                         event.setCancelled(false);
@@ -215,11 +251,14 @@ public class ShopSetupListener implements Listener {
                 }
                 else event.setCancelled(true);
             }
-            else event.setCancelled(true);
+            else if (event.getRawSlot() != CONFIRM_BUTTON_SLOT_QUANTITY) { // Onay butonu hariç diğer slotlar
+                event.setCancelled(true);
+            }
         } else {
-            event.setCancelled(true);
+            if(clickedInventory != null) event.setCancelled(true); // GUI dışı ama null olmayan tıklamaları engelle
         }
     }
+
 
     @EventHandler
     public void onInventoryClose(InventoryCloseEvent event) {
@@ -229,7 +268,6 @@ public class ShopSetupListener implements Listener {
         UUID playerId = player.getUniqueId();
 
         Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
-        // Sadece dükkan kurulum state'i varsa devam et, admin state'i ShopListener'da ele alınıyor.
         if (chestLocation == null) {
             return;
         }
@@ -237,84 +275,81 @@ public class ShopSetupListener implements Listener {
         Shop pendingShop = shopManager.getPendingShop(chestLocation);
         if (pendingShop == null) {
             plugin.getPlayerShopSetupState().remove(playerId);
+            // **** DÜZELTME: getPlayerWaitingForInput yerine getPlayerWaitingForSetupInput kullanıldı ****
+            plugin.getPlayerWaitingForSetupInput().remove(playerId);
+            plugin.getPlayerInitialShopStockItem().remove(playerId);
             return;
         }
 
-        boolean isStillInSetupChain = false;
+        // **** DÜZELTME: getPlayerWaitingForInput yerine getPlayerWaitingForSetupInput kullanıldı ****
+        boolean isStillInSetupChain = plugin.getPlayerWaitingForSetupInput().containsKey(playerId);
 
         if (viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE)) {
-            ItemStack itemInSlot = event.getInventory().getItem(ITEM_PLACEMENT_SLOT);
+            ItemStack itemInSlot = event.getInventory().getItem(ITEM_SELECT_PLACEMENT_SLOT);
             if (itemInSlot != null && itemInSlot.getType() != Material.AIR) {
                 pendingShop.setTemplateItemStack(itemInSlot.clone());
-                // Store initial stock only if it's not a pure BUY shop.
-                // For BUY_SELL shops, it's provisionally stored; might be cleared later if only buying.
-                if (pendingShop.getShopType() != ShopType.PLAYER_BUY_SHOP) {
+                if (pendingShop.getShopType() != null && pendingShop.getShopType() != ShopType.PLAYER_BUY_SHOP) {
                     plugin.getPlayerInitialShopStockItem().put(playerId, itemInSlot.clone());
-                    player.sendMessage(ChatColor.GREEN + "Template item set: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) + ChatColor.GREEN + ". This will be your initial stock if your shop sells this item.");
+                    player.sendMessage(ChatColor.GREEN + "Şablon eşya ayarlandı: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) +
+                            ChatColor.GREEN + ". Dükkanınız bu eşyayı satacaksa bu başlangıç stoğunuz olacak.");
                 } else {
-                    player.sendMessage(ChatColor.GREEN + "Template item set: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) + ChatColor.GREEN + ". (Initial stock not applicable for Buy-Only shops).");
+                    plugin.getPlayerInitialShopStockItem().remove(playerId);
+                    player.sendMessage(ChatColor.GREEN + "Şablon eşya ayarlandı: " + ChatColor.AQUA + getItemNameForMessages(itemInSlot) +
+                            ChatColor.GREEN + ". (Sadece Satın Alma Dükkanları için başlangıç stoğu uygulanmaz.)");
                 }
-                event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null); // Item is now held by the setup process
-
-
-                // Check if it's a PLAYER_BUY_SHOP, if so, clear any potentially (erroneously) stored initial stock.
-                // This specific check here in ITEM_SELECT_TITLE's close might be slightly redundant
-                // if type is selected first, but good for safety. The main check would be before finalize.
-                if (pendingShop.getShopType() == ShopType.PLAYER_BUY_SHOP) {
-                    ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(player.getUniqueId());
-                    if (initialStock != null && initialStock.getType() != Material.AIR) {
-                        // This item should not have been stored, but if it was, return it.
-                        // Normally, the player wouldn't have a chance to set initial stock for a BUY_SHOP.
-                        player.getInventory().addItem(initialStock);
-                        player.sendMessage(ChatColor.YELLOW + "Internal note: Initial stock item was cleared as this is a 'Buy Shop'.");
-                    }
-                }
-
+                // event.getInventory().setItem(ITEM_SELECT_PLACEMENT_SLOT, null); // Slotu temizle
+                final Shop finalPendingShop = pendingShop;
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        if (player.isOnline() && plugin.getPlayerShopSetupState().containsKey(playerId)) { // Hala kurulumda mı diye kontrol et
-                            shopSetupGUIManager.openQuantityInputMenu(player, pendingShop);
+                        if (player.isOnline() && plugin.getPlayerShopSetupState().containsKey(playerId)) {
+                            shopSetupGUIManager.openQuantityInputMenu(player, finalPendingShop);
                         }
                     }
                 }.runTask(plugin);
                 isStillInSetupChain = true;
             } else {
                 player.sendMessage(ChatColor.YELLOW + "Eşya seçilmedi, mağaza kurulumu iptal ediliyor.");
-                plugin.getPlayerInitialShopStockItem().remove(playerId); // Ensure cleared if never set or cancelled
+                shopManager.cancelShopSetup(playerId);
             }
         } else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
-            if (pendingShop.getItemQuantityForPrice() <= 0) { // Quantity not confirmed, setup cancelled at this stage
-                ItemStack itemInSlot = event.getInventory().getItem(ITEM_PLACEMENT_SLOT); // Item for quantity
-                if (itemInSlot != null && itemInSlot.getType() != Material.AIR) {
-                    player.getInventory().addItem(itemInSlot.clone());
+            if (pendingShop.getBundleAmount() <= 0) {
+                ItemStack itemInQuantitySlot = event.getInventory().getItem(QUANTITY_PLACEMENT_SLOT);
+                if (itemInQuantitySlot != null && itemInQuantitySlot.getType() != Material.AIR) {
+                    player.getInventory().addItem(itemInQuantitySlot.clone());
                     player.sendMessage(ChatColor.YELLOW + "Miktar belirlenmedi, miktar yuvasındaki eşyalar iade edildi.");
                 }
-
                 ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
                 if (initialStock != null && initialStock.getType() != Material.AIR) {
-                    player.getInventory().addItem(initialStock);
-                    player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock) + ChatColor.YELLOW + ") envanterinize iade edildi.");
+                    player.getInventory().addItem(initialStock.clone());
+                    player.sendMessage(ChatColor.YELLOW + "Şablon eşyanız (" + ChatColor.AQUA + getItemNameForMessages(initialStock) + ChatColor.YELLOW + ") envanterinize iade edildi.");
                 }
                 player.sendMessage(ChatColor.YELLOW + "Miktar belirlenmedi, mağaza kurulumu iptal ediliyor.");
+                shopManager.cancelShopSetup(playerId);
             } else {
-                // Quantity was confirmed, proceeding to price input via chat
+                // **** DÜZELTME: getPlayerWaitingForInput yerine getPlayerWaitingForSetupInput kullanıldı ****
+                isStillInSetupChain = plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE;
+            }
+        }
+        else if (viewTitleComponent.equals(ShopSetupGUIManager.SHOP_TYPE_TITLE)) {
+            if (pendingShop.getShopType() == null) {
+                player.sendMessage(ChatColor.YELLOW + "Mağaza türü seçilmedi, kurulum iptal ediliyor.");
+                shopManager.cancelShopSetup(playerId);
+            } else {
                 isStillInSetupChain = true;
             }
-            event.getInventory().setItem(ITEM_PLACEMENT_SLOT, null); // Clear the slot in quantity GUI
         }
 
-        if (!isStillInSetupChain) {
-            plugin.getPlayerShopSetupState().remove(playerId);
-            plugin.getPlayerInitialShopStockItem().remove(playerId); // General cleanup if setup chain broken
-            // shopManager.removePendingShop(chestLocation); // Consider if needed
+        if (!isStillInSetupChain && plugin.getPlayerShopSetupState().containsKey(playerId)) {
+            shopManager.cancelShopSetup(playerId);
+            player.sendMessage(ChatColor.YELLOW + "Mağaza kurulumu tamamlanmadığı için iptal edildi.");
         }
     }
+
 
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         if (!(event.getWhoClicked() instanceof Player)) return;
-        Player player = (Player) event.getWhoClicked();
         Inventory topInventory = event.getView().getTopInventory();
         if (topInventory == null) return;
 
@@ -323,26 +358,33 @@ public class ShopSetupListener implements Listener {
         boolean isQuantityGui = viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE);
 
         if (isItemSelectGui || isQuantityGui) {
+            int targetPlacementSlot = isItemSelectGui ? ITEM_SELECT_PLACEMENT_SLOT : (isQuantityGui ? QUANTITY_PLACEMENT_SLOT : -1);
+
             boolean affectsOnlyPlacementSlot = true;
-            for (int rawSlot : event.getRawSlots()) {
-                if (rawSlot < topInventory.getSize()) {
-                    if (rawSlot != ITEM_PLACEMENT_SLOT) {
-                        affectsOnlyPlacementSlot = false;
-                        break;
+            if (targetPlacementSlot != -1) {
+                for (int rawSlot : event.getRawSlots()) {
+                    if (rawSlot < topInventory.getSize()) {
+                        if (rawSlot != targetPlacementSlot) {
+                            affectsOnlyPlacementSlot = false;
+                            break;
+                        }
                     }
                 }
+            } else {
+                affectsOnlyPlacementSlot = false;
             }
 
             if (!affectsOnlyPlacementSlot) {
                 event.setCancelled(true);
             } else {
                 if (isQuantityGui) {
+                    Player player = (Player) event.getWhoClicked();
                     Shop pendingShop = shopManager.getPendingShop(plugin.getPlayerShopSetupState().get(player.getUniqueId()));
                     if (pendingShop != null && pendingShop.getTemplateItemStack() != null) {
                         ItemStack draggedItem = event.getOldCursor();
                         if (draggedItem != null && draggedItem.getType() != Material.AIR && !draggedItem.isSimilar(pendingShop.getTemplateItemStack())) {
                             event.setCancelled(true);
-                            player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + pendingShop.getTemplateItemStack().getType() + ChatColor.RED + ") türünde eşya sürükleyebilirsiniz!");
+                            player.sendMessage(ChatColor.RED + "Bu yuvaya sadece şablondaki (" + ChatColor.AQUA + getItemNameForMessages(pendingShop.getTemplateItemStack()) + ChatColor.RED + ") türünde eşya sürükleyebilirsiniz!");
                         }
                     } else {
                         event.setCancelled(true);
@@ -356,37 +398,33 @@ public class ShopSetupListener implements Listener {
     public void onPlayerChatForPrice(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
-        String message = event.getMessage();
 
-        // --- DÜKKAN YÖNETİMİ İÇİN YENİ EKLENEN BLOK ---
         if (plugin.getPlayerWaitingForAdminInput().containsKey(playerId)) {
-            event.setCancelled(true); // Mesajın normal sohbete gitmesini engelle
-
+            event.setCancelled(true);
             ShopAdminGUIManager.AdminInputType inputType = plugin.getPlayerWaitingForAdminInput().get(playerId);
             Location shopLocation = plugin.getPlayerAdministeringShop().get(playerId);
+            String message = event.getMessage();
 
             if (shopLocation == null) {
-                // Bu durum, state'ler düzgün yönetilirse idealde oluşmamalı
-                player.sendMessage(ChatColor.RED + "Hata: Yönetilmekte olan dükkan bulunamadı. İşlem iptal edildi.");
+                player.sendMessage(ChatColor.RED + "Hata: Yönetilen dükkan bulunamadı.");
                 plugin.getPlayerWaitingForAdminInput().remove(playerId);
-                plugin.getPlayerAdministeringShop().remove(playerId); // Yönetim state'ini de temizle
+                plugin.getPlayerAdministeringShop().remove(playerId);
                 return;
             }
 
             if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
                 plugin.getPlayerWaitingForAdminInput().remove(playerId);
-                plugin.getPlayerAdministeringShop().remove(playerId); // Yönetim state'ini de temizle
-                player.sendMessage(ChatColor.YELLOW + "Dükkan ayarı işlemi iptal edildi.");
+                plugin.getPlayerAdministeringShop().remove(playerId);
+                player.sendMessage(ChatColor.YELLOW + "Dükkan ayarı iptal edildi.");
                 return;
             }
 
-            // Dükkan işlemleri ve Bukkit API çağrıları ana thread'de yapılmalı
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Shop shop = shopManager.getActiveShop(shopLocation); // Dükkanı ana thread'de al
+                    Shop shop = shopManager.getActiveShop(shopLocation);
                     if (shop == null || !shop.getOwnerUUID().equals(playerId)) {
-                        player.sendMessage(ChatColor.RED + "Hata: Dükkan bulunamadı veya bu dükkanı yönetme yetkiniz yok.");
+                        player.sendMessage(ChatColor.RED + "Hata: Dükkan bulunamadı veya yönetme yetkiniz yok.");
                         plugin.getPlayerWaitingForAdminInput().remove(playerId);
                         plugin.getPlayerAdministeringShop().remove(playerId);
                         return;
@@ -394,125 +432,99 @@ public class ShopSetupListener implements Listener {
 
                     boolean actionSuccess = false;
                     if (inputType == ShopAdminGUIManager.AdminInputType.SHOP_DISPLAY_NAME) {
-                        String newDisplayName = message;
-                        // İsim için basit bir geçerlilik kontrolü (plugin.yml'den veya config'den uzunluk alınabilir)
                         int maxNameLength = plugin.getConfig().getInt("shop.max_display_name_length", 30);
-                        if (newDisplayName.length() > 0 && newDisplayName.length() <= maxNameLength) {
-                            shop.setShopDisplayName(newDisplayName);
+                        if (message.length() > 0 && message.length() <= maxNameLength) {
+                            shop.setShopDisplayName(ChatColor.translateAlternateColorCodes('&', message));
                             actionSuccess = true;
-                            player.sendMessage(ChatColor.GREEN + "Dükkan adı başarıyla '" + ChatColor.AQUA + newDisplayName + ChatColor.GREEN + "' olarak ayarlandı.");
+                            player.sendMessage(ChatColor.GREEN + "Dükkan adı: " + ChatColor.RESET + shop.getShopDisplayName());
                         } else {
-                            player.sendMessage(ChatColor.RED + "Geçersiz dükkan adı. Ad 1-" + maxNameLength + " karakter uzunluğunda olmalıdır. Tekrar deneyin veya 'iptal' yazın.");
+                            player.sendMessage(ChatColor.RED + "Ad 1-" + maxNameLength + " karakter olmalı. Tekrar dene veya 'iptal' yaz.");
                         }
                     } else if (inputType == ShopAdminGUIManager.AdminInputType.SHOP_PRICE) {
                         try {
                             double newPrice = Double.parseDouble(message);
-                            if (newPrice >= 0) { // Fiyat 0 veya daha büyük olabilir (ücretsiz ürünler için)
-                                shop.setPrice(newPrice);
+                            if (newPrice >= 0) {
+                                shop.setBuyPrice(newPrice); // Veya shop.setPrice(newPrice) eğer tek fiyat varsa
                                 actionSuccess = true;
-                                player.sendMessage(ChatColor.GREEN + "Dükkan paket fiyatı başarıyla " + ChatColor.GOLD + String.format("%.2f", newPrice) + ChatColor.GREEN + " olarak ayarlandı.");
+                                player.sendMessage(ChatColor.GREEN + "Dükkan paket fiyatı: " + ChatColor.GOLD + String.format("%.2f", newPrice));
                             } else {
-                                player.sendMessage(ChatColor.RED + "Fiyat negatif olamaz. Lütfen geçerli bir fiyat girin (örn: 10.5) veya 'iptal' yazın.");
+                                player.sendMessage(ChatColor.RED + "Fiyat negatif olamaz. Tekrar dene veya 'iptal' yaz.");
                             }
                         } catch (NumberFormatException e) {
-                            player.sendMessage(ChatColor.RED + "Geçersiz fiyat formatı. Lütfen bir sayı girin (örn: 10.5 veya 100) veya 'iptal' yazın.");
+                            player.sendMessage(ChatColor.RED + "Geçersiz fiyat. Sayı girin (örn: 10.5) veya 'iptal' yaz.");
                         }
                     }
 
                     if (actionSuccess) {
-                        shopManager.getShopStorage().saveShop(shop); // Değişiklikleri kalıcı olarak kaydet
-                        shopManager.updateAttachedSign(shop);       // Dükkan tabelasını güncelle
-                        plugin.getPlayerWaitingForAdminInput().remove(playerId); // Başarılı işlem sonrası state'leri temizle
+                        shopManager.saveShop(shop);
+                        plugin.getPlayerWaitingForAdminInput().remove(playerId);
                         plugin.getPlayerAdministeringShop().remove(playerId);
                     }
-                    // Eğer actionSuccess false ise (geçersiz giriş gibi), state'ler temizlenmez.
-                    // Oyuncu tekrar deneyebilir veya 'iptal' yazabilir.
                 }
-            }.runTask(plugin); // Ana thread üzerinde çalıştır
-
-            return; // Dükkan yönetim girişi bu event tarafından ele alındı, daha fazla işlem yapma.
+            }.runTask(plugin);
+            return;
         }
-        // --- DÜKKAN YÖNETİMİ İÇİN YENİ EKLENEN BLOK SONU ---
 
-
-        // --- MEVCUT DÜKKAN KURULUM FİYATI GİRİŞİ MANTIĞI ---
-        if (plugin.getPlayerShopSetupState().containsKey(playerId)) {
-            event.setCancelled(true); // Bu mesajın da normal sohbete gitmesini engelle
+        // **** DÜZELTME: getPlayerWaitingForInput yerine getPlayerWaitingForSetupInput kullanıldı ****
+        if (plugin.getPlayerShopSetupState().containsKey(playerId) &&
+                plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE) {
+            event.setCancelled(true);
             Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
             Shop pendingShop = shopManager.getPendingShop(chestLocation);
+            String message = event.getMessage();
 
-            if (pendingShop == null || pendingShop.getTemplateItemStack() == null || pendingShop.getItemQuantityForPrice() <= 0) {
-                player.sendMessage(ChatColor.RED + "Mağaza kurulumunda bir hata oluştu (eksik bilgi). Lütfen baştan başlayın.");
-                plugin.getPlayerShopSetupState().remove(playerId);
-                // shopManager.removePendingShop(chestLocation); // Eğer varsa, bekleyen dükkanı da temizle
+            if (pendingShop == null || pendingShop.getTemplateItemStack() == null || pendingShop.getBundleAmount() <= 0) {
+                player.sendMessage(ChatColor.RED + "Mağaza kurulum hatası (eksik bilgi). Baştan başla.");
+                shopManager.cancelShopSetup(playerId);
                 return;
             }
 
-            // 'iptal' komutu burada da geçerli olmalı
             if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
-                ItemStack initialStockToReturn = plugin.getPlayerInitialShopStockItem().remove(playerId);
-                if (initialStockToReturn != null && initialStockToReturn.getType() != Material.AIR) {
-                    player.getInventory().addItem(initialStockToReturn);
-                    player.sendMessage(ChatColor.YELLOW + "Initial stock item (" + ChatColor.AQUA + getItemNameForMessages(initialStockToReturn) + ChatColor.YELLOW + ") returned to inventory.");
-                }
-                plugin.getPlayerShopSetupState().remove(playerId);
-                player.sendMessage(ChatColor.YELLOW + "Price input and shop setup cancelled.");
+                shopManager.cancelShopSetup(playerId);
+                player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve dükkan kurulumu iptal edildi.");
                 return;
             }
-
-            // ShopType is no longer used to determine price input style.
-            // All shops now use BUY_PRICE:SELL_PRICE format.
-            ItemStack actualInitialStock = plugin.getPlayerInitialShopStockItem().get(playerId); // Get, don't remove yet
 
             try {
                 String[] priceParts = message.split(":");
                 if (priceParts.length != 2) {
-                    player.sendMessage(ChatColor.RED + "Invalid format. Please enter prices as YOUR_BUY_PRICE:YOUR_SELL_PRICE (e.g., 100:80 or 50:-1, or -1:70). Or type 'iptal'.");
+                    player.sendMessage(ChatColor.RED + "Geçersiz format. Fiyatları ALIS_FIYATI:SATIS_FIYATI şeklinde girin (örn: 100:80 veya 50:-1). 'iptal' yazarak iptal edin.");
                     return;
                 }
 
                 double buyPrice = Double.parseDouble(priceParts[0].trim());
                 double sellPrice = Double.parseDouble(priceParts[1].trim());
 
-                // Validate prices
-                if (buyPrice < 0 && buyPrice != -1) {
-                    player.sendMessage(ChatColor.RED + "Invalid Player Buy Price. Must be a positive number or -1 to disable your shop selling this item. Try again or 'iptal'.");
+                if ((buyPrice < 0 && buyPrice != -1) || (sellPrice < 0 && sellPrice != -1)) {
+                    player.sendMessage(ChatColor.RED + "Geçersiz fiyatlar. Fiyatlar pozitif olmalı veya -1 (devre dışı) olmalı. Tekrar deneyin veya 'iptal' yazın.");
                     return;
                 }
-                if (sellPrice < 0 && sellPrice != -1) {
-                    player.sendMessage(ChatColor.RED + "Invalid Player Sell Price. Must be a positive number or -1 to disable your shop buying this item. Try again or 'iptal'.");
-                    return;
-                }
-                if (buyPrice == -1 && sellPrice == -1) {
-                    player.sendMessage(ChatColor.RED + "A shop must either allow players to buy from it, or sell to it (or both). You cannot set both prices to -1. Try again or 'iptal'.");
+                if (buyPrice == -1 && sellPrice == -1 && pendingShop.getShopMode() != null ) {
+                    player.sendMessage(ChatColor.RED + "Bir dükkan ya satış yapmalı ya da alış yapmalı (veya ikisi de). İki fiyatı da -1 yapamazsınız. Tekrar deneyin veya 'iptal' yazın.");
                     return;
                 }
 
                 pendingShop.setBuyPrice(buyPrice);
                 pendingShop.setSellPrice(sellPrice);
 
-                // Adjust initial stock based on if the shop will sell items.
-                // If buyPrice is -1, the shop does not sell, so no initial stock is needed from the owner.
-                if (buyPrice == -1) {
-                    actualInitialStock = null;
-                    plugin.getPlayerInitialShopStockItem().remove(playerId); // Clear it if it was there
-                }
-                // If buyPrice is not -1, actualInitialStock will be the item from getPlayerInitialShopStockItem()
-                // or null if nothing was there (which shouldn't happen if template item was set).
+                player.sendMessage(ChatColor.GREEN + "Fiyatlar kabul edildi. Oyuncu Alış Fiyatı: " +
+                        (buyPrice == -1 ? ChatColor.GRAY + "Devre Dışı" : ChatColor.GOLD + String.format("%.2f", buyPrice)) +
+                        ChatColor.GREEN + ", Oyuncu Satış Fiyatı: " +
+                        (sellPrice == -1 ? ChatColor.GRAY + "Devre Dışı" : ChatColor.GOLD + String.format("%.2f", sellPrice)));
 
-                player.sendMessage(ChatColor.GREEN + "Prices accepted. Player Buy Price: " + (buyPrice == -1 ? "Disabled" : String.format("%.2f", buyPrice)) +
-                        ", Player Sell Price: " + (sellPrice == -1 ? "Disabled" : String.format("%.2f", sellPrice)));
-
-                // Finalize: Remove states and call ShopManager
                 plugin.getPlayerShopSetupState().remove(playerId);
-                // Remove initial stock from map only if it wasn't cleared above (i.e., if buyPrice != -1)
-                // or if it was already null. Effectively, always remove it as its fate is decided.
-                plugin.getPlayerInitialShopStockItem().remove(playerId);
+                // **** DÜZELTME: getPlayerWaitingForInput yerine getPlayerWaitingForSetupInput kullanıldı ****
+                plugin.getPlayerWaitingForSetupInput().remove(playerId);
+                ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
 
+                if (buyPrice == -1 && initialStock != null) {
+                    player.getInventory().addItem(initialStock.clone());
+                    player.sendMessage(ChatColor.YELLOW + "Dükkanınız satış yapmayacağı için başlangıç stoğunuz iade edildi.");
+                    initialStock = null;
+                }
 
-                // Make a final copy for the runnable
-                final ItemStack finalInitialStock = actualInitialStock;
-                final Shop finalPendingShop = pendingShop; // Capture current state for runnable
+                final ItemStack finalInitialStock = initialStock;
+                final Shop finalPendingShop = pendingShop;
 
                 new BukkitRunnable() {
                     @Override
@@ -520,38 +532,36 @@ public class ShopSetupListener implements Listener {
                         shopManager.finalizeShopSetup(
                                 chestLocation,
                                 player,
-                                finalInitialStock // This will be null if buyPrice is -1 (shop doesn't sell)
+                                finalInitialStock
                         );
                     }
                 }.runTask(plugin);
 
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Invalid number format for prices. Please use numbers (e.g., 100.50 or -1). Example: 10.5:8.0 or 50:-1 or -1:20.25. Or type 'iptal'.");
-                // State'i koru, oyuncu tekrar denesin.
+                player.sendMessage(ChatColor.RED + "Fiyatlar için geçersiz sayı formatı. Örn: 10.5 veya -1. Tekrar deneyin veya 'iptal' yazın.");
             }
         }
     }
 
     private String getItemNameForMessages(ItemStack itemStack) {
         if (itemStack == null || itemStack.getType() == Material.AIR) return "Bilinmeyen Eşya";
-        if (itemStack.hasItemMeta()) {
-            ItemMeta meta = itemStack.getItemMeta();
-            if (meta.hasDisplayName()) {
-                try {
-                    Component displayNameComponent = meta.displayName();
-                    if (displayNameComponent != null) {
-                        return LegacyComponentSerializer.legacySection().serialize(displayNameComponent);
-                    }
-                } catch (Exception e) {
-                    // Loglanabilir
+        ItemMeta meta = itemStack.getItemMeta();
+
+        if (meta != null && meta.hasDisplayName()) {
+            return meta.getDisplayName();
+        }
+        String name = itemStack.getType().toString().toLowerCase().replace("_", " ");
+        if (!name.isEmpty()) {
+            String[] parts = name.split(" ");
+            StringBuilder capitalizedName = new StringBuilder();
+            for (String part : parts) {
+                if (part.length() > 0) {
+                    capitalizedName.append(Character.toUpperCase(part.charAt(0)))
+                            .append(part.substring(1).toLowerCase()).append(" ");
                 }
             }
+            return capitalizedName.toString().trim();
         }
-        // Basit bir isim döndürme
-        String name = itemStack.getType().toString().toLowerCase().replace("_", " ");
-        if (name.length() > 0) {
-            name = Character.toUpperCase(name.charAt(0)) + name.substring(1);
-        }
-        return name;
+        return "Bilinmeyen Eşya";
     }
 }

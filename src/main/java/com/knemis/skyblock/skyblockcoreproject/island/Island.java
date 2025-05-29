@@ -3,13 +3,16 @@ package com.knemis.skyblock.skyblockcoreproject.island;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
+// Gerekirse Bukkit.getLogger() için import org.bukkit.Bukkit;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 
@@ -27,40 +30,47 @@ public class Island {
 
     private String welcomeMessage;
     private String currentBiome;
-    private int maxHomesLimit; // Adaya özel maksimum ev limiti
-    private double islandWorth;     // YENİ: Adanın hesaplanmış değeri
-    private int islandLevel;        // YENİ: Adanın mevcut seviyesi
+    private int maxHomesLimit;
+    private double islandWorth;
+    private int islandLevel;
+
+    private String regionId; // Bölge ID'si
 
     private transient World world;
 
-    // Constructor for creating a new island
-    // DÜZELTME: initialMaxHomes parametresi eklendi
+    // Yeni ada oluşturmak için yapıcı metot
     public Island(UUID ownerUUID, Location baseLocation, String defaultIslandName, int initialMaxHomes) {
+        if (ownerUUID == null) throw new IllegalArgumentException("Owner UUID cannot be null for a new island.");
+        // baseLocation null olabilir (örneğin, ada oluşturulurken koordinatlar henüz belirlenmemişse ve sonra ayarlanacaksa),
+        // ancak null ise getWorld() gibi metotlar düzgün çalışmayacaktır.
+        // IslandLifecycleManager'da baseLocation her zaman dolu geliyor.
+
         this.ownerUUID = ownerUUID;
         this.baseLocation = baseLocation;
         if (this.baseLocation != null) {
             this.world = this.baseLocation.getWorld();
         }
-        this.islandName = defaultIslandName;
+        this.islandName = (defaultIslandName != null && !defaultIslandName.isEmpty()) ? defaultIslandName : "Ada-" + ownerUUID.toString().substring(0, 8);
         this.creationDate = Instant.now();
         this.isPublic = false;
         this.boundariesEnforced = true;
         this.members = new HashSet<>();
         this.namedHomes = new HashMap<>();
-        this.currentBiome = null;
-        this.welcomeMessage = null;
         this.maxHomesLimit = initialMaxHomes;
-        this.islandWorth = 0.0; // Başlangıç değeri
-        this.islandLevel = 1;   // Başlangıç seviyesi
+        this.islandWorth = 0.0;
+        this.islandLevel = 1;
+        // regionId, WorldGuard ve diğer sistemlerle tutarlılık için belirli bir formatta olmalı.
+        this.regionId = "skyblock_island_" + ownerUUID.toString(); // TUTARLI FORMAT
     }
 
-    // Constructor for loading an island from data source
-    // Bu constructor zaten doğruydu, maxHomesLimit parametresini alıyordu.
+    // Veri kaynağından ada yüklemek için yapıcı metot
     public Island(UUID ownerUUID, String islandName, Location baseLocation, long creationTimestamp,
                   boolean isPublic, boolean boundariesEnforced,
                   Set<UUID> members, Map<String, Location> namedHomes,
                   String currentBiome, String welcomeMessage,
-                  int maxHomesLimit, double islandWorth, int islandLevel) { // Son 3 parametre önemli
+                  int maxHomesLimit, double islandWorth, int islandLevel, String regionId) { // regionId parametresi
+        if (ownerUUID == null) throw new IllegalArgumentException("Owner UUID cannot be null when loading an island.");
+
         this.ownerUUID = ownerUUID;
         this.islandName = islandName;
         this.baseLocation = baseLocation;
@@ -70,19 +80,40 @@ public class Island {
         this.creationDate = Instant.ofEpochMilli(creationTimestamp);
         this.isPublic = isPublic;
         this.boundariesEnforced = boundariesEnforced;
-        this.members = (members != null) ? members : new HashSet<>();
-        this.namedHomes = (namedHomes != null) ? namedHomes : new HashMap<>();
+        this.members = (members != null) ? new HashSet<>(members) : new HashSet<>(); // Savunmacı kopya
+        this.namedHomes = (namedHomes != null) ? new HashMap<>(namedHomes) : new HashMap<>(); // Savunmacı kopya
         this.currentBiome = currentBiome;
         this.welcomeMessage = welcomeMessage;
         this.maxHomesLimit = maxHomesLimit;
-        this.islandWorth = islandWorth;         // Bu satır eklenmiş olmalı
-        this.islandLevel = islandLevel;         // Bu satır eklenmiş olmalı
-    }
+        this.islandWorth = islandWorth;
+        this.islandLevel = islandLevel;
 
-    // ... (getOwnerUUID() ve diğer getter/setter'lar aynı kalacak) ...
+        // Yüklenen regionId null veya boş ise, bir fallback olarak ownerUUID'den türet.
+        if (regionId == null || regionId.trim().isEmpty()) {
+            this.regionId = "skyblock_island_" + ownerUUID.toString(); // TUTARLI FORMAT
+            // Opsiyonel: Bu durumun loglanması, veri bütünlüğü sorunlarını tespit etmeye yardımcı olabilir.
+            // import org.bukkit.Bukkit;
+            // Bukkit.getLogger().warning("[SkyBlock] Loaded island for " + ownerUUID + " with missing or empty regionId. Generated default: " + this.regionId);
+        } else {
+            this.regionId = regionId;
+        }
+    }
 
     public UUID getOwnerUUID() {
         return ownerUUID;
+    }
+
+    // YENİ EKLENEN METOT: isOwner
+    /**
+     * Verilen UUID'nin bu adanın sahibi olup olmadığını kontrol eder.
+     * @param playerUUID Kontrol edilecek oyuncunun UUID'si.
+     * @return Oyuncu adanın sahibiyse true, değilse false.
+     */
+    public boolean isOwner(UUID playerUUID) {
+        if (playerUUID == null) {
+            return false;
+        }
+        return this.ownerUUID.equals(playerUUID);
     }
 
     public String getIslandName() {
@@ -94,7 +125,23 @@ public class Island {
     }
 
     public Location getBaseLocation() {
-        return baseLocation;
+        return baseLocation != null ? baseLocation.clone() : null; // Savunmacı kopya
+    }
+
+    public Location getSpawnPoint() {
+        return this.baseLocation != null ? this.baseLocation.clone() : null;
+    }
+
+    public String getRegionId() {
+        return regionId;
+    }
+
+    public void setRegionId(String regionId) {
+        if (regionId == null || regionId.trim().isEmpty()) {
+            this.regionId = "skyblock_island_" + this.ownerUUID.toString(); // TUTARLI FORMAT
+            return;
+        }
+        this.regionId = regionId;
     }
 
     public World getWorld() {
@@ -115,6 +162,11 @@ public class Island {
     public boolean isPublic() {
         return isPublic;
     }
+
+    public void setPublic(boolean isPublic) {
+        this.isPublic = isPublic;
+    }
+
     public double getIslandWorth() {
         return islandWorth;
     }
@@ -131,10 +183,6 @@ public class Island {
         this.islandLevel = islandLevel;
     }
 
-    public void setPublic(boolean isPublic) {
-        this.isPublic = isPublic;
-    }
-
     public boolean areBoundariesEnforced() {
         return boundariesEnforced;
     }
@@ -144,7 +192,7 @@ public class Island {
     }
 
     public Set<UUID> getMembers() {
-        return members;
+        return Collections.unmodifiableSet(new HashSet<>(members)); // Değiştirilemez kopya
     }
 
     public boolean addMember(UUID memberUUID) {
@@ -163,16 +211,28 @@ public class Island {
     }
 
     public Map<String, Location> getNamedHomes() {
-        return namedHomes;
+        Map<String, Location> defensiveCopy = new HashMap<>();
+        for (Map.Entry<String, Location> entry : namedHomes.entrySet()) {
+            if (entry.getValue() != null) {
+                defensiveCopy.put(entry.getKey(), entry.getValue().clone());
+            } else {
+                defensiveCopy.put(entry.getKey(), null);
+            }
+        }
+        return Collections.unmodifiableMap(defensiveCopy);
     }
 
     public Location getNamedHome(String homeName) {
         if (homeName == null) return null;
-        return namedHomes.get(homeName.toLowerCase());
+        Location loc = namedHomes.get(homeName.toLowerCase());
+        return loc != null ? loc.clone() : null;
     }
 
     public void setNamedHome(String homeName, Location location) {
-        if (homeName == null || homeName.trim().isEmpty() || location == null) {
+        if (homeName == null || homeName.trim().isEmpty() || location == null || location.getWorld() == null) {
+            return;
+        }
+        if (namedHomes.size() >= maxHomesLimit && !namedHomes.containsKey(homeName.toLowerCase())) {
             return;
         }
         namedHomes.put(homeName.toLowerCase(), location.clone());
@@ -183,7 +243,7 @@ public class Island {
     }
 
     public void setMaxHomesLimit(int maxHomesLimit) {
-        this.maxHomesLimit = maxHomesLimit;
+        this.maxHomesLimit = Math.max(0, maxHomesLimit);
     }
 
     public boolean deleteNamedHome(String homeName) {
@@ -219,5 +279,18 @@ public class Island {
             return true;
         }
         return isPublic;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Island island = (Island) o;
+        return ownerUUID.equals(island.ownerUUID) && Objects.equals(regionId, island.regionId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(ownerUUID, regionId);
     }
 }
