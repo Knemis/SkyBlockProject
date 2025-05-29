@@ -240,8 +240,8 @@ public class ShopListener implements Listener {
                             plugin.getPlayerShopSetupState().put(playerId, chestLocation);
                             plugin.getShopSetupGUIManager().openItemSelectionMenu(player, newShop);
                             player.sendMessage(ChatColor.GREEN + "Shop mode '" + finalSelectedMode.name() + "' selected. Now, please select the item for your shop.");
-                            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop %s with mode %s at %s. Opening item selection.",
-                                    player.getName(), playerId, newShop.getShopId(), finalSelectedMode.name(), chestLocation));
+                            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop at %s with mode %s. Opening item selection. (Internal ID: %s)",
+                                    player.getName(), playerId, Shop.locationToString(newShop.getLocation()), finalSelectedMode.name(), newShop.getShopId()));
                         } else {
                             plugin.getLogger().severe("ShopSetupGUIManager is null! Cannot open item selection menu for " + player.getName());
                             player.sendMessage(ChatColor.RED + "Error: Shop setup GUI could not be opened. Please contact an admin.");
@@ -294,12 +294,12 @@ public class ShopListener implements Listener {
 
             if (event.getRawSlot() == displayNameSlot) {
                 shopAdminGUIManager.initiateDisplayNameChange(player, shop);
-                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiated display name change for shop %s (ID: %s) via admin GUI.",
-                        player.getName(), player.getUniqueId(), shopLocation, shop.getShopId()));
+                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiated display name change for shop at %s via admin GUI.",
+                        player.getName(), player.getUniqueId(), Shop.locationToString(shopLocation)));
             } else if (event.getRawSlot() == priceSlot) {
                 shopAdminGUIManager.initiatePriceChange(player, shop);
-                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiated price change for shop %s (ID: %s) via admin GUI.",
-                        player.getName(), player.getUniqueId(), shopLocation, shop.getShopId()));
+                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiated price change for shop at %s via admin GUI.",
+                        player.getName(), player.getUniqueId(), Shop.locationToString(shopLocation)));
             }
         }
     }

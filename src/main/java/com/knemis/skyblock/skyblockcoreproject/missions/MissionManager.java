@@ -1,6 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.missions;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -20,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -178,17 +180,17 @@ public class MissionManager {
 
     public boolean canStartMission(Player player, Mission mission) {
         String playerName = player.getName();
-        UUID playerUUID = player.getUniqueId();
+        // UUID playerUUID = player.getUniqueId(); // Already available via player.getUniqueId()
         String missionName = mission != null ? mission.getName() : "null_mission_object";
         String missionId = mission != null ? mission.getId() : "null_mission_id";
         // plugin.getLogger().info(String.format("[MissionManager] Checking if player %s (UUID: %s) can start mission '%s' (ID: %s)",
-        //        playerName, playerUUID, missionName, missionId)); // This can be too verbose
+        //        playerName, player.getUniqueId(), missionName, missionId)); // This can be too verbose
 
         if (mission == null) {
             plugin.getLogger().warning(String.format("[MissionManager] canStartMission check for %s: Mission object is null.", playerName));
             return false;
         }
-        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(playerUUID);
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
 
         if (playerData.getActiveMissionProgress(mission.getId()) != null) {
             player.sendMessage(ChatColor.YELLOW + "You have already started the mission: " + mission.getName());
@@ -234,11 +236,11 @@ public class MissionManager {
 
     public boolean startMission(Player player, Mission mission) {
         String playerName = player.getName();
-        UUID playerUUID = player.getUniqueId();
+        // UUID playerUUID = player.getUniqueId(); // Already available
         String missionName = mission != null ? mission.getName() : "null_mission_object";
         String missionId = mission != null ? mission.getId() : "null_mission_id";
         plugin.getLogger().info(String.format("[MissionManager] Attempting to start mission '%s' (ID: %s) for player %s (UUID: %s).",
-                missionName, missionId, playerName, playerUUID));
+                missionName, missionId, playerName, player.getUniqueId()));
 
         if (!canStartMission(player, mission)) {
             // canStartMission already sent the message and logged the specific reason
@@ -246,11 +248,11 @@ public class MissionManager {
                     playerName, missionName, missionId));
             return false;
         }
-        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(playerUUID);
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         playerData.addActiveMission(mission);
         player.sendMessage(ChatColor.GREEN + "Mission '" + mission.getName() + "' started!");
         plugin.getLogger().info(String.format("[MissionManager] Successfully started mission '%s' (ID: %s) for player %s (UUID: %s).",
-                missionName, missionId, playerName, playerUUID));
+                missionName, missionId, playerName, player.getUniqueId()));
         return true;
     }
 
@@ -259,9 +261,9 @@ public class MissionManager {
         String missionName = mission.getName();
         String missionId = mission.getId();
         String playerName = player.getName();
-        UUID playerUUID = player.getUniqueId();
+        // UUID playerUUID = player.getUniqueId(); // Already available
         plugin.getLogger().info(String.format("[MissionManager] Giving rewards for mission '%s' (ID: %s) to player %s (UUID: %s).",
-                missionName, missionId, playerName, playerUUID));
+                missionName, missionId, playerName, player.getUniqueId()));
 
         if (rewards == null) {
             plugin.getLogger().warning(String.format("[MissionManager] No rewards defined for mission '%s' (ID: %s). Player %s receives nothing.",
@@ -335,13 +337,13 @@ public class MissionManager {
 
     public void completeMission(Player player, Mission mission) {
         String playerName = player.getName();
-        UUID playerUUID = player.getUniqueId();
+        // UUID playerUUID = player.getUniqueId(); // Already available
         String missionName = mission != null ? mission.getName() : "null_mission_object";
         String missionId = mission != null ? mission.getId() : "null_mission_id";
         plugin.getLogger().info(String.format("[MissionManager] Attempting to complete mission '%s' (ID: %s) for player %s (UUID: %s).",
-                missionName, missionId, playerName, playerUUID));
+                missionName, missionId, playerName, player.getUniqueId()));
 
-        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(playerUUID);
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         if (mission == null || playerData.getActiveMissionProgress(missionId) == null) {
             plugin.getLogger().warning(String.format("[MissionManager] completeMission called for %s, but mission '%s' is null or not active for player.", playerName, missionId));
             return;
@@ -352,7 +354,7 @@ public class MissionManager {
 
         player.sendMessage(ChatColor.GREEN + "Mission '" + mission.getName() + "' completed! Rewards received.");
         plugin.getLogger().info(String.format("[MissionManager] Mission '%s' (ID: %s) successfully completed by player %s (UUID: %s).",
-                missionName, missionId, playerName, playerUUID));
+                missionName, missionId, playerName, player.getUniqueId()));
     }
 
     public void abandonMission(Player player, String missionId) {
@@ -379,18 +381,28 @@ public class MissionManager {
         plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) attempting to reset progress for mission '%s' (ID: %s).",
                 player.getName(), player.getUniqueId(), missionName, missionId));
 
-        if (playerData.resetMission(missionId)) { // Assuming PlayerMissionData.resetMission handles removal from active and cooldowns
+        // Check if there's any progress to reset
+        boolean wasActive = playerData.getActiveMissionProgress(missionId) != null;
+        boolean wasCompleted = playerData.hasCompletedMission(missionId);
+        boolean wasOnCooldown = playerData.isMissionOnCooldown(missionId);
+
+        if (wasActive || wasCompleted || wasOnCooldown) {
+            playerData.removeActiveMission(missionId);      // Remove from active
+            playerData.removeCompletedMission(missionId); // Remove from completed
+            playerData.removeMissionCooldown(missionId);  // Remove from cooldowns
+
             player.sendMessage(ChatColor.YELLOW + "Progress for mission '" + missionName + "' has been reset.");
-            plugin.getLogger().info(String.format("[MissionManager] Player %s successfully reset progress for mission '%s' (ID: %s).", player.getName(), missionName, missionId));
+            plugin.getLogger().info(String.format("[MissionManager] Player %s successfully reset progress for mission '%s' (ID: %s). Status before reset - Active: %b, Completed: %b, Cooldown: %b",
+                    player.getName(), missionName, missionId, wasActive, wasCompleted, wasOnCooldown));
         } else {
-            player.sendMessage(ChatColor.RED + "Could not reset progress for mission '" + missionName + "'. It might not be active or completed.");
-            plugin.getLogger().warning(String.format("[MissionManager] Player %s failed to reset mission '%s' (ID: %s): Not active or not completed, or no progress to reset.",
+            player.sendMessage(ChatColor.RED + "Could not reset progress for mission '" + missionName + "'. No active progress, completion, or cooldown found.");
+            plugin.getLogger().warning(String.format("[MissionManager] Player %s failed to reset mission '%s' (ID: %s): No active, completed, or cooldown status found to reset.",
                     player.getName(), missionName, missionId));
         }
     }
 
 
-    public boolean isMissionComplete(Player player, Mission mission) { // This is a check method, extensive logging might be too much.
+    public boolean isMissionComplete(Player player, Mission mission) {
         if (mission == null) return false;
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         PlayerMissionProgress progress = playerData.getActiveMissionProgress(mission.getId());

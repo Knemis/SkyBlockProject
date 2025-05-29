@@ -33,8 +33,8 @@ public class ShopAdminGUIManager {
     public static final Component SHOP_ADMIN_TITLE = Component.text("Mağaza Yönetimi", Style.style(NamedTextColor.DARK_GREEN, TextDecoration.BOLD));
 
     // Constants for slot numbers in the admin GUI
-    private static final int DISPLAY_NAME_SLOT = 11;
-    private static final int PRICE_SLOT = 13;
+    public static final int DISPLAY_NAME_SLOT = 11;
+    public static final int PRICE_SLOT = 13;
     private static final int INFO_SLOT = 4; // General info/current item display
     // Add more slots as needed for future functions
 
