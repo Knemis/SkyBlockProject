@@ -101,84 +101,98 @@ public class ShopStorage {
 
     public void saveShop(Shop shop) {
         if (shop == null || shop.getLocation() == null) {
-            plugin.getLogger().warning("Shop or location to save is null.");
+            plugin.getLogger().warning("[ShopStorage] saveShop called but shop or its location is null. Shop: " + shop);
             return;
         }
         String locString = Shop.locationToString(shop.getLocation());
         if (locString.isEmpty()) {
-            plugin.getLogger().warning("Shop location could not be converted to string, cannot save: Owner UUID " + shop.getOwnerUUID());
+            plugin.getLogger().warning(String.format("[ShopStorage] Shop location could not be converted to string for shop ID %s (Owner: %s), cannot save.",
+                    shop.getShopId(), shop.getOwnerUUID()));
             return;
         }
+        plugin.getLogger().info(String.format("[ShopStorage] Attempting to save shop ID %s at %s.", shop.getShopId(), locString));
         String path = "shops." + locString;
 
-        shopsConfig.set(path, shop.serialize()); // Use the serialize method of the Shop object
-        saveConfigFile();
-        plugin.getLogger().fine("Shop (" + locString + ") saved/updated to shops.yml file.");
+        try {
+            shopsConfig.set(path, shop.serialize());
+            saveConfigFile(); // This method already logs its own success/failure at FINE/SEVERE
+            plugin.getLogger().info(String.format("[ShopStorage] Shop ID %s at %s successfully saved/updated to shops.yml.", shop.getShopId(), locString));
+        } catch (Exception e) {
+            plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to save shop ID %s at %s due to an exception during serialization or saving config.",
+                    shop.getShopId(), locString), e);
+        }
     }
 
     public void saveAllShops(Map<Location, Shop> shopsToSave) {
+        if (shopsConfig == null) {
+            plugin.getLogger().severe("[ShopStorage] Cannot save all shops, shopsConfig is null!");
+            return;
+        }
         if (shopsToSave == null) {
-            plugin.getLogger().warning("Attempted to save all shops, but the provided map was null.");
-            shopsConfig.set("shops", null); // Clear existing shops in config if map is null
+            plugin.getLogger().warning("[ShopStorage] Attempted to save all shops, but the provided map was null. Clearing shops in config.");
+            shopsConfig.set("shops", null);
             saveConfigFile();
             return;
         }
-        if (shopsConfig == null) {
-            plugin.getLogger().severe("Cannot save all shops, shopsConfig is null!");
-            return;
-        }
 
-        // Clear the existing "shops" section before repopulating
-        // This ensures that shops removed from activeShops in memory are also removed from the file.
-        shopsConfig.set("shops", null);
+        plugin.getLogger().info(String.format("[ShopStorage] Attempting to save all %d shops.", shopsToSave.size()));
+        shopsConfig.set("shops", null); // Clear existing section to remove deleted shops
 
         if (shopsToSave.isEmpty()) {
-            plugin.getLogger().info("No active shops to save to shops.yml.");
+            plugin.getLogger().info("[ShopStorage] No active shops to save to shops.yml.");
         } else {
-            plugin.getLogger().info("Saving " + shopsToSave.size() + " active shops to shops.yml...");
+            int savedCount = 0;
             for (Shop shop : shopsToSave.values()) {
                 if (shop == null || shop.getLocation() == null) {
-                    plugin.getLogger().warning("Skipping save for a null shop or shop with null location during saveAllShops.");
+                    plugin.getLogger().warning("[ShopStorage] Skipping save for a null shop or shop with null location during saveAllShops.");
                     continue;
                 }
                 String locString = Shop.locationToString(shop.getLocation());
                 if (locString.isEmpty()) {
-                    plugin.getLogger().warning("Shop location could not be converted to string for shop owner: " + shop.getOwnerUUID() + ". Shop not saved.");
+                    plugin.getLogger().warning(String.format("[ShopStorage] Shop location could not be converted to string for shop ID %s (Owner: %s) during saveAllShops. Shop not saved.",
+                            shop.getShopId(), shop.getOwnerUUID()));
                     continue;
                 }
                 String path = "shops." + locString;
-                shopsConfig.set(path, shop.serialize());
+                try {
+                    shopsConfig.set(path, shop.serialize());
+                    savedCount++;
+                } catch (Exception e) {
+                     plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to serialize shop ID %s at %s during saveAllShops.",
+                            shop.getShopId(), locString), e);
+                }
             }
-            plugin.getLogger().info(shopsToSave.size() + " shops prepared for saving.");
+            plugin.getLogger().info(String.format("[ShopStorage] %d shops prepared for saving. (Total attempted: %d)", savedCount, shopsToSave.size()));
         }
-        saveConfigFile(); // Save all changes to disk
+        saveConfigFile(); // This logs actual file write success/failure
     }
 
 
-    @SuppressWarnings("unchecked") // For ItemStack deserialization
+    @SuppressWarnings("unchecked")
     public Map<Location, Shop> loadShops() {
+        plugin.getLogger().info("[ShopStorage] Attempting to load shops from shops.yml...");
         Map<Location, Shop> loadedShops = new HashMap<>();
         try {
-            shopsConfig.load(shopsFile); // Read the most current data from the file on every load
+            shopsConfig.load(shopsFile);
         } catch (IOException | InvalidConfigurationException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not read shops.yml while loading shops. Trying from backup.", e);
+            plugin.getLogger().log(Level.SEVERE, "[ShopStorage] Could not read shops.yml while loading shops. Attempting to load from backup.", e);
             if (shopsBackupFile.exists()) {
                 try {
                     shopsConfig.load(shopsBackupFile);
-                    plugin.getLogger().info(shopsBackupFile.getName() + " successfully loaded from backup (loadShops).");
+                    plugin.getLogger().info("[ShopStorage] Successfully loaded shops from backup file: " + shopsBackupFile.getName());
                 } catch (Exception ex) {
-                    plugin.getLogger().log(Level.SEVERE, "Loading from backup file also failed (loadShops)!", ex);
-                    return loadedShops;
+                    plugin.getLogger().log(Level.SEVERE, "[ShopStorage] Loading from backup file " + shopsBackupFile.getName() + " also failed!", ex);
+                    return loadedShops; // Return empty map, as primary and backup failed
                 }
             } else {
-                plugin.getLogger().warning("Backup file (loadShops) not found.");
-                return loadedShops;
+                plugin.getLogger().warning("[ShopStorage] Backup file " + shopsBackupFile.getName() + " not found. Cannot load shops.");
+                return loadedShops; // Return empty map
             }
         }
 
         ConfigurationSection shopsSection = shopsConfig.getConfigurationSection("shops");
         if (shopsSection == null) {
-            plugin.getLogger().info("'shops' section not found or empty in shops.yml. No shops loaded.");
+            plugin.getLogger().info("[ShopStorage] 'shops' section not found or empty in shops.yml. No shops loaded.");
             return loadedShops;
         }
 
@@ -186,53 +200,55 @@ public class ShopStorage {
         int failedToLoad = 0;
 
         for (String locStringKey : shopsSection.getKeys(false)) {
-            // FIX: 'shopsSection' will be used instead of 'shopsShops'.
             ConfigurationSection shopMapSection = shopsSection.getConfigurationSection(locStringKey);
             if (shopMapSection == null) {
-                plugin.getLogger().warning("Could not read shop data (null section) under key: " + locStringKey + ".");
+                plugin.getLogger().warning(String.format("[ShopStorage] Corrupt shop entry: Could not read shop data (null section) under key: %s.", locStringKey));
                 failedToLoad++;
                 continue;
             }
             Map<String, Object> shopDataMap = shopMapSection.getValues(false);
-
-            // The Shop.deserialize method directly takes a Map and reads the "location" string from within it.
-            // So, there's no need to pass locStringKey separately to deserialize,
-            // but we must ensure that the "location" key is in the map within Shop.deserialize().
-            // The Shop.serialize() method adds the "location" key.
-
             Shop shop = null;
             try {
+                // Pass the key itself for context in case location deserialization fails
+                shopDataMap.put("_locStringKeyForDebug", locStringKey);
                 shop = Shop.deserialize(shopDataMap);
-                if (shop != null && shop.getLocation() != null) { // Ensure location was successfully deserialized
+                if (shop != null && shop.getLocation() != null) {
                     loadedShops.put(shop.getLocation(), shop);
                     successfullyLoaded++;
+                     plugin.getLogger().fine(String.format("[ShopStorage] Successfully deserialized shop at key %s, ID %s.", locStringKey, shop.getShopId()));
                 } else {
-                    plugin.getLogger().warning("Shop could not be deserialized or location is incorrect: " + locStringKey + (shop == null ? " (Shop returned null)" : " (Location null)"));
+                    plugin.getLogger().warning(String.format("[ShopStorage] Corrupt shop entry: Shop could not be fully deserialized or location is incorrect for key: %s. Shop object: %s",
+                            locStringKey, (shop == null ? "null" : "location_null")));
                     failedToLoad++;
                 }
             } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Critical error while loading shop from shops.yml: " + locStringKey, e);
+                plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Critical error while deserializing shop from shops.yml at key: %s. Data: %s",
+                        locStringKey, shopDataMap), e);
                 failedToLoad++;
             }
         }
-        plugin.getLogger().info(successfullyLoaded + " shops successfully loaded. " + failedToLoad + " shops could not be loaded.");
+        plugin.getLogger().info(String.format("[ShopStorage] Shop loading complete. Successfully loaded: %d shops. Failed/Corrupt entries: %d shops.", successfullyLoaded, failedToLoad));
         return loadedShops;
     }
 
     public void removeShop(Location location) {
-        if (location == null) return;
-        String locString = Shop.locationToString(location);
-        if (locString.isEmpty()) {
-            plugin.getLogger().warning("Invalid location string for shop to be deleted.");
+        if (location == null) {
+            plugin.getLogger().warning("[ShopStorage] removeShop called with null location.");
             return;
         }
+        String locString = Shop.locationToString(location);
+        if (locString.isEmpty()) {
+            plugin.getLogger().warning("[ShopStorage] Invalid location string for shop to be deleted. Location object: " + location.toString());
+            return;
+        }
+        plugin.getLogger().info(String.format("[ShopStorage] Attempting to remove shop data for location %s from shops.yml.", locString));
 
         if (shopsConfig.contains("shops." + locString)) {
             shopsConfig.set("shops." + locString, null);
-            saveConfigFile();
-            plugin.getLogger().info("Shop data (" + locString + ") deleted from shops.yml file.");
+            saveConfigFile(); // This logs success/failure of file write
+            plugin.getLogger().info(String.format("[ShopStorage] Shop data for location %s successfully marked for deletion in shops.yml and config saved.", locString));
         } else {
-            plugin.getLogger().warning("Shop to be deleted (" + locString + ") not found in shops.yml file.");
+            plugin.getLogger().warning(String.format("[ShopStorage] Shop data for location %s to be deleted was not found in shops.yml.", locString));
         }
     }
 }

@@ -44,36 +44,51 @@ public class ShopManager {
     public ShopManager(SkyBlockProject plugin) {
         this.plugin = plugin;
         this.shopStorage = new ShopStorage(plugin);
-        this.activeShops = this.shopStorage.loadShops();
+        this.activeShops = this.shopStorage.loadShops(); // ShopStorage.loadShops() should handle its own logging for load count/failures
         this.pendingShops = new HashMap<>();
-        if (this.activeShops != null && !this.activeShops.isEmpty()) {
-            plugin.getLogger().info(this.activeShops.size() + " active shops loaded into ShopManager.");
-        } else if (this.activeShops != null) {
-            plugin.getLogger().info("No active shops found to load into ShopManager.");
+        if (this.activeShops != null) { // activeShops can be an empty map from loadShops, not null
+            plugin.getLogger().info(String.format("[ShopManager] Initialized with %d active shops from storage.", this.activeShops.size()));
         } else {
-            plugin.getLogger().warning("ShopStorage.loadShops() returned null, active shops could not be loaded.");
+            // This case should ideally not happen if loadShops returns an empty map on failure instead of null.
+            // However, if it can be null due to a deeper issue in ShopStorage:
+            plugin.getLogger().severe("[ShopManager] Initialization failed: activeShops is null after attempting to load from ShopStorage.");
+            // Consider initializing activeShops to a new HashMap to prevent NullPointerExceptions later.
+            // this.activeShops = new HashMap<>();
         }
     }
 
     public Shop initiateShopCreation(Location location, Player player, ShopMode initialShopMode) {
+        String locStr = Shop.locationToString(location);
+        plugin.getLogger().info(String.format("[ShopManager] Attempting to initiate shop creation at %s for player %s (UUID: %s) with mode %s.",
+                locStr, player.getName(), player.getUniqueId(), initialShopMode));
+
         if (location == null || player == null) {
-            plugin.getLogger().warning("initiateShopCreation: Location or player is null.");
+            plugin.getLogger().warning(String.format("[ShopManager] initiateShopCreation failed: Location (%s) or player (%s) is null.", locStr, player));
             return null;
         }
         if (isShop(location)) {
             Shop existing = getActiveShop(location);
-            if (existing == null) existing = getPendingShop(location);
-            if (existing != null && existing.getOwnerUUID().equals(player.getUniqueId())) {
-                player.sendMessage(ChatColor.YELLOW + "Bu sandıkta zaten bir kurulumunuz veya aktif bir dükkanınız var.");
-                return existing;
-            } else if (existing != null) {
-                player.sendMessage(ChatColor.RED + "Bu sandık zaten başkası tarafından dükkan olarak kullanılıyor.");
-                return null;
+            if (existing == null) existing = getPendingShop(location); // Check pending too
+            if (existing != null) {
+                if (existing.getOwnerUUID().equals(player.getUniqueId())) {
+                    player.sendMessage(ChatColor.YELLOW + "Bu sandıkta zaten bir kurulumunuz veya aktif bir dükkanınız var.");
+                    plugin.getLogger().info(String.format("[ShopManager] Player %s attempting to re-initiate shop at %s, which they already own (State: %s). Returning existing.",
+                            player.getName(), locStr, (existing.isSetupComplete() ? "ACTIVE" : "PENDING")));
+                    return existing; // Allow resuming setup or managing existing shop.
+                } else {
+                    OfflinePlayer owner = Bukkit.getOfflinePlayer(existing.getOwnerUUID());
+                    String ownerName = owner.getName() != null ? owner.getName() : existing.getOwnerUUID().toString();
+                    player.sendMessage(ChatColor.RED + "Bu sandık zaten başkası ("+ownerName+") tarafından dükkan olarak kullanılıyor.");
+                    plugin.getLogger().warning(String.format("[ShopManager] Player %s failed to initiate shop at %s: Already a shop owned by %s.",
+                            player.getName(), locStr, ownerName));
+                    return null;
+                }
             }
         }
         Shop newShop = new Shop(location, player.getUniqueId(), initialShopMode);
         pendingShops.put(location, newShop);
-        plugin.getLogger().info("Pending shop initiated at " + Shop.locationToString(location) + " for owner " + player.getName() + " with mode " + initialShopMode);
+        plugin.getLogger().info(String.format("[ShopManager] Pending shop initiated successfully: ID %s at %s for owner %s (UUID: %s) with mode %s.",
+                newShop.getShopId(), locStr, player.getName(), player.getUniqueId(), initialShopMode));
         return newShop;
     }
 
@@ -92,32 +107,36 @@ public class ShopManager {
 
 
     public void finalizeShopSetup(Location location, Player actor, ItemStack initialStockItem) {
+        String locStr = Shop.locationToString(location);
+        plugin.getLogger().info(String.format("[ShopManager] Attempting to finalize shop setup at %s for player %s (UUID: %s). Initial stock: %s",
+                locStr, actor.getName(), actor.getUniqueId(), initialStockItem != null ? initialStockItem.toString() : "null"));
+
         if (location == null || actor == null) {
-            plugin.getLogger().severe("finalizeShopSetup: Location or actor is null!");
+            plugin.getLogger().severe(String.format("[ShopManager] finalizeShopSetup failed: Location (%s) or actor (%s) is null!", locStr, actor));
             if (actor != null) actor.sendMessage(ChatColor.RED + "Dükkan kurulumu bir iç hata nedeniyle başarısız oldu (null parametreler).");
-            if (location != null) pendingShops.remove(location);
+            if (location != null) pendingShops.remove(location); // Clean up pending shop if location is known
             return;
         }
 
         Shop pendingShop = pendingShops.get(location);
         if (pendingShop == null) {
-            plugin.getLogger().warning("Sonlandırılacak bekleyen dükkan bulunamadı: " + Shop.locationToString(location));
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed: No pending shop found at %s for player %s.", locStr, actor.getName()));
             actor.sendMessage(ChatColor.RED + "Dükkan kurulum bilgisi bulunamadı. Lütfen baştan başlayın.");
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
 
         if (pendingShop.getShopMode() == null) {
-            plugin.getLogger().warning("Dükkan modu ayarlanmamış: " + Shop.locationToString(location));
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Shop mode not set.", locStr, actor.getName()));
             actor.sendMessage(ChatColor.RED + "Dükkan modu seçilmedi! Kurulum iptal edildi.");
-            pendingShops.remove(location);
+            pendingShops.remove(location); // Clean up
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
 
         ItemStack templateItem = pendingShop.getTemplateItemStack();
         if (templateItem == null || templateItem.getType() == Material.AIR) {
-            plugin.getLogger().warning("Şablon eşya ayarlanmamış: " + Shop.locationToString(location));
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Template item not set.", locStr, actor.getName()));
             actor.sendMessage(ChatColor.RED + "Satılacak/alınacak eşya ayarlanmadı! Kurulum iptal edildi.");
             pendingShops.remove(location);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
@@ -125,7 +144,8 @@ public class ShopManager {
         }
 
         if (pendingShop.getBundleAmount() <= 0) {
-            plugin.getLogger().warning("Paket miktarı geçersiz: " + Shop.locationToString(location) + " Miktar: " + pendingShop.getBundleAmount());
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Invalid bundle amount %d.",
+                    locStr, actor.getName(), pendingShop.getBundleAmount()));
             actor.sendMessage(ChatColor.RED + "İşlem için geçersiz paket miktarı! Kurulum iptal edildi.");
             pendingShops.remove(location);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
@@ -136,69 +156,73 @@ public class ShopManager {
         boolean hasValidSellPrice = pendingShop.getSellPrice() >= 0;
 
         if (!hasValidBuyPrice && !hasValidSellPrice) {
-            plugin.getLogger().warning("Ne alış ne de satış fiyatı geçerli: " + Shop.locationToString(location) + " AlışF: " + pendingShop.getBuyPrice() + " SatışF: " + pendingShop.getSellPrice());
+            plugin.getLogger().warning(String.format("[ShopManager] Finalization failed for shop %s (Player: %s): Neither buy nor sell price is valid. Buy: %.2f, Sell: %.2f",
+                    locStr, actor.getName(), pendingShop.getBuyPrice(), pendingShop.getSellPrice()));
             actor.sendMessage(ChatColor.RED + "Alış veya satış için geçerli bir fiyat belirlenmedi! Kurulum iptal edildi.");
             pendingShops.remove(location);
             if (initialStockItem != null && initialStockItem.getType() != Material.AIR) actor.getInventory().addItem(initialStockItem.clone());
             return;
         }
 
+        String shopId = pendingShop.getShopId(); // Get ID before removing from pending
         pendingShops.remove(location);
         pendingShop.setSetupComplete(true);
-        saveShop(pendingShop);
+        saveShop(pendingShop); // This will log the save operation
 
         boolean needsStocking = initialStockItem != null && initialStockItem.getType() != Material.AIR;
-        boolean canBeStocked = pendingShop.getBuyPrice() != -1;
+        boolean canBeStockedByPlayerBuying = pendingShop.getBuyPrice() != -1; // Shop sells to player (player buys)
 
-        if (needsStocking && canBeStocked) {
+        if (needsStocking && canBeStockedByPlayerBuying) {
             Block shopBlock = location.getBlock();
             if (shopBlock.getState() instanceof Chest) {
                 Chest chest = (Chest) shopBlock.getState();
                 Inventory chestInventory = chest.getInventory();
-                chestInventory.clear();
+                chestInventory.clear(); // Clear any items that might have been left from quantity GUI
                 chestInventory.addItem(initialStockItem.clone());
-                plugin.getLogger().info("Başlangıç stoğu (" + initialStockItem.getAmount() + "x " +
-                        initialStockItem.getType() + ") dükkana eklendi: " + Shop.locationToString(location));
+                plugin.getLogger().info(String.format("[ShopManager] Initial stock (%s) added to shop %s at %s.",
+                        initialStockItem.toString(), shopId, locStr));
             } else {
-                plugin.getLogger().severe("Dükkan bloğu (" + Shop.locationToString(location) + ") sandık değil. Başlangıç stoğu eklenemedi.");
+                plugin.getLogger().severe(String.format("[ShopManager] Shop block at %s is not a Chest for shop %s. Initial stock not added.", locStr, shopId));
             }
-        } else if (needsStocking && !canBeStocked) {
-            plugin.getLogger().info("Başlangıç stoğu (" + Shop.locationToString(location) + ") dükkan sadece alış yapacağı için eklenmedi (buyPrice=-1).");
+        } else if (needsStocking && !canBeStockedByPlayerBuying) {
+            plugin.getLogger().info(String.format("[ShopManager] Initial stock for shop %s at %s not added as shop is sell-only (buyPrice is -1).", shopId, locStr));
         }
 
-        plugin.getLogger().info("Dükkan sonlandırıldı (" + actor.getName() + "): " + Shop.locationToString(location) +
-                " | Eşya: " + pendingShop.getTemplateItemStack().getType() +
-                " PaketMiktarı: " + pendingShop.getBundleAmount() +
-                " AlışFiyatı: " + pendingShop.getBuyPrice() +
-                " SatışFiyatı: " + pendingShop.getSellPrice() +
-                (needsStocking && canBeStocked ? " | Stok Eklendi: " + initialStockItem.getAmount() + "x " + initialStockItem.getType() : " | Stoksuz veya Sadece Alış"));
+        plugin.getLogger().info(String.format("[ShopManager] Shop setup finalized: ID %s by %s at %s. Item: %s, QtyPerBundle: %d, BuyPrice: %.2f, SellPrice: %.2f, Mode: %s. Stocked: %b",
+                shopId, actor.getName(), locStr, templateItem.getType(), pendingShop.getBundleAmount(),
+                pendingShop.getBuyPrice(), pendingShop.getSellPrice(), pendingShop.getShopMode(), (needsStocking && canBeStockedByPlayerBuying)));
         actor.sendMessage(ChatColor.GREEN + "Dükkanınız başarıyla kuruldu!");
     }
 
     public void saveShop(Shop shop) {
         if (shop == null || shop.getLocation() == null) {
-            plugin.getLogger().warning("saveShop çağrıldı ancak dükkan veya konumu null.");
+            plugin.getLogger().warning("[ShopManager] saveShop called but shop or its location is null.");
             return;
         }
         activeShops.put(shop.getLocation(), shop);
-        shopStorage.saveShop(shop);
-        updateAttachedSign(shop);
-        plugin.getLogger().info("Dükkan kaydedildi/güncellendi: " + Shop.locationToString(shop.getLocation()));
+        shopStorage.saveShop(shop); // ShopStorage should log its own success/failure for saving to file
+        updateAttachedSign(shop); // Sign update might log fine details
+        plugin.getLogger().info(String.format("[ShopManager] Shop %s at %s saved/updated in activeShops and persistent storage requested.",
+                shop.getShopId(), Shop.locationToString(shop.getLocation())));
     }
 
     public void cancelShopSetup(UUID playerId) {
-        if (playerId == null) return;
+        if (playerId == null) {
+            plugin.getLogger().warning("[ShopManager] cancelShopSetup called with null playerId.");
+            return;
+        }
 
         Location chestLocation = plugin.getPlayerShopSetupState().remove(playerId);
-        // **** DÜZELTME: getPlayerWaitingForSetupInput kullanıldı ****
-        plugin.getPlayerWaitingForSetupInput().remove(playerId);
+        plugin.getPlayerWaitingForSetupInput().remove(playerId); // Use the correct map key
         ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
+        String locStr = Shop.locationToString(chestLocation);
 
         if (chestLocation != null) {
-            pendingShops.remove(chestLocation);
-            plugin.getLogger().info("Oyuncu " + playerId + " için dükkan kurulumu iptal edildi (Konum: " + Shop.locationToString(chestLocation) + ").");
+            Shop pending = pendingShops.remove(chestLocation);
+            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s. Pending shop (ID: %s) removed.",
+                    playerId, locStr, (pending != null ? pending.getShopId() : "N/A")));
         } else {
-            plugin.getLogger().info("Oyuncu " + playerId + " için dükkan kurulumu iptal edildi (Konum bilgisi yoktu).");
+            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancellation for player %s (no specific location found in state, possibly already cleaned or state error).", playerId));
         }
 
         if (initialStock != null && initialStock.getType() != Material.AIR) {
@@ -206,8 +230,11 @@ public class ShopManager {
             if (player != null && player.isOnline()) {
                 player.getInventory().addItem(initialStock.clone());
                 player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock, 15) + ChatColor.YELLOW + ") envanterinize iade edildi.");
+                plugin.getLogger().info(String.format("[ShopManager] Initial stock %s returned to player %s after setup cancellation for %s.",
+                        initialStock.toString(), player.getName(), locStr));
             } else {
-                plugin.getLogger().warning("Oyuncu " + playerId + " offline olduğu için başlangıç stoğu iade edilemedi (Kurulum iptali). Eşya: " + initialStock.toString());
+                plugin.getLogger().warning(String.format("[ShopManager] Could not return initial stock %s to player %s (offline or null) after setup cancellation for %s.",
+                        initialStock.toString(), playerId, locStr));
             }
         }
     }

@@ -147,49 +147,58 @@ public class IslandLifecycleManager {
     }
 
     public void createIsland(Player player) {
+        plugin.getLogger().info(String.format("Attempting to create island for player %s (UUID: %s)", player.getName(), player.getUniqueId()));
         if (islandDataHandler.playerHasIsland(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "Zaten bir adanız var!");
+            plugin.getLogger().warning(String.format("Island creation failed for %s: Player already has an island.", player.getName()));
             return;
         }
         World skyblockWorld = islandDataHandler.getSkyblockWorld();
         if (skyblockWorld == null) {
             player.sendMessage(ChatColor.RED + "Skyblock dünyası henüz yüklenmedi. Lütfen bir yetkiliye bildirin.");
-            plugin.getLogger().severe("createIsland çağrıldığında skyblockWorld (IslandDataHandler'dan) null idi!");
+            plugin.getLogger().severe("createIsland called but skyblockWorld (from IslandDataHandler) was null!");
+            plugin.getLogger().warning(String.format("Island creation failed for %s: Skyblock world is not loaded.", player.getName()));
             return;
         }
         if (!schematicFile.exists()) {
             player.sendMessage(ChatColor.RED + "Ada şematiği bulunamadı ('" + schematicFile.getPath() + "'). Lütfen bir yetkiliye bildirin.");
+            plugin.getLogger().severe("Island schematic file not found at: " + schematicFile.getPath());
+            plugin.getLogger().warning(String.format("Island creation failed for %s: Schematic file missing.", player.getName()));
             return;
         }
 
-        // DÜZELTME: newIslandName metodun başında tanımlanıyor.
         String newIslandName = defaultIslandNamePrefix + "-" + player.getName();
 
-        // DÜZELTME: Ekonomik işlem ada oluşturulmadan önce yapılıyor.
         double creationCost = plugin.getConfig().getDouble("island.creation-cost", 0.0);
         if (this.economy != null && creationCost > 0) {
             if (economy.getBalance(player) < creationCost) {
                 player.sendMessage(ChatColor.RED + "Ada oluşturmak için yeterli paran yok! Gereken: " + economy.format(creationCost));
-                return; // Para yoksa işlemi burada sonlandır
+                plugin.getLogger().warning(String.format("Island creation failed for %s: Insufficient funds. Needed: %s, Has: %s",
+                        player.getName(), economy.format(creationCost), economy.format(economy.getBalance(player))));
+                return;
             }
             EconomyResponse r = economy.withdrawPlayer(player, creationCost);
             if (r.transactionSuccess()) {
                 player.sendMessage(ChatColor.GREEN + economy.format(creationCost) + " ada oluşturma ücreti olarak hesabından çekildi.");
             } else {
                 player.sendMessage(ChatColor.RED + "Ada oluşturma ücreti çekilirken bir hata oluştu: " + r.errorMessage);
-                return; // Para çekilemezse işlemi burada sonlandır
+                plugin.getLogger().warning(String.format("Island creation failed for %s: Economy transaction error: %s", player.getName(), r.errorMessage));
+                return;
             }
         }
 
         player.sendMessage(ChatColor.YELLOW + "Adanız oluşturuluyor... Bu işlem birkaç saniye sürebilir, lütfen bekleyin.");
+        plugin.getLogger().info(String.format("Proceeding with island creation for %s. Cost: %s. Name: %s", player.getName(), creationCost, newIslandName));
         final int actualIslandX = plugin.getNextIslandXAndIncrement();
         final Location islandBaseLocation = new Location(skyblockWorld, actualIslandX, 100, 0);
+        plugin.getLogger().info(String.format("Calculated island base location for %s: X=%d, Y=100, Z=0", player.getName(), actualIslandX));
 
         try {
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
             if (format == null) {
                 player.sendMessage(ChatColor.RED + "Ada oluşturulurken bir hata oluştu. (Şematik Formatı tanınamadı)");
-                plugin.getLogger().severe("Şematik formatı tanınamadı: " + schematicFile.getName());
+                plugin.getLogger().severe("Schematic format could not be determined for file: " + schematicFile.getName());
+                plugin.getLogger().warning(String.format("Island creation failed for %s: Invalid schematic format.", player.getName()));
                 return;
             }
 
@@ -202,11 +211,13 @@ public class IslandLifecycleManager {
             com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld);
             if (adaptedWorld == null) {
                 player.sendMessage(ChatColor.RED + "Ada oluşturulurken dünya adaptasyonunda bir hata oluştu.");
-                plugin.getLogger().severe("createIsland: Skyblock dünyası WorldEdit'e adapte edilemedi.");
+                plugin.getLogger().severe("createIsland: Could not adapt Skyblock world to WorldEdit world.");
+                plugin.getLogger().warning(String.format("Island creation failed for %s: WorldEdit world adaptation failed.", player.getName()));
                 return;
             }
 
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(adaptedWorld)) {
+                plugin.getLogger().info(String.format("Pasting schematic for %s at %s", player.getName(), islandBaseLocation.toString()));
                 editSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(editSession)
@@ -271,112 +282,154 @@ public class IslandLifecycleManager {
                     }
                     player.teleport(teleportLocation);
                     player.sendMessage(ChatColor.GREEN + "Adanız başarıyla oluşturuldu ve ışınlandınız!");
-                    plugin.getLogger().info(player.getName() + " için ada başarıyla oluşturuldu ve ışınlandı: " + teleportLocation);
+                    plugin.getLogger().info(String.format("Successfully created island for player %s (UUID: %s), Island ID: %s, at Location: %s. Player teleported.",
+                            player.getName(), player.getUniqueId(), newIsland.getRegionId(), islandBaseLocation.toString()));
                 }
             }.runTaskLater(plugin, 1L);
 
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, "Ada oluşturma sırasında genel bir hata oluştu (Oyuncu: " + player.getName() + ")", e);
+            plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred during island creation for player " + player.getName() + " (UUID: " + player.getUniqueId() + ")", e);
             player.sendMessage(ChatColor.RED + "Ada oluşturulurken çok beklenmedik bir hata oluştu. Lütfen yetkililere bildirin.");
-            // Eğer bir hata oluşursa, daha önce çekilen parayı iade etmeyi düşünebilirsin.
-            // Şimdilik bu eklenmedi.
-            return; // Hata durumunda metoddan çık.
+            // Consider refunding creationCost here if applicable
+            plugin.getLogger().warning(String.format("Island creation failed for %s due to an exception. Cost %f might need refunding.", player.getName(), creationCost));
+            return;
         }
-        // DÜZELTME: Ada verisi zaten try bloğu içinde kaydedildi, disk kaydı da orada veya sonda bir kere yapılmalı.
-        // Tekrar addOrUpdateIslandData ve gereksiz Island nesnesi oluşturma kaldırıldı.
-        islandDataHandler.saveChangesToDisk(); // Tüm işlemler başarılıysa en sonda disk'e kaydet.
+        islandDataHandler.saveChangesToDisk();
+        plugin.getLogger().info("Island data saved to disk after island creation for " + player.getName());
     }
 
-    // ... (deleteIsland, resetIsland, grantOwnerBypassPermissions, revokeOwnerBypassPermissions metodları aynı kalacak) ...
     public boolean deleteIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
-        if (island == null) { player.sendMessage(ChatColor.RED + "Silebileceğin bir adan yok!"); return false; }
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Silebileceğin bir adan yok!");
+            plugin.getLogger().warning(String.format("Player %s attempted to delete island but has none.", player.getName()));
+            return false;
+        }
         Location islandBaseLocation = island.getBaseLocation();
+        String islandId = island.getRegionId(); // For logging before it's gone
+        plugin.getLogger().info(String.format("Attempting to delete island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
+
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(ChatColor.RED + "Adanın konumu veya dünyası bulunamadı (silme işlemi için).");
-            plugin.getLogger().warning("deleteIsland: " + player.getName() + " için ada temel konumu veya dünyası null.");
+            plugin.getLogger().warning(String.format("deleteIsland: Island base location or world is null for player %s (Island ID: %s).", player.getName(), islandId));
             return false;
         }
         String worldName = islandBaseLocation.getWorld().getName();
-        String regionId = getRegionId(player.getUniqueId());
+        String regionId = getRegionId(player.getUniqueId()); // This should match islandId
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi siliniyor...");
         try {
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
             com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
             if (weWorld == null) {
-                plugin.getLogger().severe("Ada silinirken WorldEdit dünyası null geldi (adaptasyon başarısız)! Ada: " + island.getOwnerUUID());
+                plugin.getLogger().severe(String.format("Could not adapt world for island deletion (Island ID: %s, Player: %s)", islandId, player.getName()));
                 player.sendMessage(ChatColor.RED + "Ada silinirken bir dünya hatası oluştu.");
+                plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));
                 return false;
             }
 
             BlockState airState = BlockTypes.AIR != null ? BlockTypes.AIR.getDefaultState() : null;
             if (airState == null) {
-                plugin.getLogger().severe("BlockTypes.AIR null veya getDefaultState çağrılamıyor! WorldEdit düzgün yüklenmemiş olabilir. Ada silme işlemi durduruldu.");
+                plugin.getLogger().severe("BlockTypes.AIR is null or cannot get default state! WorldEdit might not be loaded correctly. Island deletion stopped for " + islandId);
                 player.sendMessage(ChatColor.RED + "Ada silinirken kritik bir WorldEdit hatası oluştu.");
+                plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit BlockTypes.AIR is null.", player.getName(), islandId));
                 return false;
             }
 
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
                 editSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), airState);
             }
-            plugin.getLogger().info(player.getName() + " adlı oyuncunun ("+island.getOwnerUUID()+") ada bölgesi temizlendi.");
+            plugin.getLogger().info(String.format("Island region %s for player %s cleared.", islandId, player.getName()));
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
                 if (regionManager.hasRegion(regionId)) {
                     regionManager.removeRegion(regionId);
-                    try { regionManager.saveChanges(); } catch (StorageException e) { plugin.getLogger().log(Level.SEVERE, "WG region silinirken kayıt hatası", e); }
+                    try { regionManager.saveChanges(); } catch (StorageException e) {
+                        plugin.getLogger().log(Level.SEVERE, "Error saving WorldGuard region changes after removing " + regionId, e);
+                    }
                 } else {
-                    plugin.getLogger().warning(player.getName() + " için silinecek WorldGuard bölgesi (" + regionId + ") bulunamadı.");
+                    plugin.getLogger().warning(String.format("WorldGuard region %s for player %s not found for deletion.", regionId, player.getName()));
                 }
             } else {
-                plugin.getLogger().severe("Ada silinirken WorldGuard RegionManager alınamadı! (Dünya: " + islandBaseLocation.getWorld().getName() + ")");
+                plugin.getLogger().severe(String.format("Could not get WorldGuard RegionManager for world %s during island deletion for %s (Island ID: %s).",
+                        islandBaseLocation.getWorld().getName(), player.getName(), islandId));
             }
 
             islandDataHandler.removeIslandData(player.getUniqueId());
-            islandDataHandler.saveChangesToDisk();
+            islandDataHandler.saveChangesToDisk(); // Ensure changes are persisted
 
             revokeOwnerBypassPermissions(player, worldName, regionId);
             player.sendMessage(ChatColor.GREEN + "Adanız başarıyla silindi.");
+            plugin.getLogger().info(String.format("Successfully deleted island %s for player %s.", islandId, player.getName()));
             return true;
 
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, player.getName() + " ("+island.getOwnerUUID()+") için ada silinirken genel hata: ", e);
+            plugin.getLogger().log(Level.SEVERE, String.format("An unexpected error occurred during island deletion for player %s (Island ID: %s)", player.getName(), islandId), e);
             player.sendMessage(ChatColor.RED + "Adanız silinirken çok beklenmedik bir hata oluştu.");
+            plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s) due to an exception.", player.getName(), islandId));
             return false;
         }
     }
 
     public boolean resetIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
-        if (island == null) { player.sendMessage(ChatColor.RED + "Sıfırlayacak adan yok."); return false;}
+        if (island == null) {
+            player.sendMessage(ChatColor.RED + "Sıfırlayacak adan yok.");
+            plugin.getLogger().warning(String.format("Player %s tried to reset island but has none.", player.getName()));
+            return false;
+        }
         Location islandBaseLocation = island.getBaseLocation();
-        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) { player.sendMessage(ChatColor.RED + "Adanın konumu/dünyası bulunamadı."); return false;}
-        if (!schematicFile.exists()) { player.sendMessage(ChatColor.RED + "Ada şematiği bulunamadı."); return false;}
+        String islandId = island.getRegionId(); // For logging
+        plugin.getLogger().info(String.format("Attempting to reset island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
+
+        if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
+            player.sendMessage(ChatColor.RED + "Adanın konumu/dünyası bulunamadı.");
+            plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Island base location or world is null.", player.getName(), islandId));
+            return false;
+        }
+        if (!schematicFile.exists()) {
+            player.sendMessage(ChatColor.RED + "Ada şematiği bulunamadı.");
+            plugin.getLogger().severe("Island schematic file not found at: " + schematicFile.getPath() + " during reset for " + islandId);
+            plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Schematic file missing.", player.getName(), islandId));
+            return false;
+        }
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.");
         try {
             com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
-            if (weWorld == null) { player.sendMessage(ChatColor.RED + "Dünya hatası (WE)."); return false; }
+            if (weWorld == null) {
+                player.sendMessage(ChatColor.RED + "Dünya hatası (WE).");
+                plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));
+                return false;
+            }
 
             BlockState airState = BlockTypes.AIR != null ? BlockTypes.AIR.getDefaultState() : null;
-            if (airState == null) { player.sendMessage(ChatColor.RED + "Blok hatası (WE)."); return false; }
+            if (airState == null) {
+                player.sendMessage(ChatColor.RED + "Blok hatası (WE).");
+                plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): WorldEdit BlockTypes.AIR is null.", player.getName(), islandId));
+                return false;
+            }
 
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
             try (EditSession clearSession = WorldEdit.getInstance().newEditSession(weWorld)) {
                 clearSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), airState);
             }
-            plugin.getLogger().info(player.getName() + " ("+island.getOwnerUUID()+") için ada bölgesi temizlendi (reset).");
+            plugin.getLogger().info(String.format("Island region %s for player %s cleared (reset).", islandId, player.getName()));
 
             Clipboard clipboard;
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
-            if (format == null) { player.sendMessage(ChatColor.RED + "Şematik format hatası."); return false; }
+            if (format == null) {
+                player.sendMessage(ChatColor.RED + "Şematik format hatası.");
+                plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Schematic format error.", player.getName(), islandId));
+                return false;
+            }
             try (FileInputStream fis = new FileInputStream(schematicFile);
                  ClipboardReader reader = format.getReader(fis)) {
                 clipboard = reader.read();
             }
             try (EditSession pasteSession = WorldEdit.getInstance().newEditSession(weWorld)) {
+                plugin.getLogger().info(String.format("Pasting schematic for island %s (Player: %s) at %s for reset.", islandId, player.getName(), islandBaseLocation.toString()));
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(pasteSession)
                         .to(BlockVector3.at(islandBaseLocation.getX(), islandBaseLocation.getY(), islandBaseLocation.getZ()))
