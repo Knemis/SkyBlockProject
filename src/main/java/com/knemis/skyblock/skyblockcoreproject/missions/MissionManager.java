@@ -30,11 +30,13 @@ public class MissionManager {
     private final Map<String, Mission> allMissions = new HashMap<>();
 
     public MissionManager(SkyBlockProject plugin) {
+        System.out.println("[TRACE] Executing MissionManager constructor");
         this.plugin = plugin;
         loadMissions();
     }
 
     private void loadMissions() {
+        System.out.println("[TRACE] Executing loadMissions");
         plugin.getLogger().info("[MissionManager] Starting to load missions...");
         File missionsFile = new File(plugin.getDataFolder(), "missions.yml");
         if (!missionsFile.exists()) {
@@ -179,6 +181,7 @@ public class MissionManager {
     // }
 
     public boolean canStartMission(Player player, Mission mission) {
+        System.out.println("[TRACE] Executing canStartMission for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         String playerName = player.getName();
         // UUID playerUUID = player.getUniqueId(); // Already available via player.getUniqueId()
         String missionName = mission != null ? mission.getName() : "null_mission_object";
@@ -235,6 +238,7 @@ public class MissionManager {
     }
 
     public boolean startMission(Player player, Mission mission) {
+        System.out.println("[TRACE] Executing startMission for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         String playerName = player.getName();
         // UUID playerUUID = player.getUniqueId(); // Already available
         String missionName = mission != null ? mission.getName() : "null_mission_object";
@@ -257,6 +261,7 @@ public class MissionManager {
     }
 
     public void giveMissionRewards(Player player, Mission mission) {
+        System.out.println("[TRACE] Executing giveMissionRewards for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         MissionReward rewards = mission.getRewards();
         String missionName = mission.getName();
         String missionId = mission.getId();
@@ -336,6 +341,7 @@ public class MissionManager {
 
 
     public void completeMission(Player player, Mission mission) {
+        System.out.println("[TRACE] Executing completeMission for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         String playerName = player.getName();
         // UUID playerUUID = player.getUniqueId(); // Already available
         String missionName = mission != null ? mission.getName() : "null_mission_object";
@@ -358,6 +364,7 @@ public class MissionManager {
     }
 
     public void abandonMission(Player player, String missionId) {
+        System.out.println("[TRACE] Executing abandonMission for player " + player.getName() + " and missionId " + missionId);
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         Mission mission = getMission(missionId); // Get mission for logging name
         String missionName = mission != null ? mission.getName() : missionId;
@@ -375,6 +382,7 @@ public class MissionManager {
     }
 
     public void resetMissionProgress(Player player, String missionId) {
+        System.out.println("[TRACE] Executing resetMissionProgress for player " + player.getName() + " and missionId " + missionId);
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         Mission mission = getMission(missionId);
         String missionName = mission != null ? mission.getName() : missionId;
@@ -402,7 +410,8 @@ public class MissionManager {
     }
 
 
-    public boolean isMissionComplete(Player player, Mission mission) { 
+    public boolean isMissionComplete(Player player, Mission mission) {
+        System.out.println("[TRACE] Executing isMissionComplete for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         if (mission == null) return false;
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         PlayerMissionProgress progress = playerData.getActiveMissionProgress(mission.getId());
@@ -412,6 +421,7 @@ public class MissionManager {
     }
 
     public void updateKillMobProgress(Player player, org.bukkit.entity.EntityType mobKilled) {
+        System.out.println("[TRACE] Executing updateKillMobProgress for player " + player.getName() + " and mob " + mobKilled.name());
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         if (playerData == null || playerData.getActiveMissions().isEmpty()) return;
 

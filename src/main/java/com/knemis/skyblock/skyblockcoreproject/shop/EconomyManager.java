@@ -16,6 +16,7 @@ public class EconomyManager {
 
     // Call this from SkyBlockProject.enableVault() after Vault is confirmed to be hooked.
     public static void setupEconomy(SkyBlockProject pluginInstance) {
+        System.out.println("[TRACE] In EconomyManager.setupEconomy, pluginInstance is " + (pluginInstance == null ? "null" : "not null"));
         if (pluginInstance == null) {
             // Fallback or critical error if plugin instance cannot be obtained
             logger = Bukkit.getLogger(); // Or Logger.getLogger(EconomyManager.class.getName())
@@ -39,19 +40,24 @@ public class EconomyManager {
     }
     
     private static Logger getLogger() {
+        System.out.println("[TRACE] In EconomyManager.getLogger, current logger is " + (logger == null ? "null" : "not null"));
         if (logger == null) {
+            System.out.println("[TRACE] Logger is null, attempting to initialize.");
             // Attempt to get logger from SkyBlockProject if it has a static instance getter
             // This is a common pattern but not guaranteed.
             try {
                 SkyBlockProject plugin = SkyBlockProject.getPlugin(SkyBlockProject.class);
                 if (plugin != null) {
                     logger = plugin.getLogger();
+                    System.out.println("[TRACE] Logger initialized from SkyBlockProject.getPlugin()");
                 } else {
                     logger = Bukkit.getLogger(); // Fallback
+                    System.out.println("[TRACE] SkyBlockProject.getPlugin() returned null, using Bukkit.getLogger()");
                     logger.warning("[EconomyManager] Could not get SkyBlockProject logger statically, using Bukkit.getLogger().");
                 }
             } catch (Exception e) {
                 logger = Bukkit.getLogger(); // Fallback
+                System.out.println("[TRACE] Exception while getting logger, using Bukkit.getLogger(). Error: " + e.getMessage());
                  logger.warning("[EconomyManager] Exception while trying to get SkyBlockProject logger, using Bukkit.getLogger(). Error: " + e.getMessage());
             }
         }
@@ -60,10 +66,12 @@ public class EconomyManager {
 
 
     public static boolean isEconomyAvailable() {
+        System.out.println("[TRACE] In EconomyManager.isEconomyAvailable, economy is " + (economy == null ? "null" : "not null"));
         return economy != null;
     }
 
     public static double getBalance(OfflinePlayer player) {
+        System.out.println("[TRACE] In EconomyManager.getBalance for player " + (player != null ? player.getName() : "null"));
         if (!isEconomyAvailable() || player == null) {
             getLogger().warning("[EconomyManager] getBalance called but economy not available or player null. Player: " + (player != null ? player.getName() : "null"));
             return 0.0;
@@ -72,6 +80,7 @@ public class EconomyManager {
     }
 
     public static boolean withdraw(OfflinePlayer player, double amount) {
+        System.out.println("[TRACE] In EconomyManager.withdraw for player " + (player != null ? player.getName() : "null") + " with amount " + amount);
         if (!isEconomyAvailable() || player == null) {
             getLogger().warning(String.format("[EconomyManager] Withdraw failed for %s (amount: %.2f): Economy not available or player null.",
                     (player != null ? player.getName() : "null_player"), amount));
@@ -94,6 +103,7 @@ public class EconomyManager {
     }
 
     public static boolean deposit(OfflinePlayer player, double amount) {
+        System.out.println("[TRACE] In EconomyManager.deposit for player " + (player != null ? player.getName() : "null") + " with amount " + amount);
         if (!isEconomyAvailable() || player == null) {
              getLogger().warning(String.format("[EconomyManager] Deposit failed for %s (amount: %.2f): Economy not available or player null.",
                     (player != null ? player.getName() : "null_player"), amount));

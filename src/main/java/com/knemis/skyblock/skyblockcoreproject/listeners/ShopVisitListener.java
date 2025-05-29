@@ -48,25 +48,36 @@ public class ShopVisitListener implements Listener {
         if (!(event.getWhoClicked() instanceof Player)) return;
 
         Player buyer = (Player) event.getWhoClicked();
+        ItemStack clickedItem = event.getCurrentItem();
+        String clickedItemName = (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) ?
+                                 LegacyComponentSerializer.legacySection().serialize(clickedItem.getItemMeta().displayName()) :
+                                 (clickedItem != null ? clickedItem.getType().name() : "null");
+        String viewTitle = event.getView().getTitle(); // Using Bukkit's getTitle
+        System.out.println("[TRACE] In ShopVisitListener.onInventoryClick by " + buyer.getName() + ". Title: '" + viewTitle + "', Slot: " + event.getRawSlot() + ", Item: " + clickedItemName);
+
 
         if (!plugin.getPlayerViewingShopLocation().containsKey(buyer.getUniqueId())) {
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: Player " + buyer.getName() + " not in viewing shop state. Returning.");
             return;
         }
 
         if (event.getClickedInventory() == buyer.getOpenInventory().getBottomInventory()) {
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: Clicked in player's bottom inventory. Allowing. Player: " + buyer.getName());
             // event.setCancelled(false); // This was the line with the previous error, ensure it's correct now.
             // InventoryClickEvent is Cancellable. If this still errors, it's an API/project setup issue.
             return; // Allow interaction with player's inventory.
         }
 
         if (event.getClickedInventory() == event.getView().getTopInventory()) {
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: Clicked in top inventory (shop GUI). Setting cancelled true. Player: " + buyer.getName());
             event.setCancelled(true);
         } else {
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: Clicked inventory is neither top nor bottom. Odd state. Returning. Player: " + buyer.getName());
             return;
         }
 
-        ItemStack clickedItem = event.getCurrentItem();
         if (clickedItem == null || clickedItem.getType() == Material.AIR) {
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: Clicked item is null or AIR. Returning. Player: " + buyer.getName());
             return;
         }
 
@@ -92,9 +103,12 @@ public class ShopVisitListener implements Listener {
         // Now you can use ShopMode directly after importing it
         ShopMode mode = shop.getShopMode(); // No need for Shop.ShopMode prefix
         int rawSlot = event.getRawSlot();
+        System.out.println("[TRACE] ShopVisitListener.onInventoryClick: Processing click for shop " + shop.getShopId() + ", Mode: " + mode + ", Slot: " + rawSlot + ", Player: " + buyer.getName());
 
         if (mode == ShopMode.BANK_CHEST) { // Direct comparison
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST mode. Player: " + buyer.getName());
             if (rawSlot == 20) { // Buy 1 Bundle
+                System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST - Buy 1 Bundle clicked. Player: " + buyer.getName());
                 if (shop.getBuyPrice() != -1) {
                     plugin.getShopManager().executePurchase(buyer, shop, 1);
                     plugin.getShopVisitGUIManager().openShopVisitMenu(buyer, shop); // Refresh
@@ -102,6 +116,7 @@ public class ShopVisitListener implements Listener {
                     buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
                 }
             } else if (rawSlot == 24) { // Sell 1 Bundle
+                System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST - Sell 1 Bundle clicked. Player: " + buyer.getName());
                 if (shop.getSellPrice() != -1) {
                     plugin.getShopManager().executeSellToShop(buyer, shop, 1);
                     plugin.getShopVisitGUIManager().openShopVisitMenu(buyer, shop); // Refresh
@@ -110,7 +125,9 @@ public class ShopVisitListener implements Listener {
                 }
             }
         } else if (mode == ShopMode.MARKET_CHEST) { // Direct comparison
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST mode. Player: " + buyer.getName());
             if (rawSlot == 20) { // Buy Custom Amount
+                System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Buy Custom Amount clicked. Player: " + buyer.getName());
                 if (shop.getBuyPrice() != -1) {
                     buyer.closeInventory();
                     plugin.getPlayerEnteringBuyQuantity().put(buyer.getUniqueId(), shopLocation);
@@ -120,6 +137,7 @@ public class ShopVisitListener implements Listener {
                     buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
                 }
             } else if (rawSlot == 24) { // Sell Custom Amount
+                System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Sell Custom Amount clicked. Player: " + buyer.getName());
                 if (shop.getSellPrice() != -1) {
                     buyer.closeInventory();
                     plugin.getPlayerEnteringSellQuantity().put(buyer.getUniqueId(), shopLocation);
@@ -137,8 +155,10 @@ public class ShopVisitListener implements Listener {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
         String message = event.getMessage();
+        System.out.println("[TRACE] In ShopVisitListener.onAsyncPlayerChat by " + player.getName() + ". Message: '" + message + "'");
 
         if (plugin.getPlayerEnteringBuyQuantity().containsKey(playerId)) {
+            System.out.println("[TRACE] ShopVisitListener.onAsyncPlayerChat: Player " + player.getName() + " is entering buy quantity.");
             // event.setCancelled(true); // Also ensure this resolves if it was an issue.
             Location shopLocation = plugin.getPlayerEnteringBuyQuantity().get(playerId);
             Shop shop = plugin.getShopManager().getActiveShop(shopLocation);
@@ -150,6 +170,7 @@ public class ShopVisitListener implements Listener {
             }
 
             if (message.equalsIgnoreCase("cancel")) {
+                System.out.println("[TRACE] ShopVisitListener.onAsyncPlayerChat: Buy operation cancelled by " + player.getName());
                 plugin.getPlayerEnteringBuyQuantity().remove(playerId);
                 player.sendMessage(ChatColor.YELLOW + "Buy operation cancelled.");
                 return;
@@ -169,6 +190,7 @@ public class ShopVisitListener implements Listener {
             }
 
         } else if (plugin.getPlayerEnteringSellQuantity().containsKey(playerId)) {
+            System.out.println("[TRACE] ShopVisitListener.onAsyncPlayerChat: Player " + player.getName() + " is entering sell quantity.");
             // event.setCancelled(true); // Also ensure this resolves if it was an issue.
             Location shopLocation = plugin.getPlayerEnteringSellQuantity().get(playerId);
             Shop shop = plugin.getShopManager().getActiveShop(shopLocation);
@@ -180,6 +202,7 @@ public class ShopVisitListener implements Listener {
             }
 
             if (message.equalsIgnoreCase("cancel")) {
+                System.out.println("[TRACE] ShopVisitListener.onAsyncPlayerChat: Sell operation cancelled by " + player.getName());
                 plugin.getPlayerEnteringSellQuantity().remove(playerId);
                 player.sendMessage(ChatColor.YELLOW + "Sell operation cancelled.");
                 return;
@@ -204,13 +227,17 @@ public class ShopVisitListener implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getPlayer() instanceof Player)) return;
         Player player = (Player) event.getPlayer();
+        String viewTitle = event.getView().getTitle();
+        System.out.println("[TRACE] In ShopVisitListener.onInventoryClose by " + player.getName() + ". Title: '" + viewTitle + "'");
 
         if (plugin.getPlayerViewingShopLocation().containsKey(player.getUniqueId())) {
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClose: Player " + player.getName() + " was viewing a shop. Removing from map.");
             plugin.getPlayerViewingShopLocation().remove(player.getUniqueId());
         }
     }
 
     private void closeShopForPlayer(Player player) {
+        System.out.println("[TRACE] In ShopVisitListener.closeShopForPlayer for " + player.getName());
         player.closeInventory();
         plugin.getPlayerViewingShopLocation().remove(player.getUniqueId());
     }

@@ -122,6 +122,7 @@ public class ShopListener implements Listener {
             if (existingShop != null) {
                 if (existingShop.getOwnerUUID().equals(player.getUniqueId())) {
                     if (existingShop.isSetupComplete()) {
+                        System.out.println("[TRACE] In ShopListener.onPlayerInteract (SHIFT+RIGHT_CLICK), about to open admin menu for player " + player.getName() + " and shop " + existingShop.getShopId());
                         shopAdminGUIManager.openAdminMenu(player, existingShop);
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) is owner of existing active shop at %s. Opening admin menu.",
                                 player.getName(), player.getUniqueId(), chestLocation));
@@ -272,6 +273,7 @@ public class ShopListener implements Listener {
 
 
         if (viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
+            System.out.println("[TRACE] In ShopListener.onInventoryClick, viewTitle matches ShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName() + ", Slot: " + event.getRawSlot());
             plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) clicked in Shop Admin GUI: '%s', Slot: %d, Item: %s",
                     player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), currentItemName));
             event.setCancelled(true);
@@ -290,13 +292,17 @@ public class ShopListener implements Listener {
             }
 
             int displayNameSlot = ShopAdminGUIManager.DISPLAY_NAME_SLOT;
+            System.out.println("[TRACE] In ShopListener.onInventoryClick, ShopAdminGUIManager.DISPLAY_NAME_SLOT is " + displayNameSlot);
             int priceSlot = ShopAdminGUIManager.PRICE_SLOT;
+            System.out.println("[TRACE] In ShopListener.onInventoryClick, ShopAdminGUIManager.PRICE_SLOT is " + priceSlot);
 
             if (event.getRawSlot() == displayNameSlot) {
+                System.out.println("[TRACE] In ShopListener.onInventoryClick, clicked DISPLAY_NAME_SLOT. Player: " + player.getName());
                 shopAdminGUIManager.initiateDisplayNameChange(player, shop);
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiated display name change for shop at %s via admin GUI.",
                         player.getName(), player.getUniqueId(), Shop.locationToString(shopLocation)));
             } else if (event.getRawSlot() == priceSlot) {
+                System.out.println("[TRACE] In ShopListener.onInventoryClick, clicked PRICE_SLOT. Player: " + player.getName());
                 shopAdminGUIManager.initiatePriceChange(player, shop);
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiated price change for shop at %s via admin GUI.",
                         player.getName(), player.getUniqueId(), Shop.locationToString(shopLocation)));
@@ -316,6 +322,7 @@ public class ShopListener implements Listener {
                  plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed Shop Visit GUI. Cleared viewing state.", player.getName(), playerId));
             }
         } else if (viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
+            System.out.println("[TRACE] In ShopListener.onInventoryClose, viewTitle matches ShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName());
             if (plugin.getPlayerAdministeringShop().remove(playerId) != null) {
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed Shop Admin GUI. Cleared admin state.", player.getName(), playerId));
             }

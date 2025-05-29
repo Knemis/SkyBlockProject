@@ -41,6 +41,7 @@ public class ShopAdminGUIManager {
     private final ItemStack PLACEHOLDER_ITEM_BLACK;
 
     public ShopAdminGUIManager(SkyBlockProject plugin, ShopManager shopManager) {
+        System.out.println("[TRACE] In ShopAdminGUIManager constructor. Plugin is " + (plugin == null ? "null" : "not null") + ", ShopManager is " + (shopManager == null ? "null" : "not null"));
         this.plugin = plugin;
         this.shopManager = shopManager;
 
@@ -58,6 +59,7 @@ public class ShopAdminGUIManager {
      * @param shop The shop to be administered.
      */
     public void openAdminMenu(Player player, Shop shop) {
+        System.out.println("[TRACE] In ShopAdminGUIManager.openAdminMenu for player " + player.getName() + " and shop " + (shop != null ? shop.getShopId() : "null"));
         if (shop == null || !shop.getOwnerUUID().equals(player.getUniqueId())) {
             player.sendMessage(ChatColor.RED + "Bu mağazayı yönetme yetkiniz yok veya mağaza bulunamadı.");
             return;
@@ -141,6 +143,7 @@ public class ShopAdminGUIManager {
      * @param shop The shop being administered.
      */
     public void initiateDisplayNameChange(Player player, Shop shop) {
+        System.out.println("[TRACE] In ShopAdminGUIManager.initiateDisplayNameChange for player " + player.getName() + " and shop " + (shop != null ? shop.getShopId() : "null"));
         player.closeInventory();
         player.sendMessage(ChatColor.GOLD + "===== Mağaza Adı Değiştirme =====");
         player.sendMessage(ChatColor.YELLOW + "Yeni mağaza adını chat'e yazın.");
@@ -156,6 +159,7 @@ public class ShopAdminGUIManager {
      * @param shop The shop being administered.
      */
     public void initiatePriceChange(Player player, Shop shop) {
+        System.out.println("[TRACE] In ShopAdminGUIManager.initiatePriceChange for player " + player.getName() + " and shop " + (shop != null ? shop.getShopId() : "null"));
         player.closeInventory();
         player.sendMessage(ChatColor.GOLD + "===== Mağaza Fiyatı Değiştirme =====");
         player.sendMessage(ChatColor.YELLOW + "Yeni paket fiyatını chat'e yazın (örn: 100.50 veya 50).");

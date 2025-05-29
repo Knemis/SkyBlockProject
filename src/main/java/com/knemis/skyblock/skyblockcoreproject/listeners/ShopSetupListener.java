@@ -64,8 +64,10 @@ public class ShopSetupListener implements Listener {
         String clickedItemName = (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) ?
                                  LegacyComponentSerializer.legacySection().serialize(clickedItem.getItemMeta().displayName()) :
                                  (clickedItem != null ? clickedItem.getType().name() : "null");
+        System.out.println("[TRACE] In ShopSetupListener.onInventoryClick by " + player.getName() + ". Title: '" + viewTitle + "', Slot: " + event.getRawSlot() + ", Item: " + clickedItemName);
 
         if (viewTitleComponent.equals(ShopSetupGUIManager.SHOP_TYPE_TITLE)) {
+            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: SHOP_TYPE_TITLE matched.");
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) clicked in Shop Setup GUI: '%s', Slot: %d, Item: %s",
                     player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), clickedItemName));
             event.setCancelled(true);
@@ -105,12 +107,15 @@ public class ShopSetupListener implements Listener {
             }
         }
         else if (viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE)) {
+            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: ITEM_SELECT_TITLE matched.");
             handleItemSelectionGuiClickLogic(event, player, topInventory);
         }
         else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
+            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: QUANTITY_INPUT_TITLE matched.");
             handleQuantityInputGuiClickLogic(event, player, topInventory);
         }
         else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE)) {
+            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: CONFIRMATION_TITLE matched.");
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) clicked in Shop Setup GUI: '%s', Slot: %d, Item: %s",
                     player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), clickedItemName));
             event.setCancelled(true);
@@ -300,6 +305,7 @@ public class ShopSetupListener implements Listener {
         Player player = (Player) event.getPlayer();
         Component viewTitleComponent = event.getView().title();
         String viewTitle = LegacyComponentSerializer.legacySection().serialize(viewTitleComponent);
+        System.out.println("[TRACE] In ShopSetupListener.onInventoryClose by " + player.getName() + ". Title: '" + viewTitle + "'");
         UUID playerId = player.getUniqueId();
 
         Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
@@ -443,18 +449,21 @@ public class ShopSetupListener implements Listener {
     public void onPlayerChatForPrice(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
-        String message = event.getMessage(); 
+        String message = event.getMessage();
+        System.out.println("[TRACE] In ShopSetupListener.onPlayerChatForPrice by " + player.getName() + ". Message: '" + message + "'");
 
         if (plugin.getPlayerWaitingForAdminInput().containsKey(playerId)) {
             ShopAdminGUIManager.AdminInputType inputType = plugin.getPlayerWaitingForAdminInput().get(playerId);
             Location shopLocation = plugin.getPlayerAdministeringShop().get(playerId);
-            String locStr = Shop.locationToString(shopLocation); 
+            String locStr = Shop.locationToString(shopLocation);
+            System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Player " + player.getName() + " is waiting for AdminInput: " + inputType + " for shop " + locStr);
             plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) providing chat input for %s for shop %s. Message: '%s'",
                     player.getName(), playerId, inputType.name(), locStr, message)); 
             event.setCancelled(true);
 
 
-            if (shopLocation == null) { 
+            if (shopLocation == null) {
+                System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Admin input, but shopLocation is null for " + player.getName());
                 player.sendMessage(ChatColor.RED + "Hata: Yönetilen dükkan bulunamadı.");
                 plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) was waiting for %s input, but shopLocation is null (locStr: %s).",
                         player.getName(), playerId, inputType.name(), locStr));
@@ -467,6 +476,7 @@ public class ShopSetupListener implements Listener {
                 plugin.getPlayerWaitingForAdminInput().remove(playerId);
                 plugin.getPlayerAdministeringShop().remove(playerId); 
                 player.sendMessage(ChatColor.YELLOW + "Dükkan ayarı iptal edildi.");
+                System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Admin input cancelled by " + player.getName() + " for shop " + locStr);
                 plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) cancelled %s input for shop %s.",
                         player.getName(), playerId, inputType.name(), locStr));
                 return;
@@ -531,7 +541,8 @@ public class ShopSetupListener implements Listener {
         if (plugin.getPlayerShopSetupState().containsKey(playerId) &&
                 plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE) {
             Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
-            String locStr = Shop.locationToString(chestLocation); 
+            String locStr = Shop.locationToString(chestLocation);
+            System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Player " + player.getName() + " is waiting for PRICE input for shop " + locStr);
             plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) providing price input for shop %s. Message: '%s'",
                     player.getName(), playerId, locStr, message));
             event.setCancelled(true);
@@ -548,6 +559,7 @@ public class ShopSetupListener implements Listener {
             if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
                 shopManager.cancelShopSetup(playerId);
                 player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve dükkan kurulumu iptal edildi.");
+                System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Price input cancelled by " + player.getName() + " for shop " + locStr);
                  plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) cancelled price input for shop %s.",
                         player.getName(), playerId, locStr));
                 return;

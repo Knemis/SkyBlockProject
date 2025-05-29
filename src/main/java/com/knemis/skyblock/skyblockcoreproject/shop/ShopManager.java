@@ -42,6 +42,7 @@ public class ShopManager {
     private final Map<Location, Shop> pendingShops;
 
     public ShopManager(SkyBlockProject plugin) {
+        System.out.println("[TRACE] In ShopManager constructor. Plugin is " + (plugin == null ? "null" : "not null"));
         this.plugin = plugin;
         this.shopStorage = new ShopStorage(plugin);
         this.activeShops = this.shopStorage.loadShops(); // ShopStorage.loadShops() should handle its own logging for load count/failures
@@ -58,6 +59,7 @@ public class ShopManager {
     }
 
     public Shop initiateShopCreation(Location location, Player player, ShopMode initialShopMode) {
+        System.out.println("[TRACE] In ShopManager.initiateShopCreation for player " + (player != null ? player.getName() : "null") + " at " + Shop.locationToString(location) + " with mode " + initialShopMode);
         String locStr = Shop.locationToString(location);
         plugin.getLogger().info(String.format("[ShopManager] Attempting to initiate shop creation at %s for player %s (UUID: %s) with mode %s.",
                 locStr, player.getName(), player.getUniqueId(), initialShopMode));
@@ -108,6 +110,7 @@ public class ShopManager {
 
 
     public void finalizeShopSetup(Location location, Player actor, ItemStack initialStockItem) {
+        System.out.println("[TRACE] In ShopManager.finalizeShopSetup for player " + (actor != null ? actor.getName() : "null") + " at " + Shop.locationToString(location) + " with stock " + (initialStockItem != null ? initialStockItem.getType().name() : "null"));
         String locStr = Shop.locationToString(location);
         plugin.getLogger().info(String.format("[ShopManager] Attempting to finalize shop setup at %s for player %s (UUID: %s). Initial stock: %s",
                 locStr, actor.getName(), actor.getUniqueId(), initialStockItem != null ? initialStockItem.toString() : "null"));
@@ -196,6 +199,7 @@ public class ShopManager {
     }
 
     public void saveShop(Shop shop) {
+        System.out.println("[TRACE] In ShopManager.saveShop for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
         if (shop == null || shop.getLocation() == null) {
             plugin.getLogger().warning("[ShopManager] saveShop called but shop or its location is null. Shop object: " + shop);
             return;
@@ -208,6 +212,7 @@ public class ShopManager {
     }
 
     public void cancelShopSetup(UUID playerId) {
+        System.out.println("[TRACE] In ShopManager.cancelShopSetup for player UUID " + playerId);
         if (playerId == null) {
             plugin.getLogger().warning("[ShopManager] cancelShopSetup called with null playerId.");
             return;
@@ -261,6 +266,7 @@ public class ShopManager {
     }
 
     public void removeShop(Location location, Player player) {
+        System.out.println("[TRACE] In ShopManager.removeShop for player " + (player != null ? player.getName() : "null") + " at " + Shop.locationToString(location));
         if (location == null || player == null) return;
         Shop shopToRemove = getActiveShop(location);
         boolean wasPending = false;
@@ -341,6 +347,7 @@ public class ShopManager {
     }
 
     public void updateAttachedSign(Shop shop) {
+        System.out.println("[TRACE] In ShopManager.updateAttachedSign for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
         if (shop == null || !shop.isSetupComplete() || shop.getLocation() == null || shop.getTemplateItemStack() == null) {
             return;
         }
@@ -592,10 +599,12 @@ public class ShopManager {
         String currencySymbol = getCurrencySymbol();
 
         // **** DÜZELTME: EconomyManager çağrılarından plugin parametresi kaldırıldı ****
+        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Checking EconomyManager.isEconomyAvailable()");
         if (!EconomyManager.isEconomyAvailable()) { // plugin parametresi kaldırıldı
             buyer.sendMessage(ChatColor.RED + "Ekonomi sistemi mevcut değil.");
             return false;
         }
+        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Checking EconomyManager.getBalance()");
         if (EconomyManager.getBalance(buyer) < totalCost) { // plugin parametresi kaldırıldı
             buyer.sendMessage(ChatColor.RED + "Yetersiz bakiye! Gereken: " + String.format("%.2f%s", totalCost, currencySymbol));
             return false;
@@ -622,12 +631,15 @@ public class ShopManager {
 
         OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
 
+        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.withdraw from buyer");
         if (!EconomyManager.withdraw(buyer, totalCost)) { // plugin parametresi kaldırıldı
             buyer.sendMessage(ChatColor.RED + "Ödeme çekme işlemi başarısız oldu.");
             return false;
         }
 
+        System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.deposit to owner " + owner.getName());
         if (!EconomyManager.deposit(owner, totalCost)) { // plugin parametresi kaldırıldı
+            System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Owner deposit failed. Attempting refund to buyer.");
             EconomyManager.deposit(buyer, totalCost); // Alıcıya iade et // plugin parametresi kaldırıldı
             buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Satıcıya para transfer edilemedi. Paranız iade edildi!");
             plugin.getLogger().severe("[ShopManager-Purchase] KRİTİK: Para sahibi " + (owner.getName() != null ? owner.getName() : owner.getUniqueId()) + " hesabına yatırılamadı. Alıcı " + buyer.getName() + " iade edildi.");
@@ -635,6 +647,7 @@ public class ShopManager {
         }
 
         if (!removeItemsFromChest(chest, templateItem, totalItemsToBuy)) {
+            System.out.println("[TRACE] In ShopManager.executePurchase for " + buyer.getName() + " shop " + shop.getShopId() + ": Failed to remove items from chest. Attempting to revert transactions.");
             EconomyManager.withdraw(owner, totalCost); // Satıcıdan geri al // plugin parametresi kaldırıldı
             EconomyManager.deposit(buyer, totalCost);  // Alıcıya iade et // plugin parametresi kaldırıldı
             buyer.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Dükkandan ürünler alınamadı. Paranız iade edildi!");
@@ -715,10 +728,12 @@ public class ShopManager {
 
         OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
         // **** DÜZELTME: EconomyManager çağrılarından plugin parametresi kaldırıldı ****
+        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Checking EconomyManager.isEconomyAvailable()");
         if (!EconomyManager.isEconomyAvailable()) { // plugin parametresi kaldırıldı
             seller.sendMessage(ChatColor.RED + "Ekonomi sistemi mevcut değil.");
             return false;
         }
+        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Checking owner " + owner.getName() + " balance with EconomyManager.getBalance()");
         if (EconomyManager.getBalance(owner) < totalPaymentToPlayer) { // plugin parametresi kaldırıldı
             seller.sendMessage(ChatColor.RED + "Dükkan sahibinin ürünlerinizi alacak kadar parası yok.");
             if (owner.isOnline() && owner.getPlayer() != null) {
@@ -727,13 +742,16 @@ public class ShopManager {
             return false;
         }
 
+        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.withdraw from owner " + owner.getName());
         if (!EconomyManager.withdraw(owner, totalPaymentToPlayer)) { // plugin parametresi kaldırıldı
             seller.sendMessage(ChatColor.RED + "Dükkan sahibinden ödeme işlenirken hata oluştu. Lütfen tekrar deneyin.");
             plugin.getLogger().severe("[ShopManager-SellToShop] Sahip " + owner.getName() + " hesabından " + totalPaymentToPlayer + " çekilemedi. Dükkan: " + Shop.locationToString(shop.getLocation()));
             return false;
         }
 
+        System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Attempting EconomyManager.deposit to seller " + seller.getName());
         if (!EconomyManager.deposit(seller, totalPaymentToPlayer)) { // plugin parametresi kaldırıldı
+            System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Seller deposit failed. Attempting refund to owner.");
             EconomyManager.deposit(owner, totalPaymentToPlayer); // Sahibine iade et // plugin parametresi kaldırıldı
             seller.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Hesabınıza para yatırılamadı. Sahip iade edildi.");
             plugin.getLogger().severe("[ShopManager-SellToShop] KRİTİK: Satıcı " + seller.getName() + " hesabına " + totalPaymentToPlayer + " yatırılamadı. Sahip " + owner.getName() + " iade edildi. Dükkan: " + Shop.locationToString(shop.getLocation()));
@@ -741,6 +759,7 @@ public class ShopManager {
         }
 
         if (!removeItemsFromInventory(seller, templateItem, totalItemsToSell)) {
+            System.out.println("[TRACE] In ShopManager.executeSellToShop for " + seller.getName() + " shop " + shop.getShopId() + ": Failed to remove items from seller inventory. Attempting to revert transactions.");
             EconomyManager.withdraw(seller, totalPaymentToPlayer); // Satıcıdan parayı geri al // plugin parametresi kaldırıldı
             EconomyManager.deposit(owner, totalPaymentToPlayer);   // Sahibine iade et // plugin parametresi kaldırıldı
             seller.sendMessage(ChatColor.RED + "" + ChatColor.BOLD + "KRİTİK HATA: " + ChatColor.RESET + ChatColor.RED + "Envanterinizden ürünler kaldırılamadı. İşlem geri alındı.");

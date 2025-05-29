@@ -105,6 +105,11 @@ public class Shop implements ConfigurationSerializable {
     public String getShopDisplayName() { return shopDisplayName; }
     public long getLastActivityTimestamp() { return lastActivityTimestamp; }
 
+    public String getShopId() {
+        System.out.println("[TRACE] Executing getShopId for shop at " + this.location);
+        return Shop.locationToString(this.location);
+    }
+
     // Convenience Getters
     public int getBundleAmount() {
         return this.templateItemStack != null ? this.templateItemStack.getAmount() : 0;
@@ -329,11 +334,13 @@ public class Shop implements ConfigurationSerializable {
     }
 
     public static String locationToString(Location loc) {
+        System.out.println("[TRACE] Executing locationToString for location " + loc);
         if (loc == null || loc.getWorld() == null) return "";
         return loc.getWorld().getName() + ";" + loc.getBlockX() + ";" + loc.getBlockY() + ";" + loc.getBlockZ();
     }
 
     public static Location stringToLocation(String locString) {
+        System.out.println("[TRACE] Executing stringToLocation for string " + locString);
         if (locString == null || locString.isEmpty()) return null;
         String[] parts = locString.split(";");
         if (parts.length != 4) return null;

@@ -13,6 +13,7 @@ public class PlayerMissionData {
     private final Map<String, Long> missionCooldowns; // Key: missionId, Value: timestamp when cooldown expires
 
     public PlayerMissionData(UUID playerUuid) {
+        System.out.println("[TRACE] Executing PlayerMissionData constructor for player " + playerUuid);
         this.playerUuid = playerUuid;
         this.activeMissions = new HashMap<>();
         this.completedMissions = new HashSet<>();
@@ -41,6 +42,7 @@ public class PlayerMissionData {
     }
 
     public void addActiveMission(Mission mission) {
+        System.out.println("[TRACE] Executing addActiveMission for mission " + (mission != null ? mission.getId() : "null") + " for player " + this.playerUuid);
         if (mission == null || activeMissions.containsKey(mission.getId()) || completedMissions.contains(mission.getId())) {
             return; // Or throw exception / log warning
         }
@@ -51,6 +53,7 @@ public class PlayerMissionData {
     }
 
     public void removeActiveMission(String missionId) {
+        System.out.println("[TRACE] Executing removeActiveMission for missionId " + missionId + " for player " + this.playerUuid);
         activeMissions.remove(missionId);
     }
 
@@ -63,6 +66,7 @@ public class PlayerMissionData {
     }
 
     public void markMissionCompleted(String missionId, Mission mission) {
+        System.out.println("[TRACE] Executing markMissionCompleted for missionId " + missionId + " and mission " + (mission != null ? mission.getId() : "null") + " for player " + this.playerUuid);
         activeMissions.remove(missionId);
         completedMissions.add(missionId);
         if (mission != null && !"NONE".equalsIgnoreCase(mission.getRepeatableType()) && mission.getCooldownHours() > 0) {
@@ -93,10 +97,19 @@ public class PlayerMissionData {
     }
 
     public void removeCompletedMission(String missionId) {
+        System.out.println("[TRACE] Executing removeCompletedMission for missionId " + missionId + " for player " + this.playerUuid);
         completedMissions.remove(missionId);
     }
 
     public void removeMissionCooldown(String missionId) {
+        System.out.println("[TRACE] Executing removeMissionCooldown for missionId " + missionId + " for player " + this.playerUuid);
         missionCooldowns.remove(missionId);
+    }
+
+    public void resetMission(String missionId) {
+        System.out.println("[TRACE] Executing resetMission for missionId " + missionId + " for player " + this.playerUuid);
+        removeActiveMission(missionId);
+        removeCompletedMission(missionId);
+        removeMissionCooldown(missionId);
     }
 }

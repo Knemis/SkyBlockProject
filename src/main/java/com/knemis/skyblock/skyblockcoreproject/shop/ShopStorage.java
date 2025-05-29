@@ -29,6 +29,7 @@ public class ShopStorage {
     private static final int CURRENT_DATA_VERSION = 1;
 
     public ShopStorage(SkyBlockProject plugin) {
+        System.out.println("[TRACE] In ShopStorage constructor. Plugin is " + (plugin == null ? "null" : "not null"));
         this.plugin = plugin;
         this.shopsFile = new File(plugin.getDataFolder(), "shops.yml");
         this.shopsBackupFile = new File(plugin.getDataFolder(), "shops.yml.bak");
@@ -100,6 +101,7 @@ public class ShopStorage {
     }
 
     public void saveShop(Shop shop) {
+        System.out.println("[TRACE] In ShopStorage.saveShop for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
         if (shop == null || shop.getLocation() == null) {
             plugin.getLogger().warning("[ShopStorage] saveShop called but shop or its location is null. Shop: " + shop);
             return;
@@ -124,6 +126,7 @@ public class ShopStorage {
     }
 
     public void saveAllShops(Map<Location, Shop> shopsToSave) {
+        System.out.println("[TRACE] In ShopStorage.saveAllShops. Number of shops to save: " + (shopsToSave != null ? shopsToSave.size() : "null map"));
         if (shopsConfig == null) {
             plugin.getLogger().severe("[ShopStorage] Cannot save all shops, shopsConfig is null!");
             return;
@@ -170,6 +173,7 @@ public class ShopStorage {
 
     @SuppressWarnings("unchecked")
     public Map<Location, Shop> loadShops() {
+        System.out.println("[TRACE] In ShopStorage.loadShops");
         plugin.getLogger().info("[ShopStorage] Attempting to load shops from shops.yml...");
         Map<Location, Shop> loadedShops = new HashMap<>();
         try {
@@ -209,6 +213,7 @@ public class ShopStorage {
             Map<String, Object> shopDataMap = shopMapSection.getValues(false);
             Shop shop = null;
             try {
+                System.out.println("[TRACE] In ShopStorage.loadShops (deserialize logic) for key " + locStringKey);
                 // Pass the key itself for context in case location deserialization fails
                 shopDataMap.put("_locStringKeyForDebug", locStringKey);
                 shop = Shop.deserialize(shopDataMap);
@@ -232,6 +237,7 @@ public class ShopStorage {
     }
 
     public void removeShop(Location location) {
+        System.out.println("[TRACE] In ShopStorage.removeShop for location " + Shop.locationToString(location));
         if (location == null) {
             plugin.getLogger().warning("[ShopStorage] removeShop called with null location.");
             return;
