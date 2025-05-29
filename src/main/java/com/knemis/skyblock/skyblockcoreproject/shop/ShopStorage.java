@@ -161,7 +161,7 @@ public class ShopStorage {
                     shopsConfig.set(path, shop.serialize());
                     savedCount++;
                 } catch (Exception e) {
-                     plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to serialize shop at %s (Owner: %s) during saveAllShops.",
+                    plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to serialize shop at %s (Owner: %s) during saveAllShops.",
                             locString, shop.getOwnerUUID()), e);
                 }
             }
@@ -220,7 +220,7 @@ public class ShopStorage {
                 if (shop != null && shop.getLocation() != null) {
                     loadedShops.put(shop.getLocation(), shop);
                     successfullyLoaded++;
-                     plugin.getLogger().fine(String.format("[ShopStorage] Successfully deserialized shop at key %s, Location: %s.", locStringKey, Shop.locationToString(shop.getLocation())));
+                    plugin.getLogger().fine(String.format("[ShopStorage] Successfully deserialized shop at key %s, Location: %s.", locStringKey, Shop.locationToString(shop.getLocation())));
                 } else {
                     plugin.getLogger().warning(String.format("[ShopStorage] Corrupt shop entry: Shop could not be fully deserialized or location is incorrect for key: %s. Shop object (ref ID %s): %s",
                             locStringKey, (shop == null ? "null" : "location_null")));

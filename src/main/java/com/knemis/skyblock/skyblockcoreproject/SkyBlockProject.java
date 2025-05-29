@@ -20,6 +20,10 @@ import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener;
+import com.knemis.skyblock.skyblockcoreproject.listeners.MissionObjectiveListener; // Added import
+import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
@@ -86,15 +90,15 @@ public final class SkyBlockProject extends JavaPlugin {
     private Economy vaultEconomy = null;
 
     // Player Status Tracking
-    private final Map<UUID, Location> playerShopSetupState = new HashMap<>();
+    // private final Map<UUID, Location> playerShopSetupState = new HashMap<>(); // Removed, managed by ShopSetupSession
     private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
     private final Map<UUID, Location> playerAdministeringShop = new HashMap<>();
     private final Map<UUID, ShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>();
-    private final Map<UUID, Location> playerChoosingShopMode = new HashMap<>();
-    private final Map<UUID, ItemStack> playerInitialShopStockItem = new HashMap<>();
+    // private final Map<UUID, Location> playerChoosingShopMode = new HashMap<>(); // Removed, session existence implies choosing mode or in setup
+    // private final Map<UUID, ItemStack> playerInitialShopStockItem = new HashMap<>(); // Removed, managed by ShopSetupSession
 
     // Dükkan kurulumu sırasında oyuncudan hangi türde giriş beklendiğini tutar (örn: fiyat, miktar)
-    private final Map<UUID, ShopSetupGUIManager.InputType> playerWaitingForSetupInput = new HashMap<>();
+    // private final Map<UUID, ShopSetupGUIManager.InputType> playerWaitingForSetupInput = new HashMap<>(); // Removed, managed by ShopSetupSession
     // Oyuncunun dükkan ziyareti sırasında özel satın alma miktarı girdiği durumu takip eder
     private final Map<UUID, Location> playerEnteringBuyQuantity = new HashMap<>();
     // Oyuncunun dükkan ziyareti sırasında özel satış miktarı girdiği durumu takip eder
@@ -172,6 +176,7 @@ public final class SkyBlockProject extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
         getServer().getPluginManager().registerEvents(new MissionListener(this), this);
+        getServer().getPluginManager().registerEvents(new MissionObjectiveListener(this, this.missionManager), this); // Register new listener
         if (getConfig().getBoolean("island.enforce-boundaries", true)) {
             getServer().getPluginManager().registerEvents(new PlayerBoundaryListener(this), this);
         }
@@ -294,17 +299,17 @@ public final class SkyBlockProject extends JavaPlugin {
     public MissionGUIManager getMissionGUIManager() { return missionGUIManager; }
     public LuckPerms getLuckPermsApi() { return luckPermsApi; }
 
-    public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; }
+    // public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; } // Removed
     public Map<UUID, Location> getPlayerViewingShopLocation() { return playerViewingShopLocation; }
     public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; }
     public Map<UUID, ShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; }
-    public Map<UUID, Location> getPlayerChoosingShopMode() { return playerChoosingShopMode; }
-    public Map<UUID, ItemStack> getPlayerInitialShopStockItem() { return playerInitialShopStockItem; }
+    // public Map<UUID, Location> getPlayerChoosingShopMode() { return playerChoosingShopMode; } // Removed
+    // public Map<UUID, ItemStack> getPlayerInitialShopStockItem() { return playerInitialShopStockItem; } // Removed
 
     // Dükkan kurulumu için input bekleyen oyuncuları tutar
-    public Map<UUID, ShopSetupGUIManager.InputType> getPlayerWaitingForSetupInput() {
-        return playerWaitingForSetupInput;
-    }
+    // public Map<UUID, ShopSetupGUIManager.InputType> getPlayerWaitingForSetupInput() { // Removed
+    //    return playerWaitingForSetupInput;
+    // }
 
     // Dükkan ziyareti sırasında özel satın alma miktarı giren oyuncuları tutar
     public Map<UUID, Location> getPlayerEnteringBuyQuantity() {

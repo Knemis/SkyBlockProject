@@ -28,7 +28,6 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.UUID; // Added import
 
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopMode;
-import com.knemis.skyblock.skyblockcoreproject.shop.ShopType; // Keep for old finalizeShopSetup if needed by other parts, though ideally it's removed
 
 public class ShopListener implements Listener {
     private final SkyBlockProject plugin;
@@ -237,11 +236,18 @@ public class ShopListener implements Listener {
                     if (newShop != null) {
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) selected shop mode '%s' for chest at %s. Shop initiated.",
                                 player.getName(), playerId, finalSelectedMode.name(), chestLocation));
+
+                        // Create the setup session
+                        // Assuming initialStockItem is not handled at this stage of interaction.
+                        // If the chest had items, that logic would need to be added before or during initiateShopCreation.
+                        // For now, passing null for initialStockItem.
+                        plugin.getShopSetupGUIManager().createSession(player, chestLocation, newShop, null);
+
                         if (plugin.getShopSetupGUIManager() != null) {
-                            plugin.getPlayerShopSetupState().put(playerId, chestLocation);
+                            // plugin.getPlayerShopSetupState().put(playerId, chestLocation); // This state is now in the session
                             plugin.getShopSetupGUIManager().openItemSelectionMenu(player, newShop);
                             player.sendMessage(ChatColor.GREEN + "Shop mode '" + finalSelectedMode.name() + "' selected. Now, please select the item for your shop.");
-                            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop at %s with mode %s. Opening item selection. (Internal ID: %s)",
+                            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop at %s with mode %s. Session created. Opening item selection. (Internal ID: %s)",
                                     player.getName(), playerId, Shop.locationToString(newShop.getLocation()), finalSelectedMode.name(), newShop.getShopId()));
                         } else {
                             plugin.getLogger().severe("ShopSetupGUIManager is null! Cannot open item selection menu for " + player.getName());
@@ -268,8 +274,8 @@ public class ShopListener implements Listener {
         String viewTitle = event.getView().getTitle(); // GetTitle returns String, not Component
         ItemStack currentItem = event.getCurrentItem();
         String currentItemName = (currentItem != null && currentItem.hasItemMeta() && currentItem.getItemMeta().hasDisplayName()) ?
-                                 currentItem.getItemMeta().getDisplayName() :
-                                 (currentItem != null ? currentItem.getType().name() : "null");
+                currentItem.getItemMeta().getDisplayName() :
+                (currentItem != null ? currentItem.getType().name() : "null");
 
 
         if (viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
@@ -319,7 +325,7 @@ public class ShopListener implements Listener {
 
         if (viewTitle.equals(ShopVisitGUIManager.SHOP_VISIT_TITLE)) {
             if (plugin.getPlayerViewingShopLocation().remove(playerId) != null) {
-                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed Shop Visit GUI. Cleared viewing state.", player.getName(), playerId));
+                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed Shop Visit GUI. Cleared viewing state.", player.getName(), playerId));
             }
         } else if (viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
             System.out.println("[TRACE] In ShopListener.onInventoryClose, viewTitle matches ShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName());

@@ -9,6 +9,9 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material; // For Material.AIR comparison
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.entity.EntityType;
+import java.util.regex.Pattern;
 
 public class MissionListener implements Listener {
 
@@ -41,8 +44,8 @@ public class MissionListener implements Listener {
         if (viewTitle.startsWith(com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager.MAIN_GUI_TITLE_PREFIX)) {
             ItemStack clickedItem = event.getCurrentItem();
             String clickedItemName = (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) ?
-                                     net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(clickedItem.getItemMeta().displayName()) :
-                                     (clickedItem != null ? clickedItem.getType().name() : "null");
+                    net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(clickedItem.getItemMeta().displayName()) :
+                    (clickedItem != null ? clickedItem.getType().name() : "null");
 
             plugin.getLogger().info(String.format("Player %s (UUID: %s) clicked in Mission GUI: '%s', Slot: %d, Item: %s",
                     player.getName(), player.getUniqueId(), viewTitle, event.getSlot(), clickedItemName));
@@ -56,7 +59,7 @@ public class MissionListener implements Listener {
 
             ItemMeta meta = clickedItem.getItemMeta();
             if (meta == null || (!meta.getPersistentDataContainer().has(com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager.MISSION_ID_KEY, org.bukkit.persistence.PersistentDataType.STRING) &&
-                                !meta.getPersistentDataContainer().has(com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager.GUI_ACTION_KEY, org.bukkit.persistence.PersistentDataType.STRING))) {
+                    !meta.getPersistentDataContainer().has(com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager.GUI_ACTION_KEY, org.bukkit.persistence.PersistentDataType.STRING))) {
                 plugin.getLogger().warning(String.format("MissionListener: Player %s (UUID: %s) clicked on an item ('%s') without mission ID or GUI action in Mission GUI '%s'. Slot: %d",
                         player.getName(), player.getUniqueId(), clickedItemName, viewTitle, event.getSlot()));
                 return;
@@ -110,13 +113,52 @@ public class MissionListener implements Listener {
                 com.knemis.skyblock.skyblockcoreproject.missions.PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
 
                 if (playerData.getActiveMissionProgress(missionId) != null) {
-                    player.sendMessage(org.bukkit.ChatColor.YELLOW + "Mission '" + mission.getName() + "' is in progress. (Details/Abandon not yet implemented)");
-                    plugin.getLogger().info(String.format("Player %s (UUID: %s) clicked active mission '%s' (ID: %s) in GUI.", player.getName(), player.getUniqueId(), mission.getName(), missionId));
+                    // Check if the current view is the "Active" missions category
+                    String currentViewTitle = net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer.legacySection().serialize(event.getView().title());
+                    boolean isActiveCategoryView = currentViewTitle.contains(com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory.ACTIVE.getDisplayName());
+
+                    if (isActiveCategoryView) {
+                        plugin.getLogger().info(String.format("[MissionListener] Player %s (UUID: %s) clicked to abandon active mission '%s' (ID: %s) in GUI.", player.getName(), player.getUniqueId(), mission.getName(), missionId));
+                        plugin.getMissionManager().abandonMission(player, missionId); // Call the abandonMission method
+
+                        // Refresh the GUI
+                        // Extract current page from title, default to 1 if not parsable
+                        int currentPageFromTitle = 1;
+                        String pageString = currentViewTitle.substring(currentViewTitle.lastIndexOf("Page ") + 5, currentViewTitle.lastIndexOf("/"));
+                        try {
+                            currentPageFromTitle = Integer.parseInt(pageString);
+                        } catch (NumberFormatException e) {
+                            plugin.getLogger().warning("[MissionListener] Could not parse page number from title: " + currentViewTitle + ". Defaulting to page 1 for refresh.");
+                        }
+                        com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory categoryForRefresh = com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory.ACTIVE;
+                        String categoryNameFromTitle = currentViewTitle.replace(com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager.MAIN_GUI_TITLE_PREFIX, "").split(java.util.regex.Pattern.quote(" ("))[0];
+                        try {
+                            categoryForRefresh = com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory.fromString(categoryNameFromTitle);
+                        } catch (IllegalArgumentException e) {
+                            plugin.getLogger().warning("[MissionListener] Could not parse category from title: " + currentViewTitle + " for refresh. Defaulting to ACTIVE.");
+                        }
+
+                        final int finalCurrentPage = currentPageFromTitle; // Effectively final for lambda/runnable
+                        final com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory finalCurrentCategory = categoryForRefresh;
+                        // Refresh GUI on next tick to allow inventory event to complete
+                        org.bukkit.scheduler.BukkitRunnable runnable = new org.bukkit.scheduler.BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                plugin.getMissionGUIManager().openMainMissionGui(player, finalCurrentCategory, finalCurrentPage);
+                            }
+                        };
+                        runnable.runTask(plugin);
+
+                    } else {
+                        // If not in the "Active" category view, perhaps just show info or do nothing different
+                        player.sendMessage(org.bukkit.ChatColor.YELLOW + "Mission '" + mission.getName() + "' is in progress. View it in the 'Active' category to manage.");
+                        plugin.getLogger().info(String.format("[MissionListener] Player %s (UUID: %s) clicked active mission '%s' (ID: %s) in a non-active category view ('%s').", player.getName(), player.getUniqueId(), mission.getName(), missionId, currentViewTitle));
+                    }
                 } else if (playerData.hasCompletedMission(missionId) && !"NONE".equalsIgnoreCase(mission.getRepeatableType()) && !playerData.isMissionOnCooldown(mission.getId())) {
                     if (missionManager.startMission(player, mission)) { // startMission logs success/failure
                         plugin.getLogger().info(String.format("Player %s (UUID: %s) started repeatable mission '%s' (ID: %s) via GUI click.", player.getName(), player.getUniqueId(), mission.getName(), missionId));
                         player.closeInventory();
-                        missionGUIManager.openMainMissionGui(player, currentCategory, page); 
+                        missionGUIManager.openMainMissionGui(player, currentCategory, page);
                     }
                 } else if (playerData.hasCompletedMission(missionId)) {
                     player.sendMessage(org.bukkit.ChatColor.GRAY + "You have already completed '" + mission.getName() + "'.");
@@ -129,8 +171,8 @@ public class MissionListener implements Listener {
                 } else if (missionManager.canStartMission(player, mission)) {
                     if (missionManager.startMission(player, mission)) { // startMission logs success/failure
                         plugin.getLogger().info(String.format("Player %s (UUID: %s) started new mission '%s' (ID: %s) via GUI click.", player.getName(), player.getUniqueId(), mission.getName(), missionId));
-                        player.closeInventory(); 
-                        missionGUIManager.openMainMissionGui(player, com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory.ACTIVE, 1); 
+                        player.closeInventory();
+                        missionGUIManager.openMainMissionGui(player, com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory.ACTIVE, 1);
                     }
                 } else {
                     // canStartMission would have sent a message (and potentially logged)
@@ -169,5 +211,27 @@ public class MissionListener implements Listener {
         if (hours > 0) return String.format("%dh %dm %ds", hours, minutes, seconds);
         if (minutes > 0) return String.format("%dm %ds", minutes, seconds);
         return String.format("%ds", seconds);
+    }
+
+    @EventHandler
+    public void onEntityDeath(EntityDeathEvent event) {
+        // Check if the killer is a player
+        if (event.getEntity().getKiller() == null) {
+            return; // Not a player kill
+        }
+
+        Player player = event.getEntity().getKiller();
+        EntityType killedEntityType = event.getEntityType();
+
+        System.out.println("[TRACE] MissionListener.onEntityDeath: Player " + player.getName() + " killed entity " + killedEntityType.name());
+
+        // Call MissionManager to update progress
+        if (plugin.getMissionManager() != null) {
+            plugin.getMissionManager().updateKillMobProgress(player, killedEntityType);
+        } else {
+            System.out.println("[TRACE] MissionListener.onEntityDeath: MissionManager is null, cannot update kill progress for " + player.getName());
+            // Log a warning or error if MissionManager should always be available
+            plugin.getLogger().warning("[MissionListener] MissionManager was null when trying to update kill progress for player " + player.getName());
+        }
     }
 }

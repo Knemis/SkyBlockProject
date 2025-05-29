@@ -19,4 +19,13 @@ public enum MissionCategory {
     public String toString() {
         return displayName;
     }
+
+    public static MissionCategory fromString(String displayName) {
+        for (MissionCategory category : values()) {
+            if (category.getDisplayName().equalsIgnoreCase(displayName)) {
+                return category;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant with display name " + displayName);
+    }
 }
