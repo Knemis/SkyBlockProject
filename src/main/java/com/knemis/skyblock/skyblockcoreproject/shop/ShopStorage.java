@@ -106,20 +106,20 @@ public class ShopStorage {
         }
         String locString = Shop.locationToString(shop.getLocation());
         if (locString.isEmpty()) {
-            plugin.getLogger().warning(String.format("[ShopStorage] Shop location could not be converted to string for shop ID %s (Owner: %s), cannot save.",
-                    shop.getShopId(), shop.getOwnerUUID()));
+            plugin.getLogger().warning(String.format("[ShopStorage] Shop location could not be converted to string for shop (Owner: %s), cannot save. Shop ID for ref: %s.",
+                    shop.getOwnerUUID(), shop.getShopId()));
             return;
         }
-        plugin.getLogger().info(String.format("[ShopStorage] Attempting to save shop ID %s at %s.", shop.getShopId(), locString));
+        plugin.getLogger().info(String.format("[ShopStorage] Attempting to save shop at %s (Owner: %s).", locString, shop.getOwnerUUID()));
         String path = "shops." + locString;
 
         try {
             shopsConfig.set(path, shop.serialize());
             saveConfigFile(); // This method already logs its own success/failure at FINE/SEVERE
-            plugin.getLogger().info(String.format("[ShopStorage] Shop ID %s at %s successfully saved/updated to shops.yml.", shop.getShopId(), locString));
+            plugin.getLogger().info(String.format("[ShopStorage] Shop at %s (Owner: %s) successfully saved/updated to shops.yml.", locString, shop.getOwnerUUID()));
         } catch (Exception e) {
-            plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to save shop ID %s at %s due to an exception during serialization or saving config.",
-                    shop.getShopId(), locString), e);
+            plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to save shop at %s (Owner: %s) due to an exception during serialization or saving config.",
+                    locString, shop.getOwnerUUID()), e);
         }
     }
 
@@ -149,8 +149,8 @@ public class ShopStorage {
                 }
                 String locString = Shop.locationToString(shop.getLocation());
                 if (locString.isEmpty()) {
-                    plugin.getLogger().warning(String.format("[ShopStorage] Shop location could not be converted to string for shop ID %s (Owner: %s) during saveAllShops. Shop not saved.",
-                            shop.getShopId(), shop.getOwnerUUID()));
+                    plugin.getLogger().warning(String.format("[ShopStorage] Shop location could not be converted to string for shop (Owner: %s) during saveAllShops. Shop not saved. Shop ID for ref: %s.",
+                            shop.getOwnerUUID(), shop.getShopId()));
                     continue;
                 }
                 String path = "shops." + locString;
@@ -158,8 +158,8 @@ public class ShopStorage {
                     shopsConfig.set(path, shop.serialize());
                     savedCount++;
                 } catch (Exception e) {
-                     plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to serialize shop ID %s at %s during saveAllShops.",
-                            shop.getShopId(), locString), e);
+                     plugin.getLogger().log(Level.SEVERE, String.format("[ShopStorage] Failed to serialize shop at %s (Owner: %s) during saveAllShops.",
+                            locString, shop.getOwnerUUID()), e);
                 }
             }
             plugin.getLogger().info(String.format("[ShopStorage] %d shops prepared for saving. (Total attempted: %d)", savedCount, shopsToSave.size()));
@@ -215,9 +215,9 @@ public class ShopStorage {
                 if (shop != null && shop.getLocation() != null) {
                     loadedShops.put(shop.getLocation(), shop);
                     successfullyLoaded++;
-                     plugin.getLogger().fine(String.format("[ShopStorage] Successfully deserialized shop at key %s, ID %s.", locStringKey, shop.getShopId()));
+                     plugin.getLogger().fine(String.format("[ShopStorage] Successfully deserialized shop at key %s, Location: %s.", locStringKey, Shop.locationToString(shop.getLocation())));
                 } else {
-                    plugin.getLogger().warning(String.format("[ShopStorage] Corrupt shop entry: Shop could not be fully deserialized or location is incorrect for key: %s. Shop object: %s",
+                    plugin.getLogger().warning(String.format("[ShopStorage] Corrupt shop entry: Shop could not be fully deserialized or location is incorrect for key: %s. Shop object (ref ID %s): %s",
                             locStringKey, (shop == null ? "null" : "location_null")));
                     failedToLoad++;
                 }

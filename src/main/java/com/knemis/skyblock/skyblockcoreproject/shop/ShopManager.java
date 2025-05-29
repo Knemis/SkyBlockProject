@@ -87,7 +87,8 @@ public class ShopManager {
         }
         Shop newShop = new Shop(location, player.getUniqueId(), initialShopMode);
         pendingShops.put(location, newShop);
-        plugin.getLogger().info(String.format("[ShopManager] Pending shop initiated successfully: ID %s at %s for owner %s (UUID: %s) with mode %s.",
+        plugin.getLogger().info(String.format("[ShopManager] Pending shop initiated successfully: Location %s for owner %s (UUID: %s) with mode %s. Shop ID for internal tracking: %s.",
+                locStr, player.getName(), player.getUniqueId(), initialShopMode, newShop.getShopId()));
                 newShop.getShopId(), locStr, player.getName(), player.getUniqueId(), initialShopMode));
         return newShop;
     }
@@ -180,30 +181,30 @@ public class ShopManager {
                 chestInventory.clear(); // Clear any items that might have been left from quantity GUI
                 chestInventory.addItem(initialStockItem.clone());
                 plugin.getLogger().info(String.format("[ShopManager] Initial stock (%s) added to shop %s at %s.",
-                        initialStockItem.toString(), shopId, locStr));
+                        initialStockItem.toString(), Shop.locationToString(shop.getLocation()), locStr)); // Changed shopId to location
             } else {
-                plugin.getLogger().severe(String.format("[ShopManager] Shop block at %s is not a Chest for shop %s. Initial stock not added.", locStr, shopId));
+                plugin.getLogger().severe(String.format("[ShopManager] Shop block at %s is not a Chest for shop at %s. Initial stock not added.", locStr, Shop.locationToString(shop.getLocation()))); // Changed shopId to location
             }
         } else if (needsStocking && !canBeStockedByPlayerBuying) {
-            plugin.getLogger().info(String.format("[ShopManager] Initial stock for shop %s at %s not added as shop is sell-only (buyPrice is -1).", shopId, locStr));
+            plugin.getLogger().info(String.format("[ShopManager] Initial stock for shop at %s (%s) not added as shop is sell-only (buyPrice is -1).", locStr, Shop.locationToString(shop.getLocation()))); // Changed shopId to location
         }
 
-        plugin.getLogger().info(String.format("[ShopManager] Shop setup finalized: ID %s by %s at %s. Item: %s, QtyPerBundle: %d, BuyPrice: %.2f, SellPrice: %.2f, Mode: %s. Stocked: %b",
-                shopId, actor.getName(), locStr, templateItem.getType(), pendingShop.getBundleAmount(),
+        plugin.getLogger().info(String.format("[ShopManager] Shop setup finalized: Location %s by %s. Item: %s, QtyPerBundle: %d, BuyPrice: %.2f, SellPrice: %.2f, Mode: %s. Stocked: %b",
+                locStr, actor.getName(), templateItem.getType(), pendingShop.getBundleAmount(),
                 pendingShop.getBuyPrice(), pendingShop.getSellPrice(), pendingShop.getShopMode(), (needsStocking && canBeStockedByPlayerBuying)));
         actor.sendMessage(ChatColor.GREEN + "Dükkanınız başarıyla kuruldu!");
     }
 
     public void saveShop(Shop shop) {
         if (shop == null || shop.getLocation() == null) {
-            plugin.getLogger().warning("[ShopManager] saveShop called but shop or its location is null.");
+            plugin.getLogger().warning("[ShopManager] saveShop called but shop or its location is null. Shop object: " + shop);
             return;
         }
         activeShops.put(shop.getLocation(), shop);
-        shopStorage.saveShop(shop); // ShopStorage should log its own success/failure for saving to file
-        updateAttachedSign(shop); // Sign update might log fine details
-        plugin.getLogger().info(String.format("[ShopManager] Shop %s at %s saved/updated in activeShops and persistent storage requested.",
-                shop.getShopId(), Shop.locationToString(shop.getLocation())));
+        shopStorage.saveShop(shop); 
+        updateAttachedSign(shop); 
+        plugin.getLogger().info(String.format("[ShopManager] Shop at %s (Owner: %s) saved/updated in activeShops and persistent storage requested.",
+                 Shop.locationToString(shop.getLocation()), shop.getOwnerUUID()));
     }
 
     public void cancelShopSetup(UUID playerId) {
@@ -213,14 +214,14 @@ public class ShopManager {
         }
 
         Location chestLocation = plugin.getPlayerShopSetupState().remove(playerId);
-        plugin.getPlayerWaitingForSetupInput().remove(playerId); // Use the correct map key
+        plugin.getPlayerWaitingForSetupInput().remove(playerId); 
         ItemStack initialStock = plugin.getPlayerInitialShopStockItem().remove(playerId);
-        String locStr = Shop.locationToString(chestLocation);
+        String locStr = Shop.locationToString(chestLocation); // May be "UNKNOWN_LOCATION" if chestLocation is null
 
         if (chestLocation != null) {
             Shop pending = pendingShops.remove(chestLocation);
-            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s. Pending shop (ID: %s) removed.",
-                    playerId, locStr, (pending != null ? pending.getShopId() : "N/A")));
+            plugin.getLogger().info(String.format("[ShopManager] Shop setup cancelled by player %s for location %s. Pending shop (Owner: %s) removed.",
+                    playerId, locStr, (pending != null ? pending.getOwnerUUID() : "N/A")));
         } else {
             plugin.getLogger().info(String.format("[ShopManager] Shop setup cancellation for player %s (no specific location found in state, possibly already cleaned or state error).", playerId));
         }
@@ -230,10 +231,10 @@ public class ShopManager {
             if (player != null && player.isOnline()) {
                 player.getInventory().addItem(initialStock.clone());
                 player.sendMessage(ChatColor.YELLOW + "Başlangıç için ayrılan eşya (" + ChatColor.AQUA + getItemNameForMessages(initialStock, 15) + ChatColor.YELLOW + ") envanterinize iade edildi.");
-                plugin.getLogger().info(String.format("[ShopManager] Initial stock %s returned to player %s after setup cancellation for %s.",
+                plugin.getLogger().info(String.format("[ShopManager] Initial stock %s returned to player %s after setup cancellation for location %s.",
                         initialStock.toString(), player.getName(), locStr));
             } else {
-                plugin.getLogger().warning(String.format("[ShopManager] Could not return initial stock %s to player %s (offline or null) after setup cancellation for %s.",
+                plugin.getLogger().warning(String.format("[ShopManager] Could not return initial stock %s to player %s (offline or null) after setup cancellation for location %s.",
                         initialStock.toString(), playerId, locStr));
             }
         }

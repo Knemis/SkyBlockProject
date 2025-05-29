@@ -122,7 +122,7 @@ public final class SkyBlockProject extends JavaPlugin {
             getLogger().severe("Could not set up economy system with Vault! Economy features will be disabled.");
         } else {
             getLogger().info("Economy system with Vault successfully set up!");
-            EconomyManager.setupEconomy(); // Statik EconomyManager içindeki Vault Economy nesnesini ayarlar
+            EconomyManager.setupEconomy(this); // Statik EconomyManager içindeki Vault Economy nesnesini ayarlar
         }
         if (!hookPlugin("WorldEdit") || !setupWorldGuard()) {
             getLogger().severe("Required dependencies (WorldEdit/WorldGuard) not found or not active! Disabling plugin.");

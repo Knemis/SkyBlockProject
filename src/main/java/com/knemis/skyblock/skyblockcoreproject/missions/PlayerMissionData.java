@@ -91,4 +91,12 @@ public class PlayerMissionData {
             // Potentially check for mission completion here or let MissionManager handle it
         }
     }
+
+    public void removeCompletedMission(String missionId) {
+        completedMissions.remove(missionId);
+    }
+
+    public void removeMissionCooldown(String missionId) {
+        missionCooldowns.remove(missionId);
+    }
 }
