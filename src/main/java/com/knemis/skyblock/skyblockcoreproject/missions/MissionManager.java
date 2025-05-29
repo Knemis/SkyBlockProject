@@ -364,10 +364,11 @@ public class MissionManager {
     }
 
     public void abandonMission(Player player, String missionId) {
-        System.out.println("[TRACE] Executing abandonMission for player " + player.getName() + " and missionId " + missionId);
+        System.out.println("[TRACE] In MissionManager.abandonMission for player " + player.getName() + " and missionId " + missionId);
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         Mission mission = getMission(missionId); // Get mission for logging name
         String missionName = mission != null ? mission.getName() : missionId;
+        // The detailed logging below can remain as it's more informative than the simple trace.
         plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) attempting to abandon mission '%s' (ID: %s).",
                 player.getName(), player.getUniqueId(), missionName, missionId));
 

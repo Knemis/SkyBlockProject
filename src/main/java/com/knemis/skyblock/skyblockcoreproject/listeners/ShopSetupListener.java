@@ -64,10 +64,8 @@ public class ShopSetupListener implements Listener {
         String clickedItemName = (clickedItem != null && clickedItem.hasItemMeta() && clickedItem.getItemMeta().hasDisplayName()) ?
                                  LegacyComponentSerializer.legacySection().serialize(clickedItem.getItemMeta().displayName()) :
                                  (clickedItem != null ? clickedItem.getType().name() : "null");
-        System.out.println("[TRACE] In ShopSetupListener.onInventoryClick by " + player.getName() + ". Title: '" + viewTitle + "', Slot: " + event.getRawSlot() + ", Item: " + clickedItemName);
 
         if (viewTitleComponent.equals(ShopSetupGUIManager.SHOP_TYPE_TITLE)) {
-            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: SHOP_TYPE_TITLE matched.");
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) clicked in Shop Setup GUI: '%s', Slot: %d, Item: %s",
                     player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), clickedItemName));
             event.setCancelled(true);
@@ -107,15 +105,12 @@ public class ShopSetupListener implements Listener {
             }
         }
         else if (viewTitleComponent.equals(ShopSetupGUIManager.ITEM_SELECT_TITLE)) {
-            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: ITEM_SELECT_TITLE matched.");
             handleItemSelectionGuiClickLogic(event, player, topInventory);
         }
         else if (viewTitleComponent.equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) {
-            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: QUANTITY_INPUT_TITLE matched.");
             handleQuantityInputGuiClickLogic(event, player, topInventory);
         }
         else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE)) {
-            System.out.println("[TRACE] ShopSetupListener.onInventoryClick: CONFIRMATION_TITLE matched.");
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) clicked in Shop Setup GUI: '%s', Slot: %d, Item: %s",
                     player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), clickedItemName));
             event.setCancelled(true);
@@ -159,7 +154,9 @@ public class ShopSetupListener implements Listener {
 
     private void handleItemSelectionGuiClickLogic(InventoryClickEvent event, Player player, Inventory guiInventory) {
         Inventory clickedInventory = event.getClickedInventory();
-        Location shopLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId()); 
+        Location shopLocation = plugin.getPlayerShopSetupState().get(player.getUniqueId());
+        System.out.println("[TRACE] handleItemSelectionGuiClickLogic: Player " + player.getName() + ", Action: " + event.getAction().name() + ", Slot: " + event.getRawSlot() + ", Cursor: " + event.getCursor() + ", CurrentItem: " + event.getCurrentItem());
+
 
         if (clickedInventory != null && clickedInventory.equals(player.getOpenInventory().getBottomInventory())) {
             if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
@@ -185,8 +182,19 @@ public class ShopSetupListener implements Listener {
         }
 
         if (clickedInventory != null && clickedInventory.equals(guiInventory)) {
-            if (event.getRawSlot() == ITEM_SELECT_PLACEMENT_SLOT) { 
-                event.setCancelled(false); 
+            if (event.getRawSlot() == ITEM_SELECT_PLACEMENT_SLOT) {
+                System.out.println("[TRACE] handleItemSelectionGuiClickLogic: Clicked ITEM_SELECT_PLACEMENT_SLOT. Action: " + event.getAction().name() + ", Slot: " + event.getRawSlot() + ", Cursor: " + event.getCursor() + ", CurrentItem: " + event.getCurrentItem());
+                // Allow player to place, pick up, or swap item in this specific slot
+                if (event.getAction().name().startsWith("PICKUP_") ||
+                    event.getAction().name().startsWith("PLACE_") ||
+                    event.getAction() == InventoryAction.SWAP_WITH_CURSOR ||
+                    event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) { // MOVE_TO_OTHER_INVENTORY from this slot to player inventory
+                    event.setCancelled(false);
+                } else {
+                    // For other actions on this slot, you might want to cancel them
+                    System.out.println("[TRACE] handleItemSelectionGuiClickLogic: Other action " + event.getAction().name() + " on ITEM_SELECT_PLACEMENT_SLOT. Explicitly cancelling.");
+                    event.setCancelled(true); 
+                }
             } else {
                 event.setCancelled(true); 
                 plugin.getLogger().finer(String.format("ShopSetupListener: Player %s (UUID: %s) clicked non-interactive slot %d in ITEM_SELECT_TITLE GUI for shop %s.",
@@ -305,7 +313,6 @@ public class ShopSetupListener implements Listener {
         Player player = (Player) event.getPlayer();
         Component viewTitleComponent = event.getView().title();
         String viewTitle = LegacyComponentSerializer.legacySection().serialize(viewTitleComponent);
-        System.out.println("[TRACE] In ShopSetupListener.onInventoryClose by " + player.getName() + ". Title: '" + viewTitle + "'");
         UUID playerId = player.getUniqueId();
 
         Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
@@ -367,20 +374,38 @@ public class ShopSetupListener implements Listener {
                 isStillInSetupChain = false;
             }
         } else if (viewTitleComponent.equals(ShopSetupGUIManager.CONFIRMATION_TITLE)) {
-            if (shopManager.getPendingShop(chestLocation) != null) { 
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) closed CONFIRMATION_TITLE for shop %s without confirming/cancelling via button. Cancelling setup.",
+            // if (shopManager.getPendingShop(chestLocation) != null) { // This check might be too simple
+            // Check if the player was genuinely expected to be in confirmation state for this shop
+            Shop currentPendingShop = shopManager.getPendingShop(chestLocation);
+            boolean wasAwaitingPriceConfirmation = plugin.getPlayerWaitingForSetupInput().containsKey(playerId) && // Check key exists before getting
+                                                 plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE && 
+                                                 currentPendingShop != null;
+            System.out.println("[TRACE] ShopSetupListener.onInventoryClose: CONFIRMATION_TITLE closed by " + player.getName() + ". Was awaiting price confirmation: " + wasAwaitingPriceConfirmation);
+
+
+            if (wasAwaitingPriceConfirmation) {
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s (UUID: %s) closed CONFIRMATION_TITLE for shop %s without confirming/cancelling. Cancelling setup.",
                         player.getName(), playerId, locStr));
-                shopManager.cancelShopSetup(playerId);
+                shopManager.cancelShopSetup(playerId); // This should handle all necessary state cleanup
+                // plugin.getPlayerWaitingForSetupInput().remove(playerId); // cancelShopSetup should handle this if it removes playerShopSetupState
+            } else {
+                System.out.println("[TRACE] ShopSetupListener.onInventoryClose: Player " + player.getName() + " closed CONFIRMATION_TITLE, but was not in a state to be cancelled via this specific logic (e.g. already confirmed/cancelled, or different shop).");
             }
             isStillInSetupChain = false; 
         }
 
-        if (!isStillInSetupChain && plugin.getPlayerShopSetupState().containsKey(playerId)) {
-            if (plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE) {
-                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) was in PRICE input state for shop %s but is no longer in setup chain (e.g. closed chat or GUI). Cancelling setup.",
+        // This final check might be redundant if states are cleared correctly above, but acts as a fallback.
+        // If playerShopSetupState still exists but playerWaitingForSetupInput was cleared by a successful confirmation, this shouldn't trigger cancel.
+        if (!isStillInSetupChain && plugin.getPlayerShopSetupState().containsKey(playerId) && plugin.getPlayerWaitingForSetupInput().containsKey(playerId)) {
+             ShopSetupGUIManager.InputType currentInputState = plugin.getPlayerWaitingForSetupInput().get(playerId);
+            if (currentInputState == ShopSetupGUIManager.InputType.PRICE) {
+                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) was in PRICE input state for shop %s but is no longer in setup chain (e.g. closed chat or a GUI other than confirmation). Cancelling setup.",
                         player.getName(), playerId, locStr));
-            } else {
-                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed setup GUI '%s' for shop %s. Setup not in a chained state or explicitly cancelled. Ensuring cleanup.",
+            } else if (currentInputState != null) { // Only log if there was an actual input state we are about to override by cancelling
+                plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed setup GUI '%s' for shop %s. Current input state: %s. Ensuring cleanup by cancelling.",
+                        player.getName(), playerId, viewTitle, locStr, currentInputState));
+            } else { // playerShopSetupState exists but no specific input state - still should cancel to clean up playerShopSetupState
+                 plugin.getLogger().warning(String.format("ShopSetupListener: Player %s (UUID: %s) closed setup GUI '%s' for shop %s. No specific input state, but ensuring cleanup by cancelling.",
                         player.getName(), playerId, viewTitle, locStr));
             }
             shopManager.cancelShopSetup(playerId); 
@@ -449,21 +474,18 @@ public class ShopSetupListener implements Listener {
     public void onPlayerChatForPrice(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         UUID playerId = player.getUniqueId();
-        String message = event.getMessage();
-        System.out.println("[TRACE] In ShopSetupListener.onPlayerChatForPrice by " + player.getName() + ". Message: '" + message + "'");
+        String message = event.getMessage(); 
 
         if (plugin.getPlayerWaitingForAdminInput().containsKey(playerId)) {
             ShopAdminGUIManager.AdminInputType inputType = plugin.getPlayerWaitingForAdminInput().get(playerId);
             Location shopLocation = plugin.getPlayerAdministeringShop().get(playerId);
-            String locStr = Shop.locationToString(shopLocation);
-            System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Player " + player.getName() + " is waiting for AdminInput: " + inputType + " for shop " + locStr);
+            String locStr = Shop.locationToString(shopLocation); 
             plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) providing chat input for %s for shop %s. Message: '%s'",
                     player.getName(), playerId, inputType.name(), locStr, message)); 
             event.setCancelled(true);
 
 
-            if (shopLocation == null) {
-                System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Admin input, but shopLocation is null for " + player.getName());
+            if (shopLocation == null) { 
                 player.sendMessage(ChatColor.RED + "Hata: Yönetilen dükkan bulunamadı.");
                 plugin.getLogger().warning(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) was waiting for %s input, but shopLocation is null (locStr: %s).",
                         player.getName(), playerId, inputType.name(), locStr));
@@ -476,7 +498,6 @@ public class ShopSetupListener implements Listener {
                 plugin.getPlayerWaitingForAdminInput().remove(playerId);
                 plugin.getPlayerAdministeringShop().remove(playerId); 
                 player.sendMessage(ChatColor.YELLOW + "Dükkan ayarı iptal edildi.");
-                System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Admin input cancelled by " + player.getName() + " for shop " + locStr);
                 plugin.getLogger().info(String.format("ShopSetupListener (Admin): Player %s (UUID: %s) cancelled %s input for shop %s.",
                         player.getName(), playerId, inputType.name(), locStr));
                 return;
@@ -541,8 +562,7 @@ public class ShopSetupListener implements Listener {
         if (plugin.getPlayerShopSetupState().containsKey(playerId) &&
                 plugin.getPlayerWaitingForSetupInput().get(playerId) == ShopSetupGUIManager.InputType.PRICE) {
             Location chestLocation = plugin.getPlayerShopSetupState().get(playerId);
-            String locStr = Shop.locationToString(chestLocation);
-            System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Player " + player.getName() + " is waiting for PRICE input for shop " + locStr);
+            String locStr = Shop.locationToString(chestLocation); 
             plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) providing price input for shop %s. Message: '%s'",
                     player.getName(), playerId, locStr, message));
             event.setCancelled(true);
@@ -559,7 +579,6 @@ public class ShopSetupListener implements Listener {
             if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
                 shopManager.cancelShopSetup(playerId);
                 player.sendMessage(ChatColor.YELLOW + "Fiyat girişi ve dükkan kurulumu iptal edildi.");
-                System.out.println("[TRACE] ShopSetupListener.onPlayerChatForPrice: Price input cancelled by " + player.getName() + " for shop " + locStr);
                  plugin.getLogger().info(String.format("ShopSetupListener (PriceSetup): Player %s (UUID: %s) cancelled price input for shop %s.",
                         player.getName(), playerId, locStr));
                 return;
