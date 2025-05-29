@@ -33,8 +33,10 @@ public class MissionManager {
     }
 
     private void loadMissions() {
+        plugin.getLogger().info("[MissionManager] Starting to load missions...");
         File missionsFile = new File(plugin.getDataFolder(), "missions.yml");
         if (!missionsFile.exists()) {
+            plugin.getLogger().info("[MissionManager] missions.yml not found, saving default resource.");
             plugin.saveResource("missions.yml", false);
         }
 
@@ -42,15 +44,20 @@ public class MissionManager {
         ConfigurationSection missionsSection = config.getConfigurationSection("missions");
 
         if (missionsSection == null) {
-            plugin.getLogger().warning("No 'missions' section found in missions.yml. No missions will be loaded.");
+            plugin.getLogger().warning("[MissionManager] No 'missions' section found in missions.yml. No missions will be loaded.");
             return;
         }
 
         Set<String> missionIds = missionsSection.getKeys(false);
+        int successfullyLoadedCount = 0;
+        int failedCount = 0;
+        Map<String, Integer> categoriesLoaded = new HashMap<>();
+
         for (String missionId : missionIds) {
             ConfigurationSection missionData = missionsSection.getConfigurationSection(missionId);
             if (missionData == null) {
-                plugin.getLogger().warning("Mission data for ID '" + missionId + "' is null. Skipping.");
+                plugin.getLogger().warning(String.format("[MissionManager] Mission data for ID '%s' is null. Skipping.", missionId));
+                failedCount++;
                 continue;
             }
 
@@ -59,15 +66,16 @@ public class MissionManager {
                 List<String> description = missionData.getStringList("description");
                 String category = missionData.getString("category", "General");
                 String iconMaterialName = missionData.getString("iconMaterial", "STONE");
-                // Material.matchMaterial(iconMaterialName) can be used for validation if needed upon use
 
-                // Parse Objectives
                 List<MissionObjective> objectives = new ArrayList<>();
                 ConfigurationSection objectivesSection = missionData.getConfigurationSection("objectives");
-                if (objectivesSection != null) { // Old format might be a list
+                if (objectivesSection != null) {
                     for (String objectiveKey : objectivesSection.getKeys(false)) {
                         ConfigurationSection objData = objectivesSection.getConfigurationSection(objectiveKey);
-                        if (objData == null) continue;
+                        if (objData == null) {
+                            plugin.getLogger().warning(String.format("[MissionManager] Objective data for key '%s' in mission '%s' is null. Skipping objective.", objectiveKey, missionId));
+                            continue;
+                        }
                         objectives.add(new MissionObjective(
                                 objData.getString("type"),
                                 objData.getString("target"),
@@ -75,22 +83,22 @@ public class MissionManager {
                                 objData.getString("display_name_override")
                         ));
                     }
-                } else if (missionData.isList("objectives")) { // New list format
+                } else if (missionData.isList("objectives")) {
                     List<Map<?, ?>> objectivesMapList = missionData.getMapList("objectives");
                     for (Map<?, ?> objMapRaw : objectivesMapList) {
-                        // Manually cast and check types from Map<?, ?>
                         Map<String, Object> objMap = (Map<String, Object>) objMapRaw;
                         objectives.add(new MissionObjective(
                                 (String) objMap.get("type"),
-                                String.valueOf(objMap.get("target")), // Target can be int or string
+                                String.valueOf(objMap.get("target")),
                                 (Integer) objMap.get("amount"),
                                 (String) objMap.get("display_name_override")
                         ));
                     }
+                } else {
+                    plugin.getLogger().warning(String.format("[MissionManager] Mission '%s' (ID: %s) has no objectives or objectives are malformed.", name, missionId));
                 }
 
 
-                // Parse Rewards
                 ConfigurationSection rewardsSection = missionData.getConfigurationSection("rewards");
                 MissionReward rewards = null;
                 if (rewardsSection != null) {
@@ -108,15 +116,15 @@ public class MissionManager {
                             if (mat != null) {
                                 itemRewards.add(new ItemStack(mat, amount));
                             } else {
-                                plugin.getLogger().warning("Invalid material '" + parts[0] + "' in rewards for mission " + missionId);
+                                plugin.getLogger().warning(String.format("[MissionManager] Invalid material '%s' in rewards for mission %s (ID: %s)", parts[0], name, missionId));
                             }
                         } catch (Exception e) {
-                            plugin.getLogger().warning("Error parsing item reward '" + itemString + "' for mission " + missionId + ": " + e.getMessage());
+                            plugin.getLogger().warning(String.format("[MissionManager] Error parsing item reward '%s' for mission %s (ID: %s): %s", itemString, name, missionId, e.getMessage()));
                         }
                     }
                     rewards = new MissionReward(money, experience, itemRewards, commandStrings);
                 } else {
-                    rewards = new MissionReward(0,0, Collections.emptyList(), Collections.emptyList()); // Default empty rewards
+                    rewards = new MissionReward(0,0, Collections.emptyList(), Collections.emptyList());
                 }
 
                 List<String> dependencies = missionData.getStringList("dependencies");
@@ -127,16 +135,23 @@ public class MissionManager {
                 Mission mission = new Mission(missionId, name, description, category, iconMaterialName,
                         objectives, rewards, dependencies, repeatableType, cooldownHours, requiredPermission);
                 allMissions.put(missionId, mission);
-                plugin.getLogger().info("Loaded mission: " + name + " (ID: " + missionId + ")");
+                categoriesLoaded.put(category, categoriesLoaded.getOrDefault(category, 0) + 1);
+                successfullyLoadedCount++;
+                plugin.getLogger().fine(String.format("[MissionManager] Loaded mission: %s (ID: %s, Category: %s)", name, missionId, category));
 
             } catch (Exception e) {
-                plugin.getLogger().log(Level.SEVERE, "Failed to load mission with ID '" + missionId + "': " + e.getMessage(), e);
+                plugin.getLogger().log(Level.SEVERE, String.format("[MissionManager] Failed to load mission with ID '%s' due to an exception: %s", missionId, e.getMessage()), e);
+                failedCount++;
             }
         }
-        plugin.getLogger().info("Successfully loaded " + allMissions.size() + " missions.");
+        plugin.getLogger().info(String.format("[MissionManager] Mission loading complete. Successfully loaded: %d missions. Failed: %d missions.", successfullyLoadedCount, failedCount));
+        if (!categoriesLoaded.isEmpty()) {
+            categoriesLoaded.forEach((cat, count) -> plugin.getLogger().info(String.format("[MissionManager] Category '%s' has %d missions loaded.", cat, count)));
+        }
     }
 
     public Mission getMission(String missionId) {
+        // No logging needed for simple getter usually, unless for debugging specific mission retrieval issues.
         return allMissions.get(missionId);
     }
 
@@ -144,41 +159,53 @@ public class MissionManager {
         return Collections.unmodifiableCollection(allMissions.values());
     }
 
-    // Placeholder for future methods
     public List<Mission> getAvailableMissions(PlayerMissionData playerData) {
-        // Logic to determine which missions are available based on dependencies, completions, cooldowns, permissions
+        // No detailed logging here as it's a filter method, might be called frequently.
+        // Specific checks within canStartMission will log reasons for unavailability.
         return allMissions.values().stream()
-                .filter(mission -> !playerData.hasCompletedMission(mission.getId()) || !"NONE".equals(mission.getRepeatableType())) // crude filter for now
+                .filter(mission -> !playerData.hasCompletedMission(mission.getId()) || !"NONE".equals(mission.getRepeatableType()))
                 .filter(mission -> !playerData.isMissionOnCooldown(mission.getId()))
-                // Add dependency checks, permission checks etc.
                 .collect(Collectors.toList());
     }
 
-    public void startMission(PlayerMissionData playerData, String missionId) {
-        Mission mission = getMission(missionId);
-        if (mission != null) { // canStartMission should be called before this
-            playerData.addActiveMission(mission);
-            // Log or message player
-        }
-    }
+    // This method is mostly internal logic for canStartMission, not directly called by commands usually.
+    // public void startMission(PlayerMissionData playerData, String missionId) {
+    //     Mission mission = getMission(missionId);
+    //     if (mission != null) {
+    //         playerData.addActiveMission(mission);
+    //     }
+    // }
 
     public boolean canStartMission(Player player, Mission mission) {
-        if (mission == null) return false;
-        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
+        String playerName = player.getName();
+        UUID playerUUID = player.getUniqueId();
+        String missionName = mission != null ? mission.getName() : "null_mission_object";
+        String missionId = mission != null ? mission.getId() : "null_mission_id";
+        // plugin.getLogger().info(String.format("[MissionManager] Checking if player %s (UUID: %s) can start mission '%s' (ID: %s)",
+        //        playerName, playerUUID, missionName, missionId)); // This can be too verbose
+
+        if (mission == null) {
+            plugin.getLogger().warning(String.format("[MissionManager] canStartMission check for %s: Mission object is null.", playerName));
+            return false;
+        }
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(playerUUID);
 
         if (playerData.getActiveMissionProgress(mission.getId()) != null) {
             player.sendMessage(ChatColor.YELLOW + "You have already started the mission: " + mission.getName());
+            plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Already active.", playerName, missionName, missionId));
             return false;
         }
 
         if (playerData.hasCompletedMission(mission.getId()) && "NONE".equalsIgnoreCase(mission.getRepeatableType())) {
             player.sendMessage(ChatColor.YELLOW + "You have already completed the mission: " + mission.getName() + " and it's not repeatable.");
+            plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Already completed and not repeatable.", playerName, missionName, missionId));
             return false;
         }
 
         if (playerData.isMissionOnCooldown(mission.getId())) {
             long remaining = (playerData.getCooldownEndTime(mission.getId()) - System.currentTimeMillis()) / 1000;
             player.sendMessage(ChatColor.YELLOW + "Mission '" + mission.getName() + "' is on cooldown. Time remaining: " + formatCooldown(remaining));
+            plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): On cooldown (%s remaining).", playerName, missionName, missionId, formatCooldown(remaining)));
             return false;
         }
 
@@ -188,6 +215,7 @@ public class MissionManager {
                     Mission dependencyMission = getMission(dependencyId);
                     String depName = dependencyMission != null ? dependencyMission.getName() : dependencyId;
                     player.sendMessage(ChatColor.RED + "You must complete the mission '" + depName + "' first.");
+                    plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Dependency '%s' not met.", playerName, missionName, missionId, depName));
                     return false;
                 }
             }
@@ -195,73 +223,174 @@ public class MissionManager {
 
         if (mission.getRequiredPermission() != null && !mission.getRequiredPermission().isEmpty() && !player.hasPermission(mission.getRequiredPermission())) {
             player.sendMessage(ChatColor.RED + "You do not have permission to start this mission.");
+            plugin.getLogger().warning(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Lacks permission '%s'.",
+                    playerName, missionName, missionId, mission.getRequiredPermission()));
             return false;
         }
+        // plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) CAN start mission '%s' (ID: %s). All checks passed.",
+        //        playerName, playerUUID, missionName, missionId)); // Also potentially verbose
         return true;
     }
 
     public boolean startMission(Player player, Mission mission) {
+        String playerName = player.getName();
+        UUID playerUUID = player.getUniqueId();
+        String missionName = mission != null ? mission.getName() : "null_mission_object";
+        String missionId = mission != null ? mission.getId() : "null_mission_id";
+        plugin.getLogger().info(String.format("[MissionManager] Attempting to start mission '%s' (ID: %s) for player %s (UUID: %s).",
+                missionName, missionId, playerName, playerUUID));
+
         if (!canStartMission(player, mission)) {
-            return false; // canStartMission already sent the message
+            // canStartMission already sent the message and logged the specific reason
+            plugin.getLogger().warning(String.format("[MissionManager] startMission failed for player %s, mission '%s' (ID: %s) because canStartMission returned false.",
+                    playerName, missionName, missionId));
+            return false;
         }
-        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
-        playerData.addActiveMission(mission); // This creates PlayerMissionProgress internally
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(playerUUID);
+        playerData.addActiveMission(mission);
         player.sendMessage(ChatColor.GREEN + "Mission '" + mission.getName() + "' started!");
+        plugin.getLogger().info(String.format("[MissionManager] Successfully started mission '%s' (ID: %s) for player %s (UUID: %s).",
+                missionName, missionId, playerName, playerUUID));
         return true;
     }
 
-    public void completeMission(Player player, Mission mission) {
-        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
-        if (mission == null || playerData.getActiveMissionProgress(mission.getId()) == null) {
-            // Not active or doesn't exist, should not happen if logic is correct
+    public void giveMissionRewards(Player player, Mission mission) {
+        MissionReward rewards = mission.getRewards();
+        String missionName = mission.getName();
+        String missionId = mission.getId();
+        String playerName = player.getName();
+        UUID playerUUID = player.getUniqueId();
+        plugin.getLogger().info(String.format("[MissionManager] Giving rewards for mission '%s' (ID: %s) to player %s (UUID: %s).",
+                missionName, missionId, playerName, playerUUID));
+
+        if (rewards == null) {
+            plugin.getLogger().warning(String.format("[MissionManager] No rewards defined for mission '%s' (ID: %s). Player %s receives nothing.",
+                    missionName, missionId, playerName));
             return;
         }
 
-        playerData.markMissionCompleted(mission.getId(), mission); // This handles cooldowns internally
+        boolean allRewardsGiven = true;
+        StringBuilder rewardSummary = new StringBuilder();
 
-        MissionReward rewards = mission.getRewards();
-        if (rewards != null) {
-            if (rewards.getMoney() > 0 && plugin.getEconomy() != null) {
-                plugin.getEconomy().depositPlayer(player, rewards.getMoney());
+        if (rewards.getMoney() > 0 && plugin.getEconomy() != null && EconomyManager.isEconomyAvailable()) {
+            if (EconomyManager.deposit(player, rewards.getMoney())) { // EconomyManager logs success/failure
                 player.sendMessage(ChatColor.GOLD + "You received " + rewards.getMoney() + " " + plugin.getEconomy().currencyNamePlural() + "!");
-            }
-            if (rewards.getExperience() > 0) {
-                player.giveExp(rewards.getExperience()); // giveExp takes raw XP points
-                player.sendMessage(ChatColor.AQUA + "You received " + rewards.getExperience() + " experience points!");
-            }
-            if (rewards.getItems() != null && !rewards.getItems().isEmpty()) {
-                for (ItemStack item : rewards.getItems()) {
-                    HashMap<Integer, ItemStack> unadded = player.getInventory().addItem(item.clone());
-                    if (!unadded.isEmpty()) {
-                        player.getWorld().dropItemNaturally(player.getLocation(), unadded.get(0));
-                        player.sendMessage(ChatColor.YELLOW + "Some items couldn't fit in your inventory and were dropped nearby!");
-                    }
-                }
-                player.sendMessage(ChatColor.GREEN + "You received item rewards!");
-            }
-            if (rewards.getCommands() != null && !rewards.getCommands().isEmpty()) {
-                for (String command : rewards.getCommands()) {
-                    String processedCommand = command.replace("{player}", player.getName());
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), processedCommand);
-                }
+                rewardSummary.append(String.format("Money: %.2f, ", rewards.getMoney()));
+            } else {
+                plugin.getLogger().warning(String.format("[MissionManager] Failed to give money reward (%.2f) for mission '%s' to player %s.",
+                        rewards.getMoney(), missionId, playerName));
+                allRewardsGiven = false;
             }
         }
+        if (rewards.getExperience() > 0) {
+            player.giveExp(rewards.getExperience());
+            player.sendMessage(ChatColor.AQUA + "You received " + rewards.getExperience() + " experience points!");
+            rewardSummary.append(String.format("XP: %d, ", rewards.getExperience()));
+        }
+        if (rewards.getItems() != null && !rewards.getItems().isEmpty()) {
+            int itemsGivenCount = 0;
+            for (ItemStack item : rewards.getItems()) {
+                HashMap<Integer, ItemStack> unadded = player.getInventory().addItem(item.clone());
+                if (!unadded.isEmpty()) {
+                    player.getWorld().dropItemNaturally(player.getLocation(), unadded.get(0));
+                    player.sendMessage(ChatColor.YELLOW + "Some items couldn't fit in your inventory and were dropped nearby!");
+                    plugin.getLogger().warning(String.format("[MissionManager] Item reward %s for mission '%s' for player %s was partially dropped.",
+                            unadded.get(0).toString(), missionId, playerName));
+                    allRewardsGiven = false; // Or handle as partial success
+                }
+                itemsGivenCount++;
+            }
+            if (itemsGivenCount > 0) {
+                player.sendMessage(ChatColor.GREEN + "You received item rewards!");
+                rewardSummary.append(String.format("Items: %d types, ", itemsGivenCount));
+            }
+        }
+        if (rewards.getCommands() != null && !rewards.getCommands().isEmpty()) {
+            int commandsExecuted = 0;
+            for (String command : rewards.getCommands()) {
+                String processedCommand = command.replace("{player}", player.getName());
+                try {
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), processedCommand);
+                    plugin.getLogger().info(String.format("[MissionManager] Executed reward command for mission '%s' for player %s: %s",
+                            missionId, playerName, processedCommand));
+                    commandsExecuted++;
+                } catch (Exception e) {
+                    plugin.getLogger().log(Level.SEVERE, String.format("[MissionManager] Failed to execute reward command '%s' for mission '%s' for player %s.",
+                            processedCommand, missionId, playerName), e);
+                    allRewardsGiven = false;
+                }
+            }
+            if (commandsExecuted > 0) rewardSummary.append(String.format("Commands: %d, ", commandsExecuted));
+        }
+
+        if (allRewardsGiven) {
+            plugin.getLogger().info(String.format("[MissionManager] All rewards for mission '%s' (ID: %s) successfully given to player %s. Summary: %s",
+                    missionName, missionId, playerName, rewardSummary.length() > 0 ? rewardSummary.substring(0, rewardSummary.length() - 2) : "None"));
+        } else {
+            plugin.getLogger().warning(String.format("[MissionManager] Some rewards for mission '%s' (ID: %s) failed to be given to player %s. Summary of attempted: %s",
+                    missionName, missionId, playerName, rewardSummary.length() > 0 ? rewardSummary.substring(0, rewardSummary.length() - 2) : "None"));
+        }
+    }
+
+
+    public void completeMission(Player player, Mission mission) {
+        String playerName = player.getName();
+        UUID playerUUID = player.getUniqueId();
+        String missionName = mission != null ? mission.getName() : "null_mission_object";
+        String missionId = mission != null ? mission.getId() : "null_mission_id";
+        plugin.getLogger().info(String.format("[MissionManager] Attempting to complete mission '%s' (ID: %s) for player %s (UUID: %s).",
+                missionName, missionId, playerName, playerUUID));
+
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(playerUUID);
+        if (mission == null || playerData.getActiveMissionProgress(missionId) == null) {
+            plugin.getLogger().warning(String.format("[MissionManager] completeMission called for %s, but mission '%s' is null or not active for player.", playerName, missionId));
+            return;
+        }
+
+        playerData.markMissionCompleted(mission.getId(), mission); // Handles cooldowns
+        giveMissionRewards(player, mission); // giveMissionRewards logs its own details
+
         player.sendMessage(ChatColor.GREEN + "Mission '" + mission.getName() + "' completed! Rewards received.");
-        // Optional: Broadcast
+        plugin.getLogger().info(String.format("[MissionManager] Mission '%s' (ID: %s) successfully completed by player %s (UUID: %s).",
+                missionName, missionId, playerName, playerUUID));
     }
 
     public void abandonMission(Player player, String missionId) {
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
+        Mission mission = getMission(missionId); // Get mission for logging name
+        String missionName = mission != null ? mission.getName() : missionId;
+        plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) attempting to abandon mission '%s' (ID: %s).",
+                player.getName(), player.getUniqueId(), missionName, missionId));
+
         if (playerData.getActiveMissionProgress(missionId) != null) {
             playerData.removeActiveMission(missionId);
-            Mission mission = getMission(missionId);
-            player.sendMessage(ChatColor.YELLOW + "Mission '" + (mission != null ? mission.getName() : missionId) + "' abandoned.");
+            player.sendMessage(ChatColor.YELLOW + "Mission '" + missionName + "' abandoned.");
+            plugin.getLogger().info(String.format("[MissionManager] Player %s successfully abandoned mission '%s' (ID: %s).", player.getName(), missionName, missionId));
         } else {
             player.sendMessage(ChatColor.RED + "You are not currently on that mission.");
+            plugin.getLogger().warning(String.format("[MissionManager] Player %s failed to abandon mission '%s' (ID: %s): Not active.", player.getName(), missionName, missionId));
         }
     }
 
-    public boolean isMissionComplete(Player player, Mission mission) {
+    public void resetMissionProgress(Player player, String missionId) {
+        PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
+        Mission mission = getMission(missionId);
+        String missionName = mission != null ? mission.getName() : missionId;
+        plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) attempting to reset progress for mission '%s' (ID: %s).",
+                player.getName(), player.getUniqueId(), missionName, missionId));
+
+        if (playerData.resetMission(missionId)) { // Assuming PlayerMissionData.resetMission handles removal from active and cooldowns
+            player.sendMessage(ChatColor.YELLOW + "Progress for mission '" + missionName + "' has been reset.");
+            plugin.getLogger().info(String.format("[MissionManager] Player %s successfully reset progress for mission '%s' (ID: %s).", player.getName(), missionName, missionId));
+        } else {
+            player.sendMessage(ChatColor.RED + "Could not reset progress for mission '" + missionName + "'. It might not be active or completed.");
+            plugin.getLogger().warning(String.format("[MissionManager] Player %s failed to reset mission '%s' (ID: %s): Not active or not completed, or no progress to reset.",
+                    player.getName(), missionName, missionId));
+        }
+    }
+
+
+    public boolean isMissionComplete(Player player, Mission mission) { // This is a check method, extensive logging might be too much.
         if (mission == null) return false;
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         PlayerMissionProgress progress = playerData.getActiveMissionProgress(mission.getId());

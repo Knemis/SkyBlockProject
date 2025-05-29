@@ -36,8 +36,18 @@ public class MissionGUIManager {
     }
 
     public void openMainMissionGui(Player player, MissionCategory categoryToShow, int page) {
+        plugin.getLogger().info(String.format("[MissionGUIManager] Opening main mission GUI for player %s (UUID: %s), Category: %s, Page: %d",
+                player.getName(), player.getUniqueId(), categoryToShow.name(), page));
+
         MissionManager missionManager = plugin.getMissionManager();
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
+
+        if (missionManager == null || playerData == null) {
+            plugin.getLogger().severe(String.format("[MissionGUIManager] Failed to open GUI for %s: MissionManager (%s) or PlayerMissionData (%s) is null.",
+                    player.getName(), missionManager == null ? "null" : "ok", playerData == null ? "null" : "ok"));
+            player.sendMessage(ChatColor.RED + "An error occurred while opening the missions GUI. Please contact an administrator.");
+            return;
+        }
 
         List<Mission> missionsToDisplay;
         switch (categoryToShow) {

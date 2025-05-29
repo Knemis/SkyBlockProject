@@ -24,27 +24,42 @@ public class MissionPlayerDataManager {
     }
 
     public PlayerMissionData getPlayerData(UUID playerUuid) {
+        if (playerUuid == null) {
+            plugin.getLogger().warning("[MissionPlayerDataManager] getPlayerData called with null playerUuid.");
+            return new PlayerMissionData(null); // Or throw IllegalArgumentException
+        }
         if (playerDataCache.containsKey(playerUuid)) {
             return playerDataCache.get(playerUuid);
         }
-        // loadPlayerData will cache it if found, or create a new one and cache if not.
-        loadPlayerData(playerUuid);
-        // If loadPlayerData created a new one because file didn't exist, it's now in cache.
-        // If load failed catastrophically and didn't cache, this might still be null,
-        // so ensure a new one is created as a fallback.
+        loadPlayerData(playerUuid); // This will cache it or create a new one if not found/failed
+
+        // Ensure data is in cache after load attempt, if not, create new as a final fallback
         if (!playerDataCache.containsKey(playerUuid)) {
+            plugin.getLogger().warning(String.format("[MissionPlayerDataManager] loadPlayerData for %s did not result in cached data. Creating new PlayerMissionData as fallback.", playerUuid));
             PlayerMissionData newPlayerData = new PlayerMissionData(playerUuid);
             playerDataCache.put(playerUuid, newPlayerData);
-            plugin.getLogger().info("Created new PlayerMissionData for " + playerUuid.toString());
             return newPlayerData;
         }
         return playerDataCache.get(playerUuid);
     }
 
     public void loadPlayerData(UUID playerUuid) {
+        if (playerUuid == null) {
+            plugin.getLogger().warning("[MissionPlayerDataManager] loadPlayerData called with null playerUuid. Skipping.");
+            return;
+        }
+        plugin.getLogger().info(String.format("[MissionPlayerDataManager] Attempting to load mission data for player %s.", playerUuid));
         File playerFile = new File(plugin.getDataFolder() + File.separator + "missiondata", playerUuid.toString() + ".yml");
+
         if (!playerFile.getParentFile().exists()) {
-            playerFile.getParentFile().mkdirs();
+            if (!playerFile.getParentFile().mkdirs()) {
+                plugin.getLogger().severe(String.format("[MissionPlayerDataManager] Could not create missiondata directory for player %s at %s",
+                        playerUuid, playerFile.getParentFile().getAbsolutePath()));
+                // Create new data in cache as loading failed due to directory issue
+                playerDataCache.put(playerUuid, new PlayerMissionData(playerUuid));
+                plugin.getLogger().warning(String.format("[MissionPlayerDataManager] Created new PlayerMissionData in cache for %s due to directory creation failure.", playerUuid));
+                return;
+            }
         }
 
         if (playerFile.exists()) {
@@ -52,6 +67,8 @@ public class MissionPlayerDataManager {
             Map<String, PlayerMissionProgress> activeMissions = new HashMap<>();
             Set<String> completedMissions = new HashSet<>(config.getStringList("completed-missions"));
             Map<String, Long> missionCooldowns = new HashMap<>();
+            int loadedActive = 0;
+            int warnings = 0;
 
             ConfigurationSection activeMissionsSection = config.getConfigurationSection("active-missions");
             if (activeMissionsSection != null) {
@@ -67,11 +84,17 @@ public class MissionPlayerDataManager {
                                     int objectiveIndex = Integer.parseInt(objectiveIndexStr);
                                     objectiveProgressMap.put(objectiveIndex, objectivesSection.getInt(objectiveIndexStr));
                                 } catch (NumberFormatException e) {
-                                    plugin.getLogger().warning("Invalid objective index '" + objectiveIndexStr + "' for mission " + missionId + " for player " + playerUuid);
+                                    plugin.getLogger().warning(String.format("[MissionPlayerDataManager] Invalid objective index '%s' for mission %s for player %s. Skipping objective.",
+                                            objectiveIndexStr, missionId, playerUuid));
+                                    warnings++;
                                 }
                             }
                         }
                         activeMissions.put(missionId, new PlayerMissionProgress(missionId, objectiveProgressMap, startTime));
+                        loadedActive++;
+                    } else {
+                        plugin.getLogger().warning(String.format("[MissionPlayerDataManager] Mission progress section for mission %s is null for player %s. Skipping active mission entry.", missionId, playerUuid));
+                        warnings++;
                     }
                 }
             }
@@ -79,35 +102,49 @@ public class MissionPlayerDataManager {
             ConfigurationSection cooldownsSection = config.getConfigurationSection("mission-cooldowns");
             if (cooldownsSection != null) {
                 for (String missionId : cooldownsSection.getKeys(false)) {
-                    missionCooldowns.put(missionId, cooldownsSection.getLong(missionId));
+                    if (cooldownsSection.isLong(missionId) || cooldownsSection.isInt(missionId)) {
+                        missionCooldowns.put(missionId, cooldownsSection.getLong(missionId));
+                    } else {
+                        plugin.getLogger().warning(String.format("[MissionPlayerDataManager] Invalid cooldown value for mission %s for player %s. Must be a number. Skipping cooldown.", missionId, playerUuid));
+                        warnings++;
+                    }
                 }
             }
             PlayerMissionData loadedData = new PlayerMissionData(playerUuid, activeMissions, completedMissions, missionCooldowns);
             playerDataCache.put(playerUuid, loadedData);
-            plugin.getLogger().info("Loaded mission data for player " + playerUuid.toString());
+            plugin.getLogger().info(String.format("[MissionPlayerDataManager] Successfully loaded mission data for player %s. Active: %d, Completed: %d, Cooldowns: %d. Warnings during load: %d.",
+                    playerUuid, loadedActive, completedMissions.size(), missionCooldowns.size(), warnings));
         } else {
-            // Player file doesn't exist, create new data
             PlayerMissionData newPlayerData = new PlayerMissionData(playerUuid);
             playerDataCache.put(playerUuid, newPlayerData);
-            plugin.getLogger().info("No mission data file found for " + playerUuid.toString() + ". Created new PlayerMissionData.");
+            plugin.getLogger().info(String.format("[MissionPlayerDataManager] No mission data file found for player %s. Created new PlayerMissionData in cache.", playerUuid));
         }
     }
 
     public void savePlayerData(UUID playerUuid, boolean removeFromCache) {
-        PlayerMissionData dataToSave = playerDataCache.get(playerUuid);
-        if (dataToSave == null) {
-            plugin.getLogger().warning("Attempted to save mission data for " + playerUuid + ", but no data was found in cache.");
+        if (playerUuid == null) {
+            plugin.getLogger().warning("[MissionPlayerDataManager] savePlayerData called with null playerUuid. Skipping.");
             return;
         }
+        PlayerMissionData dataToSave = playerDataCache.get(playerUuid);
+        if (dataToSave == null) {
+            plugin.getLogger().warning(String.format("[MissionPlayerDataManager] Attempted to save mission data for %s, but no data was found in cache. Skipping save.", playerUuid));
+            return;
+        }
+        plugin.getLogger().info(String.format("[MissionPlayerDataManager] Attempting to save mission data for player %s.", playerUuid));
 
         File playerFile = new File(plugin.getDataFolder() + File.separator + "missiondata", playerUuid.toString() + ".yml");
         if (!playerFile.getParentFile().exists()) {
-            playerFile.getParentFile().mkdirs();
+            if (!playerFile.getParentFile().mkdirs()) {
+                plugin.getLogger().severe(String.format("[MissionPlayerDataManager] Could not create missiondata directory for player %s at %s. Save failed.",
+                        playerUuid, playerFile.getParentFile().getAbsolutePath()));
+                return;
+            }
         }
 
         YamlConfiguration config = new YamlConfiguration();
+        int savedActive = 0;
 
-        // Save active missions
         if (dataToSave.getActiveMissions() != null && !dataToSave.getActiveMissions().isEmpty()) {
             for (Map.Entry<String, PlayerMissionProgress> entry : dataToSave.getActiveMissions().entrySet()) {
                 String missionId = entry.getKey();
@@ -119,46 +156,55 @@ public class MissionPlayerDataManager {
                         config.set(basePath + ".objectives." + objEntry.getKey(), objEntry.getValue());
                     }
                 }
+                savedActive++;
             }
         } else {
-            config.set("active-missions", null); // Clear section if empty
+            config.set("active-missions", null);
         }
-
 
         config.set("completed-missions", new ArrayList<>(dataToSave.getCompletedMissions()));
 
-        // Save cooldowns - Bukkit should handle Map<String, Long>
         if (dataToSave.getMissionCooldowns() != null && !dataToSave.getMissionCooldowns().isEmpty()) {
-            config.createSection("mission-cooldowns", dataToSave.getMissionCooldowns());
+            // Bukkit's config system should handle Map<String, Long> directly, but let's be safe
+            ConfigurationSection cooldownsSection = config.createSection("mission-cooldowns");
+            dataToSave.getMissionCooldowns().forEach(cooldownsSection::set);
         } else {
-            config.set("mission-cooldowns", null); // Clear section if empty
+            config.set("mission-cooldowns", null);
         }
-
 
         try {
             config.save(playerFile);
-            plugin.getLogger().info("Saved mission data for player " + playerUuid.toString());
+            plugin.getLogger().info(String.format("[MissionPlayerDataManager] Successfully saved mission data for player %s to %s. Active: %d, Completed: %d, Cooldowns: %d.",
+                    playerUuid, playerFile.getName(), savedActive, dataToSave.getCompletedMissions().size(), dataToSave.getMissionCooldowns().size()));
         } catch (IOException e) {
-            plugin.getLogger().log(Level.SEVERE, "Could not save mission data for " + playerUuid.toString(), e);
+            plugin.getLogger().log(Level.SEVERE, String.format("[MissionPlayerDataManager] Could not save mission data for player %s to %s.", playerUuid, playerFile.getName()), e);
         }
 
         if (removeFromCache) {
             playerDataCache.remove(playerUuid);
-            plugin.getLogger().info("Removed mission data from cache for player " + playerUuid.toString());
+            plugin.getLogger().info(String.format("[MissionPlayerDataManager] Removed mission data from cache for player %s.", playerUuid));
         }
     }
 
     public void saveAllPlayerData() {
-        plugin.getLogger().info("Saving mission data for all cached players...");
-        // Iterate over a copy of keys to avoid ConcurrentModificationException if savePlayerData modifies the cache
-        for (UUID playerUuid : new HashSet<>(playerDataCache.keySet())) {
-            savePlayerData(playerUuid, false); // Don't remove from cache during a full save-all
+        plugin.getLogger().info(String.format("[MissionPlayerDataManager] Attempting to save mission data for all %d cached players...", playerDataCache.size()));
+        int count = 0;
+        for (UUID playerUuid : new HashSet<>(playerDataCache.keySet())) { // Iterate over a copy of keys
+            savePlayerData(playerUuid, false); // false: do not remove from cache during a save-all
+            count++;
         }
-        plugin.getLogger().info("Finished saving all cached player mission data.");
+        plugin.getLogger().info(String.format("[MissionPlayerDataManager] Finished saving mission data for %d players.", count));
     }
 
     public void clearPlayerDataFromCache(UUID playerUuid) {
-        playerDataCache.remove(playerUuid);
-        plugin.getLogger().info("Cleared mission data from cache for player " + playerUuid.toString() + " (if present).");
+        if (playerUuid == null) {
+            plugin.getLogger().warning("[MissionPlayerDataManager] clearPlayerDataFromCache called with null playerUuid.");
+            return;
+        }
+        if (playerDataCache.remove(playerUuid) != null) {
+            plugin.getLogger().info(String.format("[MissionPlayerDataManager] Cleared mission data from cache for player %s.", playerUuid));
+        } else {
+            plugin.getLogger().fine(String.format("[MissionPlayerDataManager] Attempted to clear mission data from cache for player %s, but they were not cached.", playerUuid));
+        }
     }
 }
