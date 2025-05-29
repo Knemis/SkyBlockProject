@@ -3,6 +3,7 @@ package com.knemis.skyblock.skyblockcoreproject.island;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
@@ -410,7 +411,7 @@ public class IslandDataHandler {
             RegionManager locRegionManager = container.get(BukkitAdapter.adapt(location.getWorld()));
             if(locRegionManager == null) return null;
 
-            var applicableRegions = locRegionManager.getApplicableRegions(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            com.sk89q.worldguard.protection.ApplicableRegionSet applicableRegions = locRegionManager.getApplicableRegions(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
 
             for (ProtectedRegion region : applicableRegions) {
                 String regionId = region.getId();
