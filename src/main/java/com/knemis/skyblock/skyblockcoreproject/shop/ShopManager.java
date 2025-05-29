@@ -91,7 +91,6 @@ public class ShopManager {
         pendingShops.put(location, newShop);
         plugin.getLogger().info(String.format("[ShopManager] Pending shop initiated successfully: Location %s for owner %s (UUID: %s) with mode %s. Shop ID for internal tracking: %s.",
                 locStr, player.getName(), player.getUniqueId(), initialShopMode, newShop.getShopId()));
-                newShop.getShopId(), locStr, player.getName(), player.getUniqueId(), initialShopMode));
         return newShop;
     }
 
@@ -184,12 +183,12 @@ public class ShopManager {
                 chestInventory.clear(); // Clear any items that might have been left from quantity GUI
                 chestInventory.addItem(initialStockItem.clone());
                 plugin.getLogger().info(String.format("[ShopManager] Initial stock (%s) added to shop %s at %s.",
-                        initialStockItem.toString(), Shop.locationToString(shop.getLocation()), locStr)); // Changed shopId to location
+                        initialStockItem.toString(), Shop.locationToString(pendingShop.getLocation()), locStr));
             } else {
-                plugin.getLogger().severe(String.format("[ShopManager] Shop block at %s is not a Chest for shop at %s. Initial stock not added.", locStr, Shop.locationToString(shop.getLocation()))); // Changed shopId to location
+                plugin.getLogger().severe(String.format("[ShopManager] Shop block at %s is not a Chest for shop at %s. Initial stock not added.", locStr, Shop.locationToString(pendingShop.getLocation())));
             }
         } else if (needsStocking && !canBeStockedByPlayerBuying) {
-            plugin.getLogger().info(String.format("[ShopManager] Initial stock for shop at %s (%s) not added as shop is sell-only (buyPrice is -1).", locStr, Shop.locationToString(shop.getLocation()))); // Changed shopId to location
+            plugin.getLogger().info(String.format("[ShopManager] Initial stock for shop at %s (%s) not added as shop is sell-only (buyPrice is -1).", locStr, Shop.locationToString(pendingShop.getLocation())));
         }
 
         plugin.getLogger().info(String.format("[ShopManager] Shop setup finalized: Location %s by %s. Item: %s, QtyPerBundle: %d, BuyPrice: %.2f, SellPrice: %.2f, Mode: %s. Stocked: %b",
