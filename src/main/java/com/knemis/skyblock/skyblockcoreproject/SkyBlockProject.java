@@ -178,8 +178,10 @@ public final class SkyBlockProject extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
         getServer().getPluginManager().registerEvents(new MissionListener(this), this);
         getServer().getPluginManager().registerEvents(new MissionObjectiveListener(this, this.missionManager), this); // Register new listener
+
         getServer().getPluginManager().registerEvents(new ShopAnvilListener(this, this.shopSetupGUIManager), this);
-        getLogger().info("ShopAnvilListener registered."); // Optional: for confirmation
+        getLogger().info("ShopAnvilListener registered.");
+
         if (getConfig().getBoolean("island.enforce-boundaries", true)) {
             getServer().getPluginManager().registerEvents(new PlayerBoundaryListener(this), this);
         }

@@ -1,18 +1,18 @@
 package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // Keep if admin GUIs are relevant for onInventoryClose
+// import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // Keep if admin GUIs are relevant for onInventoryClose
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager; // Keep if relevant for onInventoryClose
+// import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager; // Keep if relevant for onInventoryClose
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.Bukkit;
+// import org.bukkit.Bukkit; // Not directly used in this revised version
 import org.bukkit.ChatColor;
-import org.bukkit.Location;
+// import org.bukkit.Location; // Not directly used in this revised version
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,14 +21,13 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent; // Keep for now, though price input might be fully Anvil
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
+// import org.bukkit.inventory.meta.ItemMeta; // Not directly used for creating items here
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.UUID;
-// import java.util.logging.Level; // Not used directly, consider removing
 
 public class ShopSetupListener implements Listener {
 
@@ -36,9 +35,9 @@ public class ShopSetupListener implements Listener {
     private final ShopManager shopManager;
     private final ShopSetupGUIManager shopSetupGUIManager;
 
-    private static final int PLAYER_BUY_SHOP_SLOT = 11; // Owner Sells Items
-    private static final int PLAYER_SELL_SHOP_SLOT = 13; // Owner Buys Items
-    private static final int PLAYER_BUY_SELL_SHOP_SLOT = 15; // Dual function
+    private static final int PLAYER_BUYS_FROM_SHOP_SLOT = 11;
+    private static final int PLAYER_SELLS_TO_SHOP_SLOT = 13;
+    private static final int PLAYER_BUY_SELL_SHOP_SLOT = 15;
 
     private static final int ITEM_SELECT_PLACEMENT_SLOT = 13;
 
@@ -65,7 +64,6 @@ public class ShopSetupListener implements Listener {
         if (session == null) {
             if (viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.SHOP_TYPE_TITLE)) ||
                     viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE)) ||
-                    viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.QUANTITY_INPUT_TITLE)) ||
                     viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ANVIL_TITLE_COMPONENT)) ||
                     viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.CONFIRMATION_TITLE))) {
                 event.setCancelled(true);
@@ -103,11 +101,11 @@ public class ShopSetupListener implements Listener {
 
             int rawSlot = event.getRawSlot();
             boolean intentSet = false;
-            if (rawSlot == PLAYER_BUY_SHOP_SLOT) {
+            if (rawSlot == PLAYER_BUYS_FROM_SHOP_SLOT) {
                 session.setIntentToAllowPlayerBuy(true);
                 session.setIntentToAllowPlayerSell(false);
                 intentSet = true;
-            } else if (rawSlot == PLAYER_SELL_SHOP_SLOT) {
+            } else if (rawSlot == PLAYER_SELLS_TO_SHOP_SLOT) {
                 session.setIntentToAllowPlayerBuy(false);
                 session.setIntentToAllowPlayerSell(true);
                 intentSet = true;
@@ -118,7 +116,7 @@ public class ShopSetupListener implements Listener {
             }
 
             if (intentSet) {
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s set intent: Buy=%b, Sell=%b for shop at %s.",
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s set intent: OwnerSells=%b, OwnerBuys=%b for shop at %s.",
                         player.getName(), session.isIntentToAllowPlayerBuy(), session.isIntentToAllowPlayerSell(), Shop.locationToString(session.getChestLocation())));
                 shopSetupGUIManager.openItemSelectionMenu(player, pendingShop);
             }
@@ -129,7 +127,7 @@ public class ShopSetupListener implements Listener {
         } else if (viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.QUANTITY_INPUT_TITLE))) {
             event.setCancelled(true);
             player.closeInventory();
-            player.sendMessage(ChatColor.YELLOW + "This setup step is being updated. Please restart shop setup.");
+            player.sendMessage(ChatColor.YELLOW + "This setup step has been replaced by the Anvil GUI. Please restart shop setup if you see this.");
             shopManager.cancelShopSetup(playerId);
 
         } else if (viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.CONFIRMATION_TITLE))) {
@@ -142,11 +140,11 @@ public class ShopSetupListener implements Listener {
                 return;
             }
 
-            ItemStack currentItem = event.getCurrentItem();
-            if (currentItem != null) {
-                if (currentItem.getType() == Material.GREEN_WOOL) {
+            ItemStack currentItemClicked = event.getCurrentItem();
+            if (currentItemClicked != null) {
+                if (currentItemClicked.getType() == Material.GREEN_WOOL) {
                     shopManager.finalizeShopSetup(playerId);
-                } else if (currentItem.getType() == Material.RED_WOOL) {
+                } else if (currentItemClicked.getType() == Material.RED_WOOL) {
                     player.sendMessage(ChatColor.YELLOW + "Shop setup cancelled.");
                     shopManager.cancelShopSetup(playerId);
                 }
@@ -162,22 +160,21 @@ public class ShopSetupListener implements Listener {
             if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                 ItemStack itemToMove = event.getCurrentItem();
                 if (itemToMove != null && itemToMove.getType() != Material.AIR) {
-                    ItemStack currentItemInSlot = guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT);
-                    if (currentItemInSlot == null || currentItemInSlot.getType() == Material.GRAY_STAINED_GLASS_PANE || currentItemInSlot.getType() == Material.AIR) {
-
+                    ItemStack currentItemInGUISlot = guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT);
+                    if (currentItemInGUISlot == null || currentItemInGUISlot.getType() == Material.GRAY_STAINED_GLASS_PANE || currentItemInGUISlot.getType() == Material.AIR) {
                         event.setCancelled(true);
-                        ItemStack movedItemClone = itemToMove.clone();
-                        guiInventory.setItem(ITEM_SELECT_PLACEMENT_SLOT, movedItemClone);
+                        ItemStack movedItemCloneForTemplate = itemToMove.clone();
+
+                        pendingShop.setTemplateItemStack(movedItemCloneForTemplate);
                         event.setCurrentItem(null);
                         player.updateInventory();
 
-                        pendingShop.setTemplateItemStack(movedItemClone.clone());
-                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s auto-selected item %s (shift-click) for shop at %s. Proceeding to price/quantity setup.",
-                                player.getName(), movedItemClone.getType(), Shop.locationToString(session.getChestLocation())));
+                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s auto-selected item %s (shift-click) for shop at %s. Proceeding to Anvil.",
+                                player.getName(), pendingShop.getTemplateItemStack().getType(), Shop.locationToString(session.getChestLocation())));
                         shopSetupGUIManager.openPriceQuantityAnvilGUI(player, pendingShop);
                         return;
                     } else {
-                        player.sendMessage(ChatColor.YELLOW + "Item selection slot is already full. Please remove the current item first.");
+                        player.sendMessage(ChatColor.YELLOW + "Item selection slot is already effectively full. Please clear it first or click directly.");
                         event.setCancelled(true);
                     }
                 } else {
@@ -192,28 +189,17 @@ public class ShopSetupListener implements Listener {
         if (clickedInventory != null && clickedInventory.equals(guiInventory)) {
             if (event.getRawSlot() == ITEM_SELECT_PLACEMENT_SLOT) {
                 ItemStack cursorItem = event.getCursor();
-                // ItemStack currentItemInSlot = event.getCurrentItem(); // Not used in this revised logic
-
-                boolean isPlacingAction = event.getAction() == InventoryAction.PLACE_ONE ||
-                        event.getAction() == InventoryAction.PLACE_ALL ||
-                        event.getAction() == InventoryAction.PLACE_SOME ||
-                        (event.getAction() == InventoryAction.SWAP_WITH_CURSOR && cursorItem != null && cursorItem.getType() != Material.AIR);
-
-                if (isPlacingAction) {
+                if (cursorItem != null && cursorItem.getType() != Material.AIR) {
                     event.setCancelled(true);
-                    ItemStack itemToPlace = cursorItem.clone();
+                    ItemStack itemToPlaceCopy = cursorItem.clone();
 
-                    pendingShop.setTemplateItemStack(itemToPlace.clone());
-                    guiInventory.setItem(ITEM_SELECT_PLACEMENT_SLOT, itemToPlace);
+                    pendingShop.setTemplateItemStack(itemToPlaceCopy.clone());
                     player.setItemOnCursor(null);
 
-                    plugin.getLogger().info(String.format("ShopSetupListener: Player %s auto-selected item %s (direct place) for shop at %s. Proceeding to price/quantity setup.",
-                            player.getName(), itemToPlace.getType(), Shop.locationToString(session.getChestLocation())));
+                    plugin.getLogger().info(String.format("ShopSetupListener: Player %s auto-selected item %s (direct place) for shop at %s. Proceeding to Anvil.",
+                            player.getName(), itemToPlaceCopy.getType(), Shop.locationToString(session.getChestLocation())));
                     shopSetupGUIManager.openPriceQuantityAnvilGUI(player, pendingShop);
-
-                } else if (event.getAction().name().startsWith("PICKUP_") ||
-                        (event.getAction() == InventoryAction.SWAP_WITH_CURSOR && (cursorItem == null || cursorItem.getType() == Material.AIR)) ||
-                        event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
+                } else if (event.getAction().name().startsWith("PICKUP_") || event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY) {
                     event.setCancelled(false);
                 } else {
                     event.setCancelled(true);
@@ -236,9 +222,9 @@ public class ShopSetupListener implements Listener {
         String closedViewTitle = LegacyComponentSerializer.legacySection().serialize(event.getView().title());
 
         if (session == null) {
-            String itemSelectTitle = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE);
-            String shopTypeTitle = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.SHOP_TYPE_TITLE);
-            if (closedViewTitle.equals(itemSelectTitle) || closedViewTitle.equals(shopTypeTitle)) {
+            String itemSelectTitleSer = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE);
+            String shopTypeTitleSer = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.SHOP_TYPE_TITLE);
+            if (closedViewTitle.equals(itemSelectTitleSer) || closedViewTitle.equals(shopTypeTitleSer)) {
                 plugin.getLogger().warning("ShopSetupListener: " + player.getName() + " closed setup GUI '" + closedViewTitle + "' but session was null.");
             }
             return;
@@ -249,57 +235,44 @@ public class ShopSetupListener implements Listener {
 
         if (sessionGuiTitle != null && !sessionGuiTitle.equals(closedViewTitle)) {
             String anvilTitleSerialized = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ANVIL_TITLE_COMPONENT);
-            if (closedViewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE)) &&
-                    sessionGuiTitle.equals(anvilTitleSerialized)) {
-                plugin.getLogger().fine("ShopSetupListener: Player " + player.getName() + " closed ITEM_SELECT_TITLE, but session already advanced to ANVIL. Auto-forwarding likely handled it.");
+            String itemSelectTitleSerialized = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE);
+
+            if (closedViewTitle.equals(itemSelectTitleSerialized) && sessionGuiTitle.equals(anvilTitleSerialized)) {
+                plugin.getLogger().fine("ShopSetupListener: Player " + player.getName() + " closed ITEM_SELECT_TITLE, but session already advanced to ANVIL. Auto-forwarding handled it.");
                 return;
             }
-            plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed GUI '%s' but session expected '%s'. Ignoring close for this specific logic.",
+            plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed GUI '%s' but session current title is '%s'. Might be normal transition or stale event.",
                     player.getName(), closedViewTitle, sessionGuiTitle));
             return;
         }
 
         if (closedViewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE))) {
             if (pendingShop == null) {
-                shopManager.cancelShopSetup(playerId); return;
+                shopManager.cancelShopSetup(playerId);
+                return;
             }
             ItemStack itemInSlot = event.getInventory().getItem(ITEM_SELECT_PLACEMENT_SLOT);
             if (itemInSlot != null && itemInSlot.getType() != Material.AIR && itemInSlot.getType() != Material.GRAY_STAINED_GLASS_PANE) {
-                pendingShop.setTemplateItemStack(itemInSlot.clone());
-
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed ITEM_SELECT_TITLE with item %s in slot. Proceeding to Anvil (fallback).",
-                        player.getName(), itemInSlot.getType()));
-
-                final Player finalPlayer = player;
-                final Shop finalPendingShop = pendingShop;
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        ShopSetupSession currentSession = shopSetupGUIManager.getPlayerSession(finalPlayer.getUniqueId());
-                        if (currentSession != null && currentSession.getPendingShop() == finalPendingShop) {
-                            shopSetupGUIManager.openPriceQuantityAnvilGUI(finalPlayer, finalPendingShop);
-                        } else {
-                            plugin.getLogger().warning("ShopSetupListener: Session changed or invalidated before fallback opening of Anvil GUI for " + finalPlayer.getName());
-                        }
-                    }
-                }.runTask(plugin);
-            } else {
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed ITEM_SELECT_TITLE with no valid item selected. Cancelling setup.", player.getName()));
-                shopManager.cancelShopSetup(playerId);
+                player.getInventory().addItem(itemInSlot.clone());
+                player.sendMessage(ChatColor.YELLOW + "Item from selection slot returned. Setup cancelled.");
+                plugin.getLogger().warning("ShopSetupListener: Item " + itemInSlot.getType() + " found in ITEM_SELECT_PLACEMENT_SLOT on explicit close for " + player.getName() + ". Returning and cancelling.");
             }
+            plugin.getLogger().info(String.format("ShopSetupListener: Player %s explicitly closed ITEM_SELECT_TITLE. Cancelling setup.", player.getName()));
+            shopManager.cancelShopSetup(playerId);
+
         } else if (closedViewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.SHOP_TYPE_TITLE))) {
             if (pendingShop != null && !session.isIntentToAllowPlayerBuy() && !session.isIntentToAllowPlayerSell()) {
                 plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE. No buy/sell intent selected. Cancelling.", player.getName()));
-                shopManager.cancelShopSetup(playerId);
             } else if (pendingShop == null) {
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE, but pendingShop is null. Cancelling.", player.getName()));
-                shopManager.cancelShopSetup(playerId);
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE, but pendingShop is null (already cancelled or error).", player.getName()));
+            } else {
+                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed SHOP_TYPE_TITLE after selecting intent. Cancelling.", player.getName()));
             }
+            shopManager.cancelShopSetup(playerId);
+
         } else if (closedViewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.CONFIRMATION_TITLE))) {
-            if (pendingShop != null && !pendingShop.isSetupComplete() && session.getExpectedInputType() != null) {
-                plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed CONFIRMATION_TITLE before final confirmation/cancellation. Cancelling setup.", player.getName()));
-                shopManager.cancelShopSetup(playerId);
-            }
+            plugin.getLogger().info(String.format("ShopSetupListener: Player %s closed CONFIRMATION_TITLE without action. Cancelling setup.", player.getName()));
+            shopManager.cancelShopSetup(playerId);
         }
     }
 
@@ -309,7 +282,7 @@ public class ShopSetupListener implements Listener {
         Player player = (Player) event.getWhoClicked();
         ShopSetupSession session = shopSetupGUIManager.getPlayerSession(player.getUniqueId());
 
-        if (session == null) return;
+        if (session == null || session.getCurrentGuiTitle() == null) return;
 
         Inventory topInventory = event.getView().getTopInventory();
         if (topInventory == null) return;
@@ -317,29 +290,24 @@ public class ShopSetupListener implements Listener {
         String viewTitle = LegacyComponentSerializer.legacySection().serialize(event.getView().title());
         String itemSelectTitleSerialized = LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.ITEM_SELECT_TITLE);
 
-        if (!viewTitle.equals(itemSelectTitleSerialized)) {
+        if (!session.getCurrentGuiTitle().equals(viewTitle) || !viewTitle.equals(itemSelectTitleSerialized)) {
             return;
         }
 
-        boolean isItemSelectGui = viewTitle.equals(itemSelectTitleSerialized);
-        int targetPlacementSlot = isItemSelectGui ? ITEM_SELECT_PLACEMENT_SLOT : -1;
-
-        if (targetPlacementSlot == -1) return;
-
-        boolean affectsOnlyPlacementSlot = true;
-        boolean affectsPlacementSlotAtAll = false;
+        boolean affectsPlacementSlot = false;
+        boolean affectsOtherSlots = false;
 
         for (int rawSlot : event.getRawSlots()) {
             if (rawSlot < topInventory.getSize()) {
-                if (rawSlot == targetPlacementSlot) {
-                    affectsPlacementSlotAtAll = true;
+                if (rawSlot == ITEM_SELECT_PLACEMENT_SLOT) {
+                    affectsPlacementSlot = true;
                 } else {
-                    affectsOnlyPlacementSlot = false;
+                    affectsOtherSlots = true;
                 }
             }
         }
 
-        if (!affectsPlacementSlotAtAll || !affectsOnlyPlacementSlot) {
+        if (affectsOtherSlots || !affectsPlacementSlot) {
             event.setCancelled(true);
         } else {
             event.setCancelled(false);
@@ -356,72 +324,10 @@ public class ShopSetupListener implements Listener {
             return;
         }
 
-        Shop pendingShop = session.getPendingShop();
-        String message = event.getMessage();
         event.setCancelled(true);
-
-        if (pendingShop == null || pendingShop.getTemplateItemStack() == null || pendingShop.getBundleAmount() <= 0) {
-            player.sendMessage(ChatColor.RED + "Shop setup error (missing info). Please restart.");
-            shopManager.cancelShopSetup(playerId);
-            return;
-        }
-
-        if (message.equalsIgnoreCase("iptal") || message.equalsIgnoreCase("cancel")) {
-            shopManager.cancelShopSetup(playerId);
-            player.sendMessage(ChatColor.YELLOW + "Price input and shop setup cancelled.");
-            return;
-        }
-
-        try {
-            double buyPrice = -1.0;
-            double sellPrice = -1.0;
-            boolean priceValid = false;
-
-            if (session.isIntentToAllowPlayerBuy() && session.isIntentToAllowPlayerSell()) {
-                String[] priceParts = message.split(":");
-                if (priceParts.length != 2) {
-                    player.sendMessage(ChatColor.RED + "Invalid format. Use BUY_PRICE:SELL_PRICE (e.g., 100:80 or -1:70). Type 'cancel' to abort."); return;
-                }
-                buyPrice = Double.parseDouble(priceParts[0].trim());
-                sellPrice = Double.parseDouble(priceParts[1].trim());
-                if (!((buyPrice >= 0 || buyPrice == -1) && (sellPrice >= 0 || sellPrice == -1) && !(buyPrice == -1 && sellPrice == -1))) {
-                    player.sendMessage(ChatColor.RED + "Invalid prices. Must be positive or -1 (disabled), and not both -1."); return;
-                }
-                priceValid = true;
-            } else if (session.isIntentToAllowPlayerBuy()) {
-                buyPrice = Double.parseDouble(message.trim());
-                if (buyPrice < 0) { player.sendMessage(ChatColor.RED + "Buy price must be positive."); return; }
-                sellPrice = -1.0; priceValid = true;
-            } else if (session.isIntentToAllowPlayerSell()) {
-                sellPrice = Double.parseDouble(message.trim());
-                if (sellPrice < 0) { player.sendMessage(ChatColor.RED + "Sell price must be positive."); return; }
-                buyPrice = -1.0; priceValid = true;
-            }
-
-            if(priceValid) {
-                pendingShop.setBuyPrice(buyPrice);
-                pendingShop.setSellPrice(sellPrice);
-                session.setExpectedInputType(null);
-
-                player.sendMessage(ChatColor.GREEN + "Prices accepted. Proceeding to confirmation.");
-                final Player finalPlayer = player;
-                final Shop finalPendingShop = pendingShop;
-                final double finalBuyPrice = buyPrice;
-                final double finalSellPrice = sellPrice;
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        ShopSetupSession currentSession = shopSetupGUIManager.getPlayerSession(finalPlayer.getUniqueId());
-                        if (currentSession == null || currentSession.getPendingShop() != finalPendingShop) return;
-                        shopSetupGUIManager.openConfirmationMenu(finalPlayer, finalPendingShop, finalBuyPrice, finalSellPrice);
-                    }
-                }.runTask(plugin);
-            } else {
-                player.sendMessage(ChatColor.RED + "Error: Shop type (buy/sell intent) not properly set for price input.");
-                shopManager.cancelShopSetup(playerId);
-            }
-        } catch (NumberFormatException e) {
-            player.sendMessage(ChatColor.RED + "Invalid number format for price. Example: 10.5 or 100:80. Type 'cancel' to abort.");
-        }
+        player.sendMessage(ChatColor.YELLOW + "Price input via chat is being phased out in favor of the Anvil GUI.");
+        player.sendMessage(ChatColor.YELLOW + "Shop setup via this method is cancelled. Please restart if needed.");
+        plugin.getLogger().info("ShopSetupListener: Player " + player.getName() + " attempted chat price input (deprecated). Cancelling session.");
+        shopManager.cancelShopSetup(playerId);
     }
 }
