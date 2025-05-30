@@ -1,0 +1,150 @@
+# Default Jobs Configuration for SkyBlockProject
+
+jobs:
+  MINER:
+    display_name: "&7Miner"
+    description: "&fMine blocks to earn XP and rewards."
+    gui_material: DIAMOND_PICKAXE
+    max_level: 100
+    xp_per_level_base: 100  # XP needed to get from level 1 to 2
+    xp_per_level_multiplier: 1.15 # Each subsequent level needs 15% more XP than the last calculation point
+    rewards:
+      BLOCK_BREAK: # Action Type Key
+        STONE:
+          xp: 1.0
+          money: 0.05
+        COAL_ORE:
+          xp: 2.5
+          money: 0.15
+        IRON_ORE:
+          xp: 5.0
+          money: 0.30
+        GOLD_ORE:
+          xp: 8.0
+          money: 0.50
+        DIAMOND_ORE:
+          xp: 20.0
+          money: 1.50
+        EMERALD_ORE:
+          xp: 25.0
+          money: 2.00
+        LAPIS_ORE:
+          xp: 3.0
+          money: 0.20
+        NETHER_QUARTZ_ORE:
+          xp: 2.0
+          money: 0.10
+        ANCIENT_DEBRIS:
+          xp: 100.0
+          money: 10.0
+
+  FARMER:
+    display_name: "&eFarmer"
+    description: "&fHarvest crops and work with animals."
+    gui_material: GOLDEN_HOE
+    max_level: 100
+    xp_per_level_base: 80
+    xp_per_level_multiplier: 1.18
+    rewards:
+      BLOCK_BREAK:
+        WHEAT:
+          xp: 1.5
+          money: 0.10
+          requires_fully_grown: true
+        CARROTS:
+          xp: 1.5
+          money: 0.10
+          requires_fully_grown: true
+        POTATOES:
+          xp: 1.5
+          money: 0.10
+          requires_fully_grown: true
+        BEETROOTS:
+          xp: 1.5
+          money: 0.12
+          requires_fully_grown: true
+        NETHER_WART:
+          xp: 2.0
+          money: 0.15
+          requires_fully_grown: true # Nether wart also uses Ageable
+        PUMPKIN: # Breaking the grown pumpkin block
+          xp: 3.0
+          money: 0.25
+        MELON: # Breaking the grown melon block
+          xp: 3.0
+          money: 0.25
+        SUGAR_CANE: # Breaking sugar cane
+          xp: 0.5 # Per block broken
+          money: 0.03
+          requires_fully_grown: false # Typically not applicable, but can be set if specific growth stage matters
+      # Example for MOB_KILL if implemented later
+      # MOB_KILL:
+      #   COW:
+      #     xp: 2.0
+      #     money: 0.10
+      #   PIG:
+      #     xp: 2.0
+      #     money: 0.10
+
+  FISHERMAN:
+    display_name: "&bFisherman"
+    description: "&fCatch fish and other treasures from the sea."
+    gui_material: FISHING_ROD
+    max_level: 100
+    xp_per_level_base: 120
+    xp_per_level_multiplier: 1.20
+    rewards:
+      FISH_CAUGHT: # Custom Action Type Key for items obtained from fishing
+        COD:
+          xp: 2.0
+          money: 0.10
+        SALMON:
+          xp: 2.5
+          money: 0.15
+        TROPICAL_FISH:
+          xp: 5.0
+          money: 0.30
+        PUFFERFISH:
+          xp: 4.0
+          money: 0.25
+        # Example for treasure
+        ENCHANTED_BOOK: # This would be an itemTypeKey
+          xp: 20.0
+          money: 1.0
+        BOW:
+          xp: 15.0
+          money: 0.5
+
+  LUMBERJACK:
+    display_name: "&6Lumberjack"
+    description: "&fChop down trees for rewards."
+    gui_material: IRON_AXE
+    max_level: 100
+    xp_per_level_base: 90
+    xp_per_level_multiplier: 1.16
+    rewards:
+      BLOCK_BREAK:
+        OAK_LOG:
+          xp: 1.2
+          money: 0.08
+        SPRUCE_LOG:
+          xp: 1.2
+          money: 0.08
+        BIRCH_LOG:
+          xp: 1.2
+          money: 0.08
+        JUNGLE_LOG:
+          xp: 1.5
+          money: 0.10
+        ACACIA_LOG:
+          xp: 1.5
+          money: 0.10
+        DARK_OAK_LOG:
+          xp: 1.8
+          money: 0.12
+        CRIMSON_STEM:
+          xp: 2.0
+          money: 0.15
+        WARPED_STEM:
+          xp: 2.0
+          money: 0.15

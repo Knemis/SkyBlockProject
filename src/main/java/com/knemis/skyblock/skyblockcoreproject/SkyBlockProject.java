@@ -1,12 +1,16 @@
 // com/knemis/skyblock/skyblockcoreproject/SkyBlockProject.java
 package com.knemis.skyblock.skyblockcoreproject;
 
+import com.knemis.skyblock.skyblockcoreproject.commands.AdminShopCommand;
 import com.knemis.skyblock.skyblockcoreproject.commands.IslandCommand;
 import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand;
+import com.knemis.skyblock.skyblockcoreproject.economy.EconomyManager; // Assuming this is where your static EconomyManager methods are
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager; // InputType enum'ı için
+// import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // This might be the old one
+import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopGUIManager; // New Admin Shop GUI Manager
+import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopListener;   // New Admin Shop Listener
+import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandLifecycleManager;
@@ -74,7 +78,8 @@ public final class SkyBlockProject extends JavaPlugin {
     private ShopManager shopManager;
     private ShopSetupGUIManager shopSetupGUIManager;
     private ShopVisitGUIManager shopVisitGUIManager;
-    private ShopAdminGUIManager shopAdminGUIManager;
+    // private ShopAdminGUIManager shopAdminGUIManager; // Old one
+    private AdminShopGUIManager adminShopGUIManager; // New one
 
     // GUI Managers
     private FlagGUIManager flagGUIManager;
@@ -153,9 +158,10 @@ public final class SkyBlockProject extends JavaPlugin {
         // 6. Economy and Shop System Managers
         this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager);
         this.shopManager = new ShopManager(this); // ShopManager plugin referansını alır
-        this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager); // ShopManager referansını da verir
+        this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager);
         this.shopVisitGUIManager = new ShopVisitGUIManager(this, this.shopManager);
-        this.shopAdminGUIManager = new ShopAdminGUIManager(this, this.shopManager);
+        // this.shopAdminGUIManager = new ShopAdminGUIManager(this, this.shopManager); // Old one
+        this.adminShopGUIManager = new AdminShopGUIManager(this); // New AdminShopGUIManager
 
         // 7. Other Island Managers
         this.islandMemberManager = new IslandMemberManager(this, this.islandDataHandler, this.islandLifecycleManager);
@@ -177,10 +183,22 @@ public final class SkyBlockProject extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
         getServer().getPluginManager().registerEvents(new MissionListener(this), this);
-        getServer().getPluginManager().registerEvents(new MissionObjectiveListener(this, this.missionManager), this); // Register new listener
+        getServer().getPluginManager().registerEvents(new MissionObjectiveListener(this, this.missionManager), this);
 
         getServer().getPluginManager().registerEvents(new ShopAnvilListener(this, this.shopSetupGUIManager), this);
         getLogger().info("ShopAnvilListener registered.");
+
+        // Register new AdminShopListener
+        // Assumes EconomyManager.getInstance() or similar if it's a singleton, or pass directly if available.
+        // For now, I'll assume EconomyManager provides static access or can be passed if it's an instance.
+        // If EconomyManager is instance-based, it needs to be initialized before this.
+        // Let's assume EconomyManager is setup as static access for now as per AdminShopListener constructor.
+        // AdminShopListener now uses static EconomyManager methods, so no instance is passed.
+        AdminShopListener adminShopListener = new AdminShopListener(this, this.adminShopGUIManager);
+        this.adminShopGUIManager.setListener(adminShopListener); // Allow GUIManager to callback to listener for things like player view tracking
+        getServer().getPluginManager().registerEvents(adminShopListener, this);
+        getLogger().info("AdminShopListener registered for new AdminShop system.");
+
 
         if (getConfig().getBoolean("island.enforce-boundaries", true)) {
             getServer().getPluginManager().registerEvents(new PlayerBoundaryListener(this), this);
@@ -205,6 +223,14 @@ public final class SkyBlockProject extends JavaPlugin {
             getCommand("missions").setTabCompleter(missionCommandExecutor);
         } else {
             getLogger().severe("'missions' command not defined in plugin.yml!");
+        }
+
+        // Register AdminShopCommand
+        if (getCommand("adminshop") != null) {
+            getCommand("adminshop").setExecutor(new AdminShopCommand(this, this.adminShopGUIManager));
+            // Tab completer can be added here if desired later
+        } else {
+            getLogger().severe("'adminshop' command not defined in plugin.yml!");
         }
 
         getLogger().info("SkyBlockProject Plugin Successfully Enabled!");
@@ -297,7 +323,8 @@ public final class SkyBlockProject extends JavaPlugin {
     public ShopManager getShopManager() { return shopManager; }
     public ShopSetupGUIManager getShopSetupGUIManager() { return shopSetupGUIManager; }
     public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; }
-    public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; }
+    // public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; } // Old
+    public AdminShopGUIManager getAdminShopGUIManager() { return adminShopGUIManager; } // New
     public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
     public MissionManager getMissionManager() { return missionManager; }
     public MissionPlayerDataManager getMissionPlayerDataManager() { return missionPlayerDataManager; }

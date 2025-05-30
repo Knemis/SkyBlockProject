@@ -112,60 +112,142 @@ public class ShopAnvilListener implements Listener {
         }
 
         // Handle anvil inventory clicks
-        event.setCancelled(true); // Cancel all anvil clicks by default
+        // By default, we want to cancel interactions with the Anvil GUI that are not explicitly handled.
+        // However, for slot 0, we will allow certain actions.
+        if (rawSlot == 0) { // Input slot (first slot of Anvil)
+            // Allow item placement and retrieval actions
+            InventoryAction action = event.getAction();
+            if (action == InventoryAction.PICKUP_ALL ||
+                action == InventoryAction.PICKUP_HALF ||
+                action == InventoryAction.PICKUP_SOME ||
+                action == InventoryAction.PICKUP_ONE ||
+                action == InventoryAction.PLACE_ALL ||
+                action == InventoryAction.PLACE_SOME ||
+                action == InventoryAction.PLACE_ONE ||
+                action == InventoryAction.SWAP_WITH_CURSOR) {
 
-        if (rawSlot == 0) { // Input slot
-            // Allow taking items out
-            if (event.getAction() == InventoryAction.PICKUP_ALL ||
-                    event.getAction() == InventoryAction.PICKUP_HALF ||
-                    event.getAction() == InventoryAction.PICKUP_SOME ||
-                    event.getAction() == InventoryAction.PICKUP_ONE) {
+                // Check if the item being placed is of the correct type
+                if (action == InventoryAction.PLACE_ALL || action == InventoryAction.PLACE_SOME || action == InventoryAction.PLACE_ONE || action == InventoryAction.SWAP_WITH_CURSOR) {
+                    ItemStack cursorItem = event.getCursor();
+                    if (cursorItem != null && cursorItem.getType() != Material.AIR) {
+                        if (cursorItem.getType() != templateItem.getType()) {
+                            event.setCancelled(true); // Cancel if wrong item type
+                            player.sendMessage(Component.text("You can only place " + templateItem.getType() + " in this slot.", NamedTextColor.RED));
+                        } else {
+                            event.setCancelled(false); // Allow if correct item type
+                        }
+                    } else {
+                         // Allow if placing AIR (e.g. swapping with empty cursor to pick up)
+                        event.setCancelled(false);
+                    }
+                } else {
+                    // For PICKUP actions, always allow
+                    event.setCancelled(false);
+                }
 
-                event.setCancelled(false); // Let default behavior handle taking items
-                updateAnvilOutputSlotWithDelay(anvilInv, session.getPendingShop(), plugin.getShopManager().getCurrencySymbol());
+                // If the event is not cancelled, schedule an update to the output slot
+                if (!event.isCancelled()) {
+                    updateAnvilOutputSlotWithDelay(anvilInv, session.getPendingShop(), plugin.getShopManager().getCurrencySymbol());
+                }
+            } else {
+                // For any other actions in slot 0, cancel them.
+                event.setCancelled(true);
             }
-        }
-        else if (rawSlot == 2) { // Output slot
-            ItemStack inputItem = anvilInv.getItem(0);
-            if (inputItem == null || inputItem.getType() != templateItem.getType()) {
-                player.sendMessage(ChatColor.RED + "Please place the correct item in the first slot.");
+        } else if (rawSlot == 1) { // Second input slot (usually for repair material, not used here)
+            event.setCancelled(true); // Always cancel interactions with the second slot
+        } else if (rawSlot == 2) { // Output slot - This click confirms the setup.
+            event.setCancelled(true); // Ensure this is cancelled, logic is handled below.
+
+            ItemStack inputItem = anvilInv.getItem(0); // Item in the first slot
+            Shop pendingShop = session.getPendingShop();
+
+            // Validate item in slot 0
+            if (inputItem == null || inputItem.getType() == Material.AIR) {
+                player.sendMessage(Component.text("Please place the item to be traded in the first slot.", NamedTextColor.RED));
+                return;
+            }
+            if (inputItem.getType() != pendingShop.getTemplateItemStack().getType()) {
+                player.sendMessage(Component.text("The item in the first slot does not match the required type: " + pendingShop.getTemplateItemStack().getType(), NamedTextColor.RED));
                 return;
             }
 
             String priceText = anvilInv.getRenameText();
             if (priceText == null || priceText.trim().isEmpty()) {
-                player.sendMessage(ChatColor.RED + "Please enter a valid price.");
+                player.sendMessage(Component.text("Please enter the price in the rename field.", NamedTextColor.RED));
+                // Potentially update slot 2 to show an error state if not already handled by updateAnvilOutputSlot
                 return;
             }
 
-            try {
-                // Parse the price input
-                String[] priceParts = priceText.split(":");
-                double buyPrice = -1;
-                double sellPrice = -1;
+            double buyPrice = -1;
+            double sellPrice = -1;
+            boolean priceFormatError = false;
 
-                if (priceParts.length == 2) {
-                    buyPrice = Double.parseDouble(priceParts[0].trim());
-                    sellPrice = Double.parseDouble(priceParts[1].trim());
-                } else if (priceParts.length == 1) {
-                    if (session.isIntentToAllowPlayerBuy()) {
+            try {
+                String[] priceParts = priceText.split(":");
+                if (session.isIntentToAllowPlayerBuy() && session.isIntentToAllowPlayerSell()) { // Dual shop
+                    if (priceParts.length == 2) {
                         buyPrice = Double.parseDouble(priceParts[0].trim());
-                    } else if (session.isIntentToAllowPlayerSell()) {
-                        sellPrice = Double.parseDouble(priceParts[0].trim());
+                        sellPrice = Double.parseDouble(priceParts[1].trim());
+                        if (buyPrice <= 0 || sellPrice <= 0) {
+                            player.sendMessage(Component.text("Both buy and sell prices must be positive.", NamedTextColor.RED));
+                            priceFormatError = true;
+                        }
+                    } else {
+                        player.sendMessage(Component.text("For Buy/Sell shops, use format: BUY_PRICE:SELL_PRICE (e.g., 100:80)", NamedTextColor.RED));
+                        priceFormatError = true;
                     }
+                } else if (session.isIntentToAllowPlayerBuy()) { // Owner Sells (Player Buys)
+                    if (priceParts.length == 1) {
+                        buyPrice = Double.parseDouble(priceParts[0].trim());
+                        if (buyPrice <= 0) {
+                            player.sendMessage(Component.text("Buy price must be positive.", NamedTextColor.RED));
+                            priceFormatError = true;
+                        }
+                    } else {
+                         player.sendMessage(Component.text("For 'Owner Sells' shops, just enter the buy price (e.g., 100)", NamedTextColor.RED));
+                         priceFormatError = true;
+                    }
+                } else if (session.isIntentToAllowPlayerSell()) { // Owner Buys (Player Sells)
+                    if (priceParts.length == 1) {
+                        sellPrice = Double.parseDouble(priceParts[0].trim());
+                        if (sellPrice <= 0) {
+                            player.sendMessage(Component.text("Sell price must be positive.", NamedTextColor.RED));
+                            priceFormatError = true;
+                        }
+                    } else {
+                        player.sendMessage(Component.text("For 'Owner Buys' shops, just enter the sell price (e.g., 80)", NamedTextColor.RED));
+                        priceFormatError = true;
+                    }
+                } else {
+                    player.sendMessage(Component.text("Error: Shop intent (buy/sell) not properly set in session.", NamedTextColor.RED));
+                    return; // Critical session error
                 }
 
-                // Set the shop values
-                pendingShop.setItemQuantityForPrice(inputItem.getAmount());
-                if (buyPrice > 0) pendingShop.setPrice(buyPrice);
-                if (sellPrice > 0) pendingShop.setSellPrice(sellPrice);
-
-                // Proceed to confirmation
-                shopSetupGUIManager.openConfirmationMenu(player, pendingShop, buyPrice, sellPrice);
+                if (priceFormatError) return;
 
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Invalid price format! Use numbers only (e.g. '100' or '100:80').");
+                player.sendMessage(Component.text("Invalid price format! Use numbers only (e.g., '100' or '100:80').", NamedTextColor.RED));
+                return;
             }
+
+            // All validations passed, proceed to set values and open confirmation
+            pendingShop.setItemQuantityForPrice(inputItem.getAmount()); // Use quantity from slot 0
+
+            if (session.isIntentToAllowPlayerBuy()) {
+                pendingShop.setPrice(buyPrice); // This is player's buy price (owner's sell price)
+            } else {
+                pendingShop.setPrice(-1); // Explicitly disable if not intended
+            }
+
+            if (session.isIntentToAllowPlayerSell()) {
+                pendingShop.setSellPrice(sellPrice); // This is player's sell price (owner's buy price)
+            } else {
+                pendingShop.setSellPrice(-1); // Explicitly disable if not intended
+            }
+
+            // Pass the parsed prices to the confirmation menu, as pendingShop might store them differently
+            // or one might be -1 if not applicable.
+            shopSetupGUIManager.openConfirmationMenu(player, pendingShop, buyPrice, sellPrice);
         }
     }
 
@@ -173,10 +255,9 @@ public class ShopAnvilListener implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (anvilInv.getViewers().isEmpty()) return; // No one is viewing, perhaps player closed it
+                if (anvilInv.getViewers().isEmpty()) return;
                 Player player = (Player) anvilInv.getViewers().get(0);
-                // Ensure player is still online and has THIS Anvil inventory open
-                if (player != null && player.getOpenInventory().getTopInventory() == anvilInv) {
+                if (player != null && player.isOnline() && player.getOpenInventory().getTopInventory() == anvilInv) {
                     updateAnvilOutputSlot(anvilInv, pendingShop, currencySymbol);
                 }
             }
