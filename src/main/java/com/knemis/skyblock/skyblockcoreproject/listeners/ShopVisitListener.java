@@ -107,7 +107,7 @@ public class ShopVisitListener implements Listener {
 
         if (mode == ShopMode.BANK_CHEST) { // Direct comparison
             System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST mode. Player: " + buyer.getName());
-            if (rawSlot == 20) { // Buy 1 Bundle
+            if (rawSlot == 20) { // Buy 1 Bundle (Slot 20 for BANK_CHEST buy button)
                 System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST - Buy 1 Bundle clicked. Player: " + buyer.getName());
                 if (shop.getBuyPrice() != -1) {
                     plugin.getShopManager().executePurchase(buyer, shop, 1);
@@ -115,7 +115,7 @@ public class ShopVisitListener implements Listener {
                 } else {
                     buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
                 }
-            } else if (rawSlot == 24) { // Sell 1 Bundle
+            } else if (rawSlot == 24) { // Sell 1 Bundle (Slot 24 for BANK_CHEST sell button)
                 System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST - Sell 1 Bundle clicked. Player: " + buyer.getName());
                 if (shop.getSellPrice() != -1) {
                     plugin.getShopManager().executeSellToShop(buyer, shop, 1);
@@ -125,28 +125,32 @@ public class ShopVisitListener implements Listener {
                 }
             }
         } else if (mode == ShopMode.MARKET_CHEST) { // Direct comparison
-            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST mode. Player: " + buyer.getName());
-            if (rawSlot == 20) { // Buy Custom Amount
-                System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Buy Custom Amount clicked. Player: " + buyer.getName());
-                if (shop.getBuyPrice() != -1) {
-                    buyer.closeInventory();
-                    plugin.getPlayerEnteringBuyQuantity().put(buyer.getUniqueId(), shopLocation);
-                    buyer.sendMessage(ChatColor.GREEN + "Please enter the number of BUNDLES you wish to buy.");
-                    buyer.sendMessage(ChatColor.GRAY + "Type 'cancel' to abort.");
-                } else {
-                    buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
+            System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST mode. Player: " + buyer.getName() + ", Slot: " + rawSlot);
+            if (rawSlot == 13) { // Interaction is now on the item display at slot 13 for MARKET_CHEST
+                if (event.isLeftClick()) { // Buy action
+                    System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Slot 13 Left-Clicked (Buy). Player: " + buyer.getName());
+                    if (shop.getBuyPrice() != -1) {
+                        buyer.closeInventory();
+                        plugin.getPlayerEnteringBuyQuantity().put(buyer.getUniqueId(), shopLocation);
+                        buyer.sendMessage(ChatColor.GREEN + "Please enter the number of BUNDLES you wish to buy.");
+                        buyer.sendMessage(ChatColor.GRAY + "Type 'cancel' to abort.");
+                    } else {
+                        buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
+                    }
+                } else if (event.isRightClick()) { // Sell action
+                    System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Slot 13 Right-Clicked (Sell). Player: " + buyer.getName());
+                    if (shop.getSellPrice() != -1) {
+                        buyer.closeInventory();
+                        plugin.getPlayerEnteringSellQuantity().put(buyer.getUniqueId(), shopLocation);
+                        buyer.sendMessage(ChatColor.GREEN + "Please enter the number of BUNDLES you wish to sell.");
+                        buyer.sendMessage(ChatColor.GRAY + "Type 'cancel' to abort.");
+                    } else {
+                        buyer.sendMessage(ChatColor.RED + "This shop is not currently buying this item.");
+                    }
                 }
-            } else if (rawSlot == 24) { // Sell Custom Amount
-                System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Sell Custom Amount clicked. Player: " + buyer.getName());
-                if (shop.getSellPrice() != -1) {
-                    buyer.closeInventory();
-                    plugin.getPlayerEnteringSellQuantity().put(buyer.getUniqueId(), shopLocation);
-                    buyer.sendMessage(ChatColor.GREEN + "Please enter the number of BUNDLES you wish to sell.");
-                    buyer.sendMessage(ChatColor.GRAY + "Type 'cancel' to abort.");
-                } else {
-                    buyer.sendMessage(ChatColor.RED + "This shop is not currently buying this item.");
-                }
+                // Other click types on slot 13 in MARKET_CHEST mode are ignored.
             }
+            // Slots 20 and 24 are no longer specifically handled for MARKET_CHEST mode here, as per task alignment.
         }
     }
 

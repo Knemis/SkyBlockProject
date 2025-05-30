@@ -2,8 +2,9 @@ package com.knemis.skyblock.skyblockcoreproject.shop.admin;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.economy.EconomyManager; // Assuming this exists
+import com.knemis.skyblock.skyblockcoreproject.shop.ShopInventoryManager;
 import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
-import com.knemis.skyblock.skyblockcoreproject.utils.InventoryUtils; // To be created
+// import com.knemis.skyblock.skyblockcoreproject.utils.InventoryUtils; // To be created
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -20,7 +21,7 @@ import java.util.UUID;
 
 public class AdminShopListener implements Listener {
 
-    private final SkyBlockProject plugin;
+    private final SkyBlockProject plugin; // plugin instance may still be needed for logging or other non-InventoryUtils tasks. Keep for now.
     private final AdminShopGUIManager shopGUIManager;
     // EconomyManager will be used statically via its static methods.
 
@@ -278,8 +279,9 @@ public class AdminShopListener implements Listener {
         }
 
         ItemStack toGive = shopGUIManager.createItemStackForShopItem(shopItem, amount); // Needs to be added to AdminShopGUIManager
-
-        if (!InventoryUtils.hasEnoughSpace(player.getInventory(), toGive, plugin, amount)) { // Pass plugin to InventoryUtils
+        // Ensure 'toGive' has its amount set correctly by createItemStackForShopItem for hasEnoughSpace.
+        // ShopInventoryManager.hasEnoughSpace checks based on the amount on the itemToReceive.
+        if (!ShopInventoryManager.hasEnoughSpace(player, toGive)) {
             player.sendMessage(shopGUIManager.getMessage("inventory_full", null));
             return;
         }
@@ -316,8 +318,12 @@ public class AdminShopListener implements Listener {
         // For selling, nbtData and displayName from shopItem are crucial for matching.
         // The InventoryUtils.countItems and removeItems need to be robust.
         // Start with Material matching, then add more complex logic.
-        int itemsPlayerHas = InventoryUtils.countItems(player.getInventory(), shopItem.getMaterial(),
-                                                       shopItem.getNbtData(), shopItem.getDisplayName(), plugin); // Pass plugin
+
+        // Create a template ItemStack for matching based on material.
+        // This simplifies matching; NBT/display name specific matching is removed for now as per requirements.
+        ItemStack templateItem = new ItemStack(shopItem.getMaterial());
+
+        int itemsPlayerHas = ShopInventoryManager.countItemsInInventory(player, templateItem);
 
         if (itemsPlayerHas < amount) {
             Map<String, String> placeholders = new HashMap<>();
@@ -330,11 +336,11 @@ public class AdminShopListener implements Listener {
         double totalPayment = shopItem.getSellPrice() * amount;
 
         // removeItems needs to be accurate based on what shopItem defines (material, NBT, name)
-        boolean removed = InventoryUtils.removeItems(player.getInventory(), shopItem.getMaterial(), amount,
-                                                     shopItem.getNbtData(), shopItem.getDisplayName(), plugin);
+        // Using the same templateItem for removal.
+        boolean removed = ShopInventoryManager.removeItemsFromInventory(player, templateItem, amount);
         if (!removed) {
             player.sendMessage(shopGUIManager.getMessage("sell_error_removing_items", null));
-            plugin.getLogger().warning("AdminShopListener: Failed to remove " + amount + " of " + shopItem.getInternalName() + " ("+ shopItem.getMaterial() +") from " + player.getName() + " despite count check passing.");
+            plugin.getLogger().warning("AdminShopListener: Failed to remove " + amount + " of " + shopItem.getInternalName() + " ("+ shopItem.getMaterial() +") from " + player.getName() + " using template match, despite count check passing.");
             // No transaction occurred with economy yet, so just return.
             return;
         }
