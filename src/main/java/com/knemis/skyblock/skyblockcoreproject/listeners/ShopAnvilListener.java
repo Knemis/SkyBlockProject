@@ -67,8 +67,14 @@ public class ShopAnvilListener implements Listener {
                 ItemStack clickedItem = event.getCurrentItem();
                 if (clickedItem != null && clickedItem.getType() == templateItem.getType()) {
                     event.setCancelled(true);
+
+                    // Verify the item is still there
+                    if (clickedItem.getAmount() <= 0) {
+                        return;
+                    }
+
                     ItemStack toAdd = clickedItem.clone();
-                    toAdd.setAmount(1); // Only add one at a time for safety
+                    toAdd.setAmount(1);
 
                     // Add to anvil slot 0
                     ItemStack current = anvilInv.getItem(0);
@@ -79,20 +85,27 @@ public class ShopAnvilListener implements Listener {
                             current.setAmount(current.getAmount() + 1);
                             anvilInv.setItem(0, current);
                         } else {
-                            return; // Already at max stack
+                            return;
                         }
                     }
 
                     // Remove from player inventory
                     if (clickedItem.getAmount() == 1) {
-                        event.setCurrentItem(null);
+                        event.setCurrentItem(new ItemStack(Material.AIR));
                     } else {
                         clickedItem.setAmount(clickedItem.getAmount() - 1);
                         event.setCurrentItem(clickedItem);
                     }
 
+                    // Update inventory immediately
                     player.updateInventory();
-                    updateAnvilOutputSlot(anvilInv, session.getPendingShop(), plugin.getShopManager().getCurrencySymbol());
+
+                    // Schedule the output update with a slight delay
+                    Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                        if (player.isOnline() && player.getOpenInventory().getTopInventory() == anvilInv) {
+                            updateAnvilOutputSlot(anvilInv, session.getPendingShop(), plugin.getShopManager().getCurrencySymbol());
+                        }
+                    }, 1L);
                 }
             }
             return;
@@ -125,8 +138,34 @@ public class ShopAnvilListener implements Listener {
                 return;
             }
 
-            // Process price input and confirm...
-            // [Rest of your existing output slot handling code]
+            try {
+                // Parse the price input
+                String[] priceParts = priceText.split(":");
+                double buyPrice = -1;
+                double sellPrice = -1;
+
+                if (priceParts.length == 2) {
+                    buyPrice = Double.parseDouble(priceParts[0].trim());
+                    sellPrice = Double.parseDouble(priceParts[1].trim());
+                } else if (priceParts.length == 1) {
+                    if (session.isIntentToAllowPlayerBuy()) {
+                        buyPrice = Double.parseDouble(priceParts[0].trim());
+                    } else if (session.isIntentToAllowPlayerSell()) {
+                        sellPrice = Double.parseDouble(priceParts[0].trim());
+                    }
+                }
+
+                // Set the shop values
+                pendingShop.setItemQuantityForPrice(inputItem.getAmount());
+                if (buyPrice > 0) pendingShop.setPrice(buyPrice);
+                if (sellPrice > 0) pendingShop.setSellPrice(sellPrice);
+
+                // Proceed to confirmation
+                shopSetupGUIManager.openConfirmationMenu(player, pendingShop, buyPrice, sellPrice);
+
+            } catch (NumberFormatException e) {
+                player.sendMessage(ChatColor.RED + "Invalid price format! Use numbers only (e.g. '100' or '100:80').");
+            }
         }
     }
 
@@ -145,7 +184,12 @@ public class ShopAnvilListener implements Listener {
     }
 
     private void updateAnvilOutputSlot(AnvilInventory anvilInv, Shop pendingShop, String currencySymbol) {        if (pendingShop == null || pendingShop.getTemplateItemStack() == null) return;
+        if (pendingShop == null || pendingShop.getTemplateItemStack() == null) return;
 
+        // Check if the viewer is still valid
+        if (anvilInv.getViewers().isEmpty()) return;
+        Player player = (Player) anvilInv.getViewers().get(0);
+        if (player == null || !player.isOnline()) return;
         ItemStack quantityItem = anvilInv.getItem(0);
         Material expectedType = pendingShop.getTemplateItemStack().getType();
         int quantity = (quantityItem != null && quantityItem.getType() == pendingShop.getTemplateItemStack().getType()) ? quantityItem.getAmount() : 0;
@@ -195,6 +239,14 @@ public class ShopAnvilListener implements Listener {
         meta.lore(lore);
         displayItem.setItemMeta(meta);
         anvilInv.setItem(2, displayItem);
+        try {
+            anvilInv.setItem(2, displayItem);
+        } catch (Exception e) {
+            plugin.getLogger().warning("Error updating anvil output slot: " + e.getMessage());
+            if (player.isOnline()) {
+                player.sendMessage(ChatColor.RED + "An error occurred. Please try again.");
+            }
+        }
     }
 
     @EventHandler
