@@ -163,25 +163,37 @@ public class ShopSetupListener implements Listener {
                     ItemStack currentItemInGUISlot = guiInventory.getItem(ITEM_SELECT_PLACEMENT_SLOT);
                     if (currentItemInGUISlot == null || currentItemInGUISlot.getType() == Material.GRAY_STAINED_GLASS_PANE || currentItemInGUISlot.getType() == Material.AIR) {
                         event.setCancelled(true);
+
+                        // Clone only one item for the template
                         ItemStack movedItemCloneForTemplate = itemToMove.clone();
+                        movedItemCloneForTemplate.setAmount(1);
 
                         pendingShop.setTemplateItemStack(movedItemCloneForTemplate);
-                        event.setCurrentItem(null);
+
+                        // Update GUI
+                        ItemStack displayItem = movedItemCloneForTemplate.clone();
+                        displayItem.setAmount(1);
+                        guiInventory.setItem(ITEM_SELECT_PLACEMENT_SLOT, displayItem);
+
+                        // Update player inventory
+                        if (itemToMove.getAmount() == 1) {
+                            event.setCurrentItem(null);
+                        } else {
+                            itemToMove.setAmount(itemToMove.getAmount() - 1);
+                            event.setCurrentItem(itemToMove);
+                        }
+
                         player.updateInventory();
 
-                        plugin.getLogger().info(String.format("ShopSetupListener: Player %s auto-selected item %s (shift-click) for shop at %s. Proceeding to Anvil.",
-                                player.getName(), pendingShop.getTemplateItemStack().getType(), Shop.locationToString(session.getChestLocation())));
-                        shopSetupGUIManager.openPriceQuantityAnvilGUI(player, pendingShop);
-                        return;
-                    } else {
-                        player.sendMessage(ChatColor.YELLOW + "Item selection slot is already effectively full. Please clear it first or click directly.");
-                        event.setCancelled(true);
+                        // Proceed to Anvil GUI after a small delay
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                shopSetupGUIManager.openPriceQuantityAnvilGUI(player, pendingShop);
+                            }
+                        }.runTaskLater(plugin, 1L);
                     }
-                } else {
-                    event.setCancelled(true);
                 }
-            } else {
-                event.setCancelled(false);
             }
             return;
         }
