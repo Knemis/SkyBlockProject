@@ -9,6 +9,7 @@ import com.sk89q.worldguard.protection.flags.Flags;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
+import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for new custom flag
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.ChatColor;
@@ -60,6 +61,12 @@ public class IslandFlagManager {
         defaultIslandFlags.put(Flags.WATER_FLOW, StateFlag.State.DENY);
         defaultIslandFlags.put(Flags.FIRE_SPREAD, StateFlag.State.DENY);
         // İhtiyaç duyulan diğer bayraklar buraya eklenebilir.
+
+        if (CustomFlags.VISITOR_SHOP_USE != null) { // Ensure it was registered
+            defaultIslandFlags.put(CustomFlags.VISITOR_SHOP_USE, StateFlag.State.ALLOW);
+        } else {
+            plugin.getLogger().warning("[IslandFlagManager] Custom flag VISITOR_SHOP_USE is null, cannot add to default flags. Check registration.");
+        }
     }
 
     private String getRegionId(UUID ownerUUID) {

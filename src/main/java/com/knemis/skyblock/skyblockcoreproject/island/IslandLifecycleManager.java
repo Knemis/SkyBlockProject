@@ -3,20 +3,20 @@ package com.knemis.skyblock.skyblockcoreproject.island;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 
-import com.sk89q.worldedit.EditSession;
-import com.sk89q.worldedit.WorldEdit;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.extent.clipboard.Clipboard;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
-import com.sk89q.worldedit.function.operation.Operation;
-import com.sk89q.worldedit.function.operation.Operations;
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.session.ClipboardHolder;
-import com.sk89q.worldedit.regions.CuboidRegion;
-import com.sk89q.worldedit.world.block.BlockState;
-import com.sk89q.worldedit.world.block.BlockTypes;
+import com.fastasyncworldedit.core.extent.EditSession; // FAWE Change
+import com.fastasyncworldedit.core.WorldEdit; // FAWE Change
+import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
+import com.fastasyncworldedit.core.extent.clipboard.Clipboard; // FAWE Change
+import com.fastasyncworldedit.core.extent.clipboard.io.ClipboardFormat; // FAWE Change
+import com.fastasyncworldedit.core.extent.clipboard.io.ClipboardFormats; // FAWE Change
+import com.fastasyncworldedit.core.extent.clipboard.io.ClipboardReader; // FAWE Change
+import com.fastasyncworldedit.core.function.operation.Operation; // FAWE Change
+import com.fastasyncworldedit.core.function.operation.Operations; // FAWE Change
+import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
+import com.fastasyncworldedit.core.session.ClipboardHolder; // FAWE Change
+import com.fastasyncworldedit.core.regions.CuboidRegion; // FAWE Change
+import com.fastasyncworldedit.core.world.block.BlockState; // FAWE Change
+import com.fastasyncworldedit.core.world.block.BlockTypes; // FAWE Change
 
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -97,7 +97,7 @@ public class IslandLifecycleManager {
         BlockVector3 worldMinSchematic = islandPastePoint.add(clipboardMinRel);
         BlockVector3 worldMaxSchematic = islandPastePoint.add(clipboardMaxRel);
 
-        com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
+        com.fastasyncworldedit.core.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change
         if (weWorld == null) {
             throw new IOException("Yapıştırılan şematik bölgesi için WorldEdit dünyası null geldi (adaptasyon başarısız).");
         }
@@ -208,7 +208,7 @@ public class IslandLifecycleManager {
                 clipboard = reader.read();
             }
 
-            com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld);
+            com.fastasyncworldedit.core.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld); // FAWE Change
             if (adaptedWorld == null) {
                 player.sendMessage(ChatColor.RED + "Ada oluşturulurken dünya adaptasyonunda bir hata oluştu.");
                 plugin.getLogger().severe("createIsland: Could not adapt Skyblock world to WorldEdit world.");
@@ -320,7 +320,7 @@ public class IslandLifecycleManager {
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi siliniyor...");
         try {
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
-            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
+            com.fastasyncworldedit.core.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change
             if (weWorld == null) {
                 plugin.getLogger().severe(String.format("Could not adapt world for island deletion (Island ID: %s, Player: %s)", islandId, player.getName()));
                 player.sendMessage(ChatColor.RED + "Ada silinirken bir dünya hatası oluştu.");
@@ -397,7 +397,7 @@ public class IslandLifecycleManager {
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.");
         try {
-            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
+            com.fastasyncworldedit.core.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change
             if (weWorld == null) {
                 player.sendMessage(ChatColor.RED + "Dünya hatası (WE).");
                 plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));

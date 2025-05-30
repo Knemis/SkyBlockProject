@@ -1,8 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.math.BlockVector3;
+import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
+import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
+// com.sk89q.worldedit.util.Location will be implicitly handled by BukkitAdapter.adapt if FAWE doesn't have a direct equivalent or if it's no longer needed.
+// If a specific FAWE Location is needed, it would be com.fastasyncworldedit.core.util.Location or similar.
+// For now, we assume BukkitAdapter.adapt(org.bukkit.Location) is sufficient or BukkitAdapter.adapt still returns a type that can be used by WorldGuard's RegionContainer.
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -405,10 +408,19 @@ public class IslandDataHandler {
                 return null; // RegionManager alınamazsa, konum tabanlı ada tespiti yapılamaz.
             }
             // Konumdaki tüm bölgeleri al
-            com.sk89q.worldedit.util.Location weLocation = com.sk89q.worldedit.bukkit.BukkitAdapter.adapt(location);
+            // FAWE Change: BukkitAdapter.adapt(location) might return a World or Vector directly usable by RegionContainer methods.
+            // WorldGuard's RegionContainer.get(World) expects a WorldEdit World.
+            // BukkitAdapter.adapt(location.getWorld()) provides this.
+            // ApplicableRegionSet applicableRegions = locRegionManager.getApplicableRegions(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()));
+            // This part seems to correctly use BlockVector3 which is now from FAWE.
+
             com.sk89q.worldguard.protection.regions.RegionContainer container = com.sk89q.worldguard.WorldGuard.getInstance().getPlatform().getRegionContainer();
             if (container == null) return null;
-            RegionManager locRegionManager = container.get(BukkitAdapter.adapt(location.getWorld()));
+
+            // FAWE Change: Ensure BukkitAdapter.adapt(world) is used for getting the RegionManager
+            com.fastasyncworldedit.core.world.World faweWorld = BukkitAdapter.adapt(location.getWorld());
+            if (faweWorld == null) return null; // Could not adapt world
+            RegionManager locRegionManager = container.get(faweWorld);
             if(locRegionManager == null) return null;
 
             com.sk89q.worldguard.protection.ApplicableRegionSet applicableRegions = locRegionManager.getApplicableRegions(BlockVector3.at(location.getBlockX(), location.getBlockY(), location.getBlockZ()));

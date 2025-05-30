@@ -4,6 +4,7 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
+import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for new custom flag
 import com.sk89q.worldguard.protection.flags.Flags;
 // import com.sk89q.worldguard.protection.flags.RegionGroup; // No longer managing groups
 import com.sk89q.worldguard.protection.flags.StateFlag;

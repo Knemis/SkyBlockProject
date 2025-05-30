@@ -36,7 +36,7 @@ repositories {
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.20.4-R0.1-SNAPSHOT" // Updated Paper API
+    compileOnly "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT" // Updated Paper API
     // compileOnly "io.papermc.paper:paper-api:1.16.5-R0.1-SNAPSHOT" // Reverted to Paper API (io.papermc.paper group)
     // compileOnly "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"
     // compileOnly 'net.kyori:adventure-api:4.9.3' // Added Kyori Adventure API

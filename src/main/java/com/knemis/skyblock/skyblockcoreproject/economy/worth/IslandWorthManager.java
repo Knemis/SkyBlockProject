@@ -6,10 +6,11 @@ import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler; // IslandDataHandler'a erişim için
 import com.knemis.skyblock.skyblockcoreproject.island.IslandLifecycleManager; // Ada bölgesini almak için
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
 
-import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.sk89q.worldedit.math.BlockVector3;
+// Removed duplicate import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
+import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
+import com.fastasyncworldedit.core.regions.Region; // FAWE Change - Added explicit import
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
@@ -155,7 +156,7 @@ public class IslandWorthManager {
 
                 if (wgRegion == null) {
                     try { // Eğer WG region yoksa, LifecycleManager'dan territory almayı dene
-                        com.sk89q.worldedit.regions.Region territory = islandLifecycleManager.getIslandTerritoryRegion(island.getBaseLocation());
+                        Region territory = islandLifecycleManager.getIslandTerritoryRegion(island.getBaseLocation()); // FAWE Change
                         if (territory == null) {
                             if (requester != null && requester.isOnline()) {
                                 requester.sendMessage(ChatColor.RED + "Ada bölgesi bulunamadı, değer hesaplanamıyor.");

@@ -1,10 +1,12 @@
 package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // New addition
+import com.knemis.skyblock.skyblockcoreproject.gui.PlayerShopAdminGUIManager; // Renamed import
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
+import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for new custom flag
+import com.sk89q.worldguard.protection.flags.StateFlag; // Added for StateFlag.State
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
@@ -39,14 +41,14 @@ public class ShopListener implements Listener {
     private final ShopSetupGUIManager shopSetupGUIManager;
     private final IslandDataHandler islandDataHandler;
     private final ShopVisitGUIManager shopVisitGUIManager;
-    private final ShopAdminGUIManager shopAdminGUIManager; // New addition
+    private final PlayerShopAdminGUIManager shopAdminGUIManager; // Renamed field type
 
     public ShopListener(SkyBlockProject plugin,
                         ShopManager shopManager,
                         ShopSetupGUIManager shopSetupGUIManager,
                         IslandDataHandler islandDataHandler,
                         ShopVisitGUIManager shopVisitGUIManager,
-                        ShopAdminGUIManager shopAdminGUIManager) { // Added to constructor
+                        PlayerShopAdminGUIManager shopAdminGUIManager) { // Renamed constructor parameter type
         this.plugin = plugin;
         this.shopManager = shopManager;
         this.shopSetupGUIManager = shopSetupGUIManager;
@@ -167,6 +169,27 @@ public class ShopListener implements Listener {
             if (activeShop != null && activeShop.isSetupComplete()) {
                 event.setCancelled(true);
                 if (!activeShop.getOwnerUUID().equals(player.getUniqueId())) {
+                    // ADD THIS CHECK:
+                    Island island = plugin.getIslandDataHandler().getIslandAt(chestLocation);
+                    if (island != null && CustomFlags.VISITOR_SHOP_USE != null) {
+                        StateFlag.State shopUseState = plugin.getIslandFlagManager().getIslandFlagState(island.getOwnerUUID(), CustomFlags.VISITOR_SHOP_USE);
+
+                        // Determine effective state: if null, use default from IslandFlagManager, which should be ALLOW.
+                        // If IslandFlagManager.getIslandFlagState returns null, it means the region doesn't have it set,
+                        // so WorldGuard's default for that flag applies (which we set to true/ALLOW during registration).
+                        // Or, if our IslandFlagManager's default map has an entry, that's the effective default for our plugin.
+                        StateFlag.State effectiveState = shopUseState;
+                        if (effectiveState == null) { // Not set on region, check our plugin's default for this flag
+                            effectiveState = plugin.getIslandFlagManager().getDefaultStateForFlag(CustomFlags.VISITOR_SHOP_USE);
+                        }
+
+                        if (effectiveState == StateFlag.State.DENY) {
+                            player.sendMessage(ChatColor.RED + "The owner has disabled visitor shop access on this island.");
+                            plugin.getLogger().info(String.format("ShopListener: Player %s denied access to shop at %s due to VISITOR_SHOP_USE flag being DENY.",
+                                                    player.getName(), chestLocation));
+                            return; // Do not open GUI
+                        }
+                    }
                     plugin.getPlayerViewingShopLocation().put(player.getUniqueId(), chestLocation);
                     shopVisitGUIManager.openShopVisitMenu(player, activeShop);
                     plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) opening active shop (Owner: %s) at %s for visit.",
@@ -284,14 +307,14 @@ public class ShopListener implements Listener {
                                  (currentItem != null ? currentItem.getType().name() : "null");
 
 
-        if (viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
-            System.out.println("[TRACE] In ShopListener.onInventoryClick, viewTitle matches ShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName() + ", Slot: " + event.getRawSlot());
-            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) clicked in Shop Admin GUI: '%s', Slot: %d, Item: %s",
+        if (viewTitle.equals(PlayerShopAdminGUIManager.SHOP_ADMIN_TITLE.toString())) { // Updated to use renamed class and .toString() for Component
+            System.out.println("[TRACE] In ShopListener.onInventoryClick, viewTitle matches PlayerShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName() + ", Slot: " + event.getRawSlot());
+            plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) clicked in PlayerShop Admin GUI: '%s', Slot: %d, Item: %s", // Updated log
                     player.getName(), player.getUniqueId(), viewTitle, event.getRawSlot(), currentItemName));
             event.setCancelled(true);
             if (currentItem == null || currentItem.getType() == Material.AIR) return;
 
-            Location shopLocation = plugin.getPlayerAdministeringShop().get(player.getUniqueId());
+            Location shopLocation = shopAdminGUIManager.getPlayerAdministeringShop().get(player.getUniqueId()); // Use playerShopAdminGUIManager
             Shop shop = (shopLocation != null) ? shopManager.getActiveShop(shopLocation) : null;
 
             if (shop == null || !shop.getOwnerUUID().equals(player.getUniqueId())) {
@@ -299,14 +322,14 @@ public class ShopListener implements Listener {
                 plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) in Shop Admin GUI, but shop location/object is null or not owner. ShopLoc: %s, Shop: %s",
                         player.getName(), player.getUniqueId(), shopLocation, shop));
                 player.closeInventory();
-                plugin.getPlayerAdministeringShop().remove(player.getUniqueId());
+                shopAdminGUIManager.getPlayerAdministeringShop().remove(player.getUniqueId()); // Use playerShopAdminGUIManager
                 return;
             }
 
-            int displayNameSlot = ShopAdminGUIManager.DISPLAY_NAME_SLOT;
-            System.out.println("[TRACE] In ShopListener.onInventoryClick, ShopAdminGUIManager.DISPLAY_NAME_SLOT is " + displayNameSlot);
-            int priceSlot = ShopAdminGUIManager.PRICE_SLOT;
-            System.out.println("[TRACE] In ShopListener.onInventoryClick, ShopAdminGUIManager.PRICE_SLOT is " + priceSlot);
+            int displayNameSlot = PlayerShopAdminGUIManager.DISPLAY_NAME_SLOT; // Updated to use renamed class
+            System.out.println("[TRACE] In ShopListener.onInventoryClick, PlayerShopAdminGUIManager.DISPLAY_NAME_SLOT is " + displayNameSlot);
+            int priceSlot = PlayerShopAdminGUIManager.PRICE_SLOT; // Updated to use renamed class
+            System.out.println("[TRACE] In ShopListener.onInventoryClick, PlayerShopAdminGUIManager.PRICE_SLOT is " + priceSlot);
 
             if (event.getRawSlot() == displayNameSlot) {
                 System.out.println("[TRACE] In ShopListener.onInventoryClick, clicked DISPLAY_NAME_SLOT. Player: " + player.getName());
@@ -329,16 +352,16 @@ public class ShopListener implements Listener {
         UUID playerId = player.getUniqueId();
         String viewTitle = event.getView().getTitle(); // GetTitle returns String
 
-        if (viewTitle.equals(ShopVisitGUIManager.SHOP_VISIT_TITLE)) {
-            if (plugin.getPlayerViewingShopLocation().remove(playerId) != null) {
+        if (viewTitle.equals(ShopVisitGUIManager.SHOP_VISIT_TITLE.toString())) { // .toString() for Component
+            if (plugin.getPlayerViewingShopLocation().remove(playerId) != null) { // This map is still in SkyBlockProject, so plugin. access is correct
                  plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed Shop Visit GUI. Cleared viewing state.", player.getName(), playerId));
             }
-        } else if (viewTitle.equals(ShopAdminGUIManager.SHOP_ADMIN_TITLE)) {
-            System.out.println("[TRACE] In ShopListener.onInventoryClose, viewTitle matches ShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName());
-            if (plugin.getPlayerAdministeringShop().remove(playerId) != null) {
-                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed Shop Admin GUI. Cleared admin state.", player.getName(), playerId));
+        } else if (viewTitle.equals(PlayerShopAdminGUIManager.SHOP_ADMIN_TITLE.toString())) { // Updated to use renamed class and .toString() for Component
+            System.out.println("[TRACE] In ShopListener.onInventoryClose, viewTitle matches PlayerShopAdminGUIManager.SHOP_ADMIN_TITLE. Player: " + player.getName());
+            if (shopAdminGUIManager.getPlayerAdministeringShop().remove(playerId) != null) { // Use playerShopAdminGUIManager
+                plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) closed PlayerShop Admin GUI. Cleared admin state.", player.getName(), playerId)); // Updated log
             }
-            ShopAdminGUIManager.AdminInputType expectedInput = plugin.getPlayerWaitingForAdminInput().remove(playerId);
+            PlayerShopAdminGUIManager.AdminInputType expectedInput = shopAdminGUIManager.getPlayerWaitingForAdminInput().remove(playerId); // Use playerShopAdminGUIManager
             if (expectedInput != null) {
                 player.sendMessage(ChatColor.YELLOW + "Shop setting input cancelled.");
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) cancelled shop admin input for %s by closing GUI.",

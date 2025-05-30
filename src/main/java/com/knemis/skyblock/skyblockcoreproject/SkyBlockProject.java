@@ -7,7 +7,8 @@ import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand;
 import com.knemis.skyblock.skyblockcoreproject.economy.EconomyManager; // Assuming this is where your static EconomyManager methods are
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
-// import com.knemis.skyblock.skyblockcoreproject.gui.ShopAdminGUIManager; // This might be the old one
+import com.knemis.skyblock.skyblockcoreproject.gui.PlayerShopAdminGUIManager; // Renamed import
+import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerShopAdminAnvilListener; // Added import for new Anvil Listener
 import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopGUIManager; // New Admin Shop GUI Manager
 import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopListener;   // New Admin Shop Listener
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
@@ -39,8 +40,13 @@ import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Statik me
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop; // **** YENİ EKLENEN IMPORT ****
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
 import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.flags.Flag; // Added for custom flag
+import com.sk89q.worldguard.protection.flags.StateFlag; // Added for custom flag
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry; // Added for custom flag
+import com.sk89q.worldguard.protection.flags.FlagConflictException; // Added for custom flag
+import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for custom flag
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 
@@ -78,7 +84,7 @@ public final class SkyBlockProject extends JavaPlugin {
     private ShopManager shopManager;
     private ShopSetupGUIManager shopSetupGUIManager;
     private ShopVisitGUIManager shopVisitGUIManager;
-    // private ShopAdminGUIManager shopAdminGUIManager; // Old one
+    private PlayerShopAdminGUIManager playerShopAdminGUIManager; // Renamed field
     private AdminShopGUIManager adminShopGUIManager; // New one
 
     // GUI Managers
@@ -98,8 +104,8 @@ public final class SkyBlockProject extends JavaPlugin {
     // Player Status Tracking
     // private final Map<UUID, Location> playerShopSetupState = new HashMap<>(); // Removed, managed by ShopSetupSession
     private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
-    private final Map<UUID, Location> playerAdministeringShop = new HashMap<>();
-    private final Map<UUID, ShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>();
+    // private final Map<UUID, Location> playerAdministeringShop = new HashMap<>(); // Moved to PlayerShopAdminGUIManager
+    // private final Map<UUID, PlayerShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>(); // Moved to PlayerShopAdminGUIManager
     // private final Map<UUID, Location> playerChoosingShopMode = new HashMap<>(); // Removed, session existence implies choosing mode or in setup
     // private final Map<UUID, ItemStack> playerInitialShopStockItem = new HashMap<>(); // Removed, managed by ShopSetupSession
 
@@ -135,12 +141,35 @@ public final class SkyBlockProject extends JavaPlugin {
             System.out.println("[TRACE] In SkyBlockProject.onEnable, about to call EconomyManager.setupEconomy. this is " + (this == null ? "null" : "not null"));
             EconomyManager.setupEconomy(this); // Statik EconomyManager içindeki Vault Economy nesnesini ayarlar
         }
-        if (!hookPlugin("WorldEdit") || !setupWorldGuard()) {
-            getLogger().severe("Required dependencies (WorldEdit/WorldGuard) not found or not active! Disabling plugin.");
+        if (!hookPlugin("FastAsyncWorldEdit") || !setupWorldGuard()) { // FAWE Change
+            getLogger().severe("Required dependencies (FastAsyncWorldEdit/WorldGuard) not found or not active! Disabling plugin."); // FAWE Change
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        getLogger().info("WorldEdit and WorldGuard successfully found and active.");
+        getLogger().info("FastAsyncWorldEdit and WorldGuard successfully found and active."); // FAWE Change
+
+        // Register Custom WorldGuard Flags
+        FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
+        try {
+            // Define the flag with a default state (e.g., true means ALLOW)
+            CustomFlags.VISITOR_SHOP_USE = new StateFlag("visitor-shop-use", true); // Default true (ALLOW)
+            registry.register(CustomFlags.VISITOR_SHOP_USE);
+            getLogger().info("Custom flag 'visitor-shop-use' registered successfully.");
+        } catch (FlagConflictException e) {
+            // This can happen on plugin reload if already registered.
+            // Attempt to retrieve the existing flag.
+            Flag<?> existing = registry.get("visitor-shop-use");
+            if (existing instanceof StateFlag) {
+                CustomFlags.VISITOR_SHOP_USE = (StateFlag) existing;
+                getLogger().info("Custom flag 'visitor-shop-use' was already registered. Using existing instance.");
+            } else {
+                getLogger().severe("Could not register or retrieve 'visitor-shop-use' flag: Conflict with non-StateFlag: " + e.getMessage());
+                // Potentially disable plugin or features relying on this flag
+            }
+        } catch (Exception e) {
+            getLogger().log(java.util.logging.Level.SEVERE, "Error registering custom flags", e);
+            // Potentially disable plugin or features relying on this flag
+        }
 
         // 3. Main Data Handler
         this.islandDataHandler = new IslandDataHandler(this);
@@ -160,7 +189,7 @@ public final class SkyBlockProject extends JavaPlugin {
         this.shopManager = new ShopManager(this); // ShopManager plugin referansını alır
         this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager);
         this.shopVisitGUIManager = new ShopVisitGUIManager(this, this.shopManager);
-        // this.shopAdminGUIManager = new ShopAdminGUIManager(this, this.shopManager); // Old one
+        this.playerShopAdminGUIManager = new PlayerShopAdminGUIManager(this, this.shopManager); // Initialize renamed field
         this.adminShopGUIManager = new AdminShopGUIManager(this); // New AdminShopGUIManager
 
         // 7. Other Island Managers
@@ -179,14 +208,19 @@ public final class SkyBlockProject extends JavaPlugin {
         // 9. Listener Registrations
         getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this);
         getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this);
-        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.shopAdminGUIManager), this);
+        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.playerShopAdminGUIManager), this); // Use renamed field
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
         getServer().getPluginManager().registerEvents(new MissionListener(this), this);
         getServer().getPluginManager().registerEvents(new MissionObjectiveListener(this, this.missionManager), this);
 
-        getServer().getPluginManager().registerEvents(new ShopAnvilListener(this, this.shopSetupGUIManager), this);
-        getLogger().info("ShopAnvilListener registered.");
+        getServer().getPluginManager().registerEvents(new ShopAnvilListener(this, this.shopSetupGUIManager), this); // For shop setup
+        getLogger().info("ShopAnvilListener registered for shop setup.");
+
+        // Register PlayerShopAdminAnvilListener
+        PlayerShopAdminAnvilListener playerShopAdminAnvilListener = new PlayerShopAdminAnvilListener(this, this.playerShopAdminGUIManager);
+        getServer().getPluginManager().registerEvents(playerShopAdminAnvilListener, this);
+        getLogger().info("PlayerShopAdminAnvilListener registered for player shop admin.");
 
         // Register new AdminShopListener
         // Assumes EconomyManager.getInstance() or similar if it's a singleton, or pass directly if available.
@@ -323,7 +357,7 @@ public final class SkyBlockProject extends JavaPlugin {
     public ShopManager getShopManager() { return shopManager; }
     public ShopSetupGUIManager getShopSetupGUIManager() { return shopSetupGUIManager; }
     public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; }
-    // public ShopAdminGUIManager getShopAdminGUIManager() { return shopAdminGUIManager; } // Old
+    public PlayerShopAdminGUIManager getPlayerShopAdminGUIManager() { return playerShopAdminGUIManager; } // Getter for renamed field
     public AdminShopGUIManager getAdminShopGUIManager() { return adminShopGUIManager; } // New
     public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
     public MissionManager getMissionManager() { return missionManager; }
@@ -333,8 +367,8 @@ public final class SkyBlockProject extends JavaPlugin {
 
     // public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; } // Removed
     public Map<UUID, Location> getPlayerViewingShopLocation() { return playerViewingShopLocation; }
-    public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; }
-    public Map<UUID, ShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; }
+    // public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; } // Moved
+    // public Map<UUID, PlayerShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; } // Moved
     // public Map<UUID, Location> getPlayerChoosingShopMode() { return playerChoosingShopMode; } // Removed
     // public Map<UUID, ItemStack> getPlayerInitialShopStockItem() { return playerInitialShopStockItem; } // Removed
 
@@ -370,7 +404,7 @@ public final class SkyBlockProject extends JavaPlugin {
             getLogger().severe("WorldGuard instance is null or given world is null. Cannot get RegionManager.");
             return null;
         }
-        com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(bukkitWorld);
+        com.fastasyncworldedit.core.world.World adaptedWorld = com.fastasyncworldedit.bukkit.BukkitAdapter.adapt(bukkitWorld); // FAWE Change
         RegionContainer container = worldGuardInstance.getPlatform().getRegionContainer();
         if (container == null) {
             getLogger().severe("Could not get WorldGuard RegionContainer!");

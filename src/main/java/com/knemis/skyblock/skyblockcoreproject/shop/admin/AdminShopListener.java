@@ -3,6 +3,7 @@ package com.knemis.skyblock.skyblockcoreproject.shop.admin;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.economy.EconomyManager; // Assuming this exists
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopInventoryManager;
+import org.bukkit.NamespacedKey; // Added import
 import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 // import com.knemis.skyblock.skyblockcoreproject.utils.InventoryUtils; // To be created
 import org.bukkit.Material;
@@ -14,6 +15,8 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataContainer; // Added import
+import org.bukkit.persistence.PersistentDataType; // Added import
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +31,7 @@ public class AdminShopListener implements Listener {
     // To store current category view for pagination
     // This map holds the last category and page a player was viewing.
     private final Map<UUID, CurrentCategoryView> playerCategoryView = new HashMap<>();
+    private final NamespacedKey itemKeyPDC; // Added field
 
     // Navigation item names - ensure these exactly match the display names set in AdminShopGUIManager
     // These are translated with ChatUtils.translateAlternateColorCodes before comparison.
@@ -57,6 +61,7 @@ public class AdminShopListener implements Listener {
     public AdminShopListener(SkyBlockProject plugin, AdminShopGUIManager shopGUIManager) {
         this.plugin = plugin;
         this.shopGUIManager = shopGUIManager;
+        this.itemKeyPDC = new NamespacedKey(plugin, "admin_shop_item_internal_name"); // Initialize in constructor
     }
 
     /**
@@ -218,10 +223,35 @@ public class AdminShopListener implements Listener {
             // For now, we'll proceed assuming getShopItemFromCategoryBySlot is intended to work with the actual slot.
             // This might require AdminShopGUIManager.itemsBySlot to be cleared and repopulated per page view if slots are dynamic per page.
             // This is a known complexity point.
-             plugin.getLogger().fine("AdminShopListener: No specific ShopItem found by configured slot " + slot + ". This might be a filler pane or an auto-placed item not resolved by this lookup method.");
-            return;
+        // plugin.getLogger().fine("AdminShopListener: No specific ShopItem found by configured slot " + slot + ". This might be a filler pane or an auto-placed item not resolved by this lookup method.");
+        // return; // Original logic before PDC
+
+        // New PDC-based logic
+        AdminShopGUIManager.ShopItem targetShopItem = null;
+        ItemMeta clickedMeta = clickedItem.getItemMeta();
+        if (clickedMeta != null) {
+            PersistentDataContainer container = clickedMeta.getPersistentDataContainer();
+            if (container.has(itemKeyPDC, PersistentDataType.STRING)) {
+                String itemInternalName = container.get(itemKeyPDC, PersistentDataType.STRING);
+                if (itemInternalName != null) {
+                    targetShopItem = shopGUIManager.getShopItemByInternalName(itemInternalName);
+                }
+            }
         }
 
+        if (targetShopItem == null) {
+            // This means it's likely a navigation button or filler pane, not a shop item.
+            // The existing navigation handling logic (checking display name for "Back", "Next Page", etc.)
+            // should correctly process these before this PDC check, or after this check fails.
+            // So, if targetShopItem is null here, it's not a data-tagged shop item.
+            // The previous logic for nav buttons should still be there.
+             plugin.getLogger().fine("[AdminShopListener] Clicked item does not have a shop item PDC tag or failed lookup. Slot: " + slot);
+            // Ensure that the logic for handling navigation buttons is still effective.
+            // The current structure has nav button checks before the item lookup, which is good.
+            // So if it's null here, and not a nav button, it's a filler pane or unhandled click.
+            return; // If not a nav button and not a PDC-tagged item, do nothing further.
+        }
+        // If targetShopItem is found, proceed:
         processItemInteraction(player, targetShopItem, clickType);
     }
 

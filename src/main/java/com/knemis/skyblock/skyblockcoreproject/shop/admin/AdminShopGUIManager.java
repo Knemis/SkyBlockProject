@@ -4,6 +4,7 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.NamespacedKey; // Added import
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -34,6 +35,7 @@ public class AdminShopGUIManager {
     private AdminShopListener listener; // Reference to the listener, set via setListener()
     private FileConfiguration adminShopConfig;
     private File adminShopFile;
+    private NamespacedKey itemKeyPDC; // Added field
 
     private String mainShopTitle = "&2Admin Shop"; // Default
     private int categoryRows = 3;
@@ -52,6 +54,7 @@ public class AdminShopGUIManager {
      */
     public AdminShopGUIManager(SkyBlockProject plugin) {
         this.plugin = plugin;
+        this.itemKeyPDC = new NamespacedKey(plugin, "admin_shop_item_internal_name"); // Initialize in constructor
         loadConfiguration(); // Load config immediately
     }
 
@@ -709,6 +712,11 @@ public class AdminShopGUIManager {
 
         meta.setLore(lore);
         item.setItemMeta(meta);
+
+        if (meta != null) { // Re-check meta as it could be a new one from fallback
+            meta.getPersistentDataContainer().set(this.itemKeyPDC, org.bukkit.persistence.PersistentDataType.STRING, shopItem.getInternalName());
+            item.setItemMeta(meta);
+        }
         return item;
     }
 
@@ -789,6 +797,17 @@ public class AdminShopGUIManager {
             // Ensure titles are compared after color translation, though category.getDisplayName() should already be translated.
             if (category.getDisplayName().equals(ChatUtils.translateAlternateColorCodes(title))) {
                 return category;
+            }
+        }
+        return null;
+    }
+
+    public ShopItem getShopItemByInternalName(String internalName) {
+        for (ShopCategory category : this.categories) {
+            for (ShopItem item : category.getItems()) {
+                if (item.getInternalName().equals(internalName)) {
+                    return item;
+                }
             }
         }
         return null;

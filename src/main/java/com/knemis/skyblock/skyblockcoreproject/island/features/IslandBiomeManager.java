@@ -10,8 +10,8 @@ import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
 import org.bukkit.ChatColor;
 
-import com.sk89q.worldedit.math.BlockVector3;
-import com.sk89q.worldedit.regions.CuboidRegion;
+import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
+import com.fastasyncworldedit.core.regions.CuboidRegion; // FAWE Change
 
 import java.io.IOException;
 import java.util.Arrays;
