@@ -11,6 +11,7 @@ import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for new custom flag
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import org.bukkit.configuration.ConfigurationSection; // Added for dynamic flag loading
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -44,30 +45,74 @@ public class IslandFlagManager {
     }
 
     private void initializeDefaultFlags() {
-        // Bu bayraklar bölgenin geneli için (varsayılan olarak ziyaretçileri etkileyen) ayarlardır.
-        // Ada sahibi ve üyelerin durumu WG'nin kendi bypass mekanizmaları ve LuckPerms ile yönetilir.
-        defaultIslandFlags.put(Flags.BUILD, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.INTERACT, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.CHEST_ACCESS, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.USE, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.ITEM_DROP, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.ITEM_PICKUP, StateFlag.State.ALLOW);
-        defaultIslandFlags.put(Flags.PVP, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.DAMAGE_ANIMALS, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.TNT, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.ENDERPEARL, StateFlag.State.ALLOW);
-        defaultIslandFlags.put(Flags.MOB_SPAWNING, StateFlag.State.ALLOW);
-        defaultIslandFlags.put(Flags.RIDE, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.LAVA_FLOW, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.WATER_FLOW, StateFlag.State.DENY);
-        defaultIslandFlags.put(Flags.FIRE_SPREAD, StateFlag.State.DENY);
-        // İhtiyaç duyulan diğer bayraklar buraya eklenebilir.
+        // Inside initializeDefaultFlags() method body
+        this.defaultIslandFlags.clear(); // Start fresh
 
-        if (CustomFlags.VISITOR_SHOP_USE != null) { // Ensure it was registered
-            defaultIslandFlags.put(CustomFlags.VISITOR_SHOP_USE, StateFlag.State.ALLOW);
-        } else {
-            plugin.getLogger().warning("[IslandFlagManager] Custom flag VISITOR_SHOP_USE is null, cannot add to default flags. Check registration.");
+        org.bukkit.configuration.ConfigurationSection defaultFlagsConfig = plugin.getConfig().getConfigurationSection("island.default-flags");
+
+        // Ensure WorldGuard API is available
+        com.sk89q.worldguard.WorldGuard worldGuardInstance = null;
+        try {
+            worldGuardInstance = com.sk89q.worldguard.WorldGuard.getInstance();
+        } catch (NoClassDefFoundError e) {
+            plugin.getLogger().log(java.util.logging.Level.SEVERE, "[IslandFlagManager] WorldGuard API not found. This is a critical error. Default flags cannot be loaded.", e);
+            // Initialize with an empty map or some very basic defaults if absolutely necessary,
+            // otherwise, the plugin might not function correctly with flags.
+            // For now, just return, as flag operations would fail.
+            return;
         }
+
+
+        if (defaultFlagsConfig != null) {
+            plugin.getLogger().info("[IslandFlagManager] Loading default island flags from config.yml...");
+            for (String flagKey : defaultFlagsConfig.getKeys(false)) {
+                String stateValueStr = defaultFlagsConfig.getString(flagKey, "").toUpperCase();
+
+                com.sk89q.worldguard.protection.flags.Flag<?> genericFlag = worldGuardInstance.getFlagRegistry().get(flagKey);
+                com.sk89q.worldguard.protection.flags.StateFlag stateFlagInstance = null;
+
+                if (genericFlag instanceof com.sk89q.worldguard.protection.flags.StateFlag) {
+                    stateFlagInstance = (com.sk89q.worldguard.protection.flags.StateFlag) genericFlag;
+                } else {
+                    if (genericFlag != null) {
+                        plugin.getLogger().warning("[IslandFlagManager] Configured default flag '" + flagKey + "' is not a StateFlag (it's a " + genericFlag.getClass().getSimpleName() + "). Only StateFlags can be set as default island flags. Skipping.");
+                    } else {
+                        plugin.getLogger().warning("[IslandFlagManager] Unknown flag name '" + flagKey + "' in config.yml under island.default-flags. Skipping.");
+                    }
+                    continue;
+                }
+
+                com.sk89q.worldguard.protection.flags.StateFlag.State wgState; // Changed to non-final to allow assignment in if/else
+                if (stateValueStr.equals("ALLOW")) {
+                    wgState = com.sk89q.worldguard.protection.flags.StateFlag.State.ALLOW;
+                } else if (stateValueStr.equals("DENY")) {
+                    wgState = com.sk89q.worldguard.protection.flags.StateFlag.State.DENY;
+                } else if (stateValueStr.isEmpty() || stateValueStr.equals("NONE")) {
+                    wgState = null;
+                } else {
+                    plugin.getLogger().warning("[IslandFlagManager] Invalid state value '" + defaultFlagsConfig.getString(flagKey) + "' for flag '" + flagKey + "' in config.yml. Must be ALLOW, DENY, or NONE/empty. Skipping.");
+                    continue;
+                }
+
+                this.defaultIslandFlags.put(stateFlagInstance, wgState);
+                plugin.getLogger().info("[IslandFlagManager] Loaded default flag from config: " + flagKey + " -> " + (wgState == null ? "UNSET/NONE" : stateValueStr));
+            }
+        } else {
+            plugin.getLogger().warning("[IslandFlagManager] 'island.default-flags' section not found in config.yml. No default flags will be loaded dynamically from config. Only programmatic fallbacks might be applied.");
+        }
+
+        // Fallback for VISITOR_SHOP_USE
+        // Ensure the CustomFlags class path is correct.
+        // Assuming: import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags;
+        if (com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags.VISITOR_SHOP_USE != null) {
+            if (!this.defaultIslandFlags.containsKey(com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags.VISITOR_SHOP_USE)) {
+                this.defaultIslandFlags.put(com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags.VISITOR_SHOP_USE, com.sk89q.worldguard.protection.flags.StateFlag.State.ALLOW);
+                plugin.getLogger().info("[IslandFlagManager] Custom flag 'VISITOR_SHOP_USE' was not defined in config.yml, adding with default state ALLOW as a fallback.");
+            }
+        } else {
+             plugin.getLogger().info("[IslandFlagManager] Custom flag 'VISITOR_SHOP_USE' (CustomFlags.VISITOR_SHOP_USE) is not registered or is null. Cannot add it as a default fallback.");
+        }
+        // End of initializeDefaultFlags method body
     }
 
     private String getRegionId(UUID ownerUUID) {
