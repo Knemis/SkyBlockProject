@@ -23,3 +23,16 @@ commands:
     aliases: [mission, quests, quest, challenges]
     usage: /<command> [gui|open]
     permission: skyblock.missions.access
+  rankmanageradmin:
+    description: Administer the RankManager system.
+    usage: /<command> <validate|forcereload|confirmreload|cancelreload>
+    permission: skyblockrankmanager.admin
+    aliases: [srm, rmadmin]
+
+permissions:
+  skyblockrankmanager.admin:
+    description: Allows use of the /rankmanageradmin command and other administrative functions of RankManager.
+    default: op
+  skyblockrankmanager.owner.notify:
+    description: Allows player to receive GUI notifications for pending LuckPerms reloads when rank repairs are made.
+    default: op

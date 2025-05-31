@@ -1,16 +1,16 @@
-// com/knemis/skyblock/skyblockcoreproject/SkyBlockProject.java
 package com.knemis.skyblock.skyblockcoreproject;
 
+// Mevcut importlarınız (kısaltıldı, tam listeyi dosyanızdan alınız)
 import com.knemis.skyblock.skyblockcoreproject.commands.AdminShopCommand;
 import com.knemis.skyblock.skyblockcoreproject.commands.IslandCommand;
 import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand;
-import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Corrected import path
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.gui.PlayerShopAdminGUIManager; // Renamed import
-import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerShopAdminAnvilListener; // Added import for new Anvil Listener
-import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopGUIManager; // New Admin Shop GUI Manager
-import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopListener;   // New Admin Shop Listener
+import com.knemis.skyblock.skyblockcoreproject.gui.PlayerShopAdminGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerShopAdminAnvilListener;
+import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopGUIManager;
+import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopListener;
 import com.knemis.skyblock.skyblockcoreproject.gui.ShopSetupGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.shopvisit.ShopVisitGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
@@ -25,10 +25,7 @@ import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeMana
 import com.knemis.skyblock.skyblockcoreproject.listeners.FlagGUIListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.IslandWelcomeListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.MissionListener;
-import com.knemis.skyblock.skyblockcoreproject.listeners.MissionObjectiveListener; // Added import
+import com.knemis.skyblock.skyblockcoreproject.listeners.MissionObjectiveListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.PlayerBoundaryListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopListener;
 import com.knemis.skyblock.skyblockcoreproject.listeners.ShopSetupListener;
@@ -36,18 +33,23 @@ import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionPlayerDataManager;
-// import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Statik metotlar için - This line is now a duplicate due to correction above
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
-import com.knemis.skyblock.skyblockcoreproject.shop.Shop; // **** YENİ EKLENEN IMPORT ****
+import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
+import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter; // FAWE Change - Updated to WorldEdit API
-// Removed incorrect aliased import for com.sk89q.worldedit.world.World
+// Rank Manager Sistemi için importlar (paket adlarını kendi yapınıza göre düzeltin)
+import com.knemis.skyblock.skyblockcoreproject.rankmanager.config.RankConfigManager;
+import com.knemis.skyblock.skyblockcoreproject.rankmanager.gui.OwnerGuiManager;
+import com.knemis.skyblock.skyblockcoreproject.rankmanager.gui.PlayerInteractionListener; // Rank Manager için olan listener
+import com.knemis.skyblock.skyblockcoreproject.rankmanager.luckperms.LuckPermsHelper; // Corrected import
+import com.knemis.skyblock.skyblockcoreproject.rankmanager.util.RepairLogger;
+
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.flags.Flag; // Added for custom flag
-import com.sk89q.worldguard.protection.flags.StateFlag; // Added for custom flag
-import com.sk89q.worldguard.protection.flags.registry.FlagRegistry; // Added for custom flag
-import com.sk89q.worldguard.protection.flags.registry.FlagConflictException; // Added for custom flag - Moved to .registry subpackage
-import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for custom flag
+import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.StateFlag;
+import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 
@@ -55,191 +57,196 @@ import net.luckperms.api.LuckPerms;
 import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
 
 public final class SkyBlockProject extends JavaPlugin {
 
-    // Island Management
+    // --- Mevcut Alanlarınız ---
     private IslandDataHandler islandDataHandler;
     private IslandLifecycleManager islandLifecycleManager;
     private IslandSettingsManager islandSettingsManager;
     private IslandMemberManager islandMemberManager;
     private IslandTeleportManager islandTeleportManager;
-
-    // Island Features
     private IslandFlagManager islandFlagManager;
     private IslandBiomeManager islandBiomeManager;
     private IslandWelcomeManager islandWelcomeManager;
-
-    // Economy and Shop Management
     private IslandWorthManager islandWorthManager;
     private ShopManager shopManager;
     private ShopSetupGUIManager shopSetupGUIManager;
     private ShopVisitGUIManager shopVisitGUIManager;
-    private PlayerShopAdminGUIManager playerShopAdminGUIManager; // Renamed field
-    private AdminShopGUIManager adminShopGUIManager; // New one
-
-    // GUI Managers
+    private PlayerShopAdminGUIManager playerShopAdminGUIManager;
+    private AdminShopGUIManager adminShopGUIManager;
     private FlagGUIManager flagGUIManager;
-
-    // Missions System
     private MissionManager missionManager;
     private MissionPlayerDataManager missionPlayerDataManager;
     private MissionGUIManager missionGUIManager;
-
-    // Other
     private int nextIslandX;
-    private WorldGuard worldGuardInstance; // WorldGuard API örneği
+    private WorldGuard worldGuardInstance;
     private LuckPerms luckPermsApi;
     private Economy vaultEconomy = null;
-
-    // Player Status Tracking
-    // private final Map<UUID, Location> playerShopSetupState = new HashMap<>(); // Removed, managed by ShopSetupSession
     private final Map<UUID, Location> playerViewingShopLocation = new HashMap<>();
-    // private final Map<UUID, Location> playerAdministeringShop = new HashMap<>(); // Moved to PlayerShopAdminGUIManager
-    // private final Map<UUID, PlayerShopAdminGUIManager.AdminInputType> playerWaitingForAdminInput = new HashMap<>(); // Moved to PlayerShopAdminGUIManager
-    // private final Map<UUID, Location> playerChoosingShopMode = new HashMap<>(); // Removed, session existence implies choosing mode or in setup
-    // private final Map<UUID, ItemStack> playerInitialShopStockItem = new HashMap<>(); // Removed, managed by ShopSetupSession
-
-    // Dükkan kurulumu sırasında oyuncudan hangi türde giriş beklendiğini tutar (örn: fiyat, miktar)
-    // private final Map<UUID, ShopSetupGUIManager.InputType> playerWaitingForSetupInput = new HashMap<>(); // Removed, managed by ShopSetupSession
-    // Oyuncunun dükkan ziyareti sırasında özel satın alma miktarı girdiği durumu takip eder
     private final Map<UUID, Location> playerEnteringBuyQuantity = new HashMap<>();
-    // Oyuncunun dükkan ziyareti sırasında özel satış miktarı girdiği durumu takip eder
     private final Map<UUID, Location> playerEnteringSellQuantity = new HashMap<>();
+    // --- Mevcut Alanlarınızın Sonu ---
+
+    // --- Rank Manager Sistemi Alanları ---
+    private RankConfigManager rankConfigManager;
+    private LuckPermsHelper luckPermsHelper;
+    private RepairLogger repairLogger;
+    private OwnerGuiManager ownerGuiManager;
+    private PlayerInteractionListener rankManagerGuiListener;
+
+    private BukkitTask autoReloadTask = null;
+    private final Set<UUID> ownersPendingConfirmation = new HashSet<>();
+    private boolean reloadPending = false;
+    public static final String PLUGIN_PREFIX = ChatColor.GOLD + "[RankManager] " + ChatColor.RESET;
+    // --- Rank Manager Sistemi Alanlarının Sonu ---
 
 
     @Override
     public void onEnable() {
-        // 1. Config Loading and Defaults
+        getLogger().info("SkyBlockProject Plugin Enabling...");
+        // 1. Config Yükleme ve Varsayılanlar
         saveDefaultConfig();
         getConfig().options().copyDefaults(true);
-        getConfig().addDefault("general.next-island-x", 0);
-        getConfig().addDefault("skyblock-world-name", "skyblock_world");
-        // ... (diğer config ayarları) ...
         saveConfig();
 
         this.nextIslandX = getConfig().getInt("general.next-island-x", 0);
-        getLogger().info("SkyBlockProject Plugin Enabling...");
 
-        // 2. Dependency Checks and Setups
+        // 2. Bağımlılık Kontrolleri ve Kurulumları
         if (!setupLuckPerms()) {
-            getLogger().warning("LuckPerms API not found! Island owner bypass permissions will NOT be automatically assigned.");
-        }
-        if (!setupEconomyVault()) {
-            getLogger().severe("Could not set up economy system with Vault! Economy features will be disabled.");
-        } else {
-            getLogger().info("Economy system with Vault successfully set up!");
-            System.out.println("[TRACE] In SkyBlockProject.onEnable, about to call EconomyManager.setupEconomy. this is " + (this == null ? "null" : "not null"));
-            EconomyManager.setupEconomy(this); // Statik EconomyManager içindeki Vault Economy nesnesini ayarlar
-        }
-        if (!hookPlugin("FastAsyncWorldEdit") || !setupWorldGuard()) { // FAWE Change
-            getLogger().severe("Required dependencies (FastAsyncWorldEdit/WorldGuard) not found or not active! Disabling plugin."); // FAWE Change
+            getLogger().severe("LuckPerms API bulunamadı! SkyBlockProject devre dışı bırakılıyor.");
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
-        getLogger().info("FastAsyncWorldEdit and WorldGuard successfully found and active."); // FAWE Change
+        if (!setupEconomyVault()) {
+            getLogger().severe("Vault ile ekonomi sistemi kurulamadı! Ekonomi özellikleri devre dışı bırakılacak.");
+        } else {
+            getLogger().info("Vault ile ekonomi sistemi başarıyla kuruldu!");
+            EconomyManager.setupEconomy(this);
+        }
+        if (!hookPlugin("FastAsyncWorldEdit") || !setupWorldGuard()) {
+            getLogger().severe("Gerekli bağımlılıklar (FastAsyncWorldEdit/WorldGuard) bulunamadı veya aktif değil! Plugin devre dışı bırakılıyor.");
+            getServer().getPluginManager().disablePlugin(this);
+            return;
+        }
+        getLogger().info("FastAsyncWorldEdit ve WorldGuard başarıyla bulundu ve aktif.");
 
-        // Register Custom WorldGuard Flags
         FlagRegistry registry = WorldGuard.getInstance().getFlagRegistry();
         try {
-            // Define the flag with a default state (e.g., true means ALLOW)
-            CustomFlags.VISITOR_SHOP_USE = new StateFlag("visitor-shop-use", true); // Default true (ALLOW)
+            CustomFlags.VISITOR_SHOP_USE = new StateFlag("visitor-shop-use", true);
             registry.register(CustomFlags.VISITOR_SHOP_USE);
-            getLogger().info("Custom flag 'visitor-shop-use' registered successfully.");
+            getLogger().info("Özel 'visitor-shop-use' flag'i başarıyla kaydedildi.");
         } catch (FlagConflictException e) {
-            // This can happen on plugin reload if already registered.
-            // Attempt to retrieve the existing flag.
             Flag<?> existing = registry.get("visitor-shop-use");
             if (existing instanceof StateFlag) {
                 CustomFlags.VISITOR_SHOP_USE = (StateFlag) existing;
-                getLogger().info("Custom flag 'visitor-shop-use' was already registered. Using existing instance.");
+                getLogger().info("Özel 'visitor-shop-use' flag'i zaten kayıtlıydı. Mevcut örnek kullanılıyor.");
             } else {
-                getLogger().severe("Could not register or retrieve 'visitor-shop-use' flag: Conflict with non-StateFlag: " + e.getMessage());
-                // Potentially disable plugin or features relying on this flag
+                getLogger().severe("'visitor-shop-use' flag'i kaydedilemedi veya alınamadı: " + e.getMessage());
             }
         } catch (Exception e) {
-            getLogger().log(java.util.logging.Level.SEVERE, "Error registering custom flags", e);
-            // Potentially disable plugin or features relying on this flag
+            getLogger().log(Level.SEVERE, "Özel flag kayıt edilirken hata oluştu", e);
         }
 
-        // 3. Main Data Handler
         this.islandDataHandler = new IslandDataHandler(this);
         this.islandDataHandler.loadSkyblockWorld();
         this.islandDataHandler.loadIslandsFromConfig();
 
-        // 4. Island Feature Managers
         this.islandFlagManager = new IslandFlagManager(this, this.islandDataHandler);
         this.islandSettingsManager = new IslandSettingsManager(this, this.islandDataHandler);
         this.islandTeleportManager = new IslandTeleportManager(this, this.islandDataHandler);
 
-        // 5. Island Lifecycle Manager
         this.islandLifecycleManager = new IslandLifecycleManager(this, this.islandDataHandler, this.islandFlagManager);
 
-        // 6. Economy and Shop System Managers
         this.islandWorthManager = new IslandWorthManager(this, this.islandDataHandler, this.islandLifecycleManager);
-        this.shopManager = new ShopManager(this); // ShopManager plugin referansını alır
+        this.shopManager = new ShopManager(this);
         this.shopSetupGUIManager = new ShopSetupGUIManager(this, this.shopManager);
         this.shopVisitGUIManager = new ShopVisitGUIManager(this, this.shopManager);
-        this.playerShopAdminGUIManager = new PlayerShopAdminGUIManager(this, this.shopManager); // Initialize renamed field
-        this.adminShopGUIManager = new AdminShopGUIManager(this); // New AdminShopGUIManager
+        this.playerShopAdminGUIManager = new PlayerShopAdminGUIManager(this, this.shopManager);
+        this.adminShopGUIManager = new AdminShopGUIManager(this);
 
-        // 7. Other Island Managers
         this.islandMemberManager = new IslandMemberManager(this, this.islandDataHandler, this.islandLifecycleManager);
         this.islandBiomeManager = new IslandBiomeManager(this, this.islandDataHandler, this.islandLifecycleManager);
         this.islandWelcomeManager = new IslandWelcomeManager(this, this.islandDataHandler);
 
-        // 8. GUI Managers
         this.flagGUIManager = new FlagGUIManager(this, this.islandDataHandler, this.islandFlagManager);
 
-        // 8.5. Mission System
         this.missionManager = new MissionManager(this);
         this.missionPlayerDataManager = new MissionPlayerDataManager(this);
         this.missionGUIManager = new MissionGUIManager(this);
 
-        // 9. Listener Registrations
+
+        // --- Rank Manager Sistemi Başlatma ---
+        this.repairLogger = new RepairLogger(this);
+        this.rankConfigManager = new RankConfigManager(this);
+
+        if (this.luckPermsApi != null) {
+            this.luckPermsHelper = new LuckPermsHelper(this, this.luckPermsApi, this.rankConfigManager, this.repairLogger);
+        } else {
+            getLogger().severe("LuckPermsHelper başlatılamadı çünkü LuckPerms API null!");
+        }
+        this.ownerGuiManager = new OwnerGuiManager(this);
+        this.rankManagerGuiListener = new PlayerInteractionListener(this, this.ownerGuiManager);
+        getServer().getPluginManager().registerEvents(this.rankManagerGuiListener, this);
+        getLogger().info("Rank Manager GUI Listener kaydedildi.");
+
+        if (!rankConfigManager.loadRankTemplates()) {
+            getLogger().severe("Rank Manager için rütbe şablonları yüklenemedi. Fonksiyonellik sınırlı olacak.");
+        } else {
+            getLogger().info("Rank Manager için rütbe şablonları başarıyla yüklendi.");
+        }
+
+        if (this.luckPermsHelper != null) {
+            getServer().getScheduler().runTaskLater(this, () -> {
+                getLogger().info("Rank Manager: İlk rütbe kurulumu ve doğrulaması yapılıyor...");
+                luckPermsHelper.initializeAndValidateRanks(repairsWereMade -> {
+                    if (repairsWereMade) {
+                        getLogger().warning("Rank Manager: İlk rütbe doğrulaması sırasında tutarsızlıklar bulundu ve düzeltildi.");
+                        handleRepairsMade();
+                    } else {
+                        getLogger().info("Rank Manager: İlk rütbe doğrulaması tamamlandı. Tutarsızlık bulunamadı.");
+                    }
+                });
+            }, 20L);
+        } else {
+            getLogger().warning("Rank Manager doğrulama atlandı çünkü LuckPermsHelper başlatılamadı.");
+        }
+        getLogger().info("Rank Manager sistemi başlatıldı.");
+        // --- Rank Manager Sistemi Başlatma Sonu ---
+
         getServer().getPluginManager().registerEvents(new FlagGUIListener(this, this.flagGUIManager), this);
         getServer().getPluginManager().registerEvents(new IslandWelcomeListener(this, this.islandDataHandler, this.islandWelcomeManager), this);
-        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.playerShopAdminGUIManager), this); // Use renamed field
+        getServer().getPluginManager().registerEvents(new ShopListener(this, this.shopManager, this.shopSetupGUIManager, this.islandDataHandler, this.shopVisitGUIManager, this.playerShopAdminGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopSetupListener(this, this.shopManager, this.shopSetupGUIManager), this);
         getServer().getPluginManager().registerEvents(new ShopVisitListener(this, this.shopManager, this.shopVisitGUIManager), this);
         getServer().getPluginManager().registerEvents(new MissionListener(this), this);
         getServer().getPluginManager().registerEvents(new MissionObjectiveListener(this, this.missionManager), this);
-
-        getServer().getPluginManager().registerEvents(new ShopAnvilListener(this, this.shopSetupGUIManager), this); // For shop setup
-        getLogger().info("ShopAnvilListener registered for shop setup.");
-
-        // Register PlayerShopAdminAnvilListener
-        PlayerShopAdminAnvilListener playerShopAdminAnvilListener = new PlayerShopAdminAnvilListener(this, this.playerShopAdminGUIManager);
-        getServer().getPluginManager().registerEvents(playerShopAdminAnvilListener, this);
-        getLogger().info("PlayerShopAdminAnvilListener registered for player shop admin.");
-
-        // Register new AdminShopListener
-        // Assumes EconomyManager.getInstance() or similar if it's a singleton, or pass directly if available.
-        // For now, I'll assume EconomyManager provides static access or can be passed if it's an instance.
-        // If EconomyManager is instance-based, it needs to be initialized before this.
-        // Let's assume EconomyManager is setup as static access for now as per AdminShopListener constructor.
-        // AdminShopListener now uses static EconomyManager methods, so no instance is passed.
-        AdminShopListener adminShopListener = new AdminShopListener(this, this.adminShopGUIManager);
-        this.adminShopGUIManager.setListener(adminShopListener); // Allow GUIManager to callback to listener for things like player view tracking
-        getServer().getPluginManager().registerEvents(adminShopListener, this);
-        getLogger().info("AdminShopListener registered for new AdminShop system.");
-
-
+        getServer().getPluginManager().registerEvents(new ShopAnvilListener(this, this.shopSetupGUIManager), this);
+        getServer().getPluginManager().registerEvents(new PlayerShopAdminAnvilListener(this, this.playerShopAdminGUIManager), this);
+        getServer().getPluginManager().registerEvents(new AdminShopListener(this, this.adminShopGUIManager), this);
         if (getConfig().getBoolean("island.enforce-boundaries", true)) {
             getServer().getPluginManager().registerEvents(new PlayerBoundaryListener(this), this);
         }
 
-        // 10. Command Registrations
+
         IslandCommand islandCommandExecutor = new IslandCommand(
                 this, this.islandDataHandler, this.islandLifecycleManager, this.islandSettingsManager,
                 this.islandMemberManager, this.islandTeleportManager, this.islandBiomeManager,
@@ -249,7 +256,7 @@ public final class SkyBlockProject extends JavaPlugin {
             getCommand("island").setExecutor(islandCommandExecutor);
             getCommand("island").setTabCompleter(islandCommandExecutor);
         } else {
-            getLogger().severe("'island' command not defined in plugin.yml!");
+            getLogger().severe("'island' komutu plugin.yml dosyasında tanımlanmamış!");
         }
 
         MissionCommand missionCommandExecutor = new MissionCommand(this);
@@ -257,15 +264,13 @@ public final class SkyBlockProject extends JavaPlugin {
             getCommand("missions").setExecutor(missionCommandExecutor);
             getCommand("missions").setTabCompleter(missionCommandExecutor);
         } else {
-            getLogger().severe("'missions' command not defined in plugin.yml!");
+            getLogger().severe("'missions' komutu plugin.yml dosyasında tanımlanmamış!");
         }
 
-        // Register AdminShopCommand
         if (getCommand("adminshop") != null) {
             getCommand("adminshop").setExecutor(new AdminShopCommand(this, this.adminShopGUIManager));
-            // Tab completer can be added here if desired later
         } else {
-            getLogger().severe("'adminshop' command not defined in plugin.yml!");
+            getLogger().severe("'adminshop' komutu plugin.yml dosyasında tanımlanmamış!");
         }
 
         getLogger().info("SkyBlockProject Plugin Successfully Enabled!");
@@ -279,42 +284,48 @@ public final class SkyBlockProject extends JavaPlugin {
         if (missionPlayerDataManager != null) {
             missionPlayerDataManager.saveAllPlayerData();
         }
-        // Dükkanları kaydetme bölümü güncellendi
         if (shopManager != null && shopManager.getShopStorage() != null) {
-            Map<Location, Shop> allActiveShops = shopManager.getActiveShopsMap(); // Artık Shop tipi doğru import edildi
+            Map<Location, Shop> allActiveShops = shopManager.getActiveShopsMap();
             if (allActiveShops != null) {
-                shopManager.getShopStorage().saveAllShops(allActiveShops); // Bu çağrı artık doğru tiplerle çalışmalı
-                getLogger().info(allActiveShops.size() + " shops have been requested to be saved.");
+                shopManager.getShopStorage().saveAllShops(allActiveShops);
+                getLogger().info(allActiveShops.size() + " dükkanın kaydedilmesi istendi.");
             } else {
-                getLogger().warning("Active shops map was null, could not save shops.");
+                getLogger().warning("Aktif dükkan haritası null idi, dükkanlar kaydedilemedi.");
             }
         }
         getConfig().set("general.next-island-x", this.nextIslandX);
         saveConfig();
+
+        if (autoReloadTask != null && !autoReloadTask.isCancelled()) {
+            autoReloadTask.cancel();
+            autoReloadTask = null;
+        }
+        if (ownerGuiManager != null) ownerGuiManager.closeAllGuis();
+        ownersPendingConfirmation.clear();
+        getLogger().info("Rank Manager kapatılıyor...");
+
         getLogger().info("SkyBlockProject Plugin Disabled.");
     }
 
-    // --- Dependency Setup Methods ---
     private boolean setupLuckPerms() {
         RegisteredServiceProvider<LuckPerms> provider = Bukkit.getServicesManager().getRegistration(LuckPerms.class);
         if (provider != null) {
             this.luckPermsApi = provider.getProvider();
-            getLogger().info("Successfully connected to LuckPerms API.");
+            getLogger().info("LuckPerms API'sine başarıyla bağlanıldı.");
             return true;
         }
-        getLogger().warning("LuckPerms API not found!");
+        getLogger().warning("LuckPerms API bulunamadı!");
         return false;
     }
 
     private boolean setupEconomyVault() {
-        System.out.println("[TRACE] In SkyBlockProject.setupEconomyVault");
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            getLogger().severe("Vault plugin not found! Economy features will be unavailable.");
+            getLogger().severe("Vault plugini bulunamadı! Ekonomi özellikleri kullanılamayacak.");
             return false;
         }
         RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
         if (rsp == null) {
-            getLogger().severe("No registered economy provider for Vault found! (Is EssentialsX Economy etc. installed?)");
+            getLogger().severe("Vault için kayıtlı ekonomi sağlayıcısı bulunamadı! (EssentialsX Economy vb. yüklü mü?)");
             return false;
         }
         vaultEconomy = rsp.getProvider();
@@ -324,15 +335,15 @@ public final class SkyBlockProject extends JavaPlugin {
     private boolean setupWorldGuard() {
         Plugin wgPlugin = Bukkit.getPluginManager().getPlugin("WorldGuard");
         if (wgPlugin == null || !wgPlugin.isEnabled()) {
-            getLogger().severe("WorldGuard plugin not found or not active!");
+            getLogger().severe("WorldGuard plugini bulunamadı veya aktif değil!");
             return false;
         }
         this.worldGuardInstance = WorldGuard.getInstance();
         if (this.worldGuardInstance == null) {
-            getLogger().severe("Could not get WorldGuard instance!");
+            getLogger().severe("WorldGuard örneği alınamadı!");
             return false;
         }
-        getLogger().info("Successfully hooked into WorldGuard API.");
+        getLogger().info("WorldGuard API'sine başarıyla bağlanıldı.");
         return true;
     }
 
@@ -341,11 +352,7 @@ public final class SkyBlockProject extends JavaPlugin {
         return plugin != null && plugin.isEnabled();
     }
 
-    // --- Getter Methods ---
-    public Economy getEconomy() {
-        return vaultEconomy;
-    }
-
+    public Economy getEconomy() { return vaultEconomy; }
     public IslandDataHandler getIslandDataHandler() { return islandDataHandler; }
     public IslandLifecycleManager getIslandLifecycleManager() { return islandLifecycleManager; }
     public IslandSettingsManager getIslandSettingsManager() { return islandSettingsManager; }
@@ -358,59 +365,237 @@ public final class SkyBlockProject extends JavaPlugin {
     public ShopManager getShopManager() { return shopManager; }
     public ShopSetupGUIManager getShopSetupGUIManager() { return shopSetupGUIManager; }
     public ShopVisitGUIManager getShopVisitGUIManager() { return shopVisitGUIManager; }
-    public PlayerShopAdminGUIManager getPlayerShopAdminGUIManager() { return playerShopAdminGUIManager; } // Getter for renamed field
-    public AdminShopGUIManager getAdminShopGUIManager() { return adminShopGUIManager; } // New
+    public PlayerShopAdminGUIManager getPlayerShopAdminGUIManager() { return playerShopAdminGUIManager; }
+    public AdminShopGUIManager getAdminShopGUIManager() { return adminShopGUIManager; }
     public FlagGUIManager getFlagGUIManager() { return flagGUIManager; }
     public MissionManager getMissionManager() { return missionManager; }
     public MissionPlayerDataManager getMissionPlayerDataManager() { return missionPlayerDataManager; }
     public MissionGUIManager getMissionGUIManager() { return missionGUIManager; }
     public LuckPerms getLuckPermsApi() { return luckPermsApi; }
-
-    // public Map<UUID, Location> getPlayerShopSetupState() { return playerShopSetupState; } // Removed
     public Map<UUID, Location> getPlayerViewingShopLocation() { return playerViewingShopLocation; }
-    // public Map<UUID, Location> getPlayerAdministeringShop() { return playerAdministeringShop; } // Moved
-    // public Map<UUID, PlayerShopAdminGUIManager.AdminInputType> getPlayerWaitingForAdminInput() { return playerWaitingForAdminInput; } // Moved
-    // public Map<UUID, Location> getPlayerChoosingShopMode() { return playerChoosingShopMode; } // Removed
-    // public Map<UUID, ItemStack> getPlayerInitialShopStockItem() { return playerInitialShopStockItem; } // Removed
-
-    // Dükkan kurulumu için input bekleyen oyuncuları tutar
-    // public Map<UUID, ShopSetupGUIManager.InputType> getPlayerWaitingForSetupInput() { // Removed
-    //    return playerWaitingForSetupInput;
-    // }
-
-    // Dükkan ziyareti sırasında özel satın alma miktarı giren oyuncuları tutar
-    public Map<UUID, Location> getPlayerEnteringBuyQuantity() {
-        return playerEnteringBuyQuantity;
-    }
-
-    // Dükkan ziyareti sırasında özel satış miktarı giren oyuncuları tutar
-    public Map<UUID, Location> getPlayerEnteringSellQuantity() {
-        return playerEnteringSellQuantity;
-    }
-
-    // WorldGuard instance'ını döndürür
-    public WorldGuard getWorldGuardInstance() {
-        return worldGuardInstance;
-    }
-
+    public Map<UUID, Location> getPlayerEnteringBuyQuantity() { return playerEnteringBuyQuantity; }
+    public Map<UUID, Location> getPlayerEnteringSellQuantity() { return playerEnteringSellQuantity; }
+    public WorldGuard getWorldGuardInstance() { return worldGuardInstance; }
     public int getNextIslandXAndIncrement() {
         int currentX = this.nextIslandX;
         this.nextIslandX += getConfig().getInt("island.spacing", 300);
-        // getConfig().set("general.next-island-x", this.nextIslandX); // onDisable'da kaydetmek daha iyi
         return currentX;
     }
-
     public RegionManager getRegionManager(World bukkitWorld) {
         if (worldGuardInstance == null || bukkitWorld == null) {
-            getLogger().severe("WorldGuard instance is null or given world is null. Cannot get RegionManager.");
+            getLogger().severe("WorldGuard örneği null veya verilen dünya null. RegionManager alınamıyor.");
             return null;
         }
-        com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(bukkitWorld); // FAWE Change - Using FQN
+        com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(bukkitWorld);
         RegionContainer container = worldGuardInstance.getPlatform().getRegionContainer();
         if (container == null) {
-            getLogger().severe("Could not get WorldGuard RegionContainer!");
+            getLogger().severe("WorldGuard RegionContainer alınamadı!");
             return null;
         }
         return container.get(adaptedWorld);
+    }
+
+    // --- Rank Manager Metodları ---
+    public void handleRepairsMade() {
+        this.reloadPending = true;
+        this.ownersPendingConfirmation.clear();
+
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            if (player.hasPermission("skyblockrankmanager.owner.notify")) {
+                if (this.ownerGuiManager != null) this.ownerGuiManager.openReloadGui(player);
+                this.ownersPendingConfirmation.add(player.getUniqueId());
+                if (this.rankManagerGuiListener != null) {
+                    this.rankManagerGuiListener.addPlayerToLockdown(player.getUniqueId());
+                } else {
+                    getLogger().warning("RankManagerGuiListener null, oyuncu kilitleme yapılamadı: " + player.getName());
+                }
+            }
+        }
+
+        Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW +
+                "LuckPerms grupları düzeltildi. LuckPerms'in yeniden yüklenmesi gerekiyor!");
+        Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW +
+                "Owner'lar bilgilendirildi. Konsolda '/srm confirmreload' veya '/srm cancelreload' yazın.");
+        Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW +
+                "Eylem yapılmazsa LuckPerms 30 saniye içinde otomatik olarak yeniden yüklenecek...");
+
+        if (this.autoReloadTask != null && !this.autoReloadTask.isCancelled()) {
+            this.autoReloadTask.cancel();
+        }
+        this.autoReloadTask = getServer().getScheduler().runTaskLater(this, () -> {
+            if (this.reloadPending) {
+                Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.GOLD + "LuckPerms şimdi otomatik olarak yeniden yükleniyor...");
+                performLuckPermsReload("Otomatik yeniden yükleme (30s zaman aşımı)");
+            }
+        }, 30 * 20L);
+    }
+
+    public void confirmReload(String source) {
+        if (!this.reloadPending) {
+            String msg = PLUGIN_PREFIX + ChatColor.GREEN + "Bekleyen bir yeniden yükleme yoktu.";
+            Bukkit.getConsoleSender().sendMessage(msg);
+            if (source.startsWith("GUI")) {
+                try {
+                    String playerName = source.substring(source.indexOf('(') + 1, source.indexOf(')')); // Get player name
+                    Player player = Bukkit.getPlayerExact(playerName); // Use getPlayerExact
+                    if (player != null) player.sendMessage(msg);
+                } catch (Exception ignored) {}
+            }
+            return;
+        }
+        performLuckPermsReload(source);
+    }
+
+    public void cancelReload(String source) {
+        if (!this.reloadPending) {
+            String msg = PLUGIN_PREFIX + ChatColor.GREEN + "Bekleyen bir yeniden yükleme yoktu.";
+            Bukkit.getConsoleSender().sendMessage(msg);
+            if (source.startsWith("GUI")) {
+                 try {
+                    String playerName = source.substring(source.indexOf('(') + 1, source.indexOf(')'));
+                    Player player = Bukkit.getPlayerExact(playerName);
+                    if (player != null) player.sendMessage(msg);
+                } catch (Exception ignored) {}
+            }
+            return;
+        }
+        this.reloadPending = false;
+        if (this.autoReloadTask != null && !this.autoReloadTask.isCancelled()) {
+            this.autoReloadTask.cancel();
+            this.autoReloadTask = null;
+        }
+        Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.RED + "LuckPerms yeniden yüklemesi " + source + " tarafından iptal edildi.");
+        if (this.repairLogger != null) this.repairLogger.logInfo("LuckPerms yeniden yüklemesi " + source + " tarafından iptal edildi.");
+        releaseAllOwnersFromLockdown();
+        if (this.ownerGuiManager != null) this.ownerGuiManager.closeAllGuis();
+    }
+
+    private void performLuckPermsReload(String source) {
+        if (!this.reloadPending && !source.toLowerCase().contains("force") && !source.toLowerCase().contains("otomatik")) {
+            getLogger().info("performLuckPermsReload çağrıldı ancak bekleyen bir yeniden yükleme yoktu ve zorlanmadı/otomatik değildi.");
+            return;
+        }
+
+        this.reloadPending = false;
+        if (this.autoReloadTask != null && !this.autoReloadTask.isCancelled()) {
+            this.autoReloadTask.cancel();
+            this.autoReloadTask = null;
+        }
+
+        Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.GREEN + "LuckPerms yeniden yükleniyor (tetikleyen: " + source + ")...");
+        if (this.repairLogger != null) this.repairLogger.logInfo("LuckPerms yeniden yüklemesi başlatıldı: " + source);
+
+        boolean success = Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "lp reload");
+
+        if (success) {
+            Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.GREEN + "LuckPerms yeniden yükleme komutu çalıştırıldı.");
+            getServer().getScheduler().runTaskLater(this, () -> {
+                if (this.luckPermsHelper != null) {
+                    getLogger().info("Rank Manager: Yeniden yüklemeden sonra rütbeler yeniden doğrulanıyor...");
+                    this.luckPermsHelper.initializeAndValidateRanks(repairsMade -> {
+                        if (repairsMade) {
+                            getLogger().severe(PLUGIN_PREFIX + ChatColor.RED + "KRİTİK: LuckPerms yeniden yüklemesi ve yeniden doğrulamadan SONRA bile tutarsızlıklar bulundu!");
+                            if (this.repairLogger != null) this.repairLogger.logSevere("KRİTİK: LP yeniden yüklemesi ve yeniden doğrulamadan sonra tutarsızlıklar bulundu.");
+                        } else {
+                            getLogger().info(PLUGIN_PREFIX + ChatColor.GREEN + "Yeniden doğrulama başarılı. Tüm rütbeler uyumlu.");
+                            if (this.repairLogger != null) this.repairLogger.logInfo("Yeniden yükleme sonrası yeniden doğrulama başarılı.");
+                        }
+                    });
+                }
+            }, 40L);
+        } else {
+            Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.RED + "LuckPerms yeniden yükleme komutu gönderilemedi veya düzgün çalıştırılamadı.");
+            if (this.repairLogger != null) this.repairLogger.logSevere("LuckPerms yeniden yükleme komutu başarısız oldu.");
+            getLogger().warning(PLUGIN_PREFIX + ChatColor.DARK_RED + "LuckPerms yeniden yüklemesi başarısız oldu. Sorunlar devam ederse sunucuyu yeniden başlatmayı düşünün!");
+        }
+        releaseAllOwnersFromLockdown();
+        if (this.ownerGuiManager != null) this.ownerGuiManager.closeAllGuis();
+    }
+
+    public void releaseOwnerFromLockdown(UUID playerUuid) {
+        this.ownersPendingConfirmation.remove(playerUuid);
+        if (this.rankManagerGuiListener != null) {
+            this.rankManagerGuiListener.removePlayerFromLockdown(playerUuid);
+        }
+        Player player = Bukkit.getPlayer(playerUuid);
+        if (player != null) {
+            if (player.getOpenInventory().getTitle().equals(OwnerGuiManager.GUI_TITLE)) {
+                player.closeInventory();
+            }
+            player.sendMessage(PLUGIN_PREFIX + ChatColor.GREEN + "Artık normal şekilde etkileşimde bulunabilirsiniz.");
+        }
+    }
+
+    private void releaseAllOwnersFromLockdown() {
+        new HashSet<>(this.ownersPendingConfirmation).forEach(this::releaseOwnerFromLockdown);
+        this.ownersPendingConfirmation.clear(); // Clear after iterating over copy
+    }
+
+    public Set<UUID> getOwnersPendingConfirmation() {
+        return this.ownersPendingConfirmation;
+    }
+
+    public RepairLogger getRepairLogger() {
+        return this.repairLogger;
+    }
+    // --- Rank Manager Metodları Sonu ---
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+        if (command.getName().equalsIgnoreCase("rankmanageradmin") || command.getAliases().stream().anyMatch(alias -> alias.equalsIgnoreCase(label))) {
+            if (!sender.hasPermission("skyblockrankmanager.admin")) {
+                sender.sendMessage(ChatColor.RED + "Bu komutu kullanma izniniz yok.");
+                return true;
+            }
+            if (args.length == 0) {
+                sender.sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW + "Kullanım: /" + label + " <eylem>");
+                sender.sendMessage(PLUGIN_PREFIX + ChatColor.AQUA + "Eylemler: validate, forcereload, confirmreload, cancelreload");
+                return true;
+            }
+
+            String action = args[0].toLowerCase();
+            switch (action) {
+                case "validate":
+                    sender.sendMessage(PLUGIN_PREFIX + ChatColor.AQUA + "Manuel rütbe doğrulaması yapılıyor...");
+                    if (this.luckPermsHelper != null) {
+                        this.luckPermsHelper.initializeAndValidateRanks(repairsMade -> {
+                            if (repairsMade) {
+                                sender.sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW + "Doğrulama tamamlandı. Düzeltmeler yapıldı. Yeniden yükleme başlatıldı.");
+                                handleRepairsMade();
+                            } else {
+                                sender.sendMessage(PLUGIN_PREFIX + ChatColor.GREEN + "Doğrulama tamamlandı. Tutarsızlık bulunamadı.");
+                            }
+                        });
+                    } else {
+                        sender.sendMessage(PLUGIN_PREFIX + ChatColor.RED + "Rütbe doğrulama sistemi başlatılmamış.");
+                    }
+                    break;
+                case "forcereload":
+                    sender.sendMessage(PLUGIN_PREFIX + ChatColor.AQUA + "LuckPerms yeniden yüklemesi zorlanıyor...");
+                    performLuckPermsReload("Zorla (" + sender.getName() + ")");
+                    break;
+                case "confirmreload":
+                    if (this.reloadPending) {
+                        sender.sendMessage(PLUGIN_PREFIX + ChatColor.GREEN + "Konsol LuckPerms yeniden yüklemesini onayladı.");
+                        confirmReload("Konsol (" + sender.getName() + ")");
+                    } else {
+                        sender.sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW + "Şu anda onay bekleyen bir yeniden yükleme yok.");
+                    }
+                    break;
+                case "cancelreload":
+                    if (this.reloadPending) {
+                        sender.sendMessage(PLUGIN_PREFIX + ChatColor.RED + "Konsol LuckPerms yeniden yüklemesini iptal etti.");
+                        cancelReload("Konsol (" + sender.getName() + ")");
+                    } else {
+                        sender.sendMessage(PLUGIN_PREFIX + ChatColor.YELLOW + "Şu anda onay bekleyen bir yeniden yükleme yok.");
+                    }
+                    break;
+                default:
+                    sender.sendMessage(PLUGIN_PREFIX + ChatColor.RED + "Bilinmeyen eylem. Yardım için /" + label + " kullanın.");
+                    break;
+            }
+            return true;
+        }
+        return false;
     }
 }

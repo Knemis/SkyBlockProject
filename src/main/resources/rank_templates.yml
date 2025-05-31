@@ -1,0 +1,81 @@
+# Default Rank Templates for SkyBlockProject RankManager
+#
+# This file defines the templates for LuckPerms groups that the RankManager can create and validate.
+#
+# Each rank (group) is defined under the 'ranks:' section by its internal LuckPerms group name.
+#
+# Properties for each rank:
+#   display_name: (Optional) The friendly name for the rank. Defaults to the internal name.
+#   prefix: (Optional) The chat prefix for this rank. Use '&' for color codes.
+#   suffix: (Optional) The chat suffix for this rank. Use '&' for color codes.
+#   weight: (Required) The LuckPerms weight of the group. Higher numbers mean higher priority.
+#   permissions: (Optional) A list of permission nodes for this rank.
+#   inheritance: (Optional) A list of other LuckPerms group names that this rank should inherit permissions from.
+
+ranks:
+  default:
+    display_name: "Default"
+    prefix: "&7[Player] "
+    suffix: ""
+    weight: 0
+    permissions:
+      - skyblock.island.create  # Example: permission to create an island
+      - skyblock.island.go
+      # Add other basic permissions for default players here
+    inheritance: []
+
+  member:
+    display_name: "Member"
+    prefix: "&a[Member] "
+    suffix: ""
+    weight: 10
+    permissions:
+      - skyblock.island.team.invite # Example permission
+      - skyblock.island.home.set
+    inheritance:
+      - default # Inherits all permissions from the 'default' group
+
+  vip:
+    display_name: "VIP"
+    prefix: "&b[VIP] "
+    suffix: " &e☆"
+    weight: 20
+    permissions:
+      - skyblock.kits.vip
+      - skyblock.island.maxhomes.vip # Example: could be tied to a separate plugin or logic
+    inheritance:
+      - member
+
+  moderator:
+    display_name: "Moderator"
+    prefix: "&6[Mod] "
+    suffix: ""
+    weight: 50
+    permissions:
+      - skyblock.admin.teleport # Example admin permission
+      - skyblock.island.info.others
+      - worldguard.region.bypass.<world_name> # Example bypass, replace <world_name>
+    inheritance:
+      - default # Mods might not need all game perks from vip/member but need default island perms
+
+  admin:
+    display_name: "Admin"
+    prefix: "&c[Admin] "
+    suffix: ""
+    weight: 100
+    permissions:
+      - skyblock.admin.*
+      - luckperms.*
+      # Consider what specific admin permissions are needed for RankManager itself if any
+      # The '/rankmanageradmin' command uses 'skyblockrankmanager.admin' which is separate
+    inheritance:
+      - moderator # Admins inherit mod permissions
+
+  owner:
+    display_name: "Owner"
+    prefix: "&4[Owner] "
+    suffix: ""
+    weight: 1000
+    permissions:
+      - "*" # Owners typically have all permissions
+    inheritance: [] # Owners might not need to inherit if they have '*'
