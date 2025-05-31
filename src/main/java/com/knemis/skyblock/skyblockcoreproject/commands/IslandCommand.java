@@ -544,14 +544,18 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleResetCommand(Player player, String[] args) {
+        plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] handleResetCommand for %s: Received args: %s", player.getName(), Arrays.toString(args)));
         if (!this.islandDataHandler.playerHasIsland(player.getUniqueId())) {
             player.sendMessage(Component.text("Sıfırlayabileceğin bir adan yok!", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Player %s failed to execute /island reset: No island to reset.", player.getName()));
+            plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s has no island. Aborting reset.", player.getName()));
             return;
         }
         String subCommand = args.length > 1 ? args[1].toLowerCase() : "";
+        plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s: args.length = %d, subCommand = '%s'", player.getName(), args.length, subCommand));
 
         if (args.length == 1) {
+            plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s: Entered 'args.length == 1' block. Requesting reset confirmation. Current resetConfirmations map for player: %s", player.getName(), resetConfirmations.containsKey(player.getUniqueId()) ? "PENDING" : "NONE"));
             resetConfirmations.put(player.getUniqueId(), System.currentTimeMillis());
             player.sendMessage(Component.text("Adanı sıfırlamak istediğinden emin misin? Bu işlem adandaki yapıları silip adayı başlangıç şemasına döndürecektir. ", NamedTextColor.YELLOW)
                     .append(Component.text("Ev noktalarınız korunacaktır.", NamedTextColor.GOLD, TextDecoration.BOLD))
@@ -571,15 +575,19 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                 }
             }.runTaskLater(plugin, RESET_CONFIRM_TIMEOUT_SECONDS * 20L);
         } else if (args.length == 2 && subCommand.equalsIgnoreCase("confirm")) {
+            plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s: Entered 'args.length == 2 && subCommand.equalsIgnoreCase(\"confirm\")' block. Processing confirmation.", player.getName()));
             Long requestTime = resetConfirmations.remove(player.getUniqueId());
             if (requestTime == null || (System.currentTimeMillis() - requestTime) > (RESET_CONFIRM_TIMEOUT_SECONDS * 1000)) {
+                plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s: Reset confirmation invalid or timed out. requestTime: %s", player.getName(), requestTime));
                 player.sendMessage(Component.text("Onaylanacak aktif bir ada sıfırlama isteğin bulunmuyor veya isteğin zaman aşımına uğramış.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("Player %s failed to execute /island reset confirm: No active request or timed out.", player.getName()));
                 return;
             }
+            plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s: Reset confirmation VALID. Proceeding with islandLifecycleManager.resetIsland().", player.getName()));
             this.islandLifecycleManager.resetIsland(player);
             plugin.getLogger().info(String.format("Successfully processed /island reset confirm for %s", player.getName()));
         } else {
+            plugin.getLogger().info(String.format("[RESET_CONFIRM_TRACE] Player %s: Entered final 'else' block due to invalid arguments for reset command.", player.getName()));
             player.sendMessage(Component.text("Kullanım: /island reset veya /island reset confirm", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Player %s failed to execute /island reset: Invalid arguments. Usage: /island reset or /island reset confirm", player.getName()));
         }

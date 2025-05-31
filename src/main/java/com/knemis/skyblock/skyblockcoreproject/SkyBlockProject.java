@@ -39,7 +39,7 @@ import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags;
 
 // Rank Manager Sistemi için importlar (paket adlarını kendi yapınıza göre düzeltin)
 import com.knemis.skyblock.skyblockcoreproject.rankmanager.config.RankConfigManager;
-import com.knemis.skyblock.skyblockcoreproject.rankmanager.gui.OwnerGuiManager;
+import com.knemis.skyblock.skyblockcoreproject.rankmanager.gui.OwnerGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.rankmanager.gui.PlayerInteractionListener; // Rank Manager için olan listener
 import com.knemis.skyblock.skyblockcoreproject.rankmanager.luckperms.LuckPermsHelper; // Corrected import
 import com.knemis.skyblock.skyblockcoreproject.rankmanager.util.RepairLogger;
@@ -110,7 +110,7 @@ public final class SkyBlockProject extends JavaPlugin {
     private RankConfigManager rankConfigManager;
     private LuckPermsHelper luckPermsHelper;
     private RepairLogger repairLogger;
-    private OwnerGuiManager ownerGuiManager;
+    private OwnerGUIManager ownerGuiManager;
     private PlayerInteractionListener rankManagerGuiListener;
 
     private BukkitTask autoReloadTask = null;
@@ -203,7 +203,7 @@ public final class SkyBlockProject extends JavaPlugin {
         } else {
             getLogger().severe("LuckPermsHelper başlatılamadı çünkü LuckPerms API null!");
         }
-        this.ownerGuiManager = new OwnerGuiManager(this);
+        this.ownerGuiManager = new OwnerGUIManager(this);
         this.rankManagerGuiListener = new PlayerInteractionListener(this, this.ownerGuiManager);
         getServer().getPluginManager().registerEvents(this.rankManagerGuiListener, this);
         getLogger().info("Rank Manager GUI Listener kaydedildi.");
@@ -519,7 +519,7 @@ public final class SkyBlockProject extends JavaPlugin {
         }
         Player player = Bukkit.getPlayer(playerUuid);
         if (player != null) {
-            if (player.getOpenInventory().getTitle().equals(OwnerGuiManager.GUI_TITLE)) {
+            if (player.getOpenInventory().getTitle().equals(OwnerGUIManager.GUI_TITLE)) {
                 player.closeInventory();
             }
             player.sendMessage(PLUGIN_PREFIX + ChatColor.GREEN + "Artık normal şekilde etkileşimde bulunabilirsiniz.");

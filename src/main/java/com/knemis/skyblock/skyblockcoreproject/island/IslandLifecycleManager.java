@@ -16,6 +16,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.regions.CuboidRegion;
 import com.sk89q.worldedit.world.block.BlockTypes;
+import com.sk89q.worldedit.WorldEditException; // Added import
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
@@ -348,43 +349,75 @@ public class IslandLifecycleManager {
             return false;
         }
         Location islandBaseLocation = island.getBaseLocation();
-        String islandId = island.getRegionId();
-        plugin.getLogger().info(String.format("Attempting to delete island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
+        String islandId = island.getRegionId(); // islandId is defined here, but the log requested island.getRegionId(), which is fine.
+        // plugin.getLogger().info(String.format("Attempting to delete island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId())); // Original log, replaced by detailed trace
 
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(Component.text("Adanın konumu veya dünyası bulunamadı (silme işlemi için).", NamedTextColor.RED));
-            plugin.getLogger().warning(String.format("deleteIsland: Island base location or world is null for player %s (Island ID: %s).", player.getName(), islandId));
+            plugin.getLogger().warning(String.format("[DELETE_TRACE] deleteIsland: Island base location or world is null for player %s (IslandID: %s). Cannot proceed.", player.getName(), island.getRegionId()));
             return false;
         }
         String worldName = islandBaseLocation.getWorld().getName();
-        String regionId = getRegionId(player.getUniqueId());
+        String regionId = getRegionId(player.getUniqueId()); // This is the WG regionId, which should match island.getRegionId()
+
+        plugin.getLogger().info(String.format("[DELETE_TRACE] Initiating delete for player %s (IslandID: %s, IslandName: %s). Using baseLocation: %s (World: %s, X: %.2f, Y: %.2f, Z: %.2f).",
+            player.getName(),
+            island.getRegionId(),
+            island.getIslandName(),
+            (islandBaseLocation != null ? islandBaseLocation.toString() : "NULL_BASE_LOCATION_OBJECT"),
+            (islandBaseLocation != null && islandBaseLocation.getWorld() != null ? islandBaseLocation.getWorld().getName() : "NULL_WORLD_IN_BASE_LOCATION"),
+            (islandBaseLocation != null ? islandBaseLocation.getX() : 0.0),
+            (islandBaseLocation != null ? islandBaseLocation.getY() : 0.0),
+            (islandBaseLocation != null ? islandBaseLocation.getZ() : 0.0)
+        ));
 
         player.sendMessage(Component.text("Adanız ve tüm bölgesi siliniyor...", NamedTextColor.YELLOW));
         try {
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
+            if (islandTerritory != null) {
+                plugin.getLogger().info(String.format("[DELETE_TRACE] Calculated islandTerritory for deletion: Min(%s), Max(%s) in world %s",
+                    islandTerritory.getMinimumPoint().toString(),
+                    islandTerritory.getMaximumPoint().toString(),
+                    (islandTerritory.getWorld() != null ? islandTerritory.getWorld().getName() : "NULL_WORLD_IN_TERRITORY_REGION")
+                ));
+            } else {
+                plugin.getLogger().severe("[DELETE_TRACE] islandTerritory is NULL after call to getIslandTerritoryRegion for island " + island.getRegionId() + ". Deletion of blocks will likely fail.");
+                // Not returning false here, to allow other cleanup like WG region removal and data removal.
+                // But WorldEdit operations will likely fail or do nothing.
+            }
+
             com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
             if (weWorld == null) {
-                plugin.getLogger().severe(String.format("Could not adapt world for island deletion (Island ID: %s, Player: %s)", islandId, player.getName()));
+                plugin.getLogger().severe(String.format("[DELETE_TRACE] Could not adapt world for island deletion (IslandID: %s, Player: %s)", island.getRegionId(), player.getName()));
                 player.sendMessage(Component.text("Ada silinirken bir dünya hatası oluştu.", NamedTextColor.RED));
-                plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));
+                plugin.getLogger().warning(String.format("[DELETE_TRACE] Island deletion failed for %s (IslandID: %s): WorldEdit world adaptation failed.", player.getName(), island.getRegionId()));
                 return false;
             }
 
-            try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-                CuboidRegion regionToClear = new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint());
-                Set<BlockVector3> positions = new HashSet<>();
-                if (regionToClear != null) {
-                    for (BlockVector3 vector : regionToClear) {
-                        positions.add(vector);
+            if (islandTerritory != null) { // Only attempt to clear if territory was calculated
+                try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
+                    CuboidRegion regionToClear = new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint());
+                    Set<BlockVector3> positions = new HashSet<>();
+                    // The null check for regionToClear is technically redundant if islandTerritory is not null, but harmless.
+                    if (regionToClear != null) {
+                        for (BlockVector3 vector : regionToClear) {
+                            positions.add(vector);
+                        }
                     }
+                    if (!positions.isEmpty()) {
+                        editSession.setBlocks(positions, BlockTypes.AIR);
+                    } else {
+                        plugin.getLogger().warning("[DELETE_TRACE] No positions to clear for island " + island.getRegionId() + " (region might be empty or territory calculation failed).");
+                    }
+                } catch (com.sk89q.worldedit.WorldEditException weException) {
+                    plugin.getLogger().log(Level.SEVERE, String.format("[DELETE_TRACE] WorldEditException during island REGION CLEARANCE for %s (IslandID: %s): %s", player.getName(), island.getRegionId(), weException.getMessage()), weException);
+                    player.sendMessage(Component.text("Adanız silinirken bölge temizliğinde bir WorldEdit hatası oluştu! Detaylar için konsolu kontrol edin.", NamedTextColor.RED));
+                    // Not returning false here to allow other cleanup.
                 }
-                if (!positions.isEmpty()) {
-                    editSession.setBlocks(positions, BlockTypes.AIR);
-                } else {
-                    plugin.getLogger().warning("Attempted to clear an empty or null region for island " + islandId);
-                }
+            } else {
+                 plugin.getLogger().severe("[DELETE_TRACE] Skipping WorldEdit block clearing for island " + island.getRegionId() + " because islandTerritory was null.");
             }
-            plugin.getLogger().info(String.format("Island region %s for player %s cleared.", islandId, player.getName()));
+            plugin.getLogger().info(String.format("[DELETE_TRACE] Island region %s for player %s blocks cleared (or skipped if territory was null).", island.getRegionId(), player.getName()));
 
             // Add this call:
             clearEntitiesInRegion(islandBaseLocation.getWorld(), islandTerritory);
@@ -430,11 +463,21 @@ public class IslandLifecycleManager {
         }
         Location islandBaseLocation = island.getBaseLocation();
         String islandId = island.getRegionId();
-        plugin.getLogger().info(String.format("Attempting to reset island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
+
+        plugin.getLogger().info(String.format("[RESET_TRACE] Initiating reset for player %s (IslandID: %s, IslandName: %s). Using baseLocation: %s (World: %s, X: %.2f, Y: %.2f, Z: %.2f).",
+            player.getName(),
+            island.getRegionId(),
+            island.getIslandName(),
+            (islandBaseLocation != null ? islandBaseLocation.toString() : "NULL_BASE_LOCATION_OBJECT"),
+            (islandBaseLocation != null && islandBaseLocation.getWorld() != null ? islandBaseLocation.getWorld().getName() : "NULL_WORLD_IN_BASE_LOCATION"),
+            (islandBaseLocation != null ? islandBaseLocation.getX() : 0.0),
+            (islandBaseLocation != null ? islandBaseLocation.getY() : 0.0),
+            (islandBaseLocation != null ? islandBaseLocation.getZ() : 0.0)
+        ));
 
         // Store homes before any modification
         Map<String, Location> homesToPreserve = new HashMap<>(island.getNamedHomes());
-        plugin.getLogger().info(String.format("Found %d homes to preserve for island %s.", homesToPreserve.size(), islandId));
+        plugin.getLogger().info(String.format("[RESET_TRACE] Preserving %d homes for island %s.", homesToPreserve.size(), islandId));
 
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(Component.text("Adanın konumu/dünyası bulunamadı.", NamedTextColor.RED));
@@ -469,8 +512,13 @@ public class IslandLifecycleManager {
                 if (!positions.isEmpty()) {
                     clearSession.setBlocks(positions, BlockTypes.AIR);
                 } else {
-                    plugin.getLogger().warning("Attempted to clear an empty or null region for island " + islandId + " during reset.");
+                    plugin.getLogger().warning("[RESET_TRACE] No positions to clear for island " + islandId + " during reset (region might be empty or calculation failed).");
                 }
+            } catch (com.sk89q.worldedit.WorldEditException weException) {
+                plugin.getLogger().log(Level.SEVERE, String.format("[RESET_TRACE] WorldEditException during island REGION CLEARANCE for %s (IslandID: %s): %s", player.getName(), islandId, weException.getMessage()), weException);
+                player.sendMessage(Component.text("Adanız sıfırlanırken bölge temizliğinde bir WorldEdit hatası oluştu! Detaylar için konsolu kontrol edin.", NamedTextColor.RED));
+                // Not returning false here to allow rest of the reset (like permission/data reset) to proceed if desired.
+                // Depending on severity, could return false.
             }
             plugin.getLogger().info(String.format("Island region %s for player %s cleared (reset).", islandId, player.getName()));
 
@@ -490,13 +538,17 @@ public class IslandLifecycleManager {
                 clipboard = reader.read();
             }
             try (EditSession pasteSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-                plugin.getLogger().info(String.format("Pasting schematic for island %s (Player: %s) at %s for reset.", islandId, player.getName(), islandBaseLocation.toString()));
+                plugin.getLogger().info(String.format("[RESET_TRACE] Pasting schematic for island %s (Player: %s) at %s for reset.", islandId, player.getName(), islandBaseLocation.toString()));
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(pasteSession)
                         .to(BlockVector3.at(islandBaseLocation.getX(), islandBaseLocation.getY(), islandBaseLocation.getZ()))
                         .ignoreAirBlocks(false)
                         .build();
                 Operations.complete(operation);
+            } catch (com.sk89q.worldedit.WorldEditException weException) {
+                plugin.getLogger().log(Level.SEVERE, String.format("[RESET_TRACE] WorldEditException during island SCHEMATIC PASTE for %s (IslandID: %s): %s", player.getName(), islandId, weException.getMessage()), weException);
+                player.sendMessage(Component.text("Adanız sıfırlanırken şematik yapıştırılırken bir WorldEdit hatası oluştu! Detaylar için konsolu kontrol edin.", NamedTextColor.RED));
+                // Not returning false here.
             }
             plugin.getLogger().info(player.getName() + " ("+island.getOwnerUUID()+") için ada şematiği yeniden yapıştırıldı (reset).");
 

@@ -24,10 +24,10 @@ import java.util.UUID;
 public class PlayerInteractionListener implements Listener {
 
     private final SkyBlockProject plugin;
-    private final OwnerGuiManager ownerGuiManager;
+    private final OwnerGUIManager ownerGuiManager;
     private final Set<UUID> lockedPlayers = new HashSet<>();
 
-    public PlayerInteractionListener(SkyBlockProject plugin, OwnerGuiManager ownerGuiManager) {
+    public PlayerInteractionListener(SkyBlockProject plugin, OwnerGUIManager ownerGuiManager) {
         this.plugin = plugin;
         this.ownerGuiManager = ownerGuiManager;
     }
