@@ -11,13 +11,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 
-
-public class OwnerGuiManager {
+// Corrected class name to match filename OwnerGUIManager.java
+public class OwnerGUIManager {
     private final SkyBlockProject plugin;
     public static final String GUI_TITLE = ChatColor.DARK_RED + "" + ChatColor.BOLD + "Critical Permission Update";
     private final Map<UUID, Inventory> openGuis = new HashMap<>();
 
-    public OwnerGuiManager(SkyBlockProject plugin) {
+    public OwnerGUIManager(SkyBlockProject plugin) {
         this.plugin = plugin;
     }
 
@@ -52,46 +52,41 @@ public class OwnerGuiManager {
         plugin.getLogger().info("Showed reload GUI to " + player.getName());
     }
 
-    public void handleGuiClick(Player player, ItemStack clickedItem, Inventory clickedInventory) { // Added clickedInventory
+    // Signature matches the one in PlayerInteractionListener
+    public void handleGuiClick(Player player, ItemStack clickedItem, Inventory clickedInventory) {
         if (clickedItem == null || clickedItem.getType() == Material.AIR) return;
 
-        // Ensure this is our GUI before processing the click based on title.
-        // The PlayerInteractionListener's onInventoryClick should primarily use isOurGui(clickedInventory)
-        // before even calling this method. This is an additional safeguard.
+        // This check might be redundant if PlayerInteractionListener already does it,
+        // but it's a good safeguard.
+        // It should check the title of the inventory the item was clicked IN.
         if (!clickedInventory.getViewers().get(0).getOpenInventory().getTitle().equals(GUI_TITLE)) {
-            return;
+             return;
         }
 
         ItemMeta meta = clickedItem.getItemMeta();
-        if (meta == null || meta.getDisplayName() == null) return;
+        if (meta == null || meta.getDisplayName() == null) return; // Ensure meta and display name exist
         String buttonName = ChatColor.stripColor(meta.getDisplayName());
 
         if (buttonName.contains("CONFIRM RELOAD")) {
             plugin.getLogger().info(player.getName() + " clicked CONFIRM in GUI.");
             plugin.confirmReload("GUI (" + player.getName() + ")");
-            // Player will be released from lockdown and GUI closed by confirmReload -> performLuckPermsReload -> releaseAllOwnersFromLockdown
         } else if (buttonName.contains("CANCEL RELOAD")) {
             plugin.getLogger().info(player.getName() + " clicked CANCEL in GUI.");
             plugin.cancelReload("GUI (" + player.getName() + ")");
-            // Player will be released from lockdown and GUI closed by cancelReload -> releaseAllOwnersFromLockdown
         }
-        // No need to manually close GUI here, the calling methods (confirmReload/cancelReload) will handle it
-        // by calling releaseAllOwnersFromLockdown which closes GUIs.
     }
 
     public void closeGuiForPlayer(Player player) {
         if (openGuis.containsKey(player.getUniqueId())) {
-            // The listener should handle actual closing to prevent loops or issues with lockdown state.
-            // This method is more for external calls if needed, but primarily listener driven.
             player.closeInventory();
-            openGuis.remove(player.getUniqueId()); // Still remove from tracking if closed externally.
+            openGuis.remove(player.getUniqueId());
         }
     }
 
     public void closeAllGuis() {
         for (UUID playerId : new HashSet<>(openGuis.keySet())) {
             Player p = Bukkit.getPlayer(playerId);
-            if (p != null && p.getOpenInventory().getTitle().equals(GUI_TITLE)) { // Check if it's our GUI
+            if (p != null && p.getOpenInventory().getTitle().equals(GUI_TITLE)) {
                p.closeInventory();
             }
         }
@@ -100,19 +95,11 @@ public class OwnerGuiManager {
 
     public boolean isOurGui(Inventory inventory) {
         if (inventory == null) return false;
-        // Check if the inventory is one of the GUIs created by this manager
-        // This can be done by checking if the inventory instance is among the values of openGuis
-        // OR by title if we are sure no other plugin uses this exact title.
-        // For Bukkit.createInventory(null, ...), title is a common way.
-        // A more robust way is to implement InventoryHolder.
         try {
             // Check if the inventory has a viewer and if the title of the open inventory matches.
-            // This is important because event.getInventory() in InventoryCloseEvent is the inventory being closed,
-            // and event.getView().getTopInventory() in InventoryClickEvent is the top inventory.
             return inventory.getViewers().size() > 0 &&
                    inventory.getViewers().get(0).getOpenInventory().getTitle().equals(GUI_TITLE);
         } catch (Exception e) {
-            // IndexOutOfBoundsException if no viewers, etc.
             return false;
         }
     }
