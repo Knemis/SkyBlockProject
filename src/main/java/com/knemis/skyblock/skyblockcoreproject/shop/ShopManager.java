@@ -104,6 +104,7 @@ public class ShopManager {
     }
 
     public void finalizeShopSetup(UUID playerId) {
+        plugin.getLogger().info(String.format("[FINALIZE_TRACE] Called for player %s.", playerId));
         ShopSetupGUIManager shopSetupGUIManager = plugin.getShopSetupGUIManager();
         if (shopSetupGUIManager == null) {
             plugin.getLogger().severe("[ShopManager] finalizeShopSetup called but ShopSetupGUIManager is null!");
@@ -132,6 +133,18 @@ public class ShopManager {
         ItemStack initialStockItem = session.getInitialStockItem();
         String locStr = Shop.locationToString(location);
 
+        plugin.getLogger().info(String.format("[FINALIZE_TRACE] Player %s: Session found. PendingShop ID: %s, Item: %s, Mode: %s, BuyPrice: %.2f, SellPrice: %.2f, BundleQty: %d, ChestLoc: %s",
+            actor.getName(),
+            (pendingShop != null ? pendingShop.getShopId() : "NULL_PENDING_SHOP"),
+            (pendingShop != null && pendingShop.getTemplateItemStack() != null ? pendingShop.getTemplateItemStack().getType() : "NULL_ITEM"),
+            (pendingShop != null && pendingShop.getShopMode() != null ? pendingShop.getShopMode().name() : "NULL_MODE"),
+            (pendingShop != null ? pendingShop.getBuyPrice() : -1.0),
+            (pendingShop != null ? pendingShop.getSellPrice() : -1.0),
+            (pendingShop != null ? pendingShop.getBundleAmount() : 0),
+            (location != null ? Shop.locationToString(location) : "NULL_LOCATION")
+        ));
+
+        // Original logging, can be kept or removed if the new trace is sufficient. Keeping for now.
         plugin.getLogger().info(String.format("[ShopManager] Attempting to finalize shop setup at %s for player %s (UUID: %s) via session. Initial stock: %s",
                 locStr, actor.getName(), playerId, initialStockItem != null ? initialStockItem.toString() : "null"));
 
@@ -184,7 +197,9 @@ public class ShopManager {
         }
 
         pendingShop.setSetupComplete(true);
+        plugin.getLogger().info(String.format("[FINALIZE_TRACE] Player %s: All validations passed. Calling saveShop for shop ID %s.", actor.getName(), pendingShop.getShopId()));
         saveShop(pendingShop); 
+        plugin.getLogger().info(String.format("[FINALIZE_TRACE] Player %s: Returned from saveShop for shop ID %s.", actor.getName(), pendingShop.getShopId()));
 
         boolean needsStocking = initialStockItem != null && initialStockItem.getType() != Material.AIR;
         boolean canBeStockedByPlayerBuying = pendingShop.getBuyPrice() != -1;
@@ -209,18 +224,25 @@ public class ShopManager {
                 locStr, actor.getName(), templateItem.getType(), pendingShop.getBundleAmount(),
                 pendingShop.getBuyPrice(), pendingShop.getSellPrice(), pendingShop.getShopMode(), (needsStocking && canBeStockedByPlayerBuying)));
         
+        plugin.getLogger().info(String.format("[FINALIZE_TRACE] Player %s: Shop setup process fully finalized for shop ID %s. Removing session.", actor.getName(), pendingShop.getShopId()));
         shopSetupGUIManager.removeSession(playerId);
         actor.sendMessage(Component.text("Dükkanınız başarıyla kuruldu!", NamedTextColor.GREEN));
     }
 
     public void saveShop(Shop shop) {
+        plugin.getLogger().info(String.format("[SAVE_SHOP_TRACE] Called for shop ID %s at %s. Owner: %s",
+            shop.getShopId(), Shop.locationToString(shop.getLocation()), shop.getOwnerUUID()));
         if (shop == null || shop.getLocation() == null) {
             plugin.getLogger().warning("[ShopManager] saveShop called but shop or its location is null. Shop object: " + shop);
             return;
         }
         activeShops.put(shop.getLocation(), shop);
+        plugin.getLogger().info(String.format("[SAVE_SHOP_TRACE] Shop ID %s: Calling shopStorage.saveShop().", shop.getShopId()));
         shopStorage.saveShop(shop);
+        plugin.getLogger().info(String.format("[SAVE_SHOP_TRACE] Shop ID %s: Returned from shopStorage.saveShop().", shop.getShopId()));
+        plugin.getLogger().info(String.format("[SAVE_SHOP_TRACE] Shop ID %s: Calling shopSignManager.updateAttachedSign().", shop.getShopId()));
         this.shopSignManager.updateAttachedSign(shop, this.getCurrencySymbol());
+        plugin.getLogger().info(String.format("[SAVE_SHOP_TRACE] Shop ID %s: Returned from shopSignManager.updateAttachedSign().", shop.getShopId()));
         plugin.getLogger().info(String.format("[ShopManager] Shop at %s (Owner: %s) saved/updated in activeShops and persistent storage requested.",
                  Shop.locationToString(shop.getLocation()), shop.getOwnerUUID()));
     }

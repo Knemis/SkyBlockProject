@@ -107,7 +107,12 @@ public class ShopSignManager {
                     WallSign wallSignData = (WallSign) potentialSignBlock.getBlockData();
                     wallSignData.setFacing(face.getOppositeFace());
                     potentialSignBlock.setBlockData(wallSignData, true);
-                    plugin.getLogger().info("Created new shop sign for chest at " + Shop.locationToString(chestBlock.getLocation()) + " on face " + face);
+                    plugin.getLogger().info(String.format("[SIGN_MGR_TRACE] Successfully created new shop sign for chest at %s. Sign placed on face %s of chest, actual sign location: %s, facing %s.",
+                        Shop.locationToString(chestBlock.getLocation()),
+                        face.toString(),
+                        Shop.locationToString(potentialSignBlock.getLocation()),
+                        wallSignData.getFacing().toString()
+                    ));
                     return (Sign) potentialSignBlock.getState();
                 } else {
                     plugin.getLogger().warning("Failed to set WallSign data for new sign at " + Shop.locationToString(potentialSignBlock.getLocation()));
@@ -175,12 +180,28 @@ public class ShopSignManager {
             }
         }
         
-        plugin.getLogger().info("[ShopSignManager] Writing to sign for shop " + shop.getShopId() + ": L0=[Dükkan], L1=" + itemNameLegacy + ", L2=" + fullPriceLineLegacy + ", L3=" + ownerNameShort);
+        String line0Str = "[Dükkan]";
+        String line1Str = itemNameLegacy;
+        String line2Str = fullPriceLineLegacy;
+        String line3Str = ownerNameShort;
+
+        plugin.getLogger().info(String.format("[SIGN_MGR_TRACE] Attempting to write to sign at %s for shop %s: L0='%s', L1='%s', L2='%s', L3='%s'",
+            Shop.locationToString(signState.getLocation()),
+            shop.getShopId(),
+            line0Str,
+            line1Str,
+            line2Str,
+            line3Str
+        ));
+
+        // plugin.getLogger().info("[ShopSignManager] Writing to sign for shop " + shop.getShopId() + ": L0=[Dükkan], L1=" + itemNameLegacy + ", L2=" + fullPriceLineLegacy + ", L3=" + ownerNameShort); // Old log, replaced by detailed trace
 
         signState.line(0, Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD));
         signState.line(1, LegacyComponentSerializer.legacyAmpersand().deserialize(itemNameLegacy).colorIfAbsent(NamedTextColor.BLACK)); // Deserialize and color
         signState.line(2, LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy).colorIfAbsent(NamedTextColor.DARK_GREEN));
         signState.line(3, LegacyComponentSerializer.legacyAmpersand().deserialize(ownerNameShort).colorIfAbsent(NamedTextColor.DARK_PURPLE));
+
+        plugin.getLogger().info(String.format("[SIGN_MGR_TRACE] Calling signState.update(true) for sign at %s.", Shop.locationToString(signState.getLocation())));
         try {
             signState.update(true);
         } catch (Exception e) {
