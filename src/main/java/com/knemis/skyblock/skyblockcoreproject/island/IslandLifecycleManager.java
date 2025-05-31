@@ -1,5 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
+import com.knemis.skyblock.skyblockcoreproject.api.IslandCreateEvent;
+import com.knemis.skyblock.skyblockcoreproject.api.IslandDeleteEvent;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 
@@ -152,6 +154,22 @@ public class IslandLifecycleManager {
     }
 
     public void createIsland(Player player) {
+        // Fire IslandCreateEvent
+        // For Schematics.SchematicConfig, we use the placeholder from IslandCreateEvent for now.
+        // This part will need proper integration when schematic handling is fully addressed.
+        IslandCreateEvent.PlaceholderSchematicConfig tempSchematicConfig = new IslandCreateEvent.PlaceholderSchematicConfig("default"); // Or derive from actual schematic logic if simple
+        IslandCreateEvent createEvent = new IslandCreateEvent(player, player.getName() + "_island", tempSchematicConfig); // Example name
+        Bukkit.getServer().getPluginManager().callEvent(createEvent);
+        if (createEvent.isCancelled()) {
+            plugin.getLogger().info(String.format("Island creation for %s cancelled by IslandCreateEvent.", player.getName()));
+            // Optionally send a message to the player if desired, e.g., player.sendMessage(Component.text("Island creation was cancelled.", NamedTextColor.RED));
+            return; // Or appropriate action based on method signature if it changes
+        }
+        // Update island name and schematic if changed by the event
+        String islandNameFromEvent = createEvent.getIslandName() != null ? createEvent.getIslandName() : defaultIslandNamePrefix + "-" + player.getUniqueId().toString(); // Changed to use player UUID for default
+        // Note: The actual schematic application logic later in the method doesn't use this 'tempSchematicConfig' directly yet.
+        // The 'newIslandName' variable later should use 'islandNameFromEvent'.
+
         plugin.getLogger().info(String.format("Attempting to create island for player %s (UUID: %s)", player.getName(), player.getUniqueId()));
         if (islandDataHandler.playerHasIsland(player.getUniqueId())) {
             player.sendMessage(Component.text("Zaten bir adanız var!", NamedTextColor.RED));
@@ -172,7 +190,7 @@ public class IslandLifecycleManager {
             return;
         }
 
-        String newIslandName = defaultIslandNamePrefix + "-" + player.getName();
+        String newIslandName = islandNameFromEvent;
 
         double creationCost = plugin.getConfig().getDouble("island.creation-cost", 0.0);
         if (this.economy != null && creationCost > 0) {
@@ -348,6 +366,16 @@ public class IslandLifecycleManager {
             plugin.getLogger().warning(String.format("Player %s attempted to delete island but has none.", player.getName()));
             return false;
         }
+
+        // Fire IslandDeleteEvent
+        IslandDeleteEvent deleteEvent = new IslandDeleteEvent(island, player);
+        Bukkit.getServer().getPluginManager().callEvent(deleteEvent);
+        if (deleteEvent.isCancelled()) {
+            plugin.getLogger().info(String.format("Island deletion for %s (IslandID: %s) cancelled by IslandDeleteEvent.", player.getName(), island.getRegionId()));
+            // Optionally send message to player
+            return false;
+        }
+
         Location islandBaseLocation = island.getBaseLocation();
         String islandId = island.getRegionId(); // islandId is defined here, but the log requested island.getRegionId(), which is fine.
         // plugin.getLogger().info(String.format("Attempting to delete island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId())); // Original log, replaced by detailed trace
