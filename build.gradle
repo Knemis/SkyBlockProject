@@ -1,73 +1,98 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 group = 'com.knemis.skyblock'
 version = '1.0-SNAPSHOT'
 
 repositories {
-
+    // PaperMC Resmi Reposu
     maven {
-        name = "EngineHub"
-        url = uri("https://maven.enginehub.org/repo/")
-    }
-    mavenCentral()
-    maven {
-        name = "papermc-repo"
-        url = "https://repo.papermc.io/repository/maven-public/"
-    }
-    maven {
-        name = "sonatype"
-        url = "https://oss.sonatype.org/content/groups/public/"
-
+        name = 'PaperMC'
+        url = 'https://repo.papermc.io/repository/maven-public/'
     }
 
-    maven { url = 'https://jitpack.io' }
-    maven { url 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/' }
-    maven { url = 'https://ci.ender.zone/plugin/repository/everything/' }
+    // SpigotMC Reposu
     maven {
-        name = "essentialsx"
-        url = uri("https://repo.essentialsx.net/releases/")
+        name = 'SpigotMC'
+        url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
     }
+
+    // FAWE Resmi Reposu
     maven {
-        name = "fastasyncworldedit-repo"
-        url = "https://maven.fastasyncworldedit.com/repository/maven-public/"
+        name = 'FAWE'
+        url = 'https://maven.fastasyncworldedit.com/repository/maven-public/'
+    }
+
+    // WorldGuard Reposu
+    maven {
+        name = 'EngineHub'
+        url = 'https://maven.enginehub.org/repo/'
+    }
+
+    // EssentialsX Reposu
+    maven {
+        name = 'EssentialsX'
+        url = 'https://repo.essentialsx.net/releases/'
+    }
+
+    // Vault Reposu (JitPack)
+    maven {
+        name = 'JitPack'
+        url = 'https://jitpack.io'
+    }
+
+    // LuckPerms Reposu
+    maven {
+        name = 'LuckPerms'
+        url = 'https://repo.lucko.me/'
+    }
+
+    // Sonatype (Diğer bağımlılıklar için)
+    maven {
+        name = 'Sonatype'
+        url = 'https://oss.sonatype.org/content/groups/public/'
     }
 }
 
 dependencies {
-    compileOnly "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT" // Updated Paper API
-    // compileOnly "io.papermc.paper:paper-api:1.16.5-R0.1-SNAPSHOT" // Reverted to Paper API (io.papermc.paper group)
-    // compileOnly "org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT"
-    // compileOnly 'net.kyori:adventure-api:4.9.3' // Added Kyori Adventure API
-    // compileOnly 'net.kyori:adventure-text-serializer-legacy:4.9.3' // Added Kyori Adventure Legacy Serializer
-    // compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5' // Removed WorldEdit
-    compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.8.2' // Added FAWE
+    // Paper API (1.21.4)
+    compileOnly 'io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT'
+
+    // FastAsyncWorldEdit (1.21.4 uyumlu)
+    compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.13.0'
+
+    // WorldGuard
     implementation 'com.sk89q.worldguard:worldguard-bukkit:7.0.13'
     compileOnly 'com.sk89q.worldguard:worldguard-core:7.0.13'
-    compileOnly("net.luckperms:api:5.4")
-    compileOnly 'com.github.MilkBowl:VaultAPI:1.7' // Vault API
-    compileOnly 'net.essentialsx:EssentialsX:2.21.0' // EssentialsX ana modülü (versiyonu uygun şekilde değiştir)
 
+    // LuckPerms API
+    compileOnly 'net.luckperms:api:5.4'
 
+    // Vault API
+    compileOnly 'com.github.MilkBowl:VaultAPI:1.7'
+
+    // EssentialsX
+    compileOnly 'net.essentialsx:EssentialsX:2.21.0'
+
+    // Adventure API (Modern metin formatı için)
+    implementation 'net.kyori:adventure-api:4.14.0'
+    implementation 'net.kyori:adventure-text-minimessage:4.14.0'
+
+    // Gson (Modern sürüm)
+    implementation 'com.google.code.gson:gson:2.10.1'
 }
 
-def targetJavaVersion = 21 // Updated to Java 21
 java {
-    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-    if (JavaVersion.current() < javaVersion) {
-        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
     }
 }
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
-
-    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
-        options.release.set(targetJavaVersion)
-    }
+    options.release = 21
 }
 
 processResources {
@@ -79,9 +104,22 @@ processResources {
     }
 }
 
+shadowJar {
+    relocate 'net.kyori', 'com.knemis.skyblock.libs.kyori'
+    relocate 'com.google.gson', 'com.knemis.skyblock.libs.gson'
+    minimize()
+}
+
 configurations.all {
     resolutionStrategy {
-        force 'com.google.guava:guava:21.0'
-        force 'com.google.code.gson:gson:2.8.0'
+        // Çakışan bağımlılıkları çöz
+        force 'com.google.guava:guava:31.1-jre'
+        force 'org.slf4j:slf4j-api:2.0.7'
+
+        // Aynı modülün farklı sürümlerini reddet
+        failOnVersionConflict()
+
+        // Dinamik sürümler için en yenisini al
+        preferProjectModules()
     }
 }
