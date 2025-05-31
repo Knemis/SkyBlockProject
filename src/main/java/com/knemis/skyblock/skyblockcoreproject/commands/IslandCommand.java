@@ -553,7 +553,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
 
         if (args.length == 1) {
             resetConfirmations.put(player.getUniqueId(), System.currentTimeMillis());
-            player.sendMessage(Component.text("Adanı sıfırlamak istediğinden emin misin? Bu işlem adandaki her şeyi silip adayı başlangıç haline döndürecek ve TÜM EV NOKTALARINI SİLECEKTİR. Onaylamak için ", NamedTextColor.YELLOW)
+            player.sendMessage(Component.text("Adanı sıfırlamak istediğinden emin misin? Bu işlem adandaki yapıları silip adayı başlangıç şemasına döndürecektir. ", NamedTextColor.YELLOW)
+                    .append(Component.text("Ev noktalarınız korunacaktır.", NamedTextColor.GOLD, TextDecoration.BOLD))
+                    .append(Component.text(" Diğer ayarlar (biyom, karşılama mesajı vs.) sıfırlanacaktır. Onaylamak için ", NamedTextColor.YELLOW))
                     .append(Component.text("/island reset confirm", NamedTextColor.GOLD))
                     .append(Component.text(" yaz. Bu işlem geri alınamaz!", NamedTextColor.YELLOW)));
             player.sendMessage(Component.text("(Onaylama isteğin " + RESET_CONFIRM_TIMEOUT_SECONDS + " saniye sonra zaman aşımına uğrayacak.)", NamedTextColor.GRAY));

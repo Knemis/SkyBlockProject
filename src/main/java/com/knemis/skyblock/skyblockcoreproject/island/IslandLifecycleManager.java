@@ -19,8 +19,15 @@ import com.sk89q.worldedit.world.block.BlockTypes;
 
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion; // Added import
+import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
+import com.sk89q.worldguard.protection.flags.StateFlag; // Added import
+
+import net.luckperms.api.LuckPerms;
+import net.luckperms.api.model.user.User;
+import net.luckperms.api.node.Node;
+import net.luckperms.api.node.types.PermissionNode;
+import net.luckperms.api.model.data.DataMutateResult;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -36,10 +43,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
-import java.util.List; // For getEntities()
+import java.util.List;
+import java.util.ArrayList; // Added import
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap; // Added import
 import java.util.HashSet;
+import java.util.Map; // Added import
 import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -422,6 +432,10 @@ public class IslandLifecycleManager {
         String islandId = island.getRegionId();
         plugin.getLogger().info(String.format("Attempting to reset island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
 
+        // Store homes before any modification
+        Map<String, Location> homesToPreserve = new HashMap<>(island.getNamedHomes());
+        plugin.getLogger().info(String.format("Found %d homes to preserve for island %s.", homesToPreserve.size(), islandId));
+
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
             player.sendMessage(Component.text("Adanın konumu/dünyası bulunamadı.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Island base location or world is null.", player.getName(), islandId));
@@ -486,10 +500,19 @@ public class IslandLifecycleManager {
             }
             plugin.getLogger().info(player.getName() + " ("+island.getOwnerUUID()+") için ada şematiği yeniden yapıştırıldı (reset).");
 
-            island.getNamedHomes().clear();
+            // island.getNamedHomes().clear(); // Do not clear homes, they will be restored or overwritten if new ones with same name
             island.setCurrentBiome(null);
             island.setWelcomeMessage(null);
             island.setMaxHomesLimit(plugin.getConfig().getInt("island.max-named-homes", 3));
+
+            // Restore homes
+            if (!homesToPreserve.isEmpty()) {
+                plugin.getLogger().info("Restoring " + homesToPreserve.size() + " named homes for island " + islandId);
+                for (Map.Entry<String, Location> homeEntry : homesToPreserve.entrySet()) {
+                    island.setNamedHome(homeEntry.getKey(), homeEntry.getValue());
+                    plugin.getLogger().fine("Restored home: " + homeEntry.getKey() + " for island " + islandId);
+                }
+            }
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
@@ -528,77 +551,115 @@ public class IslandLifecycleManager {
         }
     }
     private void grantOwnerBypassPermissions(Player owner, String worldName, String regionId) {
-        plugin.getLogger().info("grantOwnerBypassPermissions for " + owner.getName() + " on region " + regionId + " is currently disabled for testing standard WorldGuard owner bypass.");
-        /*
         LuckPerms lpApi = plugin.getLuckPermsApi();
-        if (lpApi == null) { return; }
+        if (lpApi == null) {
+            plugin.getLogger().warning("LuckPerms API not available. Cannot grant bypass permissions for " + owner.getName());
+            return;
+        }
 
         List<StateFlag> manageableFlags = plugin.getIslandFlagManager().getManagableFlags();
-        if (manageableFlags == null || manageableFlags.isEmpty()) { return; }
+        if (manageableFlags == null || manageableFlags.isEmpty()) {
+            plugin.getLogger().info("No manageable flags found. No bypass permissions to grant for " + owner.getName());
+            return;
+        }
 
         UUID playerUUID = owner.getUniqueId();
-        final List<Node> nodesToAdd = new ArrayList<>();
-
-        for (StateFlag flagToBypass : manageableFlags) {
-            String flagNameForPerm = flagToBypass.getName().toLowerCase();
-            String flagSpecificBypassNode = "worldguard.bypass.flag." + flagNameForPerm + "." + worldName + "." + regionId;
-            nodesToAdd.add(PermissionNode.builder(flagSpecificBypassNode).value(true).build());
-            if (plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
-                plugin.getLogger().info(owner.getName() + " için LuckPerms bayrak-özel bypass izni ekleniyor: " + flagSpecificBypassNode);
+        // Load the user object
+        lpApi.getUserManager().loadUser(playerUUID).thenAcceptAsync(user -> {
+            if (user == null) {
+                plugin.getLogger().warning("Could not load LuckPerms user for " + owner.getName() + " (UUID: " + playerUUID + ")");
+                return;
             }
-        }
-        if (nodesToAdd.isEmpty()){ return; }
 
-        lpApi.getUserManager().modifyUser(playerUUID, user -> {
+            final List<Node> nodesToAdd = new ArrayList<>();
+            for (StateFlag flagToBypass : manageableFlags) {
+                String flagNameForPerm = flagToBypass.getName().toLowerCase();
+                String flagSpecificBypassNode = "worldguard.bypass.flag." + flagNameForPerm + "." + worldName + "." + regionId;
+                nodesToAdd.add(PermissionNode.builder(flagSpecificBypassNode).value(true).build());
+                if (plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
+                    plugin.getLogger().info("Preparing to add LuckPerms flag-specific bypass permission for " + owner.getName() + ": " + flagSpecificBypassNode);
+                }
+            }
+
+            if (nodesToAdd.isEmpty()) {
+                plugin.getLogger().info("No bypass permission nodes to add for " + owner.getName() + " on region " + regionId);
+                return;
+            }
+
             nodesToAdd.forEach(node -> {
                 DataMutateResult addResult = user.data().add(node);
                 if (!addResult.wasSuccessful() && plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
-                    plugin.getLogger().warning("LuckPerms izni (" + node.getKey() + ") oyuncu " + owner.getName() + " için eklenirken beklenen sonuç alınamadı: " + addResult.name());
+                    plugin.getLogger().warning("LuckPerms permission (" + node.getKey() + ") could not be added for player " + owner.getName() + " as expected: " + addResult.name());
                 }
             });
-        }).thenRunAsync(() -> plugin.getLogger().info(owner.getName() + " için LuckPerms bypass izinleri başarıyla eklendi ve kaydedilmesi istendi."),
-                runnable -> Bukkit.getScheduler().runTask(plugin, runnable)
-        ).exceptionally(ex -> {
-            plugin.getLogger().log(Level.SEVERE, owner.getName() + " için LuckPerms izinleri kaydedilirken hata oluştu.", ex);
+
+            // Save the changes
+            lpApi.getUserManager().saveUser(user).thenRunAsync(() -> {
+                if (plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", true)) { // Default to true for this important log
+                    plugin.getLogger().info("Successfully added and saved LuckPerms bypass permissions for " + owner.getName() + " on region " + regionId);
+                }
+            }, runnable -> Bukkit.getScheduler().runTask(plugin, runnable));
+
+        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable)).exceptionally(ex -> {
+            plugin.getLogger().log(Level.SEVERE, "Error loading LuckPerms user or adding bypass permissions for " + owner.getName() + " on region " + regionId, ex);
             return null;
         });
-        */
     }
 
     private void revokeOwnerBypassPermissions(Player owner, String worldName, String regionId) {
-        plugin.getLogger().info("revokeOwnerBypassPermissions for " + owner.getName() + " on region " + regionId + " is currently disabled.");
-        /*
         LuckPerms lpApi = plugin.getLuckPermsApi();
-        if (lpApi == null) { return; }
+        if (lpApi == null) {
+            plugin.getLogger().warning("LuckPerms API not available. Cannot revoke bypass permissions for " + owner.getName());
+            return;
+        }
 
         List<StateFlag> manageableFlags = plugin.getIslandFlagManager().getManagableFlags();
-        if (manageableFlags == null || manageableFlags.isEmpty()) { return; }
+        if (manageableFlags == null || manageableFlags.isEmpty()) {
+            plugin.getLogger().info("No manageable flags found. No bypass permissions to revoke for " + owner.getName());
+            return;
+        }
 
         UUID playerUUID = owner.getUniqueId();
-        final List<Node> nodesToRemove = new ArrayList<>();
-        for (StateFlag flagToBypass : manageableFlags) {
-            String flagNameForPerm = flagToBypass.getName().toLowerCase();
-            String flagSpecificBypassNode = "worldguard.bypass.flag." + flagNameForPerm + "." + worldName + "." + regionId;
-            nodesToRemove.add(PermissionNode.builder(flagSpecificBypassNode).build());
-            if (plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
-                plugin.getLogger().info(owner.getName() + " için LuckPerms bayrak-özel bypass izni kaldırılıyor: " + flagSpecificBypassNode);
+        // Load the user object
+        lpApi.getUserManager().loadUser(playerUUID).thenAcceptAsync(user -> {
+            if (user == null) {
+                plugin.getLogger().warning("Could not load LuckPerms user for " + owner.getName() + " (UUID: " + playerUUID + ") for permission revocation.");
+                return;
             }
-        }
-        if (nodesToRemove.isEmpty()){ return; }
 
-        lpApi.getUserManager().modifyUser(playerUUID, user -> {
+            final List<Node> nodesToRemove = new ArrayList<>();
+            for (StateFlag flagToBypass : manageableFlags) {
+                String flagNameForPerm = flagToBypass.getName().toLowerCase();
+                String flagSpecificBypassNode = "worldguard.bypass.flag." + flagNameForPerm + "." + worldName + "." + regionId;
+                // For removal, just the key is enough, but building it ensures consistency if other parts of the node mattered.
+                nodesToRemove.add(PermissionNode.builder(flagSpecificBypassNode).build());
+                if (plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
+                    plugin.getLogger().info("Preparing to remove LuckPerms flag-specific bypass permission for " + owner.getName() + ": " + flagSpecificBypassNode);
+                }
+            }
+
+            if (nodesToRemove.isEmpty()) {
+                plugin.getLogger().info("No bypass permission nodes to remove for " + owner.getName() + " on region " + regionId);
+                return;
+            }
+
             nodesToRemove.forEach(node -> {
-                DataMutateResult result = user.data().remove(node);
-                if (!result.wasSuccessful() && plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
-                    plugin.getLogger().warning("LuckPerms izni (" + node.getKey() + ") oyuncu " + owner.getName() + " için kaldırılırken beklenen sonuç alınamadı: " + result.name());
+                DataMutateResult removeResult = user.data().remove(node);
+                if (!removeResult.wasSuccessful() && plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", false)) {
+                    plugin.getLogger().warning("LuckPerms permission (" + node.getKey() + ") could not be removed for player " + owner.getName() + " as expected: " + removeResult.name());
                 }
             });
-        }).thenRunAsync(() -> plugin.getLogger().info(owner.getName() + " için LuckPerms bypass izinleri başarıyla kaldırıldı ve kaydedilmesi istendi."),
-                runnable -> Bukkit.getScheduler().runTask(plugin, runnable)
-        ).exceptionally(ex -> {
-            plugin.getLogger().log(Level.SEVERE, owner.getName() + " için LuckPerms izinleri kaldırılırken hata oluştu.", ex);
+
+            // Save the changes
+            lpApi.getUserManager().saveUser(user).thenRunAsync(() -> {
+                 if (plugin.getConfig().getBoolean("logging.detailed-luckperms-changes", true)) { // Default to true for this important log
+                    plugin.getLogger().info("Successfully removed and saved LuckPerms bypass permissions for " + owner.getName() + " on region " + regionId);
+                }
+            }, runnable -> Bukkit.getScheduler().runTask(plugin, runnable));
+
+        }, runnable -> Bukkit.getScheduler().runTaskAsynchronously(plugin, runnable)).exceptionally(ex -> {
+            plugin.getLogger().log(Level.SEVERE, "Error loading LuckPerms user or removing bypass permissions for " + owner.getName() + " on region " + regionId, ex);
             return null;
         });
-        */
     }
 }
