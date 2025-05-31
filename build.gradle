@@ -59,6 +59,16 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
     testImplementation 'org.mockito:mockito-core:5.11.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
+
+    // Add Bukkit/Paper, LuckPerms, Vault, WorldEdit, WorldGuard to test classpath
+    testImplementation "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
+    testImplementation "net.luckperms:api:5.5"
+    testImplementation('com.github.MilkBowl:VaultAPI:1.7') {
+        exclude group: 'org.bukkit', module: 'bukkit' // Already provided by paper-api
+    }
+    testImplementation 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.13.0'
+    testImplementation 'com.sk89q.worldguard:worldguard-core:7.0.13'
+    // worldguard-bukkit is already 'implementation', so it should be available to tests
 }
 
 def targetJavaVersion = 21 // Updated to Java 21

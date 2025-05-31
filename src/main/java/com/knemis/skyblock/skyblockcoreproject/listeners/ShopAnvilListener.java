@@ -45,7 +45,7 @@ public class ShopAnvilListener implements Listener {
         if (!(event.getView().getPlayer() instanceof Player)) return;
         Player player = (Player) event.getView().getPlayer();
         AnvilInventory anvilInventory = event.getInventory();
-        String renameText = anvilInventory.getRenameText();
+        String renameText = anvilInventory.getRenameText(); // Reverted
 
         // Store the input, even if it's empty, to reflect user clearing text
         // Only store if it's relevant to our shop setup
@@ -227,7 +227,7 @@ public class ShopAnvilListener implements Listener {
         int quantity = (quantityItem != null && quantityItem.getType() == expectedType) ? quantityItem.getAmount() : 0;
 
         // For display, use the live text from anvil input field for responsiveness
-        String currentAnvilText = anvilInv.getRenameText();
+        String currentAnvilText = anvilInv.getRenameText(); // Reverted
         if (currentAnvilText == null) currentAnvilText = ""; // Default to empty if null
 
         Player owner = Bukkit.getPlayer(pendingShop.getOwnerUUID());

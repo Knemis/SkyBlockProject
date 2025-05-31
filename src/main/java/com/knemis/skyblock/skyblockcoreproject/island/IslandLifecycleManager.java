@@ -115,24 +115,24 @@ public class IslandLifecycleManager {
         BlockVector3 schematicMin = schematicRegion.getMinimumPoint();
         BlockVector3 schematicMax = schematicRegion.getMaximumPoint();
 
-        int territoryMinX = schematicMin.getBlockX() - expansionRadiusHorizontal;
-        int territoryMaxX = schematicMax.getBlockX() + expansionRadiusHorizontal;
-        int territoryMinZ = schematicMin.getBlockZ() - expansionRadiusHorizontal;
-        int territoryMaxZ = schematicMax.getBlockZ() + expansionRadiusHorizontal;
+        int territoryMinX = schematicMin.x() - expansionRadiusHorizontal;
+        int territoryMaxX = schematicMax.x() + expansionRadiusHorizontal;
+        int territoryMinZ = schematicMin.z() - expansionRadiusHorizontal;
+        int territoryMaxZ = schematicMax.z() + expansionRadiusHorizontal;
 
         boolean allowBuildBelow = plugin.getConfig().getBoolean("island.allow-build-below-schematic-base", false);
-        int schematicBaseY = schematicMin.getBlockY();
+        int schematicBaseY = schematicMin.y();
         int buildLimitAboveSchematicTop = plugin.getConfig().getInt("island.build-limit-above-schematic-top", 150);
 
         int territoryMinY = allowBuildBelow ? Math.max(worldMinBuildHeight, schematicBaseY - expansionRadiusVerticalBottom)
                 : schematicBaseY;
-        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY() + buildLimitAboveSchematicTop);
+        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.y() + buildLimitAboveSchematicTop);
 
         if (territoryMinY > territoryMaxY) {
             plugin.getLogger().warning("Hesaplanan ada bölgesi Y sınırları geçersizdi (minY > maxY): Ada: " + islandBaseLocation +
                     " MinY_calc: " + territoryMinY + " MaxY_calc: " + territoryMaxY + ". Şematik Y sınırlarına geri dönülüyor.");
-            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getBlockY());
-            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY());
+            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.y());
+            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.y());
             if (territoryMinY > territoryMaxY) territoryMaxY = territoryMinY;
         }
         return new CuboidRegion(schematicRegion.getWorld(),
@@ -296,8 +296,8 @@ public class IslandLifecycleManager {
         }
 
         // Get Bukkit min/max corners for entity iteration
-        org.bukkit.Location minCorner = new org.bukkit.Location(world, islandTerritory.getMinimumPoint().getX(), islandTerritory.getMinimumPoint().getY(), islandTerritory.getMinimumPoint().getZ());
-        org.bukkit.Location maxCorner = new org.bukkit.Location(world, islandTerritory.getMaximumPoint().getX(), islandTerritory.getMaximumPoint().getY(), islandTerritory.getMaximumPoint().getZ());
+        org.bukkit.Location minCorner = new org.bukkit.Location(world, islandTerritory.getMinimumPoint().x(), islandTerritory.getMinimumPoint().y(), islandTerritory.getMinimumPoint().z());
+        org.bukkit.Location maxCorner = new org.bukkit.Location(world, islandTerritory.getMaximumPoint().x(), islandTerritory.getMaximumPoint().y(), islandTerritory.getMaximumPoint().z());
 
         int removedEntitiesCount = 0;
         // Iterate over all loaded chunks that intersect the island territory.

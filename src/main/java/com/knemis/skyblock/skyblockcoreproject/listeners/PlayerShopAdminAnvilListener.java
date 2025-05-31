@@ -37,7 +37,7 @@ public class PlayerShopAdminAnvilListener implements Listener {
         if (!(event.getView().getPlayer() instanceof Player)) return;
         Player player = (Player) event.getView().getPlayer();
         AnvilInventory anvilInventory = event.getInventory();
-        String renameText = anvilInventory.getRenameText();
+        String renameText = anvilInventory.getRenameText(); // Reverted
 
         // Store the input, even if it's empty, to reflect user clearing text
         playerAnvilInputs.put(player.getUniqueId(), renameText != null ? renameText : "");

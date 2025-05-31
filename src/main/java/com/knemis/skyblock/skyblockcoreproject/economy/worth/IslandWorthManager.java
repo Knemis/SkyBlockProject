@@ -179,10 +179,10 @@ public class IslandWorthManager {
                 BlockVector3 min = wgRegion.getMinimumPoint();
                 BlockVector3 max = wgRegion.getMaximumPoint();
 
-                for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
-                    for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                for (int x = min.x(); x <= max.x(); x++) {
+                    for (int y = min.y(); y <= max.y(); y++) {
                         if (y < world.getMinHeight() || y >= world.getMaxHeight()) continue;
-                        for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
+                        for (int z = min.z(); z <= max.z(); z++) {
                             if (wgRegion.contains(x, y, z)) {
                                 Block block = world.getBlockAt(x, y, z);
                                 totalWorth += blockValues.getOrDefault(block.getType(), 0.0);

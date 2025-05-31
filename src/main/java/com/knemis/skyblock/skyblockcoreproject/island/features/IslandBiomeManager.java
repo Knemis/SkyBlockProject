@@ -72,16 +72,16 @@ public class IslandBiomeManager {
             BlockVector3 min = islandTerritory.getMinimumPoint();
             BlockVector3 max = islandTerritory.getMaximumPoint();
 
-            for (int chunkX = min.getBlockX() >> 4; chunkX <= max.getBlockX() >> 4; chunkX++) {
-                for (int chunkZ = min.getBlockZ() >> 4; chunkZ <= max.getBlockZ() >> 4; chunkZ++) {
+            for (int chunkX = min.x() >> 4; chunkX <= max.x() >> 4; chunkX++) {
+                for (int chunkZ = min.z() >> 4; chunkZ <= max.z() >> 4; chunkZ++) {
                     Chunk chunk = world.getChunkAt(chunkX, chunkZ);
                     if (!chunk.isLoaded()) {
                         chunk.load(false);
                     }
                     for (int x = chunk.getX() * 16; x < chunk.getX() * 16 + 16; x++) {
                         for (int z = chunk.getZ() * 16; z < chunk.getZ() * 16 + 16; z++) {
-                            if (islandTerritory.contains(BlockVector3.at(x, min.getBlockY(), z))) {
-                                for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                            if (islandTerritory.contains(BlockVector3.at(x, min.y(), z))) {
+                                for (int y = min.y(); y <= max.y(); y++) {
                                     if (y >= world.getMinHeight() && y < world.getMaxHeight()) {
                                         world.setBiome(x, y, z, targetBiome);
                                     }
@@ -93,7 +93,7 @@ public class IslandBiomeManager {
             }
 
             world.getPlayers().stream()
-                    .filter(p -> islandTerritory.contains(BlockVector3.at(p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ())))
+                    .filter(p -> islandTerritory.contains(BlockVector3.at(p.getLocation().x(), p.getLocation().y(), p.getLocation().z())))
                     .forEach(pOnline -> pOnline.sendMessage(Component.text("Island biome changed! To see the changes fully, you can leave and re-enter the area or log back in.", NamedTextColor.AQUA)));
 
 

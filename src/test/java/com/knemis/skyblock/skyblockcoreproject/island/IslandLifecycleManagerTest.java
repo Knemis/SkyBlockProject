@@ -13,14 +13,17 @@ import com.sk89q.worldedit.function.operation.Operation;
 import com.sk89q.worldedit.function.operation.Operations;
 import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.regions.Region; // Added import for Region
 import com.sk89q.worldedit.session.ClipboardHolder;
 import com.sk89q.worldedit.world.block.BlockTypes;
+import com.sk89q.worldedit.function.pattern.Pattern; // Added import for Pattern
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Chunk;
+import org.bukkit.Bukkit; // Added import
 import org.bukkit.Location;
 import org.bukkit.Server;
 import org.bukkit.World;
@@ -43,9 +46,11 @@ import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.ArgumentMatchers; // Added import
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.util.Set; // Added import
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -256,7 +261,7 @@ public class IslandLifecycleManagerTest {
 
 
     @Test
-    void testDeleteIsland_RemovesEntitiesCorrectly() throws IOException {
+    void testDeleteIsland_RemovesEntitiesCorrectly() throws IOException, com.sk89q.worldedit.MaxChangedBlocksException { // Added MaxChangedBlocksException
         // Arrange
         when(islandDataHandler.getIslandByOwner(playerUUID)).thenReturn(island);
         when(bukkitWorld.getMinHeight()).thenReturn(0); // For getIslandTerritoryRegion if not spied
@@ -278,7 +283,8 @@ public class IslandLifecycleManagerTest {
 
 
         // Mock WorldEdit clear operation to return some blocks changed
-        when(editSession.setBlocks(anySet(), eq(BlockTypes.AIR))).thenReturn(100); // Simulate 100 blocks cleared
+        // Matching the public API: setBlocks(Region, Pattern)
+        when(editSession.setBlocks(any(Region.class), eq((Pattern) BlockTypes.AIR))).thenReturn(100); // Simulate 100 blocks cleared
 
 
         // Act
@@ -299,7 +305,7 @@ public class IslandLifecycleManagerTest {
 
 
     @Test
-    void testResetIsland_RemovesEntitiesCorrectlyBeforePaste() throws IOException {
+    void testResetIsland_RemovesEntitiesCorrectlyBeforePaste() throws IOException, com.sk89q.worldedit.MaxChangedBlocksException, com.sk89q.worldedit.WorldEditException { // Added exceptions
         // Arrange
         when(islandDataHandler.getIslandByOwner(playerUUID)).thenReturn(island);
 
@@ -313,7 +319,7 @@ public class IslandLifecycleManagerTest {
 
 
         // Mock WorldEdit clear and paste
-        when(editSession.setBlocks(anySet(), eq(BlockTypes.AIR))).thenReturn(100);
+        when(editSession.setBlocks(any(Region.class), eq((Pattern) BlockTypes.AIR))).thenReturn(100);
         // Mock paste operation via ClipboardHolder chain
         ClipboardHolder holder = mock(ClipboardHolder.class, Answers.RETURNS_DEEP_STUBS);
         when(holder.createPaste(any(EditSession.class)).to(any(BlockVector3.class)).ignoreAirBlocks(anyBoolean()).build()).thenReturn(mock(Operation.class));
@@ -340,7 +346,7 @@ public class IslandLifecycleManagerTest {
 
 
     @Test
-    void testDeleteIsland_NoEntitiesPresent() throws IOException {
+    void testDeleteIsland_NoEntitiesPresent() throws IOException, com.sk89q.worldedit.MaxChangedBlocksException { // Added MaxChangedBlocksException
         // Arrange
         when(islandDataHandler.getIslandByOwner(playerUUID)).thenReturn(island);
 
@@ -349,7 +355,7 @@ public class IslandLifecycleManagerTest {
         Chunk emptyChunk = mockChunkWithEntities(6, 6, Collections.emptyList());
 
 
-        when(editSession.setBlocks(anySet(), eq(BlockTypes.AIR))).thenReturn(100);
+        when(editSession.setBlocks(any(Region.class), eq((Pattern) BlockTypes.AIR))).thenReturn(100);
 
 
         // Act

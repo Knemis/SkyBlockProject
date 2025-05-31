@@ -18,6 +18,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginLogger;
 import org.junit.jupiter.api.AfterEach;
+import java.lang.reflect.Field; // For reflection
+import java.lang.reflect.Modifier; // For reflection
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -85,18 +87,19 @@ public class IslandFlagManagerTest {
         visitorShopUseFlagMock = mock(StateFlag.class);
         when(visitorShopUseFlagMock.getName()).thenReturn("visitor-shop-use"); // Ensure it has a name for logging/map keys
 
-        // Make CustomFlags.VISITOR_SHOP_USE return our mock
-        customFlagsMockedStatic.when(() -> CustomFlags.VISITOR_SHOP_USE).thenReturn(visitorShopUseFlagMock);
+        // Make CustomFlags.VISITOR_SHOP_USE return our mock via flagRegistry
+        // The static field itself will be handled by reflection in specific tests if needed.
+        // customFlagsMockedStatic.when(() -> CustomFlags.VISITOR_SHOP_USE).thenReturn(visitorShopUseFlagMock); // Removed problematic line
 
         // Default behavior for flagRegistry.get()
-        lenient().when(flagRegistry.get(eq("PVP"))).thenReturn(pvpFlag);
-        lenient().when(flagRegistry.get(eq("BUILD"))).thenReturn(buildFlag);
-        lenient().when(flagRegistry.get(eq("BLOCK_BREAK"))).thenReturn(blockBreakFlag);
-        lenient().when(flagRegistry.get(eq("VISITOR_SHOP_USE"))).thenReturn(visitorShopUseFlagMock);
-        lenient().when(flagRegistry.get(eq("INTERACT"))).thenReturn(Flags.INTERACT);
-        lenient().when(flagRegistry.get(eq("USE"))).thenReturn(Flags.USE);
-        lenient().when(flagRegistry.get(eq("CHEST_ACCESS"))).thenReturn(Flags.CHEST_ACCESS);
-         lenient().when(flagRegistry.get(eq("DAMAGE_ANIMALS"))).thenReturn(Flags.DAMAGE_ANIMALS);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("PVP"))).thenReturn(pvpFlag);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("BUILD"))).thenReturn(buildFlag);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("BLOCK_BREAK"))).thenReturn(blockBreakFlag);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("VISITOR_SHOP_USE"))).thenReturn(visitorShopUseFlagMock);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("INTERACT"))).thenReturn(Flags.INTERACT);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("USE"))).thenReturn(Flags.USE);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("CHEST_ACCESS"))).thenReturn(Flags.CHEST_ACCESS);
+        lenient().<Flag<?>>when(flagRegistry.get(eq("DAMAGE_ANIMALS"))).thenReturn(Flags.DAMAGE_ANIMALS);
 
 
         // IslandFlagManager is instantiated after mocks are set up
@@ -107,8 +110,34 @@ public class IslandFlagManagerTest {
     @AfterEach
     void tearDown() {
         worldGuardMockedStatic.close();
-        customFlagsMockedStatic.close();
+        // customFlagsMockedStatic.close(); // Closed if it was opened. Now removed.
+        resetCustomFlagsStaticField(); // Reset reflection changes
     }
+
+    // Helper to set static final field CustomFlags.VISITOR_SHOP_USE
+    private void setStaticVisitorShopUseFlag(StateFlag flag) throws Exception {
+        Field field = CustomFlags.class.getDeclaredField("VISITOR_SHOP_USE");
+        field.setAccessible(true);
+
+        Field modifiersField = Field.class.getDeclaredField("modifiers");
+        modifiersField.setAccessible(true);
+        modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+
+        field.set(null, flag);
+    }
+
+    // Helper to reset the field if necessary (e.g., to null or original if known)
+    private void resetCustomFlagsStaticField() {
+        try {
+            // Attempt to set it back to null, or its original value if it was known
+            // This is to prevent test side effects. For simple cases, null is fine.
+            setStaticVisitorShopUseFlag(null);
+        } catch (Exception e) {
+            // Log or handle if reset fails, though for tests it might not be critical
+            // if each test needing it sets it appropriately.
+        }
+    }
+
 
     @Test
     void testInitializeDefaultFlags_LoadsFromConfigCorrectly() {
@@ -139,10 +168,14 @@ public class IslandFlagManagerTest {
     }
 
     @Test
-    void testInitializeDefaultFlags_HandlesFallbackForVisitorShopUseFlag() {
+    void testInitializeDefaultFlags_HandlesFallbackForVisitorShopUseFlag() throws Exception {
         when(defaultConfigSection.getKeys(false)).thenReturn(Collections.emptySet()); // No "VISITOR_SHOP_USE" in config
-        // Ensure CustomFlags.VISITOR_SHOP_USE is not null for the fallback logic to kick in
-        // This is handled by customFlagsMockedStatic.when(() -> CustomFlags.VISITOR_SHOP_USE).thenReturn(visitorShopUseFlagMock);
+
+        // Set the static CustomFlags.VISITOR_SHOP_USE to our mock for this test
+        setStaticVisitorShopUseFlag(visitorShopUseFlagMock);
+        // Ensure flagRegistry returns it for string lookup IF IslandFlagManager were to use string first
+        // but the current IFM logic directly uses the CustomFlags.VISITOR_SHOP_USE static field as key.
+        // So, the above setStatic is the crucial part.
 
         islandFlagManager = new IslandFlagManager(plugin, islandDataHandler);
 
@@ -154,13 +187,16 @@ public class IslandFlagManagerTest {
     void testInitializeDefaultFlags_HandlesUnknownFlagInConfig() {
         String unknownFlagName = "TOTALLY_UNKNOWN_FLAG";
         Map<String, String> flagsInConfig = new HashMap<>();
-        flagsInConfig.put(unknownFlagName, "ALLOW");
+        flagsInConfig.put(unknownFlagName, "ALLOW"); // This line correctly populates the map
 
-        when(defaultConfigSection.getKeys(false)).thenReturn(new HashSet<>(flagsInസി.put(unknownFlagName, "ALLOW");
-
+        // Corrected line for mocking getKeys:
         when(defaultConfigSection.getKeys(false)).thenReturn(new HashSet<>(flagsInConfig.keySet()));
+
+        // Mock the getString call for the unknown flag name:
         when(defaultConfigSection.getString(unknownFlagName, "")).thenReturn("ALLOW");
-        when(flagRegistry.get(unknownFlagName)).thenReturn(null); // Simulate unknown flag
+
+        // Simulate that the flag registry does not know this flag:
+        when(flagRegistry.get(unknownFlagName)).thenReturn(null);
 
         islandFlagManager = new IslandFlagManager(plugin, islandDataHandler);
 
@@ -179,7 +215,8 @@ public class IslandFlagManagerTest {
 
         when(defaultConfigSection.getKeys(false)).thenReturn(new HashSet<>(flagsInConfig.keySet()));
         when(defaultConfigSection.getString(nonStateFlagName, "")).thenReturn("ANY_VALUE");
-        when(flagRegistry.get(nonStateFlagName)).thenReturn(mockNonStateFlag);
+        lenient().<Flag<?>>when(flagRegistry.get(nonStateFlagName)).thenReturn(mockNonStateFlag);
+
 
         islandFlagManager = new IslandFlagManager(plugin, islandDataHandler);
 
@@ -260,6 +297,6 @@ public class IslandFlagManagerTest {
         assertFalse(result);
         verify(mockedProtectedRegion).setFlag(pvpFlag, StateFlag.State.DENY); // Flag is set before save
         verify(mockedPlayer).sendMessage(argThat((Component component) -> component.toString().contains("beklenmedik bir hata oluştu")));
-        verify(pluginLogger).log(eq(Level.SEVERE), contains("setIslandFlagState sırasında hata"), any(com.sk89q.worldguard.protection.managers.storage.StorageException.class));
+        verify(pluginLogger).log(eq(java.util.logging.Level.SEVERE), contains("setIslandFlagState sırasında hata"), any(com.sk89q.worldguard.protection.managers.storage.StorageException.class));
     }
 }
