@@ -3,20 +3,24 @@ package com.knemis.skyblock.skyblockcoreproject.island;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 
-import com.fastasyncworldedit.core.extent.EditSession; // FAWE Change
-import com.fastasyncworldedit.core.WorldEdit; // FAWE Change
-import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
-import com.fastasyncworldedit.core.extent.clipboard.Clipboard; // FAWE Change
-import com.fastasyncworldedit.core.extent.clipboard.io.ClipboardFormat; // FAWE Change
-import com.fastasyncworldedit.core.extent.clipboard.io.ClipboardFormats; // FAWE Change
-import com.fastasyncworldedit.core.extent.clipboard.io.ClipboardReader; // FAWE Change
-import com.fastasyncworldedit.core.function.operation.Operation; // FAWE Change
-import com.fastasyncworldedit.core.function.operation.Operations; // FAWE Change
-import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
-import com.fastasyncworldedit.core.session.ClipboardHolder; // FAWE Change
-import com.fastasyncworldedit.core.regions.CuboidRegion; // FAWE Change
-import com.fastasyncworldedit.core.world.block.BlockState; // FAWE Change
-import com.fastasyncworldedit.core.world.block.BlockTypes; // FAWE Change
+import com.sk89q.worldedit.EditSession; // FAWE/WorldEdit API standard
+import com.sk89q.worldedit.WorldEdit; // FAWE/WorldEdit API standard
+import com.sk89q.worldedit.bukkit.BukkitAdapter; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.extent.clipboard.Clipboard; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.function.operation.Operation; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.function.operation.Operations; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.math.BlockVector3; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.session.ClipboardHolder; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.regions.CuboidRegion; // FAWE Change - Updated to WorldEdit API
+// import com.sk89q.worldedit.world.block.BlockState; // No longer needed if using BlockTypes.AIR directly
+import com.sk89q.worldedit.world.block.BlockTypes; // FAWE Change - Updated to WorldEdit API
+// import com.sk89q.worldedit.function.pattern.Pattern; // No longer needed
+// import com.sk89q.worldedit.function.pattern.BlockStatePattern; // Removed due to cannot find symbol
+// import com.sk89q.worldedit.world.block.BaseBlock; // No longer needed
+// Removed incorrect aliased import for com.sk89q.worldedit.world.World
 
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
@@ -40,7 +44,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet; // Added for Set conversion
 import java.util.List;
+import java.util.Set; // Added for Set conversion
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -97,7 +103,7 @@ public class IslandLifecycleManager {
         BlockVector3 worldMinSchematic = islandPastePoint.add(clipboardMinRel);
         BlockVector3 worldMaxSchematic = islandPastePoint.add(clipboardMaxRel);
 
-        com.fastasyncworldedit.core.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change
+        com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change - Using FQN
         if (weWorld == null) {
             throw new IOException("Yapıştırılan şematik bölgesi için WorldEdit dünyası null geldi (adaptasyon başarısız).");
         }
@@ -120,25 +126,25 @@ public class IslandLifecycleManager {
         BlockVector3 schematicMin = schematicRegion.getMinimumPoint();
         BlockVector3 schematicMax = schematicRegion.getMaximumPoint();
 
-        int territoryMinX = schematicMin.getBlockX() - expansionRadiusHorizontal;
-        int territoryMaxX = schematicMax.getBlockX() + expansionRadiusHorizontal;
-        int territoryMinZ = schematicMin.getBlockZ() - expansionRadiusHorizontal;
-        int territoryMaxZ = schematicMax.getBlockZ() + expansionRadiusHorizontal;
+        int territoryMinX = schematicMin.getX() - expansionRadiusHorizontal;
+        int territoryMaxX = schematicMax.getX() + expansionRadiusHorizontal;
+        int territoryMinZ = schematicMin.getZ() - expansionRadiusHorizontal;
+        int territoryMaxZ = schematicMax.getZ() + expansionRadiusHorizontal;
 
         boolean allowBuildBelow = plugin.getConfig().getBoolean("island.allow-build-below-schematic-base", false);
-        int schematicBaseY = schematicMin.getBlockY();
+        int schematicBaseY = schematicMin.getY();
         int buildLimitAboveSchematicTop = plugin.getConfig().getInt("island.build-limit-above-schematic-top", 150);
 
         int territoryMinY = allowBuildBelow ? Math.max(worldMinBuildHeight, schematicBaseY - expansionRadiusVerticalBottom)
                 : schematicBaseY;
-        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY() + buildLimitAboveSchematicTop);
+        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getY() + buildLimitAboveSchematicTop);
 
 
         if (territoryMinY > territoryMaxY) {
             plugin.getLogger().warning("Hesaplanan ada bölgesi Y sınırları geçersizdi (minY > maxY): Ada: " + islandBaseLocation +
                     " MinY_calc: " + territoryMinY + " MaxY_calc: " + territoryMaxY + ". Şematik Y sınırlarına geri dönülüyor.");
-            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getBlockY());
-            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY());
+            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getY());
+            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getY());
             if (territoryMinY > territoryMaxY) territoryMaxY = territoryMinY;
         }
         return new CuboidRegion(schematicRegion.getWorld(),
@@ -208,7 +214,7 @@ public class IslandLifecycleManager {
                 clipboard = reader.read();
             }
 
-            com.fastasyncworldedit.core.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld); // FAWE Change
+            com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld); // FAWE Change - Using FQN
             if (adaptedWorld == null) {
                 player.sendMessage(ChatColor.RED + "Ada oluşturulurken dünya adaptasyonunda bir hata oluştu.");
                 plugin.getLogger().severe("createIsland: Could not adapt Skyblock world to WorldEdit world.");
@@ -218,7 +224,7 @@ public class IslandLifecycleManager {
 
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(adaptedWorld)) {
                 plugin.getLogger().info(String.format("Pasting schematic for %s at %s", player.getName(), islandBaseLocation.toString()));
-                editSession.setReorderMode(EditSession.ReorderMode.MULTI_STAGE);
+                editSession.setReorderMode(com.sk89q.worldedit.EditSession.ReorderMode.MULTI_STAGE); // FAWE Change - Updated enum path
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(editSession)
                         .to(BlockVector3.at(islandBaseLocation.getX(), islandBaseLocation.getY(), islandBaseLocation.getZ()))
@@ -320,7 +326,7 @@ public class IslandLifecycleManager {
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi siliniyor...");
         try {
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
-            com.fastasyncworldedit.core.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change - Using FQN
             if (weWorld == null) {
                 plugin.getLogger().severe(String.format("Could not adapt world for island deletion (Island ID: %s, Player: %s)", islandId, player.getName()));
                 player.sendMessage(ChatColor.RED + "Ada silinirken bir dünya hatası oluştu.");
@@ -328,16 +334,27 @@ public class IslandLifecycleManager {
                 return false;
             }
 
-            BlockState airState = BlockTypes.AIR != null ? BlockTypes.AIR.getDefaultState() : null;
-            if (airState == null) {
-                plugin.getLogger().severe("BlockTypes.AIR is null or cannot get default state! WorldEdit might not be loaded correctly. Island deletion stopped for " + islandId);
-                player.sendMessage(ChatColor.RED + "Ada silinirken kritik bir WorldEdit hatası oluştu.");
-                plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit BlockTypes.AIR is null.", player.getName(), islandId));
-                return false;
-            }
+            // BlockState airState = BlockTypes.get("minecraft:air").getDefaultState(); // FAWE Change - Updated to use BlockTypes.get()
+            // if (airState == null) { // Should not happen if "minecraft:air" is always valid
+            //     plugin.getLogger().severe("Could not get BlockState for AIR! WorldEdit might not be loaded correctly. Island deletion stopped for " + islandId);
+            //     player.sendMessage(ChatColor.RED + "Ada silinirken kritik bir WorldEdit hatası oluştu.");
+            //     plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit BlockTypes.AIR is null.", player.getName(), islandId));
+            //     return false;
+            // }
 
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-                editSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), airState);
+                CuboidRegion regionToClear = new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint());
+                Set<BlockVector3> positions = new HashSet<>();
+                if (regionToClear != null) {
+                    for (BlockVector3 vector : regionToClear) {
+                        positions.add(vector);
+                    }
+                }
+                if (!positions.isEmpty()) {
+                    editSession.setBlocks(positions, BlockTypes.AIR); // Using Set<BlockVector3>
+                } else {
+                    plugin.getLogger().warning("Attempted to clear an empty or null region for island " + islandId);
+                }
             }
             plugin.getLogger().info(String.format("Island region %s for player %s cleared.", islandId, player.getName()));
 
@@ -397,23 +414,34 @@ public class IslandLifecycleManager {
 
         player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.");
         try {
-            com.fastasyncworldedit.core.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change - Using FQN
             if (weWorld == null) {
                 player.sendMessage(ChatColor.RED + "Dünya hatası (WE).");
                 plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));
                 return false;
             }
 
-            BlockState airState = BlockTypes.AIR != null ? BlockTypes.AIR.getDefaultState() : null;
-            if (airState == null) {
-                player.sendMessage(ChatColor.RED + "Blok hatası (WE).");
-                plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): WorldEdit BlockTypes.AIR is null.", player.getName(), islandId));
-                return false;
-            }
+            // BlockState airState = BlockTypes.get("minecraft:air").getDefaultState(); // FAWE Change - Updated to use BlockTypes.get()
+            // if (airState == null) { // Should not happen
+            //     player.sendMessage(ChatColor.RED + "Blok hatası (WE).");
+            //     plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Could not get AIR blockstate.", player.getName(), islandId));
+            //     return false;
+            // }
 
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
             try (EditSession clearSession = WorldEdit.getInstance().newEditSession(weWorld)) {
-                clearSession.setBlocks(new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()), airState);
+                CuboidRegion regionToClear = new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint());
+                Set<BlockVector3> positions = new HashSet<>();
+                if (regionToClear != null) {
+                    for (BlockVector3 vector : regionToClear) {
+                        positions.add(vector);
+                    }
+                }
+                if (!positions.isEmpty()) {
+                    clearSession.setBlocks(positions, BlockTypes.AIR); // Using Set<BlockVector3>
+                } else {
+                    plugin.getLogger().warning("Attempted to clear an empty or null region for island " + islandId + " during reset.");
+                }
             }
             plugin.getLogger().info(String.format("Island region %s for player %s cleared (reset).", islandId, player.getName()));
 

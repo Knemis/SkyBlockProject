@@ -13,6 +13,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor; // Keep for messages
+import org.bukkit.Location; // Added import for Location
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;

@@ -6,11 +6,9 @@ import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler; // IslandDataHandler'a erişim için
 import com.knemis.skyblock.skyblockcoreproject.island.IslandLifecycleManager; // Ada bölgesini almak için
 
-import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
-
-// Removed duplicate import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
-import com.fastasyncworldedit.core.regions.Region; // FAWE Change - Added explicit import
+// import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change - Removed as not directly used
+import com.sk89q.worldedit.math.BlockVector3; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.regions.Region; // FAWE Change - Updated to WorldEdit API
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.Bukkit;
@@ -183,10 +181,10 @@ public class IslandWorthManager {
                 BlockVector3 min = wgRegion.getMinimumPoint();
                 BlockVector3 max = wgRegion.getMaximumPoint();
 
-                for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
-                    for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                for (int x = min.getX(); x <= max.getX(); x++) {
+                    for (int y = min.getY(); y <= max.getY(); y++) {
                         if (y < world.getMinHeight() || y >= world.getMaxHeight()) continue; // Dünya sınırları kontrolü
-                        for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
+                        for (int z = min.getZ(); z <= max.getZ(); z++) {
                             // Bölgenin gerçekten o koordinatı içerip içermediğini kontrol et (silindirik vb. bölgeler için)
                             if (wgRegion.contains(x, y, z)) {
                                 Block block = world.getBlockAt(x, y, z);

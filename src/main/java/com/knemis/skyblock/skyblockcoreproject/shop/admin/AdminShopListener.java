@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.shop.admin;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.economy.EconomyManager; // Assuming this exists
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Corrected import path
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopInventoryManager;
 import org.bukkit.NamespacedKey; // Added import
 import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
@@ -18,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataContainer; // Added import
 import org.bukkit.persistence.PersistentDataType; // Added import
 
+import java.util.List; // Added import for List
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -204,54 +205,46 @@ public class AdminShopListener implements Listener {
             .collect(java.util.stream.Collectors.toList());
 
         AdminShopGUIManager.ShopItem targetShopItem = null;
-        // This assumes the `slot` is within the item display area.
-        // And that items are somewhat sequentially placed or `gui_slot` in config matches runtime slot.
-        // A more robust approach if `gui_slot` is strictly adhered to by `openCategoryGUI`
-        // and `getShopItemFromCategoryBySlot` uses this *runtime* slot:
+
+        // First, try to get the item by its configured slot (if applicable for the GUI design)
         targetShopItem = shopGUIManager.getShopItemFromCategoryBySlot(category, slot);
 
+        // If not found by slot (e.g., item was auto-placed or slot mapping isn't direct),
+        // then try to identify it using PersistentDataContainer tag.
         if (targetShopItem == null) {
-            // Fallback: if slot based lookup fails (e.g. item was auto-placed), try to match based on item similarity
-            // This is more complex as it requires comparing ItemStacks.
-            // For now, if getShopItemFromCategoryBySlot (which uses the configured item.guiSlot) doesn't find it,
-            // and the slot is within the item display area, it means it's an auto-placed item.
-            // The listener needs a way to map this visual slot back to a ShopItem.
-            // This indicates a potential mismatch in how items are retrieved vs displayed if not using configured slots.
-            // The current openCategoryGUI in AdminShopGUIManager has a complex placement.
-            // The simplest is that shopGUIManager.getShopItemFromCategoryBySlot needs to be aware of the page & actual display slot.
-            // Or, AdminShopGUIManager.createDisplayItem adds a PDC tag with the item's internalName.
-            // For now, we'll proceed assuming getShopItemFromCategoryBySlot is intended to work with the actual slot.
-            // This might require AdminShopGUIManager.itemsBySlot to be cleared and repopulated per page view if slots are dynamic per page.
-            // This is a known complexity point.
-        // plugin.getLogger().fine("AdminShopListener: No specific ShopItem found by configured slot " + slot + ". This might be a filler pane or an auto-placed item not resolved by this lookup method.");
-        // return; // Original logic before PDC
-
-        // New PDC-based logic
-        AdminShopGUIManager.ShopItem targetShopItem = null;
-        ItemMeta clickedMeta = clickedItem.getItemMeta();
-        if (clickedMeta != null) {
-            PersistentDataContainer container = clickedMeta.getPersistentDataContainer();
-            if (container.has(itemKeyPDC, PersistentDataType.STRING)) {
-                String itemInternalName = container.get(itemKeyPDC, PersistentDataType.STRING);
-                if (itemInternalName != null) {
-                    targetShopItem = shopGUIManager.getShopItemByInternalName(itemInternalName);
+            ItemMeta clickedMeta = clickedItem.getItemMeta();
+            if (clickedMeta != null) {
+                PersistentDataContainer container = clickedMeta.getPersistentDataContainer();
+                if (container.has(itemKeyPDC, PersistentDataType.STRING)) {
+                    String itemInternalName = container.get(itemKeyPDC, PersistentDataType.STRING);
+                    if (itemInternalName != null) {
+                        // This retrieves the ShopItem based on its unique internal name stored in PDC
+                        targetShopItem = shopGUIManager.getShopItemByInternalName(itemInternalName);
+                    }
                 }
             }
         }
 
+        // ItemMeta clickedMeta = clickedItem.getItemMeta(); // Original position of this line, moved up
+        // if (clickedMeta != null) { // Original structure, now part of the if (targetShopItem == null) block
+        //    PersistentDataContainer container = clickedMeta.getPersistentDataContainer();
+            // if (container.has(itemKeyPDC, PersistentDataType.STRING)) { // Original structure
+            //    String itemInternalName = container.get(itemKeyPDC, PersistentDataType.STRING);
+            //    if (itemInternalName != null) {
+            //        targetShopItem = shopGUIManager.getShopItemByInternalName(itemInternalName);
+            //    }
+            // }
+        // } // Original structure
+
         if (targetShopItem == null) {
-            // This means it's likely a navigation button or filler pane, not a shop item.
-            // The existing navigation handling logic (checking display name for "Back", "Next Page", etc.)
-            // should correctly process these before this PDC check, or after this check fails.
-            // So, if targetShopItem is null here, it's not a data-tagged shop item.
-            // The previous logic for nav buttons should still be there.
-             plugin.getLogger().fine("[AdminShopListener] Clicked item does not have a shop item PDC tag or failed lookup. Slot: " + slot);
-            // Ensure that the logic for handling navigation buttons is still effective.
-            // The current structure has nav button checks before the item lookup, which is good.
-            // So if it's null here, and not a nav button, it's a filler pane or unhandled click.
-            return; // If not a nav button and not a PDC-tagged item, do nothing further.
+            // If after both attempts (slot-based and PDC-based), the item is still not found,
+            // it's likely a filler pane or an unhandled part of the GUI.
+            // Navigation buttons should have been handled by their display name checks *before* this item resolution logic.
+            plugin.getLogger().fine("[AdminShopListener] Clicked item is not a recognized shop item. Slot: " + slot);
+            return;
         }
-        // If targetShopItem is found, proceed:
+
+        // If targetShopItem is found (either by slot or PDC), proceed:
         processItemInteraction(player, targetShopItem, clickType);
     }
 

@@ -15,6 +15,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.jetbrains.annotations.Nullable; // Added for @Nullable
 
 import java.io.File;
 import java.io.IOException;
@@ -417,124 +418,8 @@ public class AdminShopGUIManager {
         player.openInventory(gui);
     }
 
-    public void openCategoryGUI(Player player, ShopCategory category, int page) {
-        int itemsPerPage = Math.max(1, itemRows * 9 - 9); // Max items, leave 1 row for navigation
-        if (itemRows == 1 && category.items.size() > 9) itemsPerPage = 9; // Full row if only 1 row total
-        else if (itemRows == 1) itemsPerPage = itemRows * 9;
-
-
-        int totalItems = category.getItems().size();
-        int totalPages = (int) Math.ceil((double) totalItems / itemsPerPage);
-        if (totalPages == 0) totalPages = 1; // At least one page, even if empty
-
-        if (page < 1 || page > totalPages) {
-            player.sendMessage(getMessage("invalid_page", null));
-            // Optionally, open page 1 or close inventory
-            // openCategoryGUI(player, category, 1);
-            return;
-        }
-
-        int guiSize = itemRows * 9;
-        guiSize = Math.min(guiSize, 54); // Cap at 54
-
-        Inventory gui = Bukkit.createInventory(player, guiSize, category.getDisplayName());
-
-        List<ShopItem> pageItems = category.getItems().stream()
-                                           .skip((long)(page - 1) * itemsPerPage)
-                                           .limit(itemsPerPage)
-                                           .collect(Collectors.toList());
-
-        if (totalItems == 0) {
-            // Optional: Display a "Shop is Empty" item
-            ItemStack emptyShopItem = new ItemStack(Material.BARRIER);
-            ItemMeta emptyMeta = emptyShopItem.getItemMeta();
-            if (emptyMeta != null) {
-                emptyMeta.setDisplayName(getMessage("shop_is_empty", null));
-                emptyShopItem.setItemMeta(emptyMeta);
-            }
-            gui.setItem(guiSize / 2, emptyShopItem); // Place in the middle
-        } else {
-            int currentSlot = 0;
-            for (ShopItem shopItem : pageItems) {
-                 if (currentSlot >= itemsPerPage) break; // Should not happen with limit() but good practice
-                ItemStack displayStack = createDisplayItem(shopItem, player);
-                if (shopItem.getGuiSlot() != -1 && shopItem.getGuiSlot() < itemsPerPage && gui.getItem(shopItem.getGuiSlot()) == null) {
-                     // Ensure slot is within the item display area (not nav row)
-                    gui.setItem(shopItem.getGuiSlot(), displayStack);
-                } else {
-                    // Auto-place if slot is -1, taken, or out of bounds for items
-                    while(currentSlot < itemsPerPage && gui.getItem(currentSlot) != null) {
-                        currentSlot++;
-                    }
-                    if (currentSlot < itemsPerPage) {
-                        gui.setItem(currentSlot, displayStack);
-                    }
-                }
-                currentSlot++; // Increment even if placed by gui_slot to ensure next auto-placement is correct
-            }
-        }
-
-
-        // Navigation Items (bottom row: guiSize - 9 to guiSize - 1)
-        int navRowStartSlot = guiSize - 9;
-
-        // Back Button
-        ItemStack backButton = new ItemStack(Material.ARROW);
-        ItemMeta backMeta = backButton.getItemMeta();
-        if (backMeta != null) {
-            backMeta.setDisplayName(ChatUtils.translateAlternateColorCodes("&e&lBack to Categories"));
-            backButton.setItemMeta(backMeta);
-        }
-        gui.setItem(navRowStartSlot, backButton); // Bottom-left
-
-        // Page Info / Prev / Next
-        if (totalPages > 1) {
-            ItemStack prevButton = new ItemStack(Material.PAPER); // Or ARROW
-            ItemMeta prevMeta = prevButton.getItemMeta();
-            if (page > 1) {
-                if (prevMeta != null) prevMeta.setDisplayName(ChatUtils.translateAlternateColorCodes("&a&lPrevious Page"));
-            } else {
-                if (prevMeta != null) prevMeta.setDisplayName(ChatUtils.translateAlternateColorCodes("&7Previous Page"));
-            }
-            if (prevMeta != null) prevButton.setItemMeta(prevMeta);
-            gui.setItem(navRowStartSlot + 3, prevButton);
-
-            ItemStack pageInfo = new ItemStack(Material.BOOK);
-            ItemMeta pageMeta = pageInfo.getItemMeta();
-            if (pageMeta != null) {
-                pageMeta.setDisplayName(ChatUtils.translateAlternateColorCodes("&fPage " + page + "/" + totalPages));
-                pageInfo.setItemMeta(pageMeta);
-            }
-            gui.setItem(navRowStartSlot + 4, pageInfo);
-
-            ItemStack nextButton = new ItemStack(Material.PAPER); // Or ARROW
-            ItemMeta nextMeta = nextButton.getItemMeta();
-            if (page < totalPages) {
-                if (nextMeta != null) nextMeta.setDisplayName(ChatUtils.translateAlternateColorCodes("&a&lNext Page"));
-            } else {
-                if (nextMeta != null) nextMeta.setDisplayName(ChatUtils.translateAlternateColorCodes("&7Next Page"));
-            }
-             if (nextMeta != null) nextButton.setItemMeta(nextMeta);
-            gui.setItem(navRowStartSlot + 5, nextButton);
-        }
-
-        if (fillEmptySlots) {
-            ItemStack filler = new ItemStack(fillerPaneMaterial);
-            ItemMeta fillerMeta = filler.getItemMeta();
-            if (fillerMeta != null) {
-                fillerMeta.setDisplayName(" ");
-                filler.setItemMeta(fillerMeta);
-            }
-            // Fill all slots first, then overwrite with items/nav
-            for (int i = 0; i < guiSize; i++) {
-                 if (gui.getItem(i) == null) {
-                    gui.setItem(i, filler.clone());
-                }
-            }
-        }
-        player.openInventory(gui);
-        // No need to call listener.playerOpenedCategoryView here, this is the main menu
-    }
+    // The following duplicate openCategoryGUI method is removed.
+    // The version below this comment (originally around line 545) is the one being kept.
 
     /**
      * Opens a specific category's GUI for the player, displaying items on a given page.
@@ -903,6 +788,10 @@ public class AdminShopGUIManager {
 
     public List<ShopCategory> getCategories() {
         return new ArrayList<>(categories);
+    }
+
+    public int getItemRows() { // Added getter for itemRows
+        return this.itemRows;
     }
 
     public void reloadConfig() {

@@ -1,8 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.island;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
-import com.fastasyncworldedit.core.math.BlockVector3; // FAWE Change
+import com.sk89q.worldedit.bukkit.BukkitAdapter; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.math.BlockVector3; // FAWE Change - Updated to WorldEdit API
+// Removed: import com.sk89q.worldedit.world.World; // FAWE Change - To be FQN to avoid ambiguity
 // com.sk89q.worldedit.util.Location will be implicitly handled by BukkitAdapter.adapt if FAWE doesn't have a direct equivalent or if it's no longer needed.
 // If a specific FAWE Location is needed, it would be com.fastasyncworldedit.core.util.Location or similar.
 // For now, we assume BukkitAdapter.adapt(org.bukkit.Location) is sufficient or BukkitAdapter.adapt still returns a type that can be used by WorldGuard's RegionContainer.
@@ -418,7 +419,7 @@ public class IslandDataHandler {
             if (container == null) return null;
 
             // FAWE Change: Ensure BukkitAdapter.adapt(world) is used for getting the RegionManager
-            com.fastasyncworldedit.core.world.World faweWorld = BukkitAdapter.adapt(location.getWorld());
+            com.sk89q.worldedit.world.World faweWorld = BukkitAdapter.adapt(location.getWorld()); // FAWE Change - Using FQN
             if (faweWorld == null) return null; // Could not adapt world
             RegionManager locRegionManager = container.get(faweWorld);
             if(locRegionManager == null) return null;

@@ -4,7 +4,7 @@ package com.knemis.skyblock.skyblockcoreproject;
 import com.knemis.skyblock.skyblockcoreproject.commands.AdminShopCommand;
 import com.knemis.skyblock.skyblockcoreproject.commands.IslandCommand;
 import com.knemis.skyblock.skyblockcoreproject.commands.MissionCommand;
-import com.knemis.skyblock.skyblockcoreproject.economy.EconomyManager; // Assuming this is where your static EconomyManager methods are
+import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Corrected import path
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.FlagGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.gui.PlayerShopAdminGUIManager; // Renamed import
@@ -36,16 +36,17 @@ import com.knemis.skyblock.skyblockcoreproject.listeners.ShopVisitListener;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionGUIManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionManager;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionPlayerDataManager;
-import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Statik metotlar için
+// import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // Statik metotlar için - This line is now a duplicate due to correction above
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop; // **** YENİ EKLENEN IMPORT ****
 
-import com.fastasyncworldedit.bukkit.BukkitAdapter; // FAWE Change
+import com.sk89q.worldedit.bukkit.BukkitAdapter; // FAWE Change - Updated to WorldEdit API
+// Removed incorrect aliased import for com.sk89q.worldedit.world.World
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.Flag; // Added for custom flag
 import com.sk89q.worldguard.protection.flags.StateFlag; // Added for custom flag
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry; // Added for custom flag
-import com.sk89q.worldguard.protection.flags.FlagConflictException; // Added for custom flag
+import com.sk89q.worldguard.protection.flags.registry.FlagConflictException; // Added for custom flag - Moved to .registry subpackage
 import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for custom flag
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.RegionContainer;
@@ -404,7 +405,7 @@ public final class SkyBlockProject extends JavaPlugin {
             getLogger().severe("WorldGuard instance is null or given world is null. Cannot get RegionManager.");
             return null;
         }
-        com.fastasyncworldedit.core.world.World adaptedWorld = com.fastasyncworldedit.bukkit.BukkitAdapter.adapt(bukkitWorld); // FAWE Change
+        com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(bukkitWorld); // FAWE Change - Using FQN
         RegionContainer container = worldGuardInstance.getPlatform().getRegionContainer();
         if (container == null) {
             getLogger().severe("Could not get WorldGuard RegionContainer!");

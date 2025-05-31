@@ -171,7 +171,7 @@ public class ShopAnvilListener implements Listener {
                 return;
             }
 
-            String priceText = anvilInv.getRenameText();
+            String priceText = anvilInv.getRenameText(); // Reverted to deprecated method
             if (priceText == null || priceText.trim().isEmpty()) {
                 player.sendMessage(Component.text("Please enter the price in the rename field.", NamedTextColor.RED));
                 // Potentially update slot 2 to show an error state if not already handled by updateAnvilOutputSlot
@@ -234,9 +234,9 @@ public class ShopAnvilListener implements Listener {
             pendingShop.setItemQuantityForPrice(inputItem.getAmount()); // Use quantity from slot 0
 
             if (session.isIntentToAllowPlayerBuy()) {
-                pendingShop.setPrice(buyPrice); // This is player's buy price (owner's sell price)
+                pendingShop.setBuyPrice(buyPrice); // Corrected: This is player's buy price (owner's sell price)
             } else {
-                pendingShop.setPrice(-1); // Explicitly disable if not intended
+                pendingShop.setBuyPrice(-1); // Corrected: Explicitly disable if not intended
             }
 
             if (session.isIntentToAllowPlayerSell()) {
@@ -274,7 +274,7 @@ public class ShopAnvilListener implements Listener {
         ItemStack quantityItem = anvilInv.getItem(0);
         Material expectedType = pendingShop.getTemplateItemStack().getType();
         int quantity = (quantityItem != null && quantityItem.getType() == pendingShop.getTemplateItemStack().getType()) ? quantityItem.getAmount() : 0;
-        String priceText = anvilInv.getRenameText();
+        String priceText = anvilInv.getRenameText(); // Reverted to deprecated method
         if (priceText == null) priceText = "";
 
         Player owner = Bukkit.getPlayer(pendingShop.getOwnerUUID());

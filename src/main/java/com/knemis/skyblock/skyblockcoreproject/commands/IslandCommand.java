@@ -31,6 +31,8 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
+import org.bukkit.Registry; // Added for Biome registry
+import org.bukkit.NamespacedKey; // Added for Biome key
 
 import org.jetbrains.annotations.NotNull;
 
@@ -1093,9 +1095,9 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
                     }
                 });
             } else if (subCmd.equals("biome") && actionOrSetting.equalsIgnoreCase("set")) {
-                Arrays.stream(Biome.values())
-                        .filter(b -> b != Biome.CUSTOM && !b.name().startsWith("THE_VOID"))
-                        .map(Enum::name)
+                Registry.BIOME.stream() // Changed from Biome.values()
+                        .filter(b -> !b.getKey().equals(NamespacedKey.minecraft("custom")) && !b.getKey().getKey().startsWith("the_void")) // Check key for CUSTOM and the_void
+                        .map(b -> b.getKey().getKey()) // Changed from Biome::name
                         .filter(name ->
                                 name.toLowerCase().startsWith(arg2Lower))
                         .forEach(completions::add);

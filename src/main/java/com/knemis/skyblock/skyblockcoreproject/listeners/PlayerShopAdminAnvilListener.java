@@ -82,7 +82,7 @@ public class PlayerShopAdminAnvilListener implements Listener {
                  return;
             }
 
-            String inputText = anvilInv.getRenameText();
+            String inputText = anvilInv.getRenameText(); // Reverted to deprecated method
 
             if (inputText == null || inputText.trim().isEmpty()) {
                 player.sendMessage(ChatColor.RED + "Input cannot be empty.");

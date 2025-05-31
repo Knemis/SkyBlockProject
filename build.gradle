@@ -42,13 +42,17 @@ dependencies {
     // compileOnly 'net.kyori:adventure-api:4.9.3' // Added Kyori Adventure API
     // compileOnly 'net.kyori:adventure-text-serializer-legacy:4.9.3' // Added Kyori Adventure Legacy Serializer
     // compileOnly 'com.sk89q.worldedit:worldedit-bukkit:7.2.5' // Removed WorldEdit
-    compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.8.2' // Added FAWE
-    implementation 'com.sk89q.worldguard:worldguard-bukkit:7.0.13'
-    compileOnly 'com.sk89q.worldguard:worldguard-core:7.0.13'
-    compileOnly("net.luckperms:api:5.4")
-    compileOnly 'com.github.MilkBowl:VaultAPI:1.7' // Vault API
-    compileOnly 'net.essentialsx:EssentialsX:2.21.0' // EssentialsX ana modülü (versiyonu uygun şekilde değiştir)
-
+    compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.13.0' // Added FAWE, updated to 2.13.0
+    implementation 'com.sk89q.worldguard:worldguard-bukkit:7.0.13' // Already latest for 1.21.4
+    compileOnly 'com.sk89q.worldguard:worldguard-core:7.0.13' // Already latest for 1.21.4
+    compileOnly("net.luckperms:api:5.5") // Updated to 5.5
+    compileOnly('com.github.MilkBowl:VaultAPI:1.7') { // Vault API, assumed current
+        exclude group: 'org.bukkit', module: 'bukkit'
+    }
+    compileOnly('net.essentialsx:EssentialsX:2.21.0') { // EssentialsX, downgraded to 2.21.0 for MC 1.21.4 compatibility
+        exclude group: 'org.spigotmc', module: 'spigot-api'
+    }
+    compileOnly 'org.jetbrains:annotations:24.1.0' // Added JetBrains annotations for @Nullable etc.
 
 }
 
@@ -83,5 +87,6 @@ configurations.all {
     resolutionStrategy {
         force 'com.google.guava:guava:21.0'
         force 'com.google.code.gson:gson:2.8.0'
+        // Removed forced WorldEdit versions to let FAWE manage its dependency
     }
 }
