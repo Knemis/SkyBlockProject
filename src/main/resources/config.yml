@@ -104,33 +104,46 @@ island:
   # Bu bayraklar, ada ilk oluşturulduğunda bölgeye uygulanır.
   # Olası değerler: ALLOW, DENY, veya boş bırakılırsa (veya NONE yazılırsa) WorldGuard varsayılanı.
   default-flags:
-    BUILD: "DENY"
-    INTERACT: "DENY"
-    CHEST_ACCESS: "DENY"
-    USE: "DENY"
-    ITEM_DROP: "DENY"
-    ITEM_PICKUP: "ALLOW" # Ziyaretçilerin yerdeki eşyaları toplaması
-    PVP: "DENY"
-    DAMAGE_ANIMALS: "DENY"
-    TNT: "DENY"
-    ENDERPEARL: "ALLOW" # Ziyaretçilerin ender pearl atması
-    MOB_SPAWNING: "ALLOW" # Doğal mob spawnı
-    RIDE: "DENY" # Ziyaretçilerin binek hayvanlara binmesi
-    LAVA_FLOW: "DENY"
-    WATER_FLOW: "DENY"
-    FIRE_SPREAD: "DENY"
-    # Ekleyebileceğiniz diğer WorldGuard bayrakları:
-    # GREET_MESSAGE: "" (boş bırakılırsa kullanılmaz)
+    # Temel Koruma Bayrakları (Ziyaretçiler ve Genel Üyeler için Kısıtlayıcı)
+    PASSTHROUGH: "ALLOW"  # Genel olarak adaya girişe izin verilir, ada sahibi isterse /island settings ile kapatabilir.
+    BUILD: "DENY"         # WorldGuard'ın kendi varsayılanı genellikle üyelere izin verir, bu daha kısıtlayıcı.
+    BLOCK_BREAK: "DENY"   # Blok kırmayı engeller
+    BLOCK_PLACE: "DENY"   # Blok yerleştirmeyi engeller
+    INTERACT: "DENY"      # Genel etkileşimleri kısıtlar (örn: redstone olmayan bloklar, yataklar)
+    USE: "DENY"           # Kapı, düğme, manivela vb. kullanımını engeller
+    CHEST_ACCESS: "DENY"  # Sandık ve diğer envanter bloklarına erişimi engeller
+    DAMAGE_ANIMALS: "DENY"# Hayvanlara zarar vermeyi engeller
+    PVP: "DENY"           # Oyuncular arası savaşı engeller
+    TNT: "DENY"           # TNT hasarını ve patlamasını engeller (WorldGuard'ın TNT bayrağı patlamayı engeller, hasarı değil, bu genel bir kısıtlama)
+
+    # Etkileşim ve Kullanım Kolaylığı Bayrakları
+    ITEM_PICKUP: "ALLOW"  # Ziyaretçilerin yerdeki eşyaları toplamasına izin ver (isteğe bağlı)
+    ITEM_DROP: "DENY"     # Ziyaretçilerin adaya eşya bırakmasını engeller (spam önleme)
+    EXP_DROPS: "ALLOW"    # EXP kürelerinin düşmesine izin ver
+    ENDERPEARL: "ALLOW"   # Ziyaretçilerin ender pearl kullanmasına izin ver
+    MOB_SPAWNING: "ALLOW" # Doğal mob spawn olmasına izin ver (ada sahibi farmlar için isteyebilir)
+    RIDE: "DENY"          # Ziyaretçilerin hayvanlara veya araçlara binmesini engeller
+
+    # Çevresel Bayraklar
+    LAVA_FLOW: "DENY"     # Lav akışını engeller
+    WATER_FLOW: "DENY"    # Su akışını engeller
+    FIRE_SPREAD: "DENY"   # Ateşin yayılmasını engeller
+
+    # Özel Eklenti Bayrakları
+    VISITOR_SHOP_USE: "ALLOW" # Özel dükkan kullanma bayrağı
+
+    # Diğer Önemli Olabilecek WorldGuard Bayrakları (varsayılanları genellikle yeterlidir veya ada sahibi ayarlar)
+    # GREET_MESSAGE: ""
     # FAREWELL_MESSAGE: ""
-    # GRASS_GROWTH: "ALLOW"
-    # MYCELIUM_SPREAD: "ALLOW"
-    # VINE_GROWTH: "ALLOW"
-    # SNOW_FALL: "ALLOW"
-    # SNOW_MELT: "ALLOW"
-    # ICE_FORM: "ALLOW"
-    # ICE_MELT: "ALLOW"
-    # LIGHTNING: "DENY"
-    # PISTONS: "ALLOW" # Ziyaretçilerin piston kullanması
+    # GRASS_GROWTH: "ALLOW" # Çimlerin büyümesi
+    # MYCELIUM_SPREAD: "ALLOW" # Miselyumun yayılması
+    # VINE_GROWTH: "ALLOW" # Sarmaşıkların büyümesi
+    # SNOW_FALL: "ALLOW" # Kar yağışı (biyoma bağlı)
+    # SNOW_MELT: "ALLOW" # Karın erimesi
+    # ICE_FORM: "ALLOW" # Buz oluşumu
+    # ICE_MELT: "ALLOW" # Buzun erimesi
+    # LIGHTNING: "DENY" # Yıldırım düşmesi
+    # PISTONS: "DENY" # Ziyaretçilerin piston kullanması (USE kapsamalı ama daha spesifik olabilir)
 
 # Dükkan Sistemi Ayarları
 shop:

@@ -12,6 +12,8 @@ import com.knemis.skyblock.skyblockcoreproject.island.features.IslandBiomeManage
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
 import com.knemis.skyblock.skyblockcoreproject.economy.worth.IslandWorthManager;
 
+import net.luckperms.api.LuckPerms; // Not strictly needed if accessed via plugin instance, but good for clarity
+import net.luckperms.api.model.user.User;
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;
 
@@ -212,30 +214,66 @@ public class IslandCommand implements CommandExecutor, TabCompleter {
     }
 
     private void handleCreateCommand(Player player) {
-        if (createCooldowns.containsKey(player.getUniqueId())) {
-            long timeElapsedMillis = System.currentTimeMillis() - createCooldowns.get(player.getUniqueId());
-            long cooldownMillis = CREATE_COOLDOWN_SECONDS * 1000;
-            if (timeElapsedMillis < cooldownMillis) {
-                long secondsLeft = (cooldownMillis - timeElapsedMillis) / 1000;
-                player.sendMessage(Component.text("Bu komutu tekrar kullanmak için " + secondsLeft + " saniye beklemelisiniz.", NamedTextColor.RED));
-                plugin.getLogger().warning(String.format("Player %s failed to execute /island create: Cooldown active (%d seconds left)", player.getName(), secondsLeft));
-                return;
-            } else {
-                createCooldowns.remove(player.getUniqueId());
+        UUID playerUUID = player.getUniqueId();
+        boolean isOwner = false;
+
+        // Check if plugin instance and LuckPerms API are available
+        if (this.plugin != null && this.plugin.getLuckPermsApi() != null) {
+            LuckPerms luckPerms = this.plugin.getLuckPermsApi();
+            // Ensure LuckPerms API is loaded and functional before using it
+            try {
+                User lpUser = luckPerms.getUserManager().getUser(playerUUID);
+                if (lpUser != null) {
+                    String primaryGroup = lpUser.getPrimaryGroup();
+                    if (primaryGroup != null && primaryGroup.equalsIgnoreCase("owner")) {
+                        isOwner = true;
+                        plugin.getLogger().info(String.format("Player %s (UUID: %s) identified as owner. Island creation cooldown will be bypassed.", player.getName(), playerUUID));
+                    }
+                } else {
+                    plugin.getLogger().warning(String.format("LuckPerms user data not found for %s (UUID: %s). Cannot check for owner group.", player.getName(), playerUUID));
+                }
+            } catch (Exception e) {
+                plugin.getLogger().log(Level.SEVERE, String.format("Error accessing LuckPerms user data for %s (UUID: %s). Cooldown bypass check might fail.", player.getName(), playerUUID), e);
+            }
+        } else {
+            if (this.plugin == null) {
+                plugin.getLogger().warning("SkyBlockProject plugin instance is null in IslandCommand. Cannot check for owner group for cooldown bypass.");
+            } else { // this.plugin.getLuckPermsApi() is null
+                plugin.getLogger().warning("LuckPerms API is not available through SkyBlockProject plugin. Cannot check for owner group for cooldown bypass.");
             }
         }
 
-        if (this.islandDataHandler.playerHasIsland(player.getUniqueId())) {
+        if (!isOwner) {
+            if (createCooldowns.containsKey(playerUUID)) {
+                long timeSinceLastCreate = createCooldowns.get(playerUUID);
+                long currentTime = System.currentTimeMillis();
+                // Ensure CREATE_COOLDOWN_SECONDS is used (it's a final field, so this. is implicit)
+                long timeLeftSeconds = CREATE_COOLDOWN_SECONDS - ((currentTime - timeSinceLastCreate) / 1000);
+
+                if (timeLeftSeconds > 0) {
+                    player.sendMessage(Component.text("Yeni bir ada oluşturmak için " + timeLeftSeconds + " saniye daha beklemelisiniz.", NamedTextColor.RED));
+                    plugin.getLogger().warning(String.format("Player %s (UUID: %s) failed to execute /island create: Cooldown active (%d seconds left)", player.getName(), playerUUID, timeLeftSeconds));
+                    return;
+                } else {
+                    createCooldowns.remove(playerUUID); // Cooldown expired
+                }
+            }
+        } // else: isOwner is true, so cooldown check is skipped
+
+        if (this.islandDataHandler.playerHasIsland(playerUUID)) {
             player.sendMessage(Component.text("Zaten bir adanız var! Sıfırlamak için ", NamedTextColor.RED)
                     .append(Component.text("/island reset", NamedTextColor.GOLD))
                     .append(Component.text(" kullanabilirsiniz.", NamedTextColor.RED)));
-            plugin.getLogger().warning(String.format("Player %s failed to execute /island create: Already has an island", player.getName()));
+            plugin.getLogger().warning(String.format("Player %s (UUID: %s) failed to execute /island create: Already has an island", player.getName(), playerUUID));
         } else {
+            // Perform island creation
             this.islandLifecycleManager.createIsland(player);
-            if (CREATE_COOLDOWN_SECONDS > 0) {
-                createCooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+
+            // Apply cooldown only if not owner and cooldown is enabled
+            if (!isOwner && CREATE_COOLDOWN_SECONDS > 0) {
+                createCooldowns.put(playerUUID, System.currentTimeMillis());
             }
-            plugin.getLogger().info(String.format("Successfully processed /island create for %s", player.getName()));
+            plugin.getLogger().info(String.format("Successfully processed /island create for %s (UUID: %s). Owner: %b", player.getName(), playerUUID, isOwner));
         }
     }
 

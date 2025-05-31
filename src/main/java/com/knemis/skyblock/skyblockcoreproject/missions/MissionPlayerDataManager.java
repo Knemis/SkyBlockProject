@@ -26,7 +26,7 @@ public class MissionPlayerDataManager {
     public PlayerMissionData getPlayerData(UUID playerUuid) {
         if (playerUuid == null) {
             plugin.getLogger().warning("[MissionPlayerDataManager] getPlayerData called with null playerUuid.");
-            return new PlayerMissionData(null); // Or throw IllegalArgumentException
+            return new PlayerMissionData(null, this.plugin); // Or throw IllegalArgumentException
         }
         if (playerDataCache.containsKey(playerUuid)) {
             return playerDataCache.get(playerUuid);
@@ -36,7 +36,7 @@ public class MissionPlayerDataManager {
         // Ensure data is in cache after load attempt, if not, create new as a final fallback
         if (!playerDataCache.containsKey(playerUuid)) {
             plugin.getLogger().warning(String.format("[MissionPlayerDataManager] loadPlayerData for %s did not result in cached data. Creating new PlayerMissionData as fallback.", playerUuid));
-            PlayerMissionData newPlayerData = new PlayerMissionData(playerUuid);
+            PlayerMissionData newPlayerData = new PlayerMissionData(playerUuid, this.plugin);
             playerDataCache.put(playerUuid, newPlayerData);
             return newPlayerData;
         }
@@ -56,7 +56,7 @@ public class MissionPlayerDataManager {
                 plugin.getLogger().severe(String.format("[MissionPlayerDataManager] Could not create missiondata directory for player %s at %s",
                         playerUuid, playerFile.getParentFile().getAbsolutePath()));
                 // Create new data in cache as loading failed due to directory issue
-                playerDataCache.put(playerUuid, new PlayerMissionData(playerUuid));
+                playerDataCache.put(playerUuid, new PlayerMissionData(playerUuid, this.plugin));
                 plugin.getLogger().warning(String.format("[MissionPlayerDataManager] Created new PlayerMissionData in cache for %s due to directory creation failure.", playerUuid));
                 return;
             }
@@ -110,12 +110,12 @@ public class MissionPlayerDataManager {
                     }
                 }
             }
-            PlayerMissionData loadedData = new PlayerMissionData(playerUuid, activeMissions, completedMissions, missionCooldowns);
+            PlayerMissionData loadedData = new PlayerMissionData(playerUuid, this.plugin, activeMissions, completedMissions, missionCooldowns);
             playerDataCache.put(playerUuid, loadedData);
             plugin.getLogger().info(String.format("[MissionPlayerDataManager] Successfully loaded mission data for player %s. Active: %d, Completed: %d, Cooldowns: %d. Warnings during load: %d.",
                     playerUuid, loadedActive, completedMissions.size(), missionCooldowns.size(), warnings));
         } else {
-            PlayerMissionData newPlayerData = new PlayerMissionData(playerUuid);
+            PlayerMissionData newPlayerData = new PlayerMissionData(playerUuid, this.plugin);
             playerDataCache.put(playerUuid, newPlayerData);
             plugin.getLogger().info(String.format("[MissionPlayerDataManager] No mission data file found for player %s. Created new PlayerMissionData in cache.", playerUuid));
         }

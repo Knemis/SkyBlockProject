@@ -31,10 +31,12 @@ import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
+import java.util.List; // For getEntities()
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.HashSet;
@@ -287,6 +289,47 @@ public class IslandLifecycleManager {
         plugin.getLogger().info("Island data saved to disk after island creation for " + player.getName());
     }
 
+    private void clearEntitiesInRegion(World world, CuboidRegion islandTerritory) {
+        if (world == null || islandTerritory == null) {
+            plugin.getLogger().warning("Cannot clear entities: World or island territory is null.");
+            return;
+        }
+
+        // Get Bukkit min/max corners for entity iteration
+        org.bukkit.Location minCorner = new org.bukkit.Location(world, islandTerritory.getMinimumPoint().getX(), islandTerritory.getMinimumPoint().getY(), islandTerritory.getMinimumPoint().getZ());
+        org.bukkit.Location maxCorner = new org.bukkit.Location(world, islandTerritory.getMaximumPoint().getX(), islandTerritory.getMaximumPoint().getY(), islandTerritory.getMaximumPoint().getZ());
+
+        int removedEntitiesCount = 0;
+        // Iterate over all loaded chunks that intersect the island territory.
+        // This is more efficient than iterating all entities in the world.
+        int minChunkX = minCorner.getBlockX() >> 4;
+        int maxChunkX = maxCorner.getBlockX() >> 4;
+        int minChunkZ = minCorner.getBlockZ() >> 4;
+        int maxChunkZ = maxCorner.getBlockZ() >> 4;
+
+        for (int cx = minChunkX; cx <= maxChunkX; cx++) {
+            for (int cz = minChunkZ; cz <= maxChunkZ; cz++) {
+                if (world.isChunkLoaded(cx, cz)) {
+                    for (Entity entity : world.getChunkAt(cx, cz).getEntities()) {
+                        // Check if entity is within the precise island territory
+                        BlockVector3 entityPos = BlockVector3.at(entity.getLocation().getX(), entity.getLocation().getY(), entity.getLocation().getZ());
+                        if (islandTerritory.contains(entityPos)) {
+                            // Do not remove players. Item frames and armor stands are common.
+                            // You might want to be more specific or broader here.
+                            if (!(entity instanceof Player)) {
+                                entity.remove();
+                                removedEntitiesCount++;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (removedEntitiesCount > 0) {
+            plugin.getLogger().info("Removed " + removedEntitiesCount + " entities from island region in world " + world.getName());
+        }
+    }
+
     public boolean deleteIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
@@ -332,6 +375,10 @@ public class IslandLifecycleManager {
                 }
             }
             plugin.getLogger().info(String.format("Island region %s for player %s cleared.", islandId, player.getName()));
+
+            // Add this call:
+            clearEntitiesInRegion(islandBaseLocation.getWorld(), islandTerritory);
+            plugin.getLogger().info(String.format("Entities cleared for island %s.", islandId));
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
@@ -412,6 +459,10 @@ public class IslandLifecycleManager {
                 }
             }
             plugin.getLogger().info(String.format("Island region %s for player %s cleared (reset).", islandId, player.getName()));
+
+            // Add this call:
+            clearEntitiesInRegion(islandBaseLocation.getWorld(), islandTerritory);
+            plugin.getLogger().info(String.format("Entities cleared for island %s during reset.", islandId));
 
             Clipboard clipboard;
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
