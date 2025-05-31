@@ -10,6 +10,8 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.Material; // For Material.AIR comparison
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.event.entity.EntityDeathEvent;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.EntityType;
 import java.util.regex.Pattern;
 
@@ -71,7 +73,7 @@ public class MissionListener implements Listener {
             if (missionGUIManager == null || missionManager == null) {
                 plugin.getLogger().severe(String.format("MissionListener: MissionGUIManager or MissionManager is null for player %s (UUID: %s) in GUI click. GUI: %s",
                         player.getName(), player.getUniqueId(), viewTitle));
-                player.sendMessage(org.bukkit.ChatColor.RED + "An error occurred with the mission system. Please contact an admin.");
+                player.sendMessage(Component.text("An error occurred with the mission system. Please contact an admin.", NamedTextColor.RED));
                 return;
             }
 
@@ -104,7 +106,7 @@ public class MissionListener implements Listener {
             if (missionId != null) {
                 com.knemis.skyblock.skyblockcoreproject.missions.Mission mission = missionManager.getMission(missionId);
                 if (mission == null) {
-                    player.sendMessage(org.bukkit.ChatColor.RED + "Error: Could not find mission details.");
+                    player.sendMessage(Component.text("Error: Could not find mission details.", NamedTextColor.RED));
                     plugin.getLogger().warning(String.format("MissionListener: Player %s (UUID: %s) clicked on mission item in GUI, but mission ID '%s' is not found by MissionManager.",
                             player.getName(), player.getUniqueId(), missionId));
                     return;
@@ -151,7 +153,7 @@ public class MissionListener implements Listener {
 
                     } else {
                         // If not in the "Active" category view, perhaps just show info or do nothing different
-                        player.sendMessage(org.bukkit.ChatColor.YELLOW + "Mission '" + mission.getName() + "' is in progress. View it in the 'Active' category to manage.");
+                        player.sendMessage(Component.text("Mission '" + mission.getName() + "' is in progress. View it in the 'Active' category to manage.", NamedTextColor.YELLOW));
                         plugin.getLogger().info(String.format("[MissionListener] Player %s (UUID: %s) clicked active mission '%s' (ID: %s) in a non-active category view ('%s').", player.getName(), player.getUniqueId(), mission.getName(), missionId, currentViewTitle));
                     }
                 } else if (playerData.hasCompletedMission(missionId) && !"NONE".equalsIgnoreCase(mission.getRepeatableType()) && !playerData.isMissionOnCooldown(mission.getId())) {
@@ -161,10 +163,10 @@ public class MissionListener implements Listener {
                         missionGUIManager.openMainMissionGui(player, currentCategory, page); 
                     }
                 } else if (playerData.hasCompletedMission(missionId)) {
-                    player.sendMessage(org.bukkit.ChatColor.GRAY + "You have already completed '" + mission.getName() + "'.");
+                    player.sendMessage(Component.text("You have already completed '" + mission.getName() + "'.", NamedTextColor.GRAY));
                     if(playerData.isMissionOnCooldown(mission.getId())){
                         long remainingSeconds = (playerData.getCooldownEndTime(mission.getId()) - System.currentTimeMillis()) / 1000;
-                        player.sendMessage(org.bukkit.ChatColor.GRAY + "It's on cooldown for: " + formatCooldown(remainingSeconds));
+                        player.sendMessage(Component.text("It's on cooldown for: " + formatCooldown(remainingSeconds), NamedTextColor.GRAY));
                     }
                     plugin.getLogger().info(String.format("Player %s (UUID: %s) clicked already completed (repeatable: %s, on cooldown: %s) mission '%s' (ID: %s) in GUI.",
                             player.getName(), player.getUniqueId(), mission.getRepeatableType(), playerData.isMissionOnCooldown(mission.getId()), mission.getName(), missionId));
@@ -176,7 +178,7 @@ public class MissionListener implements Listener {
                     }
                 } else {
                     // canStartMission would have sent a message (and potentially logged)
-                    player.sendMessage(org.bukkit.ChatColor.RED + "Cannot interact with this mission at the moment.");
+                    player.sendMessage(Component.text("Cannot interact with this mission at the moment.", NamedTextColor.RED));
                     plugin.getLogger().info(String.format("Player %s (UUID: %s) clicked mission '%s' (ID: %s) in GUI, but cannot start it (canStartMission=false or other reason).",
                             player.getName(), player.getUniqueId(), mission.getName(), missionId));
                 }

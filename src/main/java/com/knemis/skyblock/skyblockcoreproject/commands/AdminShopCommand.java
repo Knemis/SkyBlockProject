@@ -2,8 +2,9 @@ package com.knemis.skyblock.skyblockcoreproject.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.shop.admin.AdminShopGUIManager;
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils; // Assuming this exists
-import org.bukkit.ChatColor;
+// import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils; // Assuming this exists - Not used directly after refactor
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -41,9 +42,9 @@ public class AdminShopCommand implements CommandExecutor {
                 // Check console permission if we had a concept of console permissions, otherwise allow.
                 // For simplicity, console reload is typically an admin action.
                 adminShopGUIManager.reloadConfig(); // reloadConfig() already logs.
-                sender.sendMessage(ChatColor.GREEN + "AdminShop configuration reloaded from console.");
+                sender.sendMessage(Component.text("AdminShop configuration reloaded from console.", NamedTextColor.GREEN));
             } else {
-                sender.sendMessage(ChatColor.RED + "This command can only be run by a player, or as '/" + label + " reload' from console.");
+                sender.sendMessage(Component.text("This command can only be run by a player, or as '/" + label + " reload' from console.", NamedTextColor.RED));
             }
             return true; // Command was handled (or attempted)
         }
@@ -82,7 +83,7 @@ public class AdminShopCommand implements CommandExecutor {
         // }
 
         // Invalid arguments or sub-command not recognized
-        player.sendMessage(ChatColor.RED + "Usage: /" + label + " [reload]"); // Basic usage message
+        player.sendMessage(Component.text("Usage: /" + label + " [reload]", NamedTextColor.RED)); // Basic usage message
         return true; // Return true because we handled the command by showing usage.
     }
 }

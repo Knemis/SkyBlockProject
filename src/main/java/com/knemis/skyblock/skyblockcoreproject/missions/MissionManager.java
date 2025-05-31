@@ -2,16 +2,16 @@ package com.knemis.skyblock.skyblockcoreproject.missions;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
-
-
-import org.bukkit.entity.Player; // Player sınıfı için
-import org.bukkit.ChatColor;    // ChatColor için
+import org.bukkit.entity.Player;
 import org.bukkit.Bukkit;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -30,13 +30,11 @@ public class MissionManager {
     private final Map<String, Mission> allMissions = new HashMap<>();
 
     public MissionManager(SkyBlockProject plugin) {
-        System.out.println("[TRACE] Executing MissionManager constructor");
         this.plugin = plugin;
         loadMissions();
     }
 
     private void loadMissions() {
-        System.out.println("[TRACE] Executing loadMissions");
         plugin.getLogger().info("[MissionManager] Starting to load missions...");
         File missionsFile = new File(plugin.getDataFolder(), "missions.yml");
         if (!missionsFile.exists()) {
@@ -102,7 +100,6 @@ public class MissionManager {
                      plugin.getLogger().warning(String.format("[MissionManager] Mission '%s' (ID: %s) has no objectives or objectives are malformed.", name, missionId));
                 }
 
-
                 ConfigurationSection rewardsSection = missionData.getConfigurationSection("rewards");
                 MissionReward rewards = null;
                 if (rewardsSection != null) {
@@ -155,7 +152,6 @@ public class MissionManager {
     }
 
     public Mission getMission(String missionId) {
-        // No logging needed for simple getter usually, unless for debugging specific mission retrieval issues.
         return allMissions.get(missionId);
     }
 
@@ -164,30 +160,16 @@ public class MissionManager {
     }
 
     public List<Mission> getAvailableMissions(PlayerMissionData playerData) {
-        // No detailed logging here as it's a filter method, might be called frequently.
-        // Specific checks within canStartMission will log reasons for unavailability.
         return allMissions.values().stream()
                 .filter(mission -> !playerData.hasCompletedMission(mission.getId()) || !"NONE".equals(mission.getRepeatableType()))
                 .filter(mission -> !playerData.isMissionOnCooldown(mission.getId()))
                 .collect(Collectors.toList());
     }
 
-    // This method is mostly internal logic for canStartMission, not directly called by commands usually.
-    // public void startMission(PlayerMissionData playerData, String missionId) {
-    //     Mission mission = getMission(missionId);
-    //     if (mission != null) {
-    //         playerData.addActiveMission(mission);
-    //     }
-    // }
-
     public boolean canStartMission(Player player, Mission mission) {
-        System.out.println("[TRACE] Executing canStartMission for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         String playerName = player.getName();
-        // UUID playerUUID = player.getUniqueId(); // Already available via player.getUniqueId()
         String missionName = mission != null ? mission.getName() : "null_mission_object";
         String missionId = mission != null ? mission.getId() : "null_mission_id";
-        // plugin.getLogger().info(String.format("[MissionManager] Checking if player %s (UUID: %s) can start mission '%s' (ID: %s)",
-        //        playerName, player.getUniqueId(), missionName, missionId)); // This can be too verbose
 
         if (mission == null) {
             plugin.getLogger().warning(String.format("[MissionManager] canStartMission check for %s: Mission object is null.", playerName));
@@ -196,20 +178,20 @@ public class MissionManager {
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
 
         if (playerData.getActiveMissionProgress(mission.getId()) != null) {
-            player.sendMessage(ChatColor.YELLOW + "You have already started the mission: " + mission.getName());
+            player.sendMessage(Component.text("You have already started the mission: " + mission.getName(), NamedTextColor.YELLOW));
             plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Already active.", playerName, missionName, missionId));
             return false;
         }
 
         if (playerData.hasCompletedMission(mission.getId()) && "NONE".equalsIgnoreCase(mission.getRepeatableType())) {
-            player.sendMessage(ChatColor.YELLOW + "You have already completed the mission: " + mission.getName() + " and it's not repeatable.");
+            player.sendMessage(Component.text("You have already completed the mission: " + mission.getName() + " and it's not repeatable.", NamedTextColor.YELLOW));
             plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Already completed and not repeatable.", playerName, missionName, missionId));
             return false;
         }
 
         if (playerData.isMissionOnCooldown(mission.getId())) {
             long remaining = (playerData.getCooldownEndTime(mission.getId()) - System.currentTimeMillis()) / 1000;
-            player.sendMessage(ChatColor.YELLOW + "Mission '" + mission.getName() + "' is on cooldown. Time remaining: " + formatCooldown(remaining));
+            player.sendMessage(Component.text("Mission '" + mission.getName() + "' is on cooldown. Time remaining: " + formatCooldown(remaining), NamedTextColor.YELLOW));
             plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): On cooldown (%s remaining).", playerName, missionName, missionId, formatCooldown(remaining)));
             return false;
         }
@@ -219,7 +201,7 @@ public class MissionManager {
                 if (!playerData.hasCompletedMission(dependencyId)) {
                     Mission dependencyMission = getMission(dependencyId);
                     String depName = dependencyMission != null ? dependencyMission.getName() : dependencyId;
-                    player.sendMessage(ChatColor.RED + "You must complete the mission '" + depName + "' first.");
+                    player.sendMessage(Component.text("You must complete the mission '" + depName + "' first.", NamedTextColor.RED));
                     plugin.getLogger().info(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Dependency '%s' not met.", playerName, missionName, missionId, depName));
                     return false;
                 }
@@ -227,46 +209,39 @@ public class MissionManager {
         }
 
         if (mission.getRequiredPermission() != null && !mission.getRequiredPermission().isEmpty() && !player.hasPermission(mission.getRequiredPermission())) {
-            player.sendMessage(ChatColor.RED + "You do not have permission to start this mission.");
+            player.sendMessage(Component.text("You do not have permission to start this mission.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("[MissionManager] Player %s cannot start mission '%s' (ID: %s): Lacks permission '%s'.",
                     playerName, missionName, missionId, mission.getRequiredPermission()));
             return false;
         }
-        // plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) CAN start mission '%s' (ID: %s). All checks passed.",
-        //        playerName, playerUUID, missionName, missionId)); // Also potentially verbose
         return true;
     }
 
     public boolean startMission(Player player, Mission mission) {
-        System.out.println("[TRACE] Executing startMission for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         String playerName = player.getName();
-        // UUID playerUUID = player.getUniqueId(); // Already available
         String missionName = mission != null ? mission.getName() : "null_mission_object";
         String missionId = mission != null ? mission.getId() : "null_mission_id";
         plugin.getLogger().info(String.format("[MissionManager] Attempting to start mission '%s' (ID: %s) for player %s (UUID: %s).",
                 missionName, missionId, playerName, player.getUniqueId()));
 
         if (!canStartMission(player, mission)) {
-            // canStartMission already sent the message and logged the specific reason
             plugin.getLogger().warning(String.format("[MissionManager] startMission failed for player %s, mission '%s' (ID: %s) because canStartMission returned false.",
                     playerName, missionName, missionId));
             return false;
         }
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         playerData.addActiveMission(mission);
-        player.sendMessage(ChatColor.GREEN + "Mission '" + mission.getName() + "' started!");
+        player.sendMessage(Component.text("Mission '" + mission.getName() + "' started!", NamedTextColor.GREEN));
         plugin.getLogger().info(String.format("[MissionManager] Successfully started mission '%s' (ID: %s) for player %s (UUID: %s).",
                 missionName, missionId, playerName, player.getUniqueId()));
         return true;
     }
 
     public void giveMissionRewards(Player player, Mission mission) {
-        System.out.println("[TRACE] Executing giveMissionRewards for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         MissionReward rewards = mission.getRewards();
         String missionName = mission.getName();
         String missionId = mission.getId();
         String playerName = player.getName();
-        // UUID playerUUID = player.getUniqueId(); // Already available
         plugin.getLogger().info(String.format("[MissionManager] Giving rewards for mission '%s' (ID: %s) to player %s (UUID: %s).",
                 missionName, missionId, playerName, player.getUniqueId()));
 
@@ -280,8 +255,8 @@ public class MissionManager {
         StringBuilder rewardSummary = new StringBuilder();
 
         if (rewards.getMoney() > 0 && plugin.getEconomy() != null && EconomyManager.isEconomyAvailable()) {
-            if (EconomyManager.deposit(player, rewards.getMoney())) { // EconomyManager logs success/failure
-                player.sendMessage(ChatColor.GOLD + "You received " + rewards.getMoney() + " " + plugin.getEconomy().currencyNamePlural() + "!");
+            if (EconomyManager.deposit(player, rewards.getMoney())) {
+                player.sendMessage(Component.text("You received " + rewards.getMoney() + " " + plugin.getEconomy().currencyNamePlural() + "!", NamedTextColor.GOLD));
                 rewardSummary.append(String.format("Money: %.2f, ", rewards.getMoney()));
             } else {
                 plugin.getLogger().warning(String.format("[MissionManager] Failed to give money reward (%.2f) for mission '%s' to player %s.",
@@ -291,7 +266,7 @@ public class MissionManager {
         }
         if (rewards.getExperience() > 0) {
             player.giveExp(rewards.getExperience());
-            player.sendMessage(ChatColor.AQUA + "You received " + rewards.getExperience() + " experience points!");
+            player.sendMessage(Component.text("You received " + rewards.getExperience() + " experience points!", NamedTextColor.AQUA));
             rewardSummary.append(String.format("XP: %d, ", rewards.getExperience()));
         }
         if (rewards.getItems() != null && !rewards.getItems().isEmpty()) {
@@ -300,15 +275,15 @@ public class MissionManager {
                 HashMap<Integer, ItemStack> unadded = player.getInventory().addItem(item.clone());
                 if (!unadded.isEmpty()) {
                     player.getWorld().dropItemNaturally(player.getLocation(), unadded.get(0));
-                    player.sendMessage(ChatColor.YELLOW + "Some items couldn't fit in your inventory and were dropped nearby!");
+                    player.sendMessage(Component.text("Some items couldn't fit in your inventory and were dropped nearby!", NamedTextColor.YELLOW));
                     plugin.getLogger().warning(String.format("[MissionManager] Item reward %s for mission '%s' for player %s was partially dropped.",
                             unadded.get(0).toString(), missionId, playerName));
-                    allRewardsGiven = false; // Or handle as partial success
+                    allRewardsGiven = false;
                 }
                 itemsGivenCount++;
             }
             if (itemsGivenCount > 0) {
-                player.sendMessage(ChatColor.GREEN + "You received item rewards!");
+                player.sendMessage(Component.text("You received item rewards!", NamedTextColor.GREEN));
                 rewardSummary.append(String.format("Items: %d types, ", itemsGivenCount));
             }
         }
@@ -339,11 +314,8 @@ public class MissionManager {
         }
     }
 
-
     public void completeMission(Player player, Mission mission) {
-        System.out.println("[TRACE] Executing completeMission for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         String playerName = player.getName();
-        // UUID playerUUID = player.getUniqueId(); // Already available
         String missionName = mission != null ? mission.getName() : "null_mission_object";
         String missionId = mission != null ? mission.getId() : "null_mission_id";
         plugin.getLogger().info(String.format("[MissionManager] Attempting to complete mission '%s' (ID: %s) for player %s (UUID: %s).",
@@ -355,16 +327,15 @@ public class MissionManager {
             return;
         }
 
-        playerData.markMissionCompleted(mission.getId(), mission); // Handles cooldowns
-        giveMissionRewards(player, mission); // giveMissionRewards logs its own details
+        playerData.markMissionCompleted(mission.getId(), mission);
+        giveMissionRewards(player, mission);
 
-        player.sendMessage(ChatColor.GREEN + "Mission '" + mission.getName() + "' completed! Rewards received.");
+        player.sendMessage(Component.text("Mission '" + mission.getName() + "' completed! Rewards received.", NamedTextColor.GREEN));
         plugin.getLogger().info(String.format("[MissionManager] Mission '%s' (ID: %s) successfully completed by player %s (UUID: %s).",
                 missionName, missionId, playerName, player.getUniqueId()));
     }
 
     public void abandonMission(Player player, String missionId) {
-        // System.out.println("[TRACE] In MissionManager.abandonMission for player " + player.getName() + " and missionId " + missionId);
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         Mission mission = getMission(missionId); 
         String missionNameForLog = mission != null ? mission.getName() : missionId;
@@ -373,68 +344,62 @@ public class MissionManager {
                 player.getName(), player.getUniqueId(), missionNameForLog, missionId));
 
         if (playerData.getActiveMissionProgress(missionId) != null) {
-            playerData.removeActiveMission(missionId); // This removes the PlayerMissionProgress object
-            plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), false); // Save changes
-            player.sendMessage(ChatColor.YELLOW + "Mission '" + missionNameForLog + "' abandoned.");
+            playerData.removeActiveMission(missionId);
+            plugin.getMissionPlayerDataManager().savePlayerData(player.getUniqueId(), false);
+            player.sendMessage(Component.text("Mission '" + missionNameForLog + "' abandoned.", NamedTextColor.YELLOW));
             plugin.getLogger().info(String.format("[MissionManager] Player %s successfully abandoned mission '%s' (ID: %s).", 
                                     player.getName(), missionNameForLog, missionId));
         } else {
-            player.sendMessage(ChatColor.RED + "You are not currently on that mission or it's already completed/not repeatable in a way that allows active progress view.");
+            player.sendMessage(Component.text("You are not currently on that mission or it's already completed/not repeatable in a way that allows active progress view.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("[MissionManager] Player %s failed to abandon mission '%s' (ID: %s): Not found in active missions.", 
                                      player.getName(), missionNameForLog, missionId));
         }
     }
 
     public void resetMissionProgress(Player player, String missionId) {
-        System.out.println("[TRACE] Executing resetMissionProgress for player " + player.getName() + " and missionId " + missionId);
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         Mission mission = getMission(missionId);
         String missionName = mission != null ? mission.getName() : missionId;
         plugin.getLogger().info(String.format("[MissionManager] Player %s (UUID: %s) attempting to reset progress for mission '%s' (ID: %s).",
                 player.getName(), player.getUniqueId(), missionName, missionId));
 
-        // Check if there's any progress to reset
         boolean wasActive = playerData.getActiveMissionProgress(missionId) != null;
         boolean wasCompleted = playerData.hasCompletedMission(missionId);
         boolean wasOnCooldown = playerData.isMissionOnCooldown(missionId);
 
         if (wasActive || wasCompleted || wasOnCooldown) {
-            playerData.removeActiveMission(missionId);      // Remove from active
-            playerData.removeCompletedMission(missionId); // Remove from completed
-            playerData.removeMissionCooldown(missionId);  // Remove from cooldowns
+            playerData.removeActiveMission(missionId);
+            playerData.removeCompletedMission(missionId);
+            playerData.removeMissionCooldown(missionId);
             
-            player.sendMessage(ChatColor.YELLOW + "Progress for mission '" + missionName + "' has been reset.");
+            player.sendMessage(Component.text("Progress for mission '" + missionName + "' has been reset.", NamedTextColor.YELLOW));
             plugin.getLogger().info(String.format("[MissionManager] Player %s successfully reset progress for mission '%s' (ID: %s). Status before reset - Active: %b, Completed: %b, Cooldown: %b", 
                                     player.getName(), missionName, missionId, wasActive, wasCompleted, wasOnCooldown));
         } else {
-            player.sendMessage(ChatColor.RED + "Could not reset progress for mission '" + missionName + "'. No active progress, completion, or cooldown found.");
+            player.sendMessage(Component.text("Could not reset progress for mission '" + missionName + "'. No active progress, completion, or cooldown found.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("[MissionManager] Player %s failed to reset mission '%s' (ID: %s): No active, completed, or cooldown status found to reset.",
                     player.getName(), missionName, missionId));
         }
     }
 
-
     public boolean isMissionComplete(Player player, Mission mission) {
-        System.out.println("[TRACE] Executing isMissionComplete for player " + player.getName() + " and mission " + (mission != null ? mission.getId() : "null"));
         if (mission == null) return false;
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         PlayerMissionProgress progress = playerData.getActiveMissionProgress(mission.getId());
-        if (progress == null) return false; // Not started or already completed and removed
+        if (progress == null) return false;
 
         return progress.areAllObjectivesCompleted(mission);
     }
 
     public void updateKillMobProgress(Player player, org.bukkit.entity.EntityType mobKilled) {
-        System.out.println("[TRACE] Executing updateKillMobProgress for player " + player.getName() + " and mob " + mobKilled.name());
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         if (playerData == null || playerData.getActiveMissions().isEmpty()) return;
 
-        // Create a list of mission IDs to avoid ConcurrentModificationException if a mission is completed
         List<String> activeMissionIds = new ArrayList<>(playerData.getActiveMissions().keySet());
 
         for (String missionId : activeMissionIds) {
             PlayerMissionProgress prog = playerData.getActiveMissionProgress(missionId);
-            if (prog == null) continue; // Should not happen if activeMissionIds is from playerData.getActiveMissions()
+            if (prog == null) continue;
 
             Mission mission = getMission(prog.getMissionId());
             if (mission == null) continue;
@@ -448,15 +413,14 @@ public class MissionManager {
                     int currentAmount = prog.getProgress(i);
                     if (currentAmount < obj.getAmount()) {
                         prog.incrementProgress(i, 1);
-                        currentAmount++; // Update for message
-                        player.sendMessage(ChatColor.AQUA + "Progress for '" + mission.getName() + "': Killed " + mobKilled.name() + " (" + currentAmount + "/" + obj.getAmount() + ")");
+                        currentAmount++;
+                        player.sendMessage(Component.text("Progress for '", NamedTextColor.AQUA)
+                                .append(Component.text(mission.getName(), NamedTextColor.AQUA))
+                                .append(Component.text("': Killed " + mobKilled.name() + " (" + currentAmount + "/" + obj.getAmount() + ")", NamedTextColor.AQUA)));
 
-                        // Check completion after updating progress
                         if (isMissionComplete(player, mission)) {
                             completeMission(player, mission);
-                            // If completeMission removes the mission from active,
-                            // we need to handle loop carefully - using list of IDs helps here
-                            break; // Break from objectives loop for this mission as it's now complete
+                            break;
                         }
                     }
                 }
@@ -474,45 +438,25 @@ public class MissionManager {
         return hours + "h " + minutes + "m " + seconds + "s";
     }
 
-    // --- Objective Progress Update Methods ---
-
     public void checkMissionCompletion(Player player, Mission mission) {
         if (player == null || mission == null) return;
-
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
         if (playerData == null) return;
-
         PlayerMissionProgress progress = playerData.getActiveMissionProgress(mission.getId());
-        if (progress == null || !progress.areAllObjectivesCompleted(mission)) {
-            return;
-        }
-
-        // Check if already completed (for non-repeatable) or if cooldown applies
-        if (playerData.hasCompletedMission(mission.getId()) && "NONE".equalsIgnoreCase(mission.getRepeatableType())) {
-            // Already completed and not repeatable, do nothing further.
-            // Active progress should ideally be removed upon first completion for non-repeatable.
-            return;
-        }
-        if (playerData.isMissionOnCooldown(mission.getId())) {
-            // On cooldown, cannot complete yet.
-            return;
-        }
-        
+        if (progress == null || !progress.areAllObjectivesCompleted(mission)) return;
+        if (playerData.hasCompletedMission(mission.getId()) && "NONE".equalsIgnoreCase(mission.getRepeatableType())) return;
+        if (playerData.isMissionOnCooldown(mission.getId())) return;
         completeMission(player, mission);
     }
 
     public void checkGatherItemObjectives(Player player) {
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
-        if (playerData == null || playerData.getActiveMissions().isEmpty()) {
-            return;
-        }
-
+        if (playerData == null || playerData.getActiveMissions().isEmpty()) return;
         List<String> activeMissionIds = new ArrayList<>(playerData.getActiveMissions().keySet());
 
         for (String missionId : activeMissionIds) {
             PlayerMissionProgress prog = playerData.getActiveMissionProgress(missionId);
             if (prog == null) continue;
-
             Mission mission = getMission(prog.getMissionId());
             if (mission == null) continue;
 
@@ -521,45 +465,32 @@ public class MissionManager {
             for (int i = 0; i < objectives.size(); i++) {
                 MissionObjective obj = objectives.get(i);
                 if ("GATHER_ITEM".equalsIgnoreCase(obj.getType())) {
-                    if (prog.getProgress(i) >= obj.getAmount()) continue; // Objective already met
-
+                    if (prog.getProgress(i) >= obj.getAmount()) continue;
                     Material targetMaterial = Material.matchMaterial(obj.getTarget());
                     if (targetMaterial == null) {
                         plugin.getLogger().warning(String.format("[MissionManager] Invalid target material '%s' for GATHER_ITEM objective in mission '%s' (ID: %s).",
                                 obj.getTarget(), mission.getName(), mission.getId()));
                         continue;
                     }
-
                     int currentCountInInventory = 0;
                     for (ItemStack item : player.getInventory().getContents()) {
                         if (item != null && item.getType() == targetMaterial) {
                             currentCountInInventory += item.getAmount();
                         }
                     }
-                    
-                    // Update progress only if it has changed and is less than required
-                    // This logic ensures we don't spam updates if inventory count fluctuates but objective isn't met.
-                    // The progress stored is the highest count achieved so far up to the required amount.
                     int newProgress = Math.min(currentCountInInventory, obj.getAmount());
-
                     if (newProgress > prog.getProgress(i)) {
                         prog.setProgress(i, newProgress);
                         missionProgressMade = true;
-                        player.sendMessage(String.format("%sProgress for '%s': %s %d/%d%s",
-                                ChatColor.AQUA, mission.getName(),
-                                obj.getDisplayNameOverride() != null ? obj.getDisplayNameOverride() : targetMaterial.name(),
-                                newProgress, obj.getAmount(),
-                                ChatColor.RESET));
+                        player.sendMessage(Component.text("Progress for '", NamedTextColor.AQUA)
+                                .append(Component.text(mission.getName(), NamedTextColor.AQUA))
+                                .append(Component.text("': " + (obj.getDisplayNameOverride() != null ? obj.getDisplayNameOverride() : targetMaterial.name()) + " " + newProgress + "/" + obj.getAmount(), NamedTextColor.AQUA)));
                     } else if (currentCountInInventory < prog.getProgress(i) && prog.getProgress(i) < obj.getAmount()) {
-                        // If player dropped items and their current inventory count is less than last recorded progress
-                        // (but objective not yet complete), update to reflect current inventory.
-                        prog.setProgress(i, newProgress); // newProgress is currentCountInInventory here
+                        prog.setProgress(i, newProgress);
                         missionProgressMade = true;
-                         player.sendMessage(String.format("%sProgress for '%s': %s %d/%d%s (Inventory decreased)",
-                                ChatColor.YELLOW, mission.getName(),
-                                obj.getDisplayNameOverride() != null ? obj.getDisplayNameOverride() : targetMaterial.name(),
-                                newProgress, obj.getAmount(),
-                                ChatColor.RESET));
+                         player.sendMessage(Component.text("Progress for '", NamedTextColor.YELLOW)
+                                 .append(Component.text(mission.getName(), NamedTextColor.YELLOW))
+                                 .append(Component.text("': " + (obj.getDisplayNameOverride() != null ? obj.getDisplayNameOverride() : targetMaterial.name()) + " " + newProgress + "/" + obj.getAmount() + " (Inventory decreased)", NamedTextColor.YELLOW)));
                     }
                 }
             }
@@ -572,16 +503,12 @@ public class MissionManager {
 
     public void updatePlaceBlockProgress(Player player, Material placedBlockMaterial) {
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
-        if (playerData == null || playerData.getActiveMissions().isEmpty()) {
-            return;
-        }
-
+        if (playerData == null || playerData.getActiveMissions().isEmpty()) return;
         List<String> activeMissionIds = new ArrayList<>(playerData.getActiveMissions().keySet());
 
         for (String missionId : activeMissionIds) {
             PlayerMissionProgress prog = playerData.getActiveMissionProgress(missionId);
             if (prog == null) continue;
-
             Mission mission = getMission(prog.getMissionId());
             if (mission == null) continue;
 
@@ -590,19 +517,15 @@ public class MissionManager {
             for (int i = 0; i < objectives.size(); i++) {
                 MissionObjective obj = objectives.get(i);
                 if ("PLACE_BLOCKS".equalsIgnoreCase(obj.getType())) {
-                    if (prog.getProgress(i) >= obj.getAmount()) continue; // Objective already met
-
+                    if (prog.getProgress(i) >= obj.getAmount()) continue;
                     boolean materialMatch = obj.getTarget().equalsIgnoreCase("ANY") ||
                                             obj.getTarget().equalsIgnoreCase(placedBlockMaterial.name());
-
                     if (materialMatch) {
                         prog.incrementProgress(i, 1);
                         missionProgressMade = true;
-                        player.sendMessage(String.format("%sProgress for '%s': %s %d/%d%s",
-                                ChatColor.AQUA, mission.getName(),
-                                obj.getDisplayNameOverride() != null ? obj.getDisplayNameOverride() : "Place Blocks",
-                                prog.getProgress(i), obj.getAmount(),
-                                ChatColor.RESET));
+                        player.sendMessage(Component.text("Progress for '", NamedTextColor.AQUA)
+                                .append(Component.text(mission.getName(), NamedTextColor.AQUA))
+                                .append(Component.text("': " + (obj.getDisplayNameOverride() != null ? obj.getDisplayNameOverride() : "Place Blocks") + " " + prog.getProgress(i) + "/" + obj.getAmount(), NamedTextColor.AQUA)));
                     }
                 }
             }
@@ -615,15 +538,12 @@ public class MissionManager {
 
     public void updateIslandLevelProgress(Player player, int newIslandLevel) {
         PlayerMissionData playerData = plugin.getMissionPlayerDataManager().getPlayerData(player.getUniqueId());
-        if (playerData == null || playerData.getActiveMissions().isEmpty()) {
-            return;
-        }
+        if (playerData == null || playerData.getActiveMissions().isEmpty()) return;
         List<String> activeMissionIds = new ArrayList<>(playerData.getActiveMissions().keySet());
 
         for (String missionId : activeMissionIds) {
             PlayerMissionProgress prog = playerData.getActiveMissionProgress(missionId);
             if (prog == null) continue;
-
             Mission mission = getMission(prog.getMissionId());
             if (mission == null) continue;
             
@@ -632,8 +552,7 @@ public class MissionManager {
             for (int i = 0; i < objectives.size(); i++) {
                 MissionObjective obj = objectives.get(i);
                 if ("ISLAND_LEVEL".equalsIgnoreCase(obj.getType())) {
-                    if (prog.getProgress(i) >= obj.getAmount()) continue; // Objective already met (amount should be 1)
-
+                    if (prog.getProgress(i) >= obj.getAmount()) continue;
                     int requiredLevel;
                     try {
                         requiredLevel = Integer.parseInt(obj.getTarget());
@@ -642,18 +561,12 @@ public class MissionManager {
                                 obj.getTarget(), mission.getName(), mission.getId()));
                         continue;
                     }
-
                     if (newIslandLevel >= requiredLevel) {
-                        prog.setProgress(i, obj.getAmount()); // Mark as complete
+                        prog.setProgress(i, obj.getAmount());
                         missionProgressMade = true;
-                        player.sendMessage(String.format("%sObjective Met for '%s': Reach Island Level %d (Current: %d)%s",
-                                ChatColor.GREEN, mission.getName(), requiredLevel, newIslandLevel, ChatColor.RESET));
-                    } else {
-                        // Optional: update with current level if you want to show partial progress, though ISLAND_LEVEL is usually binary.
-                        // For simplicity, we only mark complete or not. If you want to show "Level X of Y",
-                        // you'd store newIslandLevel (capped at requiredLevel) in prog.setProgress().
-                        // prog.setProgress(i, 0) or some representation of current progress.
-                        // For now, if not met, progress remains as it was (likely 0).
+                        player.sendMessage(Component.text("Objective Met for '", NamedTextColor.GREEN)
+                                .append(Component.text(mission.getName(), NamedTextColor.GREEN))
+                                .append(Component.text("': Reach Island Level " + requiredLevel + " (Current: " + newIslandLevel + ")", NamedTextColor.GREEN)));
                     }
                 }
             }

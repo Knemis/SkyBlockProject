@@ -3,38 +3,32 @@ package com.knemis.skyblock.skyblockcoreproject.island;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandFlagManager;
 
-import com.sk89q.worldedit.EditSession; // FAWE/WorldEdit API standard
-import com.sk89q.worldedit.WorldEdit; // FAWE/WorldEdit API standard
-import com.sk89q.worldedit.bukkit.BukkitAdapter; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.extent.clipboard.Clipboard; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.function.operation.Operation; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.function.operation.Operations; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.math.BlockVector3; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.session.ClipboardHolder; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.regions.CuboidRegion; // FAWE Change - Updated to WorldEdit API
-// import com.sk89q.worldedit.world.block.BlockState; // No longer needed if using BlockTypes.AIR directly
-import com.sk89q.worldedit.world.block.BlockTypes; // FAWE Change - Updated to WorldEdit API
-// import com.sk89q.worldedit.function.pattern.Pattern; // No longer needed
-// import com.sk89q.worldedit.function.pattern.BlockStatePattern; // Removed due to cannot find symbol
-// import com.sk89q.worldedit.world.block.BaseBlock; // No longer needed
-// Removed incorrect aliased import for com.sk89q.worldedit.world.World
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitAdapter;
+import com.sk89q.worldedit.extent.clipboard.Clipboard;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormat;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardFormats;
+import com.sk89q.worldedit.extent.clipboard.io.ClipboardReader;
+import com.sk89q.worldedit.function.operation.Operation;
+import com.sk89q.worldedit.function.operation.Operations;
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.session.ClipboardHolder;
+import com.sk89q.worldedit.regions.CuboidRegion;
+import com.sk89q.worldedit.world.block.BlockTypes;
 
-import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedCuboidRegion;
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
+import com.sk89q.worldguard.protection.regions.ProtectedRegion; // Added import
 import com.sk89q.worldguard.protection.managers.storage.StorageException;
 
-import net.luckperms.api.LuckPerms;
-import net.luckperms.api.model.data.DataMutateResult;
-import net.luckperms.api.node.Node;
-import net.luckperms.api.node.types.PermissionNode;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -43,15 +37,10 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashSet; // Added for Set conversion
-import java.util.List;
-import java.util.Set; // Added for Set conversion
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Level;
-
-import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 
 public class IslandLifecycleManager {
 
@@ -63,18 +52,16 @@ public class IslandLifecycleManager {
     private final Economy economy;
     private final int initialMaxHomes;
 
-
     public IslandLifecycleManager(SkyBlockProject plugin, IslandDataHandler islandDataHandler, IslandFlagManager islandFlagManager) {
         this.plugin = plugin;
         this.islandDataHandler = islandDataHandler;
         this.islandFlagManager = islandFlagManager;
         this.schematicFile = new File(plugin.getDataFolder(), "island.schem");
         this.defaultIslandNamePrefix = plugin.getConfig().getString("island.default-name-prefix", "Ada");
-        this.economy = plugin.getEconomy(); // SkyBlockProject'ten ekonomi nesnesini al
-        this.initialMaxHomes = plugin.getConfig().getInt("island.max-named-homes", 3); // Başlangıç ev limitini al
+        this.economy = plugin.getEconomy();
+        this.initialMaxHomes = plugin.getConfig().getInt("island.max-named-homes", 3);
     }
 
-    // ... (getRegionId, getPastedSchematicRegion, getIslandTerritoryRegion metodları aynı kalacak) ...
     public String getRegionId(UUID playerUUID) {
         return "skyblock_island_" + playerUUID.toString();
     }
@@ -103,7 +90,7 @@ public class IslandLifecycleManager {
         BlockVector3 worldMinSchematic = islandPastePoint.add(clipboardMinRel);
         BlockVector3 worldMaxSchematic = islandPastePoint.add(clipboardMaxRel);
 
-        com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change - Using FQN
+        com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
         if (weWorld == null) {
             throw new IOException("Yapıştırılan şematik bölgesi için WorldEdit dünyası null geldi (adaptasyon başarısız).");
         }
@@ -126,25 +113,24 @@ public class IslandLifecycleManager {
         BlockVector3 schematicMin = schematicRegion.getMinimumPoint();
         BlockVector3 schematicMax = schematicRegion.getMaximumPoint();
 
-        int territoryMinX = schematicMin.getX() - expansionRadiusHorizontal;
-        int territoryMaxX = schematicMax.getX() + expansionRadiusHorizontal;
-        int territoryMinZ = schematicMin.getZ() - expansionRadiusHorizontal;
-        int territoryMaxZ = schematicMax.getZ() + expansionRadiusHorizontal;
+        int territoryMinX = schematicMin.getBlockX() - expansionRadiusHorizontal;
+        int territoryMaxX = schematicMax.getBlockX() + expansionRadiusHorizontal;
+        int territoryMinZ = schematicMin.getBlockZ() - expansionRadiusHorizontal;
+        int territoryMaxZ = schematicMax.getBlockZ() + expansionRadiusHorizontal;
 
         boolean allowBuildBelow = plugin.getConfig().getBoolean("island.allow-build-below-schematic-base", false);
-        int schematicBaseY = schematicMin.getY();
+        int schematicBaseY = schematicMin.getBlockY();
         int buildLimitAboveSchematicTop = plugin.getConfig().getInt("island.build-limit-above-schematic-top", 150);
 
         int territoryMinY = allowBuildBelow ? Math.max(worldMinBuildHeight, schematicBaseY - expansionRadiusVerticalBottom)
                 : schematicBaseY;
-        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getY() + buildLimitAboveSchematicTop);
-
+        int territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY() + buildLimitAboveSchematicTop);
 
         if (territoryMinY > territoryMaxY) {
             plugin.getLogger().warning("Hesaplanan ada bölgesi Y sınırları geçersizdi (minY > maxY): Ada: " + islandBaseLocation +
                     " MinY_calc: " + territoryMinY + " MaxY_calc: " + territoryMaxY + ". Şematik Y sınırlarına geri dönülüyor.");
-            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getY());
-            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getY());
+            territoryMinY = Math.max(worldMinBuildHeight, schematicMin.getBlockY());
+            territoryMaxY = Math.min(worldMaxBuildHeight, schematicMax.getBlockY());
             if (territoryMinY > territoryMaxY) territoryMaxY = territoryMinY;
         }
         return new CuboidRegion(schematicRegion.getWorld(),
@@ -155,19 +141,19 @@ public class IslandLifecycleManager {
     public void createIsland(Player player) {
         plugin.getLogger().info(String.format("Attempting to create island for player %s (UUID: %s)", player.getName(), player.getUniqueId()));
         if (islandDataHandler.playerHasIsland(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Zaten bir adanız var!");
+            player.sendMessage(Component.text("Zaten bir adanız var!", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Island creation failed for %s: Player already has an island.", player.getName()));
             return;
         }
         World skyblockWorld = islandDataHandler.getSkyblockWorld();
         if (skyblockWorld == null) {
-            player.sendMessage(ChatColor.RED + "Skyblock dünyası henüz yüklenmedi. Lütfen bir yetkiliye bildirin.");
+            player.sendMessage(Component.text("Skyblock dünyası henüz yüklenmedi. Lütfen bir yetkiliye bildirin.", NamedTextColor.RED));
             plugin.getLogger().severe("createIsland called but skyblockWorld (from IslandDataHandler) was null!");
             plugin.getLogger().warning(String.format("Island creation failed for %s: Skyblock world is not loaded.", player.getName()));
             return;
         }
         if (!schematicFile.exists()) {
-            player.sendMessage(ChatColor.RED + "Ada şematiği bulunamadı ('" + schematicFile.getPath() + "'). Lütfen bir yetkiliye bildirin.");
+            player.sendMessage(Component.text("Ada şematiği bulunamadı ('" + schematicFile.getPath() + "'). Lütfen bir yetkiliye bildirin.", NamedTextColor.RED));
             plugin.getLogger().severe("Island schematic file not found at: " + schematicFile.getPath());
             plugin.getLogger().warning(String.format("Island creation failed for %s: Schematic file missing.", player.getName()));
             return;
@@ -178,22 +164,22 @@ public class IslandLifecycleManager {
         double creationCost = plugin.getConfig().getDouble("island.creation-cost", 0.0);
         if (this.economy != null && creationCost > 0) {
             if (economy.getBalance(player) < creationCost) {
-                player.sendMessage(ChatColor.RED + "Ada oluşturmak için yeterli paran yok! Gereken: " + economy.format(creationCost));
+                player.sendMessage(Component.text("Ada oluşturmak için yeterli paran yok! Gereken: " + economy.format(creationCost), NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("Island creation failed for %s: Insufficient funds. Needed: %s, Has: %s",
                         player.getName(), economy.format(creationCost), economy.format(economy.getBalance(player))));
                 return;
             }
             EconomyResponse r = economy.withdrawPlayer(player, creationCost);
             if (r.transactionSuccess()) {
-                player.sendMessage(ChatColor.GREEN + economy.format(creationCost) + " ada oluşturma ücreti olarak hesabından çekildi.");
+                player.sendMessage(Component.text(economy.format(creationCost) + " ada oluşturma ücreti olarak hesabından çekildi.", NamedTextColor.GREEN));
             } else {
-                player.sendMessage(ChatColor.RED + "Ada oluşturma ücreti çekilirken bir hata oluştu: " + r.errorMessage);
+                player.sendMessage(Component.text("Ada oluşturma ücreti çekilirken bir hata oluştu: " + r.errorMessage, NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("Island creation failed for %s: Economy transaction error: %s", player.getName(), r.errorMessage));
                 return;
             }
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Adanız oluşturuluyor... Bu işlem birkaç saniye sürebilir, lütfen bekleyin.");
+        player.sendMessage(Component.text("Adanız oluşturuluyor... Bu işlem birkaç saniye sürebilir, lütfen bekleyin.", NamedTextColor.YELLOW));
         plugin.getLogger().info(String.format("Proceeding with island creation for %s. Cost: %s. Name: %s", player.getName(), creationCost, newIslandName));
         final int actualIslandX = plugin.getNextIslandXAndIncrement();
         final Location islandBaseLocation = new Location(skyblockWorld, actualIslandX, 100, 0);
@@ -202,7 +188,7 @@ public class IslandLifecycleManager {
         try {
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
             if (format == null) {
-                player.sendMessage(ChatColor.RED + "Ada oluşturulurken bir hata oluştu. (Şematik Formatı tanınamadı)");
+                player.sendMessage(Component.text("Ada oluşturulurken bir hata oluştu. (Şematik Formatı tanınamadı)", NamedTextColor.RED));
                 plugin.getLogger().severe("Schematic format could not be determined for file: " + schematicFile.getName());
                 plugin.getLogger().warning(String.format("Island creation failed for %s: Invalid schematic format.", player.getName()));
                 return;
@@ -214,9 +200,9 @@ public class IslandLifecycleManager {
                 clipboard = reader.read();
             }
 
-            com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld); // FAWE Change - Using FQN
+            com.sk89q.worldedit.world.World adaptedWorld = BukkitAdapter.adapt(skyblockWorld);
             if (adaptedWorld == null) {
-                player.sendMessage(ChatColor.RED + "Ada oluşturulurken dünya adaptasyonunda bir hata oluştu.");
+                player.sendMessage(Component.text("Ada oluşturulurken dünya adaptasyonunda bir hata oluştu.", NamedTextColor.RED));
                 plugin.getLogger().severe("createIsland: Could not adapt Skyblock world to WorldEdit world.");
                 plugin.getLogger().warning(String.format("Island creation failed for %s: WorldEdit world adaptation failed.", player.getName()));
                 return;
@@ -224,7 +210,7 @@ public class IslandLifecycleManager {
 
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(adaptedWorld)) {
                 plugin.getLogger().info(String.format("Pasting schematic for %s at %s", player.getName(), islandBaseLocation.toString()));
-                editSession.setReorderMode(com.sk89q.worldedit.EditSession.ReorderMode.MULTI_STAGE); // FAWE Change - Updated enum path
+                editSession.setReorderMode(com.sk89q.worldedit.EditSession.ReorderMode.MULTI_STAGE);
                 Operation operation = new ClipboardHolder(clipboard)
                         .createPaste(editSession)
                         .to(BlockVector3.at(islandBaseLocation.getX(), islandBaseLocation.getY(), islandBaseLocation.getZ()))
@@ -233,10 +219,8 @@ public class IslandLifecycleManager {
                 Operations.complete(operation);
             }
 
-            // DÜZELTME: Island nesnesi burada, doğru constructor ile BİR KERE oluşturuluyor.
-            // initialMaxHomes sınıf üyesi olarak constructor'da atanmıştı.
             Island newIsland = new Island(player.getUniqueId(), islandBaseLocation, newIslandName, this.initialMaxHomes);
-            islandDataHandler.addOrUpdateIslandData(newIsland); // Ve BİR KERE kaydediliyor.
+            islandDataHandler.addOrUpdateIslandData(newIsland);
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
@@ -244,7 +228,7 @@ public class IslandLifecycleManager {
                 CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
 
                 if (regionManager.hasRegion(regionId)) {
-                    regionManager.removeRegion(regionId); // Önceki bölge varsa kaldır
+                    regionManager.removeRegion(regionId);
                 }
                 ProtectedCuboidRegion protectedRegion = new ProtectedCuboidRegion(
                         regionId, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint()
@@ -265,11 +249,11 @@ public class IslandLifecycleManager {
                     grantOwnerBypassPermissions(player, islandBaseLocation.getWorld().getName(), regionId);
                 } catch (StorageException e) {
                     plugin.getLogger().log(Level.SEVERE, "WorldGuard bölgeleri oluşturulurken (kayıt) hata: " + regionId, e);
-                    player.sendMessage(ChatColor.RED + "Ada koruması kaydedilirken kritik bir hata oluştu.");
+                    player.sendMessage(Component.text("Ada koruması kaydedilirken kritik bir hata oluştu.", NamedTextColor.RED));
                 }
             } else {
                 plugin.getLogger().severe("Ada için WorldGuard RegionManager alınamadı! Koruma oluşturulamadı.");
-                player.sendMessage(ChatColor.RED + "Adanız oluşturuldu ancak koruma sağlanırken bir sorun oluştu.");
+                player.sendMessage(Component.text("Adanız oluşturuldu ancak koruma sağlanırken bir sorun oluştu.", NamedTextColor.RED));
             }
 
             double offsetX = plugin.getConfig().getDouble("island-spawn-offset.x", 0.5);
@@ -282,12 +266,12 @@ public class IslandLifecycleManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (!player.isOnline()) return; // Oyuncu offline ise ışınlama
+                    if (!player.isOnline()) return;
                     if (!teleportLocation.getChunk().isLoaded()) {
                         teleportLocation.getChunk().load();
                     }
                     player.teleport(teleportLocation);
-                    player.sendMessage(ChatColor.GREEN + "Adanız başarıyla oluşturuldu ve ışınlandınız!");
+                    player.sendMessage(Component.text("Adanız başarıyla oluşturuldu ve ışınlandınız!", NamedTextColor.GREEN));
                     plugin.getLogger().info(String.format("Successfully created island for player %s (UUID: %s), Island ID: %s, at Location: %s. Player teleported.",
                             player.getName(), player.getUniqueId(), newIsland.getRegionId(), islandBaseLocation.toString()));
                 }
@@ -295,8 +279,7 @@ public class IslandLifecycleManager {
 
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, "An unexpected error occurred during island creation for player " + player.getName() + " (UUID: " + player.getUniqueId() + ")", e);
-            player.sendMessage(ChatColor.RED + "Ada oluşturulurken çok beklenmedik bir hata oluştu. Lütfen yetkililere bildirin.");
-            // Consider refunding creationCost here if applicable
+            player.sendMessage(Component.text("Ada oluşturulurken çok beklenmedik bir hata oluştu. Lütfen yetkililere bildirin.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Island creation failed for %s due to an exception. Cost %f might need refunding.", player.getName(), creationCost));
             return;
         }
@@ -307,40 +290,32 @@ public class IslandLifecycleManager {
     public boolean deleteIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Silebileceğin bir adan yok!");
+            player.sendMessage(Component.text("Silebileceğin bir adan yok!", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Player %s attempted to delete island but has none.", player.getName()));
             return false;
         }
         Location islandBaseLocation = island.getBaseLocation();
-        String islandId = island.getRegionId(); // For logging before it's gone
+        String islandId = island.getRegionId();
         plugin.getLogger().info(String.format("Attempting to delete island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
 
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
-            player.sendMessage(ChatColor.RED + "Adanın konumu veya dünyası bulunamadı (silme işlemi için).");
+            player.sendMessage(Component.text("Adanın konumu veya dünyası bulunamadı (silme işlemi için).", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("deleteIsland: Island base location or world is null for player %s (Island ID: %s).", player.getName(), islandId));
             return false;
         }
         String worldName = islandBaseLocation.getWorld().getName();
-        String regionId = getRegionId(player.getUniqueId()); // This should match islandId
+        String regionId = getRegionId(player.getUniqueId());
 
-        player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi siliniyor...");
+        player.sendMessage(Component.text("Adanız ve tüm bölgesi siliniyor...", NamedTextColor.YELLOW));
         try {
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
-            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change - Using FQN
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
             if (weWorld == null) {
                 plugin.getLogger().severe(String.format("Could not adapt world for island deletion (Island ID: %s, Player: %s)", islandId, player.getName()));
-                player.sendMessage(ChatColor.RED + "Ada silinirken bir dünya hatası oluştu.");
+                player.sendMessage(Component.text("Ada silinirken bir dünya hatası oluştu.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));
                 return false;
             }
-
-            // BlockState airState = BlockTypes.get("minecraft:air").getDefaultState(); // FAWE Change - Updated to use BlockTypes.get()
-            // if (airState == null) { // Should not happen if "minecraft:air" is always valid
-            //     plugin.getLogger().severe("Could not get BlockState for AIR! WorldEdit might not be loaded correctly. Island deletion stopped for " + islandId);
-            //     player.sendMessage(ChatColor.RED + "Ada silinirken kritik bir WorldEdit hatası oluştu.");
-            //     plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s): WorldEdit BlockTypes.AIR is null.", player.getName(), islandId));
-            //     return false;
-            // }
 
             try (EditSession editSession = WorldEdit.getInstance().newEditSession(weWorld)) {
                 CuboidRegion regionToClear = new CuboidRegion(weWorld, islandTerritory.getMinimumPoint(), islandTerritory.getMaximumPoint());
@@ -351,7 +326,7 @@ public class IslandLifecycleManager {
                     }
                 }
                 if (!positions.isEmpty()) {
-                    editSession.setBlocks(positions, BlockTypes.AIR); // Using Set<BlockVector3>
+                    editSession.setBlocks(positions, BlockTypes.AIR);
                 } else {
                     plugin.getLogger().warning("Attempted to clear an empty or null region for island " + islandId);
                 }
@@ -374,16 +349,16 @@ public class IslandLifecycleManager {
             }
 
             islandDataHandler.removeIslandData(player.getUniqueId());
-            islandDataHandler.saveChangesToDisk(); // Ensure changes are persisted
+            islandDataHandler.saveChangesToDisk();
 
             revokeOwnerBypassPermissions(player, worldName, regionId);
-            player.sendMessage(ChatColor.GREEN + "Adanız başarıyla silindi.");
+            player.sendMessage(Component.text("Adanız başarıyla silindi.", NamedTextColor.GREEN));
             plugin.getLogger().info(String.format("Successfully deleted island %s for player %s.", islandId, player.getName()));
             return true;
 
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, String.format("An unexpected error occurred during island deletion for player %s (Island ID: %s)", player.getName(), islandId), e);
-            player.sendMessage(ChatColor.RED + "Adanız silinirken çok beklenmedik bir hata oluştu.");
+            player.sendMessage(Component.text("Adanız silinirken çok beklenmedik bir hata oluştu.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Island deletion failed for %s (Island ID: %s) due to an exception.", player.getName(), islandId));
             return false;
         }
@@ -392,41 +367,34 @@ public class IslandLifecycleManager {
     public boolean resetIsland(Player player) {
         Island island = islandDataHandler.getIslandByOwner(player.getUniqueId());
         if (island == null) {
-            player.sendMessage(ChatColor.RED + "Sıfırlayacak adan yok.");
+            player.sendMessage(Component.text("Sıfırlayacak adan yok.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Player %s tried to reset island but has none.", player.getName()));
             return false;
         }
         Location islandBaseLocation = island.getBaseLocation();
-        String islandId = island.getRegionId(); // For logging
+        String islandId = island.getRegionId();
         plugin.getLogger().info(String.format("Attempting to reset island %s for player %s (UUID: %s)", islandId, player.getName(), player.getUniqueId()));
 
         if (islandBaseLocation == null || islandBaseLocation.getWorld() == null) {
-            player.sendMessage(ChatColor.RED + "Adanın konumu/dünyası bulunamadı.");
+            player.sendMessage(Component.text("Adanın konumu/dünyası bulunamadı.", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Island base location or world is null.", player.getName(), islandId));
             return false;
         }
         if (!schematicFile.exists()) {
-            player.sendMessage(ChatColor.RED + "Ada şematiği bulunamadı.");
+            player.sendMessage(Component.text("Ada şematiği bulunamadı.", NamedTextColor.RED));
             plugin.getLogger().severe("Island schematic file not found at: " + schematicFile.getPath() + " during reset for " + islandId);
             plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Schematic file missing.", player.getName(), islandId));
             return false;
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.");
+        player.sendMessage(Component.text("Adanız ve tüm bölgesi sıfırlanıyor... Lütfen bekleyin.", NamedTextColor.YELLOW));
         try {
-            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld()); // FAWE Change - Using FQN
+            com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(islandBaseLocation.getWorld());
             if (weWorld == null) {
-                player.sendMessage(ChatColor.RED + "Dünya hatası (WE).");
+                player.sendMessage(Component.text("Dünya hatası (WE).", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): WorldEdit world adaptation failed.", player.getName(), islandId));
                 return false;
             }
-
-            // BlockState airState = BlockTypes.get("minecraft:air").getDefaultState(); // FAWE Change - Updated to use BlockTypes.get()
-            // if (airState == null) { // Should not happen
-            //     player.sendMessage(ChatColor.RED + "Blok hatası (WE).");
-            //     plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Could not get AIR blockstate.", player.getName(), islandId));
-            //     return false;
-            // }
 
             CuboidRegion islandTerritory = getIslandTerritoryRegion(islandBaseLocation);
             try (EditSession clearSession = WorldEdit.getInstance().newEditSession(weWorld)) {
@@ -438,7 +406,7 @@ public class IslandLifecycleManager {
                     }
                 }
                 if (!positions.isEmpty()) {
-                    clearSession.setBlocks(positions, BlockTypes.AIR); // Using Set<BlockVector3>
+                    clearSession.setBlocks(positions, BlockTypes.AIR);
                 } else {
                     plugin.getLogger().warning("Attempted to clear an empty or null region for island " + islandId + " during reset.");
                 }
@@ -448,7 +416,7 @@ public class IslandLifecycleManager {
             Clipboard clipboard;
             ClipboardFormat format = ClipboardFormats.findByFile(schematicFile);
             if (format == null) {
-                player.sendMessage(ChatColor.RED + "Şematik format hatası.");
+                player.sendMessage(Component.text("Şematik format hatası.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("Island reset failed for %s (Island ID: %s): Schematic format error.", player.getName(), islandId));
                 return false;
             }
@@ -467,22 +435,19 @@ public class IslandLifecycleManager {
             }
             plugin.getLogger().info(player.getName() + " ("+island.getOwnerUUID()+") için ada şematiği yeniden yapıştırıldı (reset).");
 
-            // Reset specific island properties
-            island.getNamedHomes().clear(); // Clear all homes
-            island.setCurrentBiome(null); // Reset biome to default (or null to let it be whatever the schematic sets)
-            island.setWelcomeMessage(null); // Clear welcome message
-            // maxHomesLimit'i başlangıç değerine döndür
+            island.getNamedHomes().clear();
+            island.setCurrentBiome(null);
+            island.setWelcomeMessage(null);
             island.setMaxHomesLimit(plugin.getConfig().getInt("island.max-named-homes", 3));
-
 
             RegionManager regionManager = plugin.getRegionManager(islandBaseLocation.getWorld());
             if (regionManager != null) {
                 String regionId = getRegionId(player.getUniqueId());
                 ProtectedRegion region = regionManager.getRegion(regionId);
                 if (region != null) {
-                    region.getFlags().clear(); // Clear all flags
+                    region.getFlags().clear();
                     if (islandFlagManager != null) {
-                        islandFlagManager.applyDefaultFlagsToRegion(region); // Apply default flags
+                        islandFlagManager.applyDefaultFlagsToRegion(region);
                     } else {
                         plugin.getLogger().severe("IslandFlagManager null! Ada sıfırlanırken varsayılan bayraklar uygulanamadı.");
                     }
@@ -491,24 +456,23 @@ public class IslandLifecycleManager {
                     plugin.getLogger().warning(player.getName() + " için sıfırlanacak/güncellenecek WorldGuard bölgesi (" + regionId + ") bulunamadı.");
                 }
             }
-            islandDataHandler.addOrUpdateIslandData(island); // Save changes to island object
+            islandDataHandler.addOrUpdateIslandData(island);
             islandDataHandler.saveChangesToDisk();
 
-            // Teleport player after a short delay
             new BukkitRunnable() {
                 @Override
                 public void run() {
                     if (player.isOnline()) {
                         plugin.getIslandTeleportManager().teleportPlayerToIslandSpawn(player);
-                        player.sendMessage(ChatColor.GREEN + "Adanız başarıyla sıfırlandı ve ışınlandınız!");
+                        player.sendMessage(Component.text("Adanız başarıyla sıfırlandı ve ışınlandınız!", NamedTextColor.GREEN));
                     }
                 }
-            }.runTaskLater(plugin, 20L); // 1 saniye sonra ışınla (chunk yüklenmesi için)
+            }.runTaskLater(plugin, 20L);
 
             return true;
         } catch (Exception e) {
             plugin.getLogger().log(Level.SEVERE, player.getName() + " ("+island.getOwnerUUID()+") için ada sıfırlanırken genel hata: ", e);
-            player.sendMessage(ChatColor.RED + "Adanız sıfırlanırken çok beklenmedik bir hata oluştu.");
+            player.sendMessage(Component.text("Adanız sıfırlanırken çok beklenmedik bir hata oluştu.", NamedTextColor.RED));
             return false;
         }
     }

@@ -13,7 +13,7 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+// import org.bukkit.ChatColor; // Will be removed
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer; // Import OfflinePlayer
 import org.bukkit.block.Chest;
@@ -44,7 +44,7 @@ public class ShopVisitGUIManager {
      */
     public void openShopVisitMenu(Player player, Shop shop) {
         if (shop == null || !shop.isSetupComplete() || shop.getTemplateItemStack() == null) {
-            player.sendMessage(ChatColor.RED + "This shop cannot be viewed currently or is misconfigured.");
+            player.sendMessage(Component.text("This shop cannot be viewed currently or is misconfigured.", NamedTextColor.RED));
             return;
         }
 

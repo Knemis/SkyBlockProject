@@ -8,14 +8,16 @@ import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Player;
-import org.bukkit.ChatColor;
-import org.bukkit.NamespacedKey; // Added for Biome key
-import org.bukkit.Registry; // Added for Biome registry
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 
-import com.sk89q.worldedit.math.BlockVector3; // FAWE Change - Updated to WorldEdit API
-import com.sk89q.worldedit.regions.CuboidRegion; // FAWE Change - Updated to WorldEdit API
+import com.sk89q.worldedit.math.BlockVector3;
+import com.sk89q.worldedit.regions.CuboidRegion;
 
 import java.io.IOException;
+import java.util.ArrayList; // Added import
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -35,17 +37,17 @@ public class IslandBiomeManager {
 
     public boolean setIslandBiome(Player player, Island island, String biomeName) {
         if (island == null || island.getWorld() == null) {
-            player.sendMessage(ChatColor.RED + "You don't have an island or island world whose biome you can change.");
+            player.sendMessage(Component.text("You don't have an island or island world whose biome you can change.", NamedTextColor.RED));
             return false;
         }
 
         Biome targetBiome;
         try {
-            // Consider using NamespacedKey.minecraft(biomeName.toLowerCase(java.util.Locale.ROOT)) and Registry.BIOME.get() for future robustness
-            targetBiome = Biome.valueOf(biomeName.toUpperCase(java.util.Locale.ROOT));
+            targetBiome = Registry.BIOME.get(NamespacedKey.minecraft(biomeName.toLowerCase(java.util.Locale.ROOT)));
+            if (targetBiome == null) throw new IllegalArgumentException("Invalid biome name provided.");
         } catch (IllegalArgumentException e) {
-            player.sendMessage(ChatColor.RED + "Invalid biome name: " + biomeName);
-            player.sendMessage(ChatColor.YELLOW + "To see available biomes: /island biome list");
+            player.sendMessage(Component.text("Invalid biome name: " + biomeName, NamedTextColor.RED));
+            player.sendMessage(Component.text("To see available biomes: /island biome list", NamedTextColor.YELLOW));
             return false;
         }
 
@@ -54,35 +56,32 @@ public class IslandBiomeManager {
         try {
             islandTerritory = islandLifecycleManager.getIslandTerritoryRegion(island.getBaseLocation());
         } catch (IOException e) {
-            player.sendMessage(ChatColor.RED + "An error occurred while calculating island boundaries: " + e.getMessage());
+            player.sendMessage(Component.text("An error occurred while calculating island boundaries: " + e.getMessage(), NamedTextColor.RED));
             plugin.getLogger().log(Level.SEVERE, "IO Error while calculating island boundaries (setIslandBiome): " + e.getMessage(), e);
             return false;
         }
 
         if (islandTerritory == null) {
-            player.sendMessage(ChatColor.RED + "Island region not found.");
+            player.sendMessage(Component.text("Island region not found.", NamedTextColor.RED));
             return false;
         }
 
-        player.sendMessage(ChatColor.YELLOW + "Island biome is being set to '" + targetBiome.getKey().getKey() + "'... This process may take some time.");
+        player.sendMessage(Component.text("Island biome is being set to '" + targetBiome.getKey().getKey() + "'... This process may take some time.", NamedTextColor.YELLOW));
 
         try {
             BlockVector3 min = islandTerritory.getMinimumPoint();
             BlockVector3 max = islandTerritory.getMaximumPoint();
 
-            for (int chunkX = min.getX() >> 4; chunkX <= max.getX() >> 4; chunkX++) {
-                for (int chunkZ = min.getZ() >> 4; chunkZ <= max.getZ() >> 4; chunkZ++) {
+            for (int chunkX = min.getBlockX() >> 4; chunkX <= max.getBlockX() >> 4; chunkX++) {
+                for (int chunkZ = min.getBlockZ() >> 4; chunkZ <= max.getBlockZ() >> 4; chunkZ++) {
                     Chunk chunk = world.getChunkAt(chunkX, chunkZ);
                     if (!chunk.isLoaded()) {
-                        // WARNING FIX: The return value of chunk.load() method was used (or at least assigned to a variable).
-                        @SuppressWarnings("unused") // If the "loaded" variable will not be used, this warning can be suppressed with this annotation.
-                        boolean loaded = chunk.load(false);
+                        chunk.load(false);
                     }
                     for (int x = chunk.getX() * 16; x < chunk.getX() * 16 + 16; x++) {
                         for (int z = chunk.getZ() * 16; z < chunk.getZ() * 16 + 16; z++) {
-                            // ERROR FIX: contains method called with BlockVector3.at().
-                            if (islandTerritory.contains(BlockVector3.at(x, min.getY(), z))) {
-                                for (int y = min.getY(); y <= max.getY(); y++) {
+                            if (islandTerritory.contains(BlockVector3.at(x, min.getBlockY(), z))) {
+                                for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
                                     if (y >= world.getMinHeight() && y < world.getMaxHeight()) {
                                         world.setBiome(x, y, z, targetBiome);
                                     }
@@ -94,8 +93,8 @@ public class IslandBiomeManager {
             }
 
             world.getPlayers().stream()
-                    .filter(p -> islandTerritory.contains(BlockVector3.at(p.getLocation().getBlockX(), p.getLocation().getY(), p.getLocation().getBlockZ())))
-                    .forEach(pOnline -> pOnline.sendMessage(ChatColor.AQUA + "Island biome changed! To see the changes fully, you can leave and re-enter the area or log back in."));
+                    .filter(p -> islandTerritory.contains(BlockVector3.at(p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ())))
+                    .forEach(pOnline -> pOnline.sendMessage(Component.text("Island biome changed! To see the changes fully, you can leave and re-enter the area or log back in.", NamedTextColor.AQUA)));
 
 
             island.setCurrentBiome(targetBiome.getKey().getKey()); // Use getKey().getKey()
@@ -103,11 +102,13 @@ public class IslandBiomeManager {
             islandDataHandler.saveChangesToDisk();
 
             plugin.getLogger().info(player.getName() + " (" + player.getUniqueId() + ") set their island's (" + island.getOwnerUUID() + ") biome to " + targetBiome.getKey().getKey() + ".");
-            player.sendMessage(ChatColor.GREEN + "Island biome successfully set to " + ChatColor.AQUA + targetBiome.getKey().getKey() + ChatColor.GREEN + "!");
+            player.sendMessage(Component.text("Island biome successfully set to ", NamedTextColor.GREEN)
+                    .append(Component.text(targetBiome.getKey().getKey(), NamedTextColor.AQUA))
+                    .append(Component.text("!", NamedTextColor.GREEN)));
             return true;
 
         } catch (Exception e) {
-            player.sendMessage(ChatColor.RED + "An unexpected error occurred while setting the biome. Please check the console.");
+            player.sendMessage(Component.text("An unexpected error occurred while setting the biome. Please check the console.", NamedTextColor.RED));
             plugin.getLogger().log(Level.SEVERE, "Error during setIslandBiome: " + e.getMessage(), e);
             return false;
         }
@@ -130,8 +131,17 @@ public class IslandBiomeManager {
                 .map(b -> b.getKey().getKey()) // Use getKey().getKey()
                 .sorted()
                 .collect(Collectors.toList());
-        player.sendMessage(ChatColor.GOLD + "--- Available Biomes ---");
-        player.sendMessage(ChatColor.YELLOW + String.join(ChatColor.GRAY + ", " + ChatColor.YELLOW, availableBiomes));
-        player.sendMessage(ChatColor.GRAY + "Note: Some biomes may differ based on server configuration or game version.");
+        player.sendMessage(Component.text("--- Available Biomes ---", NamedTextColor.GOLD));
+
+        // Joining with components for proper coloring
+        List<Component> biomeComponents = new ArrayList<>();
+        for (int i = 0; i < availableBiomes.size(); i++) {
+            biomeComponents.add(Component.text(availableBiomes.get(i), NamedTextColor.YELLOW));
+            if (i < availableBiomes.size() - 1) {
+                biomeComponents.add(Component.text(", ", NamedTextColor.GRAY));
+            }
+        }
+        player.sendMessage(Component.join(Component.empty(), biomeComponents));
+        player.sendMessage(Component.text("Note: Some biomes may differ based on server configuration or game version.", NamedTextColor.GRAY));
     }
 }

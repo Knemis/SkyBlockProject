@@ -3,8 +3,9 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.PlayerShopAdminGUIManager;
 // import com.knemis.skyblock.skyblockcoreproject.shop.Shop; // Not directly needed here, PlayerShopAdminGUIManager handles shop retrieval
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
-import org.bukkit.ChatColor;
 import org.bukkit.Location; // For onInventoryClose logic if re-opening main admin menu
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,19 +13,34 @@ import org.bukkit.event.Listener;
 // import org.bukkit.event.inventory.InventoryAction; // Not strictly needed for this implementation
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent; // Added import
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.ItemStack; // For checking output item, though not strictly necessary for this logic
 
+import java.util.HashMap; // Added import
+import java.util.Map; // Added import
 import java.util.UUID;
 
 public class PlayerShopAdminAnvilListener implements Listener {
 
     private final SkyBlockProject plugin;
     private final PlayerShopAdminGUIManager playerShopAdminGUIManager;
+    private final Map<UUID, String> playerAnvilInputs = new HashMap<>(); // Added map
 
     public PlayerShopAdminAnvilListener(SkyBlockProject plugin, PlayerShopAdminGUIManager playerShopAdminGUIManager) {
         this.plugin = plugin;
         this.playerShopAdminGUIManager = playerShopAdminGUIManager;
+    }
+
+    @EventHandler
+    public void onPrepareAnvil(PrepareAnvilEvent event) {
+        if (!(event.getView().getPlayer() instanceof Player)) return;
+        Player player = (Player) event.getView().getPlayer();
+        AnvilInventory anvilInventory = event.getInventory();
+        String renameText = anvilInventory.getRenameText();
+
+        // Store the input, even if it's empty, to reflect user clearing text
+        playerAnvilInputs.put(player.getUniqueId(), renameText != null ? renameText : "");
     }
 
     @EventHandler
@@ -77,15 +93,17 @@ public class PlayerShopAdminAnvilListener implements Listener {
             // This is the result slot
             ItemStack resultItem = event.getCurrentItem(); // Item in the result slot
             if (resultItem == null || resultItem.getType().isAir()) {
-                 player.sendMessage(ChatColor.RED + "Please enter a value in the Anvil.");
+                 player.sendMessage(Component.text("Please enter a value in the Anvil.", NamedTextColor.RED));
                  event.setCancelled(true); // Prevent taking an empty/invalid result
                  return;
             }
 
-            String inputText = anvilInv.getRenameText(); // Reverted to deprecated method
+            // String inputText = anvilInv.getRenameText(); // OLD METHOD
+            String inputText = playerAnvilInputs.get(player.getUniqueId());
 
-            if (inputText == null || inputText.trim().isEmpty()) {
-                player.sendMessage(ChatColor.RED + "Input cannot be empty.");
+
+            if (inputText == null || inputText.trim().isEmpty()) { // inputText can be null if PrepareAnvilEvent didn't fire or map was cleared
+                    player.sendMessage(Component.text("Input cannot be empty.", NamedTextColor.RED));
                 event.setCancelled(true); // Prevent taking an empty/invalid result
                 return;
             }
@@ -101,6 +119,7 @@ public class PlayerShopAdminAnvilListener implements Listener {
             } else if (inputType == PlayerShopAdminGUIManager.AdminInputType.SHOP_PRICE_ANVIL) {
                 playerShopAdminGUIManager.processAnvilPriceInput(player, inputText.trim());
             }
+            playerAnvilInputs.remove(player.getUniqueId()); // Clean up map after processing
              // Let the event proceed so player can take the item, which closes anvil.
              // State is cleared by process methods.
         }
@@ -133,11 +152,12 @@ public class PlayerShopAdminAnvilListener implements Listener {
                 // This indicates a premature close.
                 if (playerShopAdminGUIManager.getPlayerWaitingForAdminInput().containsKey(playerId)) {
                     playerShopAdminGUIManager.getPlayerWaitingForAdminInput().remove(playerId);
+                    playerAnvilInputs.remove(playerId); // Clean up map on close
                     // Also remove from administering shop to prevent issues if they re-open admin menu without finishing.
                     // Location shopLocation = playerShopAdminGUIManager.getPlayerAdministeringShop().remove(playerId);
                     // No, keep administering shop state, just cancel the specific input.
 
-                    player.sendMessage(ChatColor.YELLOW + "Shop admin input cancelled.");
+                    player.sendMessage(Component.text("Shop admin input cancelled.", NamedTextColor.YELLOW));
                     plugin.getLogger().info("[PlayerShopAdminAnvilListener] Player " + player.getName() +
                                            " prematurely closed Anvil GUI for " + inputType + ". Input state cleared.");
 

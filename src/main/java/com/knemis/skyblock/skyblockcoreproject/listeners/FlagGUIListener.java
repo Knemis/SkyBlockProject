@@ -8,7 +8,10 @@ import com.sk89q.worldguard.protection.flags.Flag;
 // import com.sk89q.worldguard.protection.flags.RegionGroup; // KALDIRILDI
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.Style;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -79,7 +82,7 @@ public class FlagGUIListener implements Listener {
         }
 
         if (!plugin.getIslandDataHandler().playerHasIsland(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Bu işlemi yapabilmek için bir adanız olmalı!");
+            player.sendMessage(Component.text("Bu işlemi yapabilmek için bir adanız olmalı!", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("FlagGUIListener: Player %s has no island, cannot modify flag %s.", player.getName(), flagName));
             player.closeInventory();
             return;
@@ -87,13 +90,13 @@ public class FlagGUIListener implements Listener {
 
         Flag<?> genericFlag = flagRegistry.get(flagName);
         if (genericFlag == null) {
-            player.sendMessage(ChatColor.RED + "Bilinmeyen bayrak adı: " + flagName);
+            player.sendMessage(Component.text("Bilinmeyen bayrak adı: " + flagName, NamedTextColor.RED));
             plugin.getLogger().warning(String.format("FlagGUIListener: Unknown flag name '%s' clicked by player %s.", flagName, player.getName()));
             return;
         }
 
         if (!(genericFlag instanceof StateFlag)) {
-            player.sendMessage(ChatColor.RED + "'" + flagName + "' bayrağı AÇIK/KAPALI/VARSAYILAN yapılamaz (StateFlag değil).");
+            player.sendMessage(Component.text("'" + flagName + "' bayrağı AÇIK/KAPALI/VARSAYILAN yapılamaz (StateFlag değil).", NamedTextColor.RED));
             plugin.getLogger().warning(String.format("FlagGUIListener: Flag '%s' is not a StateFlag, clicked by player %s.", flagName, player.getName()));
             return;
         }
@@ -114,16 +117,18 @@ public class FlagGUIListener implements Listener {
 
         if (success) {
             String newStateString;
-            ChatColor statusColor;
+            NamedTextColor statusColor;
 
             if (newState == StateFlag.State.ALLOW) {
-                newStateString = "İZİNLİ"; statusColor = ChatColor.GREEN;
+                newStateString = "İZİNLİ"; statusColor = NamedTextColor.GREEN;
             } else if (newState == StateFlag.State.DENY) {
-                newStateString = "YASAKLI"; statusColor = ChatColor.RED;
+                newStateString = "YASAKLI"; statusColor = NamedTextColor.RED;
             } else { // newState == null (VARSAYILAN)
-                newStateString = "VARSAYILAN"; statusColor = ChatColor.GRAY;
+                newStateString = "VARSAYILAN"; statusColor = NamedTextColor.GRAY;
             }
-            player.sendMessage(ChatColor.GOLD + "'" + flagName + "' bayrağı (genel) " + statusColor + ChatColor.BOLD + newStateString + ChatColor.GOLD + " olarak ayarlandı.");
+            player.sendMessage(Component.text("'" + flagName + "' bayrağı (genel) ", NamedTextColor.GOLD)
+                    .append(Component.text(newStateString, statusColor, TextDecoration.BOLD))
+                    .append(Component.text(" olarak ayarlandı.", NamedTextColor.GOLD)));
             plugin.getLogger().info(String.format("Player %s successfully toggled flag %s to %s for their island.", player.getName(), flagName, (newState == null ? "DEFAULT" : newState.name())));
             flagGUIManager.openFlagsGUI(player); // Refresh GUI
         } else {

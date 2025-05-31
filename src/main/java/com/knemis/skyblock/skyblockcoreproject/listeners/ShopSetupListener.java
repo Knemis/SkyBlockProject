@@ -9,9 +9,9 @@ import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession;
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 // import org.bukkit.Bukkit; // Not directly used in this revised version
-import org.bukkit.ChatColor;
 // import org.bukkit.Location; // Not directly used in this revised version
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -93,7 +93,7 @@ public class ShopSetupListener implements Listener {
 
             Shop pendingShop = session.getPendingShop();
             if (pendingShop == null) {
-                player.sendMessage(ChatColor.RED + "Shop setup error (no pending shop). Please start over.");
+                player.sendMessage(Component.text("Shop setup error (no pending shop). Please start over.", NamedTextColor.RED));
                 player.closeInventory();
                 shopManager.cancelShopSetup(playerId);
                 return;
@@ -127,14 +127,14 @@ public class ShopSetupListener implements Listener {
         } else if (viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.QUANTITY_INPUT_TITLE))) {
             event.setCancelled(true);
             player.closeInventory();
-            player.sendMessage(ChatColor.YELLOW + "This setup step has been replaced by the Anvil GUI. Please restart shop setup if you see this.");
+            player.sendMessage(Component.text("This setup step has been replaced by the Anvil GUI. Please restart shop setup if you see this.", NamedTextColor.YELLOW));
             shopManager.cancelShopSetup(playerId);
 
         } else if (viewTitle.equals(LegacyComponentSerializer.legacySection().serialize(ShopSetupGUIManager.CONFIRMATION_TITLE))) {
             event.setCancelled(true);
             Shop pendingShop = session.getPendingShop();
             if (pendingShop == null) {
-                player.sendMessage(ChatColor.RED + "Confirmation error. Setup info missing. Please restart.");
+                player.sendMessage(Component.text("Confirmation error. Setup info missing. Please restart.", NamedTextColor.RED));
                 player.closeInventory();
                 shopManager.cancelShopSetup(playerId);
                 return;
@@ -145,7 +145,7 @@ public class ShopSetupListener implements Listener {
                 if (currentItemClicked.getType() == Material.GREEN_WOOL) {
                     shopManager.finalizeShopSetup(playerId);
                 } else if (currentItemClicked.getType() == Material.RED_WOOL) {
-                    player.sendMessage(ChatColor.YELLOW + "Shop setup cancelled.");
+                    player.sendMessage(Component.text("Shop setup cancelled.", NamedTextColor.YELLOW));
                     shopManager.cancelShopSetup(playerId);
                 }
             }
@@ -266,7 +266,7 @@ public class ShopSetupListener implements Listener {
             ItemStack itemInSlot = event.getInventory().getItem(ITEM_SELECT_PLACEMENT_SLOT);
             if (itemInSlot != null && itemInSlot.getType() != Material.AIR && itemInSlot.getType() != Material.GRAY_STAINED_GLASS_PANE) {
                 player.getInventory().addItem(itemInSlot.clone());
-                player.sendMessage(ChatColor.YELLOW + "Item from selection slot returned. Setup cancelled.");
+                player.sendMessage(Component.text("Item from selection slot returned. Setup cancelled.", NamedTextColor.YELLOW));
                 plugin.getLogger().warning("ShopSetupListener: Item " + itemInSlot.getType() + " found in ITEM_SELECT_PLACEMENT_SLOT on explicit close for " + player.getName() + ". Returning and cancelling.");
             }
             plugin.getLogger().info(String.format("ShopSetupListener: Player %s explicitly closed ITEM_SELECT_TITLE. Cancelling setup.", player.getName()));
@@ -337,8 +337,8 @@ public class ShopSetupListener implements Listener {
         }
 
         event.setCancelled(true);
-        player.sendMessage(ChatColor.YELLOW + "Price input via chat is being phased out in favor of the Anvil GUI.");
-        player.sendMessage(ChatColor.YELLOW + "Shop setup via this method is cancelled. Please restart if needed.");
+        player.sendMessage(Component.text("Price input via chat is being phased out in favor of the Anvil GUI.", NamedTextColor.YELLOW));
+        player.sendMessage(Component.text("Shop setup via this method is cancelled. Please restart if needed.", NamedTextColor.YELLOW));
         plugin.getLogger().info("ShopSetupListener: Player " + player.getName() + " attempted chat price input (deprecated). Cancelling session.");
         shopManager.cancelShopSetup(playerId);
     }

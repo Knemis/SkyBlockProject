@@ -2,7 +2,8 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -85,7 +86,7 @@ public class PlayerBoundaryListener implements Listener {
 
                 if(isTheirIslandStruct){
                     event.setCancelled(true);
-                    player.sendMessage(ChatColor.RED + "You cannot leave your island's territory.");
+                    player.sendMessage(Component.text("You cannot leave your island's territory.", NamedTextColor.RED));
                     Location spawnPoint = islandPlayerIsCurrentlyOn.getSpawnPoint();
                     Location teleportTarget = (spawnPoint != null) ? spawnPoint : from; // Fallback to 'from'
                     player.teleport(teleportTarget);
@@ -166,7 +167,7 @@ public class PlayerBoundaryListener implements Listener {
                         (cause == PlayerTeleportEvent.TeleportCause.COMMAND && !player.hasPermission("skyblock.admin.teleport.bypasswilderness"))) {
 
                     event.setCancelled(true);
-                    player.sendMessage(ChatColor.RED + "You cannot teleport outside your island's territory using " + cause.name().replace("_", " ").toLowerCase() + ".");
+                    player.sendMessage(Component.text("You cannot teleport outside your island's territory using " + cause.name().replace("_", " ").toLowerCase() + ".", NamedTextColor.RED));
                     plugin.getLogger().warning(String.format("PlayerBoundaryListener: Player %s (UUID: %s) DENIED teleporting from their island (%s) to wilderness at (X:%.1f,Y:%.1f,Z:%.1f). Cause: %s.",
                             player.getName(), player.getUniqueId(), islandPlayerIsCurrentlyOn.getRegionId(),
                             to.getX(), to.getY(), to.getZ(), cause.name()));

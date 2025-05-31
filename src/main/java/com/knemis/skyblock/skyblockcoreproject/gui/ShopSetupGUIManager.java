@@ -10,7 +10,7 @@ import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+// import org.bukkit.ChatColor; // Will be removed
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryType; // Added for Anvil
@@ -122,7 +122,7 @@ public class ShopSetupGUIManager {
     public void openItemSelectionMenu(Player player, Shop pendingShop) {
         ShopSetupSession session = getPlayerSession(player.getUniqueId());
         if (session == null) {
-            player.sendMessage(ChatColor.RED + "Error: Shop setup session not found. Please start over.");
+            player.sendMessage(Component.text("Error: Shop setup session not found. Please start over.", NamedTextColor.RED));
             plugin.getLogger().severe("ShopSetupGUIManager.openItemSelectionMenu: No session for " + player.getName());
             return;
         }
@@ -146,7 +146,7 @@ public class ShopSetupGUIManager {
     public void openPriceQuantityAnvilGUI(Player player, Shop pendingShop) {
         ShopSetupSession session = getPlayerSession(player.getUniqueId());
         if (session == null || pendingShop == null) {
-            player.sendMessage(ChatColor.RED + "Shop setup session or pending shop not found. Please restart setup.");
+            player.sendMessage(Component.text("Shop setup session or pending shop not found. Please restart setup.", NamedTextColor.RED));
             plugin.getLogger().severe("openPriceQuantityAnvilGUI: Session or pendingShop is null for " + player.getName());
             if (player.getOpenInventory().getTopInventory() != player.getInventory()) player.closeInventory();
             return;
@@ -154,7 +154,7 @@ public class ShopSetupGUIManager {
 
         ItemStack templateItem = pendingShop.getTemplateItemStack();
         if (templateItem == null || templateItem.getType() == Material.AIR) {
-            player.sendMessage(ChatColor.RED + "No item selected for the shop. Please select an item first.");
+            player.sendMessage(Component.text("No item selected for the shop. Please select an item first.", NamedTextColor.RED));
             plugin.getLogger().warning("openPriceQuantityAnvilGUI: templateItem is null/AIR for " + player.getName() + ". Reverting to item selection.");
             openItemSelectionMenu(player, pendingShop);
             return;
@@ -175,23 +175,23 @@ public class ShopSetupGUIManager {
     public void openPriceInputPrompt(Player player, Shop pendingShop) {
         ShopSetupSession session = getPlayerSession(player.getUniqueId());
         if (session == null) {
-            player.sendMessage(ChatColor.RED + "Error: Shop setup session not found. Please start over.");
+            player.sendMessage(Component.text("Error: Shop setup session not found. Please start over.", NamedTextColor.RED));
             return;
         }
         player.closeInventory();
-        player.sendMessage(ChatColor.YELLOW+"Price input via chat is being phased out. Please use the Anvil GUI.");
+        player.sendMessage(Component.text("Price input via chat is being phased out. Please use the Anvil GUI.", NamedTextColor.YELLOW));
         shopManager.cancelShopSetup(player.getUniqueId());
     }
 
     public void openConfirmationMenu(Player player, Shop pendingShop, double buyPrice, double sellPrice) {
         ShopSetupSession session = getPlayerSession(player.getUniqueId());
         if (session == null) {
-            player.sendMessage(ChatColor.RED + "Error: Shop setup session not found. Please start over.");
+            player.sendMessage(Component.text("Error: Shop setup session not found. Please start over.", NamedTextColor.RED));
             plugin.getLogger().severe("ShopSetupGUIManager.openConfirmationMenu: No session for " + player.getName());
             return;
         }
         if (pendingShop == null || pendingShop.getTemplateItemStack() == null || pendingShop.getBundleAmount() <=0) {
-            player.sendMessage(ChatColor.RED + "Error: Invalid shop data for confirmation. Please restart setup.");
+            player.sendMessage(Component.text("Error: Invalid shop data for confirmation. Please restart setup.", NamedTextColor.RED));
             plugin.getLogger().severe("ShopSetupGUIManager.openConfirmationMenu: Invalid pendingShop data for " + player.getName());
             shopManager.cancelShopSetup(player.getUniqueId());
             return;
@@ -244,11 +244,11 @@ public class ShopSetupGUIManager {
     public void openQuantityInputMenu(Player player, Shop pendingShop) {
         ShopSetupSession session = getPlayerSession(player.getUniqueId());
         if (session == null || pendingShop.getTemplateItemStack() == null) {
-            player.sendMessage(ChatColor.RED + "Error: Shop setup session or template item not found.");
+            player.sendMessage(Component.text("Error: Shop setup session or template item not found.", NamedTextColor.RED));
             if(session != null) shopManager.cancelShopSetup(player.getUniqueId());
             return;
         }
-        player.sendMessage(ChatColor.YELLOW + "Quantity is now set in the Anvil GUI with the price. Restarting item selection.");
+        player.sendMessage(Component.text("Quantity is now set in the Anvil GUI with the price. Restarting item selection.", NamedTextColor.YELLOW));
         openItemSelectionMenu(player, pendingShop);
     }
 }

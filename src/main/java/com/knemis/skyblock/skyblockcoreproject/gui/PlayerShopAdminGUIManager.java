@@ -12,7 +12,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 // import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer; // Not directly used after changes
 
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor; // Keep for messages
+// import org.bukkit.ChatColor; // Will be removed
 import org.bukkit.Location; // Added import for Location
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -73,7 +73,7 @@ public class PlayerShopAdminGUIManager { // Renamed class
     public void openAdminMenu(Player player, Shop shop) {
         System.out.println("[TRACE] In PlayerShopAdminGUIManager.openAdminMenu for player " + player.getName() + " and shop " + (shop != null ? shop.getShopId() : "null")); // Renamed trace
         if (shop == null || !shop.getOwnerUUID().equals(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Bu mağazayı yönetme yetkiniz yok veya mağaza bulunamadı.");
+            player.sendMessage(Component.text("Bu mağazayı yönetme yetkiniz yok veya mağaza bulunamadı.", NamedTextColor.RED));
             return;
         }
 
@@ -224,7 +224,7 @@ public class PlayerShopAdminGUIManager { // Renamed class
         plugin.getLogger().info("[PlayerShopAdminGUIManager] Processing Anvil display name input for " + player.getName() + ", shop " + shop.getShopId() + ". New name: " + newName);
         shop.setShopDisplayName(newName);
         shopManager.saveShop(shop); // Make sure shopManager is accessible
-        player.sendMessage(ChatColor.GREEN + "Shop display name updated to: " + newName);
+        player.sendMessage(Component.text("Shop display name updated to: " + newName, NamedTextColor.GREEN));
         // Optionally, re-open the admin menu or close inventory.
         // For now, let listener handle inventory closure.
         this.getPlayerWaitingForAdminInput().remove(player.getUniqueId());
@@ -239,16 +239,16 @@ public class PlayerShopAdminGUIManager { // Renamed class
         try {
             double newPrice = Double.parseDouble(newPriceStr);
             if (newPrice < 0) {
-                player.sendMessage(ChatColor.RED + "Price cannot be negative.");
+                player.sendMessage(Component.text("Price cannot be negative.", NamedTextColor.RED));
                 openAnvilForShopSetting(player, shop, AdminInputType.SHOP_PRICE_ANVIL); // Re-open anvil
                 return;
             }
             // Assuming this is for the BUY price. If SELL price needs separate editing, more logic is needed.
             shop.setBuyPrice(newPrice); // Or setPrice() if that's the primary one
             shopManager.saveShop(shop);
-            player.sendMessage(ChatColor.GREEN + "Shop price updated to: " + String.format("%.2f", newPrice));
+            player.sendMessage(Component.text("Shop price updated to: " + String.format("%.2f", newPrice), NamedTextColor.GREEN));
         } catch (NumberFormatException e) {
-            player.sendMessage(ChatColor.RED + "Invalid price format. Please enter a number.");
+            player.sendMessage(Component.text("Invalid price format. Please enter a number.", NamedTextColor.RED));
             openAnvilForShopSetting(player, shop, AdminInputType.SHOP_PRICE_ANVIL); // Re-open anvil
             return;
         }
@@ -260,13 +260,13 @@ public class PlayerShopAdminGUIManager { // Renamed class
     private Shop getShopForAdmin(Player player) {
         Location shopLocation = this.getPlayerAdministeringShop().get(player.getUniqueId());
         if (shopLocation == null) {
-            player.sendMessage(ChatColor.RED + "Error: Shop administration session expired.");
+            player.sendMessage(Component.text("Error: Shop administration session expired.", NamedTextColor.RED));
             this.getPlayerWaitingForAdminInput().remove(player.getUniqueId()); // Clean up state
             return null;
         }
         Shop shop = shopManager.getActiveShop(shopLocation); // Ensure shopManager is accessible
         if (shop == null || !shop.getOwnerUUID().equals(player.getUniqueId())) {
-            player.sendMessage(ChatColor.RED + "Error: Shop not found or you do not own this shop.");
+            player.sendMessage(Component.text("Error: Shop not found or you do not own this shop.", NamedTextColor.RED));
              this.getPlayerAdministeringShop().remove(player.getUniqueId()); // Clean up state
              this.getPlayerWaitingForAdminInput().remove(player.getUniqueId());
             return null;

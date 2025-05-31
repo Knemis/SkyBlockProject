@@ -12,7 +12,8 @@ import com.sk89q.worldguard.protection.managers.storage.StorageException;
 import com.knemis.skyblock.skyblockcoreproject.utils.CustomFlags; // Added for new custom flag
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
@@ -107,23 +108,23 @@ public class IslandFlagManager {
     public boolean setIslandFlagState(Player changer, UUID ownerUUID, StateFlag flag, StateFlag.State newState) {
         if (changer == null || ownerUUID == null || flag == null ) {
             plugin.getLogger().severe("[FlagManager] setIslandFlagState: Gerekli parametrelerden biri null!");
-            if(changer != null) changer.sendMessage(ChatColor.RED + "Bayrak ayarlanırken iç bir hata oluştu.");
+            if(changer != null) changer.sendMessage(Component.text("Bayrak ayarlanırken iç bir hata oluştu.", NamedTextColor.RED));
             return false;
         }
 
         Island island = islandDataHandler.getIslandByOwner(ownerUUID);
         if (island == null || island.getWorld() == null) {
-            changer.sendMessage(ChatColor.RED + "Bayrak ayarlanacak ada veya dünya bulunamadı.");
+            changer.sendMessage(Component.text("Bayrak ayarlanacak ada veya dünya bulunamadı.", NamedTextColor.RED));
             return false;
         }
         ProtectedRegion region = getProtectedRegionForIsland(ownerUUID);
         if (region == null) {
-            changer.sendMessage(ChatColor.RED + "Adanın koruma bölgesi bulunamadı.");
+            changer.sendMessage(Component.text("Adanın koruma bölgesi bulunamadı.", NamedTextColor.RED));
             return false;
         }
 
         if (!changer.getUniqueId().equals(ownerUUID) && !changer.hasPermission("skyblock.admin.setanyflag")) {
-            changer.sendMessage(ChatColor.RED + "Bu adanın bayraklarını değiştirme izniniz yok.");
+            changer.sendMessage(Component.text("Bu adanın bayraklarını değiştirme izniniz yok.", NamedTextColor.RED));
             return false;
         }
 
@@ -134,19 +135,21 @@ public class IslandFlagManager {
             RegionManager regionManager = plugin.getRegionManager(island.getWorld());
             if (regionManager == null) {
                 plugin.getLogger().severe("[FlagManager] setIslandFlagState: RegionManager alınamadı.");
-                changer.sendMessage(ChatColor.RED + "Bayrak ayarlanırken bir hata oluştu (RM).");
+                changer.sendMessage(Component.text("Bayrak ayarlanırken bir hata oluştu (RM).", NamedTextColor.RED));
                 return false;
             }
             regionManager.saveChanges();
 
             String oldStateString = (oldState == null) ? "VARSAYILAN" : oldState.name();
             String newStateString = (newState == null) ? "VARSAYILAN" : newState.name();
-            changer.sendMessage(ChatColor.GREEN + "'" + flag.getName() + "' bayrağı (genel) " + ChatColor.AQUA + newStateString + ChatColor.GREEN + " olarak ayarlandı.");
+            changer.sendMessage(Component.text("'" + flag.getName() + "' bayrağı (genel) ", NamedTextColor.GREEN)
+                    .append(Component.text(newStateString, NamedTextColor.AQUA))
+                    .append(Component.text(" olarak ayarlandı.", NamedTextColor.GREEN)));
             plugin.getLogger().info("[FlagManager] " + changer.getName() + " -> Ada: " + ownerUUID + ", Bayrak: '" + flag.getName() + "', Eski: " + oldStateString + ", Yeni: " + newStateString);
             return true;
         } catch (Exception e) { // StorageException veya diğer olası hatalar
             plugin.getLogger().log(Level.SEVERE, "[FlagManager] setIslandFlagState sırasında hata: " + e.getMessage(), e);
-            changer.sendMessage(ChatColor.RED + "Bayrak ayarlanırken beklenmedik bir hata oluştu.");
+            changer.sendMessage(Component.text("Bayrak ayarlanırken beklenmedik bir hata oluştu.", NamedTextColor.RED));
             return false;
         }
     }

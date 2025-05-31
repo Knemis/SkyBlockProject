@@ -5,8 +5,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer; // Added
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+// import org.bukkit.ChatColor; // To be removed
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -30,15 +31,21 @@ public class ShopSignManager {
 
     public String shortenFormattedString(String text, int maxLength) {
         if (text == null) return "";
-        if (maxLength < 3) maxLength = 3; // Ensure space for "..."
-        String cleanText = ChatColor.stripColor(text); // Use Bukkit's ChatColor for stripping
-        if (cleanText.length() <= maxLength) {
-            return text; // Return original if it contains formatting and is short enough
+        if (maxLength < 3) maxLength = 3;
+
+        // Deserialize to component to handle colors, then serialize to plain for length check
+        Component component = LegacyComponentSerializer.legacyAmpersand().deserialize(text); // Assuming '&' codes
+        String plainText = PlainComponentSerializer.plain().serialize(component);
+
+        if (plainText.length() <= maxLength) {
+            return text; // Return original if it contains formatting and is short enough based on plain length
         }
-        // If the original text (with color codes) is longer than cleanText,
-        // we might need a more sophisticated way to shorten while preserving colors.
-        // For now, this simple approach shortens the clean text.
-        return cleanText.substring(0, Math.max(0, maxLength - 3)) + "...";
+
+        // If we need to shorten, we shorten the plain text and append "..."
+        // This loses color information in the shortened part.
+        // A more sophisticated version would try to preserve color on the "..." or the part before it.
+        // For now, plain shortening is implemented.
+        return plainText.substring(0, Math.max(0, maxLength - 3)) + "...";
     }
 
     public String shortenItemName(String name) {
@@ -48,14 +55,11 @@ public class ShopSignManager {
     public String getItemNameForMessages(ItemStack itemStack, int maxLength) {
         if (itemStack == null || itemStack.getType() == Material.AIR) return "Bilinmeyen";
         ItemMeta meta = itemStack.getItemMeta();
-        if (meta != null && meta.hasDisplayName()) {
-            try {
-                Component displayNameComponent = meta.displayName();
-                if (displayNameComponent != null) {
-                    return shortenFormattedString(LegacyComponentSerializer.legacySection().serialize(displayNameComponent), maxLength);
-                }
-            } catch (NoSuchMethodError e) { // API < 1.16.5 (or no Adventure support)
-                 if (meta.hasDisplayName()) return shortenFormattedString(meta.getDisplayName(), maxLength);
+        if (meta != null) {
+            Component displayNameComponent = meta.displayName(); // Paper API
+            if (displayNameComponent != null) {
+                // Serialize to legacy string to pass to shortenFormattedString, which expects legacy codes
+                return shortenFormattedString(LegacyComponentSerializer.legacySection().serialize(displayNameComponent), maxLength);
             }
         }
         String name = itemStack.getType().toString().toLowerCase().replace("_", " ");
@@ -68,6 +72,7 @@ public class ShopSignManager {
                             .append(part.substring(1).toLowerCase()).append(" ");
                 }
             }
+            // This string is plain, no legacy codes, fine for shortenFormattedString's plain path
             return shortenFormattedString(capitalizedName.toString().trim(), maxLength);
         }
         return "Eşya";
@@ -75,17 +80,17 @@ public class ShopSignManager {
     
     public Sign findOrCreateAttachedSign(Block chestBlock) {
         BlockFace[] facesToTry = {BlockFace.NORTH, BlockFace.EAST, BlockFace.SOUTH, BlockFace.WEST};
-        Material signMaterial = Material.OAK_WALL_SIGN; // Default sign type
+        Material signMaterial = Material.OAK_WALL_SIGN;
 
         for (BlockFace face : facesToTry) {
             Block relative = chestBlock.getRelative(face);
             if (Tag.WALL_SIGNS.isTagged(relative.getType()) && relative.getState() instanceof Sign) {
                 if (relative.getBlockData() instanceof WallSign) {
                     WallSign wallSignData = (WallSign) relative.getBlockData();
-                    if (wallSignData.getFacing().getOppositeFace() == face) { // Sign is attached to the chest
+                    if (wallSignData.getFacing().getOppositeFace() == face) {
                         Sign sign = (Sign) relative.getState();
-                        // Check if it's a shop sign (e.g., by a specific line or persistent data)
-                        if (sign.line(0).equals(Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) {
+                        // Modern Paper sign lines are Components
+                        if (Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD).equals(sign.line(0))) {
                             plugin.getLogger().info("Found existing shop sign for chest at " + Shop.locationToString(chestBlock.getLocation()) + " on face " + face);
                             return sign;
                         }
@@ -94,21 +99,19 @@ public class ShopSignManager {
             }
         }
 
-        // No existing shop sign found, try to create a new one
         for (BlockFace face : facesToTry) {
             Block potentialSignBlock = chestBlock.getRelative(face);
-            if (potentialSignBlock.getType() == Material.AIR) { // Found a place for a new sign
-                potentialSignBlock.setType(signMaterial, false); // Place the sign block
+            if (potentialSignBlock.getType() == Material.AIR) {
+                potentialSignBlock.setType(signMaterial, false);
                 if (potentialSignBlock.getBlockData() instanceof WallSign) {
                     WallSign wallSignData = (WallSign) potentialSignBlock.getBlockData();
-                    wallSignData.setFacing(face.getOppositeFace()); // Make it face away from the chest
-                    potentialSignBlock.setBlockData(wallSignData, true); // Apply facing direction
+                    wallSignData.setFacing(face.getOppositeFace());
+                    potentialSignBlock.setBlockData(wallSignData, true);
                     plugin.getLogger().info("Created new shop sign for chest at " + Shop.locationToString(chestBlock.getLocation()) + " on face " + face);
                     return (Sign) potentialSignBlock.getState();
                 } else {
-                    // Should not happen if signMaterial is a valid WallSign
                     plugin.getLogger().warning("Failed to set WallSign data for new sign at " + Shop.locationToString(potentialSignBlock.getLocation()));
-                    potentialSignBlock.setType(Material.AIR); // Clean up if not a valid sign state
+                    potentialSignBlock.setType(Material.AIR);
                 }
             }
         }
@@ -116,7 +119,7 @@ public class ShopSignManager {
         return null;
     }
 
-    public void updateAttachedSign(Shop shop, String currencySymbol) {
+    public void updateAttachedSign(Shop shop, String currencySymbol) { // currencySymbol is legacy string
         plugin.getLogger().fine("[ShopSignManager] Attempting to update sign for shop at " + (shop != null ? Shop.locationToString(shop.getLocation()) : "null"));
         if (shop == null || !shop.isSetupComplete() || shop.getLocation() == null || shop.getTemplateItemStack() == null) {
             plugin.getLogger().fine("[ShopSignManager] Update sign aborted: Shop or essential shop data is null/incomplete. Shop: " + shop);
@@ -135,46 +138,51 @@ public class ShopSignManager {
         }
 
         OfflinePlayer owner = Bukkit.getOfflinePlayer(shop.getOwnerUUID());
-        String ownerName = owner.getName() != null ? shortenFormattedString(owner.getName(), 14) : "Bilinmeyen";
-        String itemName = getItemNameForMessages(shop.getTemplateItemStack(), 15);
+        String ownerNamePlain = owner.getName() != null ? owner.getName() : "Bilinmeyen";
+        String ownerNameShort = shortenFormattedString(ownerNamePlain, 14); // shortenFormattedString handles plain text
+
+        String itemNameLegacy = getItemNameForMessages(shop.getTemplateItemStack(), 15); // Returns legacy string
         
-        String priceString;
+        String priceStringLegacy;
         boolean canPlayerBuy = shop.getBuyPrice() >= 0;
         boolean canPlayerSell = shop.getSellPrice() >= 0;
 
         if (canPlayerBuy && canPlayerSell) {
-            priceString = String.format("Al:%.0f Sat:%.0f", shop.getBuyPrice(), shop.getSellPrice());
+            priceStringLegacy = String.format("Al:%.0f Sat:%.0f", shop.getBuyPrice(), shop.getSellPrice());
         } else if (canPlayerBuy) {
-            priceString = String.format("Fiyat: %.0f", shop.getBuyPrice());
+            priceStringLegacy = String.format("Fiyat: %.0f", shop.getBuyPrice());
         } else if (canPlayerSell) {
-            priceString = String.format("Ödeme: %.0f", shop.getSellPrice());
+            priceStringLegacy = String.format("Ödeme: %.0f", shop.getSellPrice());
         } else {
-            priceString = "Fiyat Yok";
+            priceStringLegacy = "Fiyat Yok";
         }
 
         String bundleInfo = shop.getBundleAmount() + " adet";
-        String fullPriceLine = bundleInfo + " " + currencySymbol + " " + priceString;
+        // currencySymbol is already a legacy string
+        String fullPriceLineLegacy = bundleInfo + " " + currencySymbol + " " + priceStringLegacy;
 
-        // Attempt to shorten if too long
-        if (ChatColor.stripColor(fullPriceLine).length() > 15) {
-            fullPriceLine = shop.getBundleAmount() + "" + currencySymbol + "/" + priceString; // No spaces, short currency
-             if (ChatColor.stripColor(fullPriceLine).length() > 15) { // Try even shorter
-                if (canPlayerBuy && canPlayerSell) priceString = String.format("A:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
-                else if (canPlayerBuy) priceString = String.format("F:%.0f", shop.getBuyPrice());
-                else if (canPlayerSell) priceString = String.format("Ö:%.0f", shop.getSellPrice());
-                else priceString = "N/A";
-                fullPriceLine = shop.getBundleAmount() + "/" + priceString; // Minimal
+        String plainFullPriceLine = PlainComponentSerializer.plain().serialize(LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy));
+
+        if (plainFullPriceLine.length() > 15) {
+            fullPriceLineLegacy = shop.getBundleAmount() + currencySymbol + "/" + priceStringLegacy;
+            plainFullPriceLine = PlainComponentSerializer.plain().serialize(LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy));
+             if (plainFullPriceLine.length() > 15) {
+                if (canPlayerBuy && canPlayerSell) priceStringLegacy = String.format("A:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
+                else if (canPlayerBuy) priceStringLegacy = String.format("F:%.0f", shop.getBuyPrice());
+                else if (canPlayerSell) priceStringLegacy = String.format("Ö:%.0f", shop.getSellPrice());
+                else priceStringLegacy = "N/A";
+                fullPriceLineLegacy = shop.getBundleAmount() + "/" + priceStringLegacy;
             }
         }
         
-        plugin.getLogger().info("[ShopSignManager] Writing to sign for shop " + shop.getShopId() + ": L0=[Dükkan], L1=" + itemName + ", L2=" + fullPriceLine + ", L3=" + ownerName);
+        plugin.getLogger().info("[ShopSignManager] Writing to sign for shop " + shop.getShopId() + ": L0=[Dükkan], L1=" + itemNameLegacy + ", L2=" + fullPriceLineLegacy + ", L3=" + ownerNameShort);
 
         signState.line(0, Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD));
-        signState.line(1, Component.text(itemName, NamedTextColor.BLACK));
-        signState.line(2, Component.text(fullPriceLine, NamedTextColor.DARK_GREEN));
-        signState.line(3, Component.text(ownerName, NamedTextColor.DARK_PURPLE));
+        signState.line(1, LegacyComponentSerializer.legacyAmpersand().deserialize(itemNameLegacy).colorIfAbsent(NamedTextColor.BLACK)); // Deserialize and color
+        signState.line(2, LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy).colorIfAbsent(NamedTextColor.DARK_GREEN));
+        signState.line(3, LegacyComponentSerializer.legacyAmpersand().deserialize(ownerNameShort).colorIfAbsent(NamedTextColor.DARK_PURPLE));
         try {
-            signState.update(true); // Force update
+            signState.update(true);
         } catch (Exception e) {
             plugin.getLogger().log(Level.WARNING, "[ShopSignManager] Exception while updating sign state for shop at " + Shop.locationToString(shop.getLocation()), e);
         }
@@ -189,13 +197,12 @@ public class ShopSignManager {
             Block signBlock = chestBlock.getRelative(face);
             if (Tag.WALL_SIGNS.isTagged(signBlock.getType()) && signBlock.getBlockData() instanceof WallSign) {
                 WallSign wallSignData = (WallSign) signBlock.getBlockData();
-                if (wallSignData.getFacing().getOppositeFace() == face) { // Sign is attached to this chest
+                if (wallSignData.getFacing().getOppositeFace() == face) {
                     Sign signState = (Sign) signBlock.getState();
-                    // Check if it's a shop sign by looking for the specific first line
-                    if (signState.line(0).equals(Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD))) {
-                        signBlock.setType(Material.AIR); // Remove the sign
+                    if (Component.text("[Dükkan]", NamedTextColor.DARK_BLUE, TextDecoration.BOLD).equals(signState.line(0))) {
+                        signBlock.setType(Material.AIR);
                         plugin.getLogger().info("[ShopSignManager] Shop sign cleared for chest at " + Shop.locationToString(chestLocation) + " on face " + face);
-                        return; // Assume only one shop sign per chest
+                        return;
                     }
                 }
             }

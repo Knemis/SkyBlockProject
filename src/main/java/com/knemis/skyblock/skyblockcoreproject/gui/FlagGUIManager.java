@@ -38,7 +38,7 @@ public class FlagGUIManager {
 
     // Single general GUI title
     public static final Component GUI_TITLE_COMPONENT = Component.text("Island Flag Management", Style.style(NamedTextColor.DARK_AQUA, TextDecoration.BOLD));
-    public static final String GUI_TITLE_STRING = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Island Flag Management"; // Old string for listener
+    // public static final String GUI_TITLE_STRING = ChatColor.DARK_AQUA + "" + ChatColor.BOLD + "Island Flag Management"; // Old string for listener - REMOVED as it's unused by FlagGUIListener
 
     private final NamespacedKey flagNameKey;
     // private final NamespacedKey flagGroupKey; // Removed

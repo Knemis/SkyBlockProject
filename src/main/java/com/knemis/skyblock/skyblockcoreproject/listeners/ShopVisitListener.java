@@ -9,9 +9,9 @@ import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopMode; // <---  ADD THIS IMPORT
 
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -83,20 +83,20 @@ public class ShopVisitListener implements Listener {
 
         Location shopLocation = plugin.getPlayerViewingShopLocation().get(buyer.getUniqueId());
         if (shopLocation == null) {
-            buyer.sendMessage(ChatColor.RED + "Error: Shop location not found. Please reopen the shop.");
+            buyer.sendMessage(Component.text("Error: Shop location not found. Please reopen the shop.", NamedTextColor.RED));
             closeShopForPlayer(buyer);
             return;
         }
 
         Shop shop = shopManager.getActiveShop(shopLocation);
         if (shop == null || !shop.isSetupComplete() || shop.getTemplateItemStack() == null) {
-            buyer.sendMessage(ChatColor.RED + "This shop is not available or misconfigured.");
+            buyer.sendMessage(Component.text("This shop is not available or misconfigured.", NamedTextColor.RED));
             closeShopForPlayer(buyer);
             return;
         }
 
         if (shop.getOwnerUUID().equals(buyer.getUniqueId())) {
-            buyer.sendMessage(ChatColor.YELLOW + "You cannot buy from or sell to your own shop this way.");
+            buyer.sendMessage(Component.text("You cannot buy from or sell to your own shop this way.", NamedTextColor.YELLOW));
             return;
         }
 
@@ -113,7 +113,7 @@ public class ShopVisitListener implements Listener {
                     plugin.getShopManager().executePurchase(buyer, shop, 1);
                     plugin.getShopVisitGUIManager().openShopVisitMenu(buyer, shop); // Refresh
                 } else {
-                    buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
+                    buyer.sendMessage(Component.text("This shop is not currently selling this item.", NamedTextColor.RED));
                 }
             } else if (rawSlot == 24) { // Sell 1 Bundle (Slot 24 for BANK_CHEST sell button)
                 System.out.println("[TRACE] ShopVisitListener.onInventoryClick: BANK_CHEST - Sell 1 Bundle clicked. Player: " + buyer.getName());
@@ -121,7 +121,7 @@ public class ShopVisitListener implements Listener {
                     plugin.getShopManager().executeSellToShop(buyer, shop, 1);
                     plugin.getShopVisitGUIManager().openShopVisitMenu(buyer, shop); // Refresh
                 } else {
-                    buyer.sendMessage(ChatColor.RED + "This shop is not currently buying this item.");
+                    buyer.sendMessage(Component.text("This shop is not currently buying this item.", NamedTextColor.RED));
                 }
             }
         } else if (mode == ShopMode.MARKET_CHEST) { // Direct comparison
@@ -132,20 +132,20 @@ public class ShopVisitListener implements Listener {
                     if (shop.getBuyPrice() != -1) {
                         buyer.closeInventory();
                         plugin.getPlayerEnteringBuyQuantity().put(buyer.getUniqueId(), shopLocation);
-                        buyer.sendMessage(ChatColor.GREEN + "Please enter the number of BUNDLES you wish to buy.");
-                        buyer.sendMessage(ChatColor.GRAY + "Type 'cancel' to abort.");
+                        buyer.sendMessage(Component.text("Please enter the number of BUNDLES you wish to buy.", NamedTextColor.GREEN));
+                        buyer.sendMessage(Component.text("Type 'cancel' to abort.", NamedTextColor.GRAY));
                     } else {
-                        buyer.sendMessage(ChatColor.RED + "This shop is not currently selling this item.");
+                        buyer.sendMessage(Component.text("This shop is not currently selling this item.", NamedTextColor.RED));
                     }
                 } else if (event.isRightClick()) { // Sell action
                     System.out.println("[TRACE] ShopVisitListener.onInventoryClick: MARKET_CHEST - Slot 13 Right-Clicked (Sell). Player: " + buyer.getName());
                     if (shop.getSellPrice() != -1) {
                         buyer.closeInventory();
                         plugin.getPlayerEnteringSellQuantity().put(buyer.getUniqueId(), shopLocation);
-                        buyer.sendMessage(ChatColor.GREEN + "Please enter the number of BUNDLES you wish to sell.");
-                        buyer.sendMessage(ChatColor.GRAY + "Type 'cancel' to abort.");
+                        buyer.sendMessage(Component.text("Please enter the number of BUNDLES you wish to sell.", NamedTextColor.GREEN));
+                        buyer.sendMessage(Component.text("Type 'cancel' to abort.", NamedTextColor.GRAY));
                     } else {
-                        buyer.sendMessage(ChatColor.RED + "This shop is not currently buying this item.");
+                        buyer.sendMessage(Component.text("This shop is not currently buying this item.", NamedTextColor.RED));
                     }
                 }
                 // Other click types on slot 13 in MARKET_CHEST mode are ignored.
@@ -168,7 +168,7 @@ public class ShopVisitListener implements Listener {
             Shop shop = plugin.getShopManager().getActiveShop(shopLocation);
 
             if (shop == null || !shop.isSetupComplete()) {
-                player.sendMessage(ChatColor.RED + "The shop you were interacting with is no longer available.");
+                player.sendMessage(Component.text("The shop you were interacting with is no longer available.", NamedTextColor.RED));
                 plugin.getPlayerEnteringBuyQuantity().remove(playerId);
                 return;
             }
@@ -176,19 +176,19 @@ public class ShopVisitListener implements Listener {
             if (message.equalsIgnoreCase("cancel")) {
                 System.out.println("[TRACE] ShopVisitListener.onAsyncPlayerChat: Buy operation cancelled by " + player.getName());
                 plugin.getPlayerEnteringBuyQuantity().remove(playerId);
-                player.sendMessage(ChatColor.YELLOW + "Buy operation cancelled.");
+                player.sendMessage(Component.text("Buy operation cancelled.", NamedTextColor.YELLOW));
                 return;
             }
 
             try {
                 int quantityInBundles = Integer.parseInt(message);
                 if (quantityInBundles <= 0) {
-                    player.sendMessage(ChatColor.RED + "Please enter a positive number of bundles.");
+                    player.sendMessage(Component.text("Please enter a positive number of bundles.", NamedTextColor.RED));
                     return;
                 }
                 plugin.getShopManager().executePurchase(player, shop, quantityInBundles);
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Invalid number format. Please enter a whole number for bundles.");
+                player.sendMessage(Component.text("Invalid number format. Please enter a whole number for bundles.", NamedTextColor.RED));
             } finally {
                 plugin.getPlayerEnteringBuyQuantity().remove(playerId);
             }
@@ -200,7 +200,7 @@ public class ShopVisitListener implements Listener {
             Shop shop = plugin.getShopManager().getActiveShop(shopLocation);
 
             if (shop == null || !shop.isSetupComplete()) {
-                player.sendMessage(ChatColor.RED + "The shop you were interacting with is no longer available.");
+                player.sendMessage(Component.text("The shop you were interacting with is no longer available.", NamedTextColor.RED));
                 plugin.getPlayerEnteringSellQuantity().remove(playerId);
                 return;
             }
@@ -208,19 +208,19 @@ public class ShopVisitListener implements Listener {
             if (message.equalsIgnoreCase("cancel")) {
                 System.out.println("[TRACE] ShopVisitListener.onAsyncPlayerChat: Sell operation cancelled by " + player.getName());
                 plugin.getPlayerEnteringSellQuantity().remove(playerId);
-                player.sendMessage(ChatColor.YELLOW + "Sell operation cancelled.");
+                player.sendMessage(Component.text("Sell operation cancelled.", NamedTextColor.YELLOW));
                 return;
             }
 
             try {
                 int quantityInBundles = Integer.parseInt(message);
                 if (quantityInBundles <= 0) {
-                    player.sendMessage(ChatColor.RED + "Please enter a positive number of bundles.");
+                    player.sendMessage(Component.text("Please enter a positive number of bundles.", NamedTextColor.RED));
                     return;
                 }
                 plugin.getShopManager().executeSellToShop(player, shop, quantityInBundles);
             } catch (NumberFormatException e) {
-                player.sendMessage(ChatColor.RED + "Invalid number format. Please enter a whole number for bundles.");
+                player.sendMessage(Component.text("Invalid number format. Please enter a whole number for bundles.", NamedTextColor.RED));
             } finally {
                 plugin.getPlayerEnteringSellQuantity().remove(playerId);
             }

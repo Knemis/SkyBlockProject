@@ -5,8 +5,9 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer; // Added
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+// import org.bukkit.ChatColor; // To be removed
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;
@@ -45,7 +46,7 @@ public class MissionGUIManager {
         if (missionManager == null || playerData == null) {
             plugin.getLogger().severe(String.format("[MissionGUIManager] Failed to open GUI for %s: MissionManager (%s) or PlayerMissionData (%s) is null.",
                     player.getName(), missionManager == null ? "null" : "ok", playerData == null ? "null" : "ok"));
-            player.sendMessage(ChatColor.RED + "An error occurred while opening the missions GUI. Please contact an administrator.");
+            player.sendMessage(Component.text("An error occurred while opening the missions GUI. Please contact an administrator.", NamedTextColor.RED));
             return;
         }
 
@@ -92,11 +93,11 @@ public class MissionGUIManager {
 
             List<Component> lore = new ArrayList<>();
             NamedTextColor nameColor = NamedTextColor.GRAY;
-            String status;
+            String statusStringPlain; // Plain string for status
 
             if (playerData.getActiveMissions().containsKey(mission.getId())) {
                 nameColor = NamedTextColor.YELLOW;
-                status = ChatColor.YELLOW + "In Progress";
+                statusStringPlain = "In Progress";
                 PlayerMissionProgress progress = playerData.getActiveMissionProgress(mission.getId());
                 for (int j = 0; j < mission.getObjectives().size(); j++) {
                     MissionObjective obj = mission.getObjectives().get(j);
@@ -105,28 +106,27 @@ public class MissionGUIManager {
             } else if (playerData.isMissionOnCooldown(mission.getId())) {
                 nameColor = NamedTextColor.DARK_GRAY;
                 long remainingSeconds = (playerData.getCooldownEndTime(mission.getId()) - System.currentTimeMillis()) / 1000;
-                status = ChatColor.DARK_GRAY + "On Cooldown (" + formatCooldown(remainingSeconds) + ")";
+                statusStringPlain = "On Cooldown (" + formatCooldown(remainingSeconds) + ")";
             } else if (playerData.hasCompletedMission(mission.getId())) {
-                nameColor = NamedTextColor.DARK_GRAY; // Or GREEN if you want to show completed differently
-                status = ChatColor.DARK_GREEN + "Completed";
+                nameColor = NamedTextColor.DARK_GRAY;
+                statusStringPlain = "Completed";
                 if (!"NONE".equalsIgnoreCase(mission.getRepeatableType())) {
-                    status += ChatColor.GRAY + " (Repeatable)";
+                    statusStringPlain += " (Repeatable)";
                 }
             } else if (missionManager.canStartMission(player, mission)) {
                 nameColor = NamedTextColor.GREEN;
-                status = ChatColor.GREEN + "Available";
-            } else { // Cannot start (e.g. unmet dependencies, no permission) - canStartMission should provide specific feedback
+                statusStringPlain = "Available";
+            } else {
                 nameColor = NamedTextColor.RED;
-                status = ChatColor.RED + "Locked";
+                statusStringPlain = "Locked";
             }
 
             meta.displayName(Component.text(mission.getName(), nameColor, TextDecoration.BOLD));
 
-
-            mission.getDescription().forEach(descLine -> lore.add(Component.text(ChatColor.translateAlternateColorCodes('&', descLine), NamedTextColor.WHITE)));
+            mission.getDescription().forEach(descLine -> lore.add(LegacyComponentSerializer.legacyAmpersand().deserialize(descLine).colorIfAbsent(NamedTextColor.WHITE)));
             lore.add(Component.text(" "));
             lore.add(Component.text("Category: ", NamedTextColor.BLUE).append(Component.text(mission.getCategory(), NamedTextColor.WHITE)));
-            lore.add(Component.text("Status: ").append(Component.text(ChatColor.stripColor(status), nameColor))); // Use nameColor for status too
+            lore.add(Component.text("Status: ").append(Component.text(statusStringPlain, nameColor)));
 
             if (mission.getRewards() != null) {
                 lore.add(Component.text("Rewards:", NamedTextColor.GOLD));

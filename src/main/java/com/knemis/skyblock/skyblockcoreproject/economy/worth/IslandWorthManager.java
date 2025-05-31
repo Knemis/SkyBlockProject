@@ -30,9 +30,9 @@ import java.util.Map;
 
 import java.util.logging.Level;
 
-
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
@@ -126,13 +126,13 @@ public class IslandWorthManager {
     public void calculateAndSetIslandWorth(Island island, Player requester) {
         if (island == null || island.getBaseLocation() == null || island.getWorld() == null) {
             if (requester != null && requester.isOnline()) {
-                requester.sendMessage(ChatColor.RED + "Ada bilgileri eksik, değer hesaplanamıyor.");
+                requester.sendMessage(Component.text("Ada bilgileri eksik, değer hesaplanamıyor.", NamedTextColor.RED));
             }
             return;
         }
 
         if (requester != null && requester.isOnline()) {
-            requester.sendMessage(ChatColor.YELLOW + "Ada değerin hesaplanıyor... Bu işlem biraz zaman alabilir.");
+            requester.sendMessage(Component.text("Ada değerin hesaplanıyor... Bu işlem biraz zaman alabilir.", NamedTextColor.YELLOW));
         }
 
         new BukkitRunnable() {
@@ -146,7 +146,7 @@ public class IslandWorthManager {
                 if (regionManager == null) {
                     plugin.getLogger().severe("[IslandWorth] RegionManager null, " + island.getOwnerUUID() + " için ada değeri hesaplanamıyor.");
                     if (requester != null && requester.isOnline()) {
-                        requester.sendMessage(ChatColor.RED + "Bölge yöneticisi bulunamadı, ada değeri hesaplanamıyor.");
+                        requester.sendMessage(Component.text("Bölge yöneticisi bulunamadı, ada değeri hesaplanamıyor.", NamedTextColor.RED));
                     }
                     return;
                 }
@@ -157,7 +157,7 @@ public class IslandWorthManager {
                         Region territory = islandLifecycleManager.getIslandTerritoryRegion(island.getBaseLocation()); // FAWE Change
                         if (territory == null) {
                             if (requester != null && requester.isOnline()) {
-                                requester.sendMessage(ChatColor.RED + "Ada bölgesi bulunamadı, değer hesaplanamıyor.");
+                                requester.sendMessage(Component.text("Ada bölgesi bulunamadı, değer hesaplanamıyor.", NamedTextColor.RED));
                             }
                             return;
                         }
@@ -170,22 +170,19 @@ public class IslandWorthManager {
                     } catch (IOException e) {
                         plugin.getLogger().log(Level.SEVERE, "[IslandWorth] Ada bölgesi alınırken hata: " + island.getOwnerUUID(), e);
                         if (requester != null && requester.isOnline()) {
-                            requester.sendMessage(ChatColor.RED + "Ada bölgesi alınırken bir hata oluştu.");
+                            requester.sendMessage(Component.text("Ada bölgesi alınırken bir hata oluştu.", NamedTextColor.RED));
                         }
                         return;
                     }
                 }
 
-
-                // WGRegion'dan min/max noktaları al
                 BlockVector3 min = wgRegion.getMinimumPoint();
                 BlockVector3 max = wgRegion.getMaximumPoint();
 
-                for (int x = min.getX(); x <= max.getX(); x++) {
-                    for (int y = min.getY(); y <= max.getY(); y++) {
-                        if (y < world.getMinHeight() || y >= world.getMaxHeight()) continue; // Dünya sınırları kontrolü
-                        for (int z = min.getZ(); z <= max.getZ(); z++) {
-                            // Bölgenin gerçekten o koordinatı içerip içermediğini kontrol et (silindirik vb. bölgeler için)
+                for (int x = min.getBlockX(); x <= max.getBlockX(); x++) {
+                    for (int y = min.getBlockY(); y <= max.getBlockY(); y++) {
+                        if (y < world.getMinHeight() || y >= world.getMaxHeight()) continue;
+                        for (int z = min.getBlockZ(); z <= max.getBlockZ(); z++) {
                             if (wgRegion.contains(x, y, z)) {
                                 Block block = world.getBlockAt(x, y, z);
                                 totalWorth += blockValues.getOrDefault(block.getType(), 0.0);
@@ -206,8 +203,8 @@ public class IslandWorthManager {
                     islandDataHandler.saveChangesToDisk();      // Diske yaz
 
                     if (requester != null && requester.isOnline()) {
-                        requester.sendMessage(ChatColor.GREEN + "Ada değerin hesaplandı: " + ChatColor.GOLD + String.format("%.2f", finalTotalWorth));
-                        requester.sendMessage(ChatColor.GREEN + "Ada Seviyen: " + ChatColor.GOLD + newLevel);
+                        requester.sendMessage(Component.text("Ada değerin hesaplandı: ", NamedTextColor.GREEN).append(Component.text(String.format("%.2f", finalTotalWorth), NamedTextColor.GOLD)));
+                        requester.sendMessage(Component.text("Ada Seviyen: ", NamedTextColor.GREEN).append(Component.text(String.valueOf(newLevel), NamedTextColor.GOLD)));
                     }
 
                     // Update mission progress for ISLAND_LEVEL objectives
@@ -225,7 +222,9 @@ public class IslandWorthManager {
                     if (newLevel > oldLevel) {
                         plugin.getLogger().info(island.getOwnerUUID() + " adası " + oldLevel + " seviyesinden " + newLevel + " seviyesine yükseldi!");
                         if (requester != null && requester.isOnline()) {
-                            requester.sendMessage(ChatColor.AQUA + "Tebrikler! Adan " + ChatColor.GOLD + newLevel + ". seviyeye ulaştı!");
+                            requester.sendMessage(Component.text("Tebrikler! Adan ", NamedTextColor.AQUA)
+                                    .append(Component.text(String.valueOf(newLevel), NamedTextColor.GOLD))
+                                    .append(Component.text(". seviyeye ulaştı!", NamedTextColor.AQUA)));
                         }
                         // Seviye atlama ödüllerini ver
                         for (int levelReached = oldLevel + 1; levelReached <= newLevel; levelReached++) {

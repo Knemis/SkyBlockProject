@@ -12,8 +12,9 @@ import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.setup.ShopSetupSession; // Added import
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -79,13 +80,13 @@ public class ShopListener implements Listener {
             boolean inShopSetupState = existingSession != null && existingSession.getPendingShop() != null && existingSession.getCurrentGuiTitle() != null && (existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.ITEM_SELECT_TITLE.toString()) || existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.QUANTITY_INPUT_TITLE.toString()) || existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.PRICE_INPUT_TITLE.toString()) || existingSession.getCurrentGuiTitle().equals(ShopSetupGUIManager.CONFIRMATION_TITLE.toString()));
             boolean inChoosingModeState = this.playerChoosingShopMode.containsKey(player.getUniqueId());
             if (inShopSetupState || inChoosingModeState) {
-                player.sendMessage(ChatColor.YELLOW + "You are already in a shop creation process. Type 'cancel' to abort.");
+                player.sendMessage(Component.text("You are already in a shop creation process. Type 'cancel' to abort.", NamedTextColor.YELLOW));
                 event.setCancelled(true);
                 return;
             }
 
             if (!player.hasPermission("skyblock.shop.create")) {
-                player.sendMessage(ChatColor.RED + "You don't have permission to create shops.");
+                player.sendMessage(Component.text("You don't have permission to create shops.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) lacks skyblock.shop.create permission for chest at %s.",
                         player.getName(), player.getUniqueId(), chestLocation));
                 event.setCancelled(true);
@@ -103,7 +104,7 @@ public class ShopListener implements Listener {
                 canCreateHere = true;
             } else {
                 if (island == null) {
-                    player.sendMessage(ChatColor.RED + "You cannot create a shop here as there is no island at this location.");
+                    player.sendMessage(Component.text("You cannot create a shop here as there is no island at this location.", NamedTextColor.RED));
                     plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) tried to create shop at %s but no island was found (non-admin).",
                             player.getName(), player.getUniqueId(), chestLocation));
                     event.setCancelled(true);
@@ -115,7 +116,7 @@ public class ShopListener implements Listener {
             }
 
             if (!canCreateHere) {
-                player.sendMessage(ChatColor.RED + "You can only create shops on your island or an island you are a member of.");
+                player.sendMessage(Component.text("You can only create shops on your island or an island you are a member of.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) tried to create shop at %s on island %s, but is not owner/member.",
                         player.getName(), player.getUniqueId(), chestLocation, (island != null ? island.getRegionId() : "NULL_ISLAND_OBJ")));
                 event.setCancelled(true);
@@ -135,14 +136,14 @@ public class ShopListener implements Listener {
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) is owner of existing active shop at %s. Opening admin menu.",
                                 player.getName(), player.getUniqueId(), chestLocation));
                     } else {
-                        player.sendMessage(ChatColor.YELLOW + "Resuming setup for this pending shop.");
+                        player.sendMessage(Component.text("Resuming setup for this pending shop.", NamedTextColor.YELLOW));
                         shopSetupGUIManager.openItemSelectionMenu(player, existingShop);
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) is owner of existing pending shop at %s. Opening item selection menu to resume setup.",
                                 player.getName(), player.getUniqueId(), chestLocation));
                     }
                 } else {
                     String ownerName = Bukkit.getOfflinePlayer(existingShop.getOwnerUUID()).getName();
-                    player.sendMessage(ChatColor.RED + "A shop owned by " + ownerName + " already exists here.");
+                    player.sendMessage(Component.text("A shop owned by " + ownerName + " already exists here.", NamedTextColor.RED));
                     plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) tried to create shop at %s, but it's owned by %s.",
                             player.getName(), player.getUniqueId(), chestLocation, ownerName));
                 }
@@ -151,12 +152,12 @@ public class ShopListener implements Listener {
             }
 
             this.playerChoosingShopMode.put(player.getUniqueId(), chestLocation);
-            player.sendMessage(ChatColor.GOLD + "------------------------------------------");
-            player.sendMessage(ChatColor.YELLOW + "Choose a shop mode for this chest location:");
-            player.sendMessage(ChatColor.GREEN + "Type 'market'" + ChatColor.GRAY + " - Players open chest, select custom amount.");
-            player.sendMessage(ChatColor.GREEN + "Type 'bank'" + ChatColor.GRAY + "   - Players click sign/chest to buy fixed bundles.");
-            player.sendMessage(ChatColor.RED + "Type 'cancel'" + ChatColor.GRAY + " - Abort shop creation.");
-            player.sendMessage(ChatColor.GOLD + "------------------------------------------");
+            player.sendMessage(Component.text("------------------------------------------", NamedTextColor.GOLD));
+            player.sendMessage(Component.text("Choose a shop mode for this chest location:", NamedTextColor.YELLOW));
+            player.sendMessage(Component.text("Type 'market'", NamedTextColor.GREEN).append(Component.text(" - Players open chest, select custom amount.", NamedTextColor.GRAY)));
+            player.sendMessage(Component.text("Type 'bank'", NamedTextColor.GREEN).append(Component.text("   - Players click sign/chest to buy fixed bundles.", NamedTextColor.GRAY)));
+            player.sendMessage(Component.text("Type 'cancel'", NamedTextColor.RED).append(Component.text(" - Abort shop creation.", NamedTextColor.GRAY)));
+            player.sendMessage(Component.text("------------------------------------------", NamedTextColor.GOLD));
             plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) initiating shop mode choice for new shop at %s.",
                     player.getName(), player.getUniqueId(), chestLocation));
             event.setCancelled(true);
@@ -184,7 +185,7 @@ public class ShopListener implements Listener {
                         }
 
                         if (effectiveState == StateFlag.State.DENY) {
-                            player.sendMessage(ChatColor.RED + "The owner has disabled visitor shop access on this island.");
+                            player.sendMessage(Component.text("The owner has disabled visitor shop access on this island.", NamedTextColor.RED));
                             plugin.getLogger().info(String.format("ShopListener: Player %s denied access to shop at %s due to VISITOR_SHOP_USE flag being DENY.",
                                                     player.getName(), chestLocation));
                             return; // Do not open GUI
@@ -205,11 +206,11 @@ public class ShopListener implements Listener {
                     event.setCancelled(true);
                     if (plugin.getShopSetupGUIManager() != null) {
                         plugin.getShopSetupGUIManager().openItemSelectionMenu(player, pendingShop);
-                        player.sendMessage(ChatColor.YELLOW + "Resuming shop setup: Please select an item.");
+                        player.sendMessage(Component.text("Resuming shop setup: Please select an item.", NamedTextColor.YELLOW));
                         plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) right-clicked their own pending shop at %s. Attempting to resume setup by opening item selection.",
                                 player.getName(), player.getUniqueId(), chestLocation));
                     } else {
-                        player.sendMessage(ChatColor.RED + "Error: Shop setup GUI is unavailable.");
+                        player.sendMessage(Component.text("Error: Shop setup GUI is unavailable.", NamedTextColor.RED));
                         plugin.getLogger().severe("ShopListener: ShopSetupGUIManager is null when trying to resume pending shop for " + player.getName());
                     }
                 }
@@ -237,12 +238,12 @@ public class ShopListener implements Listener {
                 selectedMode = ShopMode.BANK_CHEST;
             } else if (message.equals("cancel")) {
                 this.playerChoosingShopMode.remove(playerId);
-                player.sendMessage(ChatColor.YELLOW + "Shop creation cancelled.");
+                player.sendMessage(Component.text("Shop creation cancelled.", NamedTextColor.YELLOW));
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) cancelled shop creation at mode selection for location %s.",
                         player.getName(), playerId, chestLocation));
                 return;
             } else {
-                player.sendMessage(ChatColor.RED + "Invalid choice. Type 'market', 'bank', or 'cancel'.");
+                player.sendMessage(Component.text("Invalid choice. Type 'market', 'bank', or 'cancel'.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) made invalid shop mode choice: '%s' for location %s.",
                         player.getName(), playerId, message, chestLocation));
                 return;
@@ -255,7 +256,7 @@ public class ShopListener implements Listener {
                 @Override
                 public void run() {
                     if (plugin.getShopManager().isShop(chestLocation)) {
-                        player.sendMessage(ChatColor.RED + "A shop was created at this location while you were choosing. Please try again.");
+                        player.sendMessage(Component.text("A shop was created at this location while you were choosing. Please try again.", NamedTextColor.RED));
                         plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) chose mode for %s, but shop was created concurrently by another process.",
                                 player.getName(), playerId, chestLocation));
                         return;
@@ -275,15 +276,15 @@ public class ShopListener implements Listener {
                         if (plugin.getShopSetupGUIManager() != null) {
                             // plugin.getPlayerShopSetupState().put(playerId, chestLocation); // This state is now in the session
                             plugin.getShopSetupGUIManager().openItemSelectionMenu(player, newShop);
-                            player.sendMessage(ChatColor.GREEN + "Shop mode '" + finalSelectedMode.name() + "' selected. Now, please select the item for your shop.");
+                            player.sendMessage(Component.text("Shop mode '" + finalSelectedMode.name() + "' selected. Now, please select the item for your shop.", NamedTextColor.GREEN));
                             plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) successfully initiated shop at %s with mode %s. Session created. Opening item selection. (Internal ID: %s)",
                                     player.getName(), playerId, Shop.locationToString(newShop.getLocation()), finalSelectedMode.name(), newShop.getShopId()));
                         } else {
                             plugin.getLogger().severe("ShopSetupGUIManager is null! Cannot open item selection menu for " + player.getName());
-                            player.sendMessage(ChatColor.RED + "Error: Shop setup GUI could not be opened. Please contact an admin.");
+                            player.sendMessage(Component.text("Error: Shop setup GUI could not be opened. Please contact an admin.", NamedTextColor.RED));
                         }
                     } else {
-                        player.sendMessage(ChatColor.RED + "Failed to initiate shop creation. Please ensure the location is valid and try again.");
+                        player.sendMessage(Component.text("Failed to initiate shop creation. Please ensure the location is valid and try again.", NamedTextColor.RED));
                         plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) selected mode %s for %s, but shopManager.initiateShopCreation failed.",
                                 player.getName(), playerId, finalSelectedMode.name(), chestLocation));
                     }
@@ -318,7 +319,7 @@ public class ShopListener implements Listener {
             Shop shop = (shopLocation != null) ? shopManager.getActiveShop(shopLocation) : null;
 
             if (shop == null || !shop.getOwnerUUID().equals(player.getUniqueId())) {
-                player.sendMessage(ChatColor.RED + "Error: Shop not found or you do not have permission to manage this shop.");
+                player.sendMessage(Component.text("Error: Shop not found or you do not have permission to manage this shop.", NamedTextColor.RED));
                 plugin.getLogger().warning(String.format("ShopListener: Player %s (UUID: %s) in Shop Admin GUI, but shop location/object is null or not owner. ShopLoc: %s, Shop: %s",
                         player.getName(), player.getUniqueId(), shopLocation, shop));
                 player.closeInventory();
@@ -363,7 +364,7 @@ public class ShopListener implements Listener {
             }
             PlayerShopAdminGUIManager.AdminInputType expectedInput = shopAdminGUIManager.getPlayerWaitingForAdminInput().remove(playerId); // Use playerShopAdminGUIManager
             if (expectedInput != null) {
-                player.sendMessage(ChatColor.YELLOW + "Shop setting input cancelled.");
+                player.sendMessage(Component.text("Shop setting input cancelled.", NamedTextColor.YELLOW));
                 plugin.getLogger().info(String.format("ShopListener: Player %s (UUID: %s) cancelled shop admin input for %s by closing GUI.",
                         player.getName(), playerId, expectedInput.name()));
             }

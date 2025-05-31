@@ -4,7 +4,7 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.island.features.IslandWelcomeManager;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -82,7 +82,7 @@ public class IslandWelcomeListener implements Listener {
 
             String welcomeMessage = welcomeManager.getWelcomeMessage(islandAtTo);
             if (welcomeMessage != null && !welcomeMessage.isEmpty()) {
-                player.sendMessage(ChatColor.translateAlternateColorCodes('&', welcomeMessage));
+                player.sendMessage(LegacyComponentSerializer.legacyAmpersand().deserialize(welcomeMessage));
                 plugin.getLogger().info(String.format("Welcome message displayed to %s for island %s (Owner: %s): '%s'",
                         player.getName(), islandAtTo.getIslandName(), islandAtTo.getOwnerUUID().toString(), welcomeMessage));
             } else {

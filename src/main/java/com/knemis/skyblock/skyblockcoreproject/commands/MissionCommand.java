@@ -2,7 +2,8 @@ package com.knemis.skyblock.skyblockcoreproject.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.missions.MissionCategory;
-import org.bukkit.ChatColor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -35,7 +36,7 @@ public class MissionCommand implements CommandExecutor, TabCompleter {
         Player player = (Player) sender;
 
         if (plugin.getMissionGUIManager() == null) {
-            player.sendMessage(ChatColor.RED + "Missions system is currently unavailable. Please try again later.");
+            player.sendMessage(Component.text("Missions system is currently unavailable. Please try again later.", NamedTextColor.RED));
             plugin.getLogger().severe("MissionGUIManager is null! Cannot open missions GUI."); // This is already a good log
             plugin.getLogger().warning(String.format("Player %s failed to execute /%s: MissionGUIManager is null.", player.getName(), command.getName()));
             return true;
@@ -51,7 +52,7 @@ public class MissionCommand implements CommandExecutor, TabCompleter {
 
         // Potentially add other subcommands later, e.g., /missions list [category]
         // For now, only the GUI is supported.
-        player.sendMessage(ChatColor.RED + "Usage: /" + label + " [gui|open]");
+        player.sendMessage(Component.text("Usage: /" + label + " [gui|open]", NamedTextColor.RED));
         plugin.getLogger().warning(String.format("Player %s failed to execute /%s: Unknown or unsupported subcommand '%s'. Usage: /%s [gui|open]", player.getName(), command.getName(), subCommand, label));
         return true;
     }
