@@ -35,7 +35,7 @@ public class ShopSignManager {
 
         // Deserialize to component to handle colors, then serialize to plain for length check
         Component component = LegacyComponentSerializer.legacyAmpersand().deserialize(text); // Assuming '&' codes
-        String plainText = PlainComponentSerializer.plain().serialize(component);
+        String plainText = PlainComponentSerializer.plainText().serialize(component);
 
         if (plainText.length() <= maxLength) {
             return text; // Return original if it contains formatting and is short enough based on plain length
@@ -67,7 +67,7 @@ public class ShopSignManager {
             String[] parts = name.split(" ");
             StringBuilder capitalizedName = new StringBuilder();
             for (String part : parts) {
-                if (part.length() > 0) {
+                if (!part.isEmpty()) {
                     capitalizedName.append(Character.toUpperCase(part.charAt(0)))
                             .append(part.substring(1).toLowerCase()).append(" ");
                 }
@@ -166,11 +166,11 @@ public class ShopSignManager {
         // currencySymbol is already a legacy string
         String fullPriceLineLegacy = bundleInfo + " " + currencySymbol + " " + priceStringLegacy;
 
-        String plainFullPriceLine = PlainComponentSerializer.plain().serialize(LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy));
+        String plainFullPriceLine = PlainComponentSerializer.plainText().serialize(LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy));
 
         if (plainFullPriceLine.length() > 15) {
             fullPriceLineLegacy = shop.getBundleAmount() + currencySymbol + "/" + priceStringLegacy;
-            plainFullPriceLine = PlainComponentSerializer.plain().serialize(LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy));
+            plainFullPriceLine = PlainComponentSerializer.plainText().serialize(LegacyComponentSerializer.legacyAmpersand().deserialize(fullPriceLineLegacy));
              if (plainFullPriceLine.length() > 15) {
                 if (canPlayerBuy && canPlayerSell) priceStringLegacy = String.format("A:%.0f S:%.0f", shop.getBuyPrice(), shop.getSellPrice());
                 else if (canPlayerBuy) priceStringLegacy = String.format("F:%.0f", shop.getBuyPrice());
