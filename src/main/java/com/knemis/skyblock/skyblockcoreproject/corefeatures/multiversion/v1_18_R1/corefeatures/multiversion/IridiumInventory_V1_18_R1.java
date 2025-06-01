@@ -1,6 +1,11 @@
-package com.knemis.skyblock.skyblockcoreproject.corefeatures.multiversion.v1_18_R1.corefeatures.multiversion;
+package com.iridium.iridiumcore.multiversion;
 
-public class IridiumInventory_V1_18_R1 {
-    public static class MultiVersion_V1_18_R1 {
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+
+public class IridiumInventory_V1_18_R1 extends IridiumInventory {
+    @Override
+    public Inventory getTopInventory(Player player) {
+        return player.getOpenInventory().getTopInventory();
     }
 }
