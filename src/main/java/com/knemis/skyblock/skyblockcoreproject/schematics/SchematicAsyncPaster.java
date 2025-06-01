@@ -118,7 +118,7 @@ public class SchematicAsyncPaster implements SchematicPaster { // Renamed and im
                         String blockStateString = null;
                         byte currentBlockDataVal = schematicData.blockdata[index];
 
-                        for (Map.Entry<String, Tag> entry : schematicData.palette.entrySet()) {
+                        for (Map.Entry<String, Tag<?>> entry : schematicData.palette.entrySet()) {
                             if (entry.getValue() instanceof IntTag) {
                                 if (((IntTag) entry.getValue()).getValue() == currentBlockDataVal) {
                                     blockStateString = entry.getKey();
@@ -147,10 +147,10 @@ public class SchematicAsyncPaster implements SchematicPaster { // Renamed and im
 
                     if (!coordinates.hasNext()) { // All blocks placed
                         if (schematicData.tileEntities != null) {
-                            for (Tag tag : schematicData.tileEntities) {
+                            for (Tag<?> tag : schematicData.tileEntities) { // Changed Tag to Tag<?>
                                 if (!(tag instanceof CompoundTag)) continue;
                                 CompoundTag t = (CompoundTag) tag;
-                                Map<String, Tag> tags = t.getValue();
+                                Map<String, Tag<?>> tags = t.getValue(); // Changed Tag to Tag<?>
 
                                 if (!tags.containsKey("Pos") || !tags.containsKey("Id")) continue;
 
@@ -165,11 +165,11 @@ public class SchematicAsyncPaster implements SchematicPaster { // Renamed and im
                                 if (id.equalsIgnoreCase("chest") && block.getState() instanceof Chest) {
                                     Chest chest = (Chest) block.getState();
                                     if (tags.containsKey("Items") && tags.get("Items") instanceof ListTag) { // Check type
-                                        List<Tag> items = SchematicData.getChildTag(tags, "Items", ListTag.class).getValue();
+                                        List<Tag<?>> items = SchematicData.getChildTag(tags, "Items", ListTag.class).getValue(); // Changed Tag to Tag<?>
                                         chest.getBlockInventory().clear(); // Clear existing items before adding new ones
-                                        for (Tag item : items) {
+                                        for (Tag<?> item : items) { // Changed Tag to Tag<?>
                                             if (!(item instanceof CompoundTag)) continue;
-                                            Map<String, Tag> itemtag = ((CompoundTag) item).getValue();
+                                            Map<String, Tag<?>> itemtag = ((CompoundTag) item).getValue(); // Changed Tag to Tag<?>
                                             if (!itemtag.containsKey("Slot") || !itemtag.containsKey("id") || !itemtag.containsKey("Count")) continue;
 
                                             byte slot = SchematicData.getChildTag(itemtag, "Slot", ByteTag.class).getValue();

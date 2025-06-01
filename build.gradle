@@ -54,6 +54,23 @@ dependencies {
     }
     compileOnly 'org.jetbrains:annotations:24.1.0' // Added JetBrains annotations for @Nullable etc.
 
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // XSeries
+    implementation 'com.github.cryptomorin:XSeries:9.8.0'
+
+    // Kyori Adventure for modern text components
+    compileOnly "net.kyori:adventure-api:4.17.0"
+    compileOnly "net.kyori:adventure-text-serializer-plain:4.17.0"
+    // For legacy color codes (e.g., '&c'), if needed for ChatUtils or existing configs
+    compileOnly "net.kyori:adventure-text-serializer-legacy:4.17.0"
+    // Placeholder for IridiumTeams - assuming it's a provided JAR or needs specific setup
+    // compileOnly files('libs/IridiumTeams-API.jar') // Example if it were a local JAR
+
     // Test dependencies
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'

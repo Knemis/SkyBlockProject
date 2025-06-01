@@ -51,6 +51,11 @@ public class IslandCreateEvent extends Event implements Cancellable {
         this.cancelled = cancelled;
     }
 
+    @Override
+    public boolean isCancelled() {
+        return this.cancelled;
+    }
+
     @Nullable
     public String getIslandName() {
         return islandName;
