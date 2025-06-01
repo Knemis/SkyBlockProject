@@ -1,4 +1,4 @@
-package com.knemis.skyblock.skyblockcoreproject.corefeatures.multiversion.v1_10_R1.corefeatures.multiversion;
+package com.iridium.iridiumcore.multiversion;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
