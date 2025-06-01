@@ -15,7 +15,7 @@ import java.util.List;
 
 // The 'implements com.iridium.iridiumteams.TeamChatPlaceholderBuilder' may cause issues
 // if the IridiumTeams framework is not present. This will be addressed in compilation/dependency resolution step.
-public class TeamChatPlaceholderBuilder implements com.iridium.iridiumteams.TeamChatPlaceholderBuilder {
+public class TeamChatPlaceholderBuilder implements  {
 
     @Override
     public List<Placeholder> getPlaceholders(AsyncPlayerChatEvent event, Player player) {
