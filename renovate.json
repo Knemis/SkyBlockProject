@@ -3,5 +3,32 @@
   "extends": [
     "config:recommended"
   ],
-  "schedule": ["every day"]
+  "schedule": ["every day"],
+  "labels": ["dependencies", "renovate"],
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true,
+  "packageRules": [
+    {
+      "description": "Group ESLint and Prettier updates",
+      "matchPackagePatterns": ["^eslint", "prettier"],
+      "groupName": "linters and formatters"
+    },
+    {
+      "description": "Automerge non-major updates for most dependencies",
+      "matchUpdateTypes": ["minor", "patch", "pin", "digest"],
+      "matchDepTypes": ["dependencies", "devDependencies"],
+      "automerge": true,
+      "automergeType": "pr"
+    },
+    {
+      "description": "Assign a reviewer for critical package updates (example)",
+      "matchPackageNames": ["apache-beam"],
+      "assignees": ["@github_username_of_reviewer"]
+    },
+    {
+      "description": "Automatically rebase PRs when conflicts occur",
+      "rebaseStalePrs": true
+    }
+  ]
 }
