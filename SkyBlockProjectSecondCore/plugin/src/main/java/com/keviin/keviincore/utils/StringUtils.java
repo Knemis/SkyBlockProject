@@ -1,7 +1,7 @@
-package com.iridium.iridiumcore.utils;
+package com.keviin.keviincore.utils;
 
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import com.iridium.iridiumcore.DefaultFontInfo;
+import com.keviin.keviincore.DefaultFontInfo;
 
 import java.util.List;
 import java.util.stream.Collectors;

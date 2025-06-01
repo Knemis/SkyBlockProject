@@ -1,10 +1,10 @@
-package com.iridium.iridiumcore.gui;
+package com.keviin.keviincore.gui;
 
-import com.iridium.iridiumcore.Background;
-import com.iridium.iridiumcore.IridiumCore;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumcore.utils.InventoryUtils;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
+import com.keviin.keviincore.Background;
+import com.keviin.keviincore.IridiumCore;
+import com.keviin.keviincore.Item;
+import com.keviin.keviincore.utils.InventoryUtils;
+import com.keviin.keviincore.utils.ItemStackUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;

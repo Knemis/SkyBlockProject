@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore;
+package com.keviin.keviincore;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore.utils;
+package com.keviin.keviincore.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

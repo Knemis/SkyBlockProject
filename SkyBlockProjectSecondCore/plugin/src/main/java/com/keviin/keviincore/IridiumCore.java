@@ -1,9 +1,9 @@
-package com.iridium.iridiumcore;
+package com.keviin.keviincore;
 
-import com.iridium.iridiumcore.gui.GUI;
-import com.iridium.iridiumcore.multiversion.IridiumInventory;
-import com.iridium.iridiumcore.multiversion.MultiVersion;
-import com.iridium.iridiumcore.nms.NMS;
+import com.keviin.keviincore.gui.GUI;
+import com.keviin.keviincore.multiversion.IridiumInventory;
+import com.keviin.keviincore.multiversion.MultiVersion;
+import com.keviin.keviincore.nms.NMS;
 import io.papermc.lib.PaperLib;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

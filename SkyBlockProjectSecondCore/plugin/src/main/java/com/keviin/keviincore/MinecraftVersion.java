@@ -1,7 +1,7 @@
-package com.iridium.iridiumcore;
+package com.keviin.keviincore;
 
-import com.iridium.iridiumcore.multiversion.*;
-import com.iridium.iridiumcore.nms.*;
+import com.keviin.keviincore.multiversion.*;
+import com.keviin.keviincore.nms.*;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
