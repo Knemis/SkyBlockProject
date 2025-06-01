@@ -1,0 +1,21 @@
+[submodule "IridiumCore"]
+	path = IridiumCore
+	url = https://github.com/Iridium-Development/IridiumCore
+[submodule "IridiumEnchants"]
+	path = IridiumEnchants
+	url = https://github.com/Iridium-Development/IridiumEnchants
+[submodule "IridiumMobCoins"]
+	path = IridiumMobCoins
+	url = https://github.com/Iridium-Development/IridiumMobCoins
+[submodule "IridiumChunkBusters"]
+	path = IridiumChunkBusters
+	url = https://github.com/Iridium-Development/IridiumChunkBusters
+[submodule "IridiumColorAPI"]
+	path = IridiumColorAPI
+	url = https://github.com/Iridium-Development/IridiumColorAPI
+[submodule "IridiumFactions"]
+	path = IridiumFactions
+	url = https://github.com/Iridium-Development/IridiumFactions
+[submodule "IridiumTeams"]
+	path = IridiumTeams
+	url = https://github.com/Iridium-Development/IridiumTeams
