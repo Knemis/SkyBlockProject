@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore.gui;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.gui;
 
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;

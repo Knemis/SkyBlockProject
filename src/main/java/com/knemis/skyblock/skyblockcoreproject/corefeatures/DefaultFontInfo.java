@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures;
 
 public enum DefaultFontInfo {
 

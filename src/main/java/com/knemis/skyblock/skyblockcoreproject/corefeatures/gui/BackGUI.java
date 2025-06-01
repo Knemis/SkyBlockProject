@@ -1,10 +1,10 @@
-package com.iridium.iridiumcore.gui;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.gui;
 
-import com.iridium.iridiumcore.Background;
-import com.iridium.iridiumcore.IridiumCore;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumcore.utils.InventoryUtils;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.Background;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.IridiumCore;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.Item;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.ItemStackUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;

@@ -1,11 +1,11 @@
-package com.iridium.iridiumcore.utils;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.utils;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.profiles.builder.XSkull;
 import com.cryptomorin.xseries.profiles.objects.Profileable;
 import com.cryptomorin.xseries.reflection.XReflection;
-import com.iridium.iridiumcore.IridiumCore;
-import com.iridium.iridiumcore.Item;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.IridiumCore;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.Item;
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.NBTItem;
 import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;

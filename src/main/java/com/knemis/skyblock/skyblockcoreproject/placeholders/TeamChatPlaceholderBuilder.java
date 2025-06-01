@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.placeholders; // Adjusted package
 
-// Assuming com.iridium.iridiumcore.utils.Placeholder is a dependency.
+// Assuming com.knemis.skyblock.skyblockcoreproject.placeholders.utils.corefeatures.Placeholder is a dependency.
 // If not, this will need to be adapted or a placeholder class created.
 import com.knemis.skyblock.skyblockcoreproject.utils.Placeholder;
 // Assuming com.iridium.iridiumteams.TeamChatPlaceholderBuilder is an interface dependency.

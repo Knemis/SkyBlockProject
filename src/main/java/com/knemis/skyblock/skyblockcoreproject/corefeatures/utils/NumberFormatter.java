@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore.utils;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.utils;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

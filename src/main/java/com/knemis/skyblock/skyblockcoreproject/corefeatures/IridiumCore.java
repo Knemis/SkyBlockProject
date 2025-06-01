@@ -1,6 +1,6 @@
-package com.iridium.iridiumcore;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures;
 
-import com.iridium.iridiumcore.gui.GUI;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.gui.GUI;
 import com.iridium.iridiumcore.multiversion.IridiumInventory;
 import com.iridium.iridiumcore.multiversion.MultiVersion;
 import com.iridium.iridiumcore.nms.NMS;

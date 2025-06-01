@@ -1,7 +1,7 @@
-package com.iridium.iridiumcore.utils;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.utils;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.Background;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.Background;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 

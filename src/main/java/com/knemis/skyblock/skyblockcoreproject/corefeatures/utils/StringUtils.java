@@ -1,7 +1,7 @@
-package com.iridium.iridiumcore.utils;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.utils;
 
 import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import com.iridium.iridiumcore.DefaultFontInfo;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.DefaultFontInfo;
 
 import java.util.List;
 import java.util.stream.Collectors;

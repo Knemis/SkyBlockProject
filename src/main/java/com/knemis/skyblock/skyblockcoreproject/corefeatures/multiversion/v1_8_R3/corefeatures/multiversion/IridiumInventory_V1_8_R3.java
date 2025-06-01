@@ -1,0 +1,4 @@
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.multiversion.v1_8_R3.corefeatures.multiversion;
+
+public class IridiumInventory_V1_8_R3 {
+}
