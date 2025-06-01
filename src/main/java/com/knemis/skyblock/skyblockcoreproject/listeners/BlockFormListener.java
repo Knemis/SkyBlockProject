@@ -4,7 +4,6 @@ import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler; // Assuming this can get island at location
-import com.knemis.skyblock.skyblockcoreproject.utils.RandomAccessList;
 
 import org.bukkit.Material;
 import org.bukkit.World;
@@ -12,10 +11,8 @@ import org.bukkit.block.BlockState;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockFormEvent;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;

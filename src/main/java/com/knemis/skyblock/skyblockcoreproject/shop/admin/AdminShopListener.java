@@ -4,7 +4,6 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopInventoryManager;
 import org.bukkit.NamespacedKey;
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -14,13 +13,11 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 
-import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;

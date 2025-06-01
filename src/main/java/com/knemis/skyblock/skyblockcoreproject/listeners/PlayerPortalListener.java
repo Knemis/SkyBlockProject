@@ -3,8 +3,6 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
-import com.knemis.skyblock.skyblockcoreproject.island.IslandTeleportManager; // For potential safe Y finding
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

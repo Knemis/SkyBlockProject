@@ -2,9 +2,6 @@ package com.knemis.skyblock.skyblockcoreproject.gui;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.base.BackGUI;
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
-import com.knemis.skyblock.skyblockcoreproject.utils.InventoryUtils;
-import com.knemis.skyblock.skyblockcoreproject.utils.Placeholder;
 
 import com.cryptomorin.xseries.XBiome;
 import com.cryptomorin.xseries.XMaterial;
@@ -28,7 +25,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public class BiomeCategoryGUI extends BackGUI {
 

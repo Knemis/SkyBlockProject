@@ -2,7 +2,6 @@ package com.knemis.skyblock.skyblockcoreproject.jobs;
 
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.shop.EconomyManager; // For job payments
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;

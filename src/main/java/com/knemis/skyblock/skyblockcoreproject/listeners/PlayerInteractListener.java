@@ -2,9 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 
 import com.cryptomorin.xseries.XMaterial; // For XMaterial.END_PORTAL
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter; // For WorldGuard check
 import com.sk89q.worldguard.WorldGuard; // For WorldGuard check

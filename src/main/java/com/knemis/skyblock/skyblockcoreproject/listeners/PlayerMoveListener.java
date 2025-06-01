@@ -4,7 +4,6 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandTeleportManager; // For teleporting to island home
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
 
 
 import org.bukkit.Location;

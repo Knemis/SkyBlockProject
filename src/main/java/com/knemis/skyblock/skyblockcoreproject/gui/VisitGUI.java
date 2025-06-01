@@ -4,9 +4,6 @@ import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.base.PagedGUI;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.placeholders.IslandPlaceholderBuilder;
-import com.knemis.skyblock.skyblockcoreproject.utils.InventoryUtils;
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils;
-import com.knemis.skyblock.skyblockcoreproject.utils.Placeholder; // Explicit import for Placeholder
 
 import com.cryptomorin.xseries.XMaterial; // For default background material
 

@@ -3,7 +3,6 @@ package com.knemis.skyblock.skyblockcoreproject.listeners;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.island.IslandDataHandler;
-import com.knemis.skyblock.skyblockcoreproject.utils.ChatUtils; // Assuming ChatUtils for color
 
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
