@@ -11,7 +11,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-// Placeholder for the IridiumTeams EnhancementUpdateEvent.
+// Placeholder for a Team EnhancementUpdateEvent.
 // If this event were to be integrated, it would need to be defined in the project.
 // import com.iridium.iridiumteams.api.EnhancementUpdateEvent; // This would be a project-specific version
 
@@ -27,15 +27,15 @@ public class EnhancementUpdateListener implements Listener {
     // @EventHandler
     // public void onEnhancementUpdateEvent(EnhancementUpdateEvent<Island, User> event) {
     //     if (event.getEnhancement().equals("size")) {
-    //         Bukkit.getScheduler().runTask(IridiumSkyblock.getInstance(), () ->
-    //                 IridiumSkyblock.getInstance().getTeamManager().getMembersOnIsland(event.getTeam()).forEach(user -> IridiumSkyblock.getInstance().getTeamManager().sendIslandBorder(user.getPlayer()))
+    //         Bukkit.getScheduler().runTask(SkyBlockProject.getInstance(), () -> // Assuming SkyBlockProject is main plugin
+    //                 SkyBlockProject.getInstance().getTeamManager().getMembersOnIsland(event.getTeam()).forEach(user -> SkyBlockProject.getInstance().getTeamManager().sendIslandBorder(user.getPlayer()))
     //         );
     //     }
     // }
 
     // TODO: This listener is currently a stub. It relies on 'EnhancementUpdateEvent'
     //       and an enhancement system (e.g., for 'size' upgrades) that are not yet
-    //       part of skyblockcoreproject or have not been integrated from Iridium code.
+    //       part of skyblockcoreproject or have not been integrated from the original code.
     //       To make this functional, skyblockcoreproject would need its own event for
     //       island upgrades/enhancements, or this logic would need to be triggered
     //       directly after an island size upgrade occurs through other means.

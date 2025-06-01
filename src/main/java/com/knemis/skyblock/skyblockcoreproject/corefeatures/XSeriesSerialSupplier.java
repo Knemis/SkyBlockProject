@@ -48,7 +48,7 @@ public class XSeriesSerialSupplier {
             String xMaterial = node.toString().replace("\"", "");
             Optional<XMaterial> optional = XMaterial.matchXMaterial(xMaterial);
             if(!optional.isPresent()){
-                IridiumCore.getInstance().getLogger().warning("Could not deserialize "+xMaterial+" to a Material, defaulting to AIR");
+                SkyBlockFeatureManager.getInstance().getLogger().warning("Could not deserialize "+xMaterial+" to a Material, defaulting to AIR");
             }
             return optional.orElse(XMaterial.AIR);
         }
@@ -84,7 +84,7 @@ public class XSeriesSerialSupplier {
             String xPotion = node.toString().replace("\"", "");
             Optional<XPotion> optional = XPotion.of(xPotion);
             if(!optional.isPresent()){
-                IridiumCore.getInstance().getLogger().warning("Could not deserialize "+xPotion+" to a Potion, defaulting to LUCK");
+                SkyBlockFeatureManager.getInstance().getLogger().warning("Could not deserialize "+xPotion+" to a Potion, defaulting to LUCK");
             }
             return optional.orElse(XPotion.LUCK);
         }
@@ -120,7 +120,7 @@ public class XSeriesSerialSupplier {
             String xEnchantment = node.toString().replace("\"", "");
             Optional<XEnchantment> optional = XEnchantment.of(xEnchantment);
             if(!optional.isPresent()){
-                IridiumCore.getInstance().getLogger().warning("Could not deserialize "+xEnchantment+" to an Enchantment, defaulting to WIND_BURST");
+                SkyBlockFeatureManager.getInstance().getLogger().warning("Could not deserialize "+xEnchantment+" to an Enchantment, defaulting to WIND_BURST");
             }
             return optional.orElse(XEnchantment.WIND_BURST);
         }
@@ -156,7 +156,7 @@ public class XSeriesSerialSupplier {
             String xBiome = node.toString().replace("\"", "");
             Optional<XBiome> optional = XBiome.of(xBiome);
             if(!optional.isPresent()){
-                IridiumCore.getInstance().getLogger().warning("Could not deserialize "+xBiome+" to a Biome, defaulting to Plains");
+                SkyBlockFeatureManager.getInstance().getLogger().warning("Could not deserialize "+xBiome+" to a Biome, defaulting to Plains");
             }
             return optional.orElse(XBiome.PLAINS);
         }
@@ -192,7 +192,7 @@ public class XSeriesSerialSupplier {
             String xSound = node.toString().replace("\"", "");
             Optional<XSound> optional = XSound.of(xSound);
             if(!optional.isPresent()){
-                IridiumCore.getInstance().getLogger().warning("Could not deserialize "+xSound+" to a Sound, defaulting to ENTITY_PLAYER_LEVELUP");
+                SkyBlockFeatureManager.getInstance().getLogger().warning("Could not deserialize "+xSound+" to a Sound, defaulting to ENTITY_PLAYER_LEVELUP");
             }
             return optional.orElse(XSound.ENTITY_PLAYER_LEVELUP);
         }
@@ -228,7 +228,7 @@ public class XSeriesSerialSupplier {
             String xEntityType = node.toString().replace("\"", "");
             Optional<XEntityType> optional = XEntityType.of(xEntityType);
             if(!optional.isPresent()){
-                IridiumCore.getInstance().getLogger().warning("Could not deserialize "+xEntityType+" to an EntityType, defaulting to WOLF");
+                SkyBlockFeatureManager.getInstance().getLogger().warning("Could not deserialize "+xEntityType+" to an EntityType, defaulting to WOLF");
             }
             return optional.orElse(XEntityType.WOLF);
         }

@@ -30,7 +30,7 @@ public class PlayerTeleportListener implements Listener {
             // TODO: Implement or verify how island borders are visually sent to players in SkyBlockProject.
             // This functionality might reside in IslandLifecycleManager (related to their region)
             // or a dedicated IslandBorderManager / IslandDisplayManager.
-            // The original Iridium code called: IridiumSkyblock.getInstance().getTeamManager().sendIslandBorder(player);
+            // The original code called: SkyBlockProject.getInstance().getTeamManager().sendIslandBorder(player);
             // Example placeholder call:
             // if (plugin.getIslandDisplayManager() != null) { // Assuming such a manager exists
             //     plugin.getIslandDisplayManager().updatePlayerIslandBorderView(player);

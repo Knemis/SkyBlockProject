@@ -32,7 +32,7 @@ public class WorldEditPaster implements SchematicPaster { // Renamed and impleme
 
     private static final HashMap<File, ClipboardFormat> cachedClipboardFormat = new HashMap<>();
 
-    // The original isWorking() method relied on IridiumSkyblock.getInstance().getLogger().
+    // The original isWorking() method relied on SkyBlockProject.getInstance().getLogger().
     // This static utility method might be better placed in a WorldEdit utility class for the project,
     // or called by the plugin's main class. For now, adapting it to use Bukkit.getLogger().
     public static boolean isWorldEditWorking() {

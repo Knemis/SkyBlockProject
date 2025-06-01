@@ -37,7 +37,7 @@ public class PlayerJoinListener implements Listener {
         }
 
         // Regarding sending island border information:
-        // The original Iridium code had a direct `getTeamManager().sendIslandBorder(event.getPlayer())`.
+        // The original code had a direct `getTeamManager().sendIslandBorder(event.getPlayer())`.
         // SkyBlockProject's `IslandLifecycleManager` creates WorldGuard regions.
         // Visual borders are often client-side effects that WorldGuard can trigger based on region entry/awareness,
         // or they might require a custom packet solution if a persistent visual is desired without client mods.

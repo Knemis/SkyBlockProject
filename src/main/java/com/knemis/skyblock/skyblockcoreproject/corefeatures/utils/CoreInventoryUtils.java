@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Various utils which perform operations on {@link Inventory}'s.
  */
-public class InventoryUtils {
+public class CoreInventoryUtils {
 
     /**
      * Counts the amount of the specified Material in the Inventory.

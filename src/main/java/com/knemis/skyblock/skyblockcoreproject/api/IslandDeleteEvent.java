@@ -3,7 +3,7 @@ package com.knemis.skyblock.skyblockcoreproject.api;
 // Assuming com.knemis.skyblock.skyblockcoreproject.island.Island is the correct Island class for this project
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import lombok.Getter;
-import org.bukkit.entity.Player; // Changed from Iridium User
+import org.bukkit.entity.Player; // Changed from original User class
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

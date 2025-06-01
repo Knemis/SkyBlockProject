@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore.nms;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.multiversion.v1_16_R2.corefeatures.nms;
 
 import com.iridium.iridiumcore.Color;
 import net.minecraft.server.v1_16_R2.*;

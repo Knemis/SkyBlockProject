@@ -34,7 +34,7 @@ public class BlockFormListener implements Listener {
     public BlockFormListener(SkyBlockProject plugin) {
         this.plugin = plugin;
         // Initialize with default behavior (e.g., always cobblestone or stone)
-        // as enhancement system is not present from IridiumSkyblock.
+        // as enhancement system is not present from the original Skyblock system.
         // Level 0 could represent default.
         Map<XMaterial, Integer> defaultOres = new HashMap<>();
         defaultOres.put(XMaterial.COBBLESTONE, 1);
@@ -85,7 +85,7 @@ public class BlockFormListener implements Listener {
             relevantOreMap = netherOreLevels;
         } else if (newState.getWorld().getEnvironment() == World.Environment.NETHER) {
             // If a normal generator (cobble/stone) is in the Nether, potentially use nether ores
-            // This depends on desired game mechanics. The original Iridium code snippet didn't explicitly show
+            // This depends on desired game mechanics. The original code snippet didn't explicitly show
             // this distinction for normal generators in nether, only for basalt ones with netherOnlyGenerator.
             // For now, assume normal generators use normalOreLevels regardless of dimension,
             // unless a specific config/enhancement dictates otherwise.
@@ -114,7 +114,7 @@ public class BlockFormListener implements Listener {
         if (isBasaltGenerator && netherOnlyBasaltConfig && newState.getWorld().getEnvironment() != World.Environment.NETHER) {
             // If it's a basalt generator, and config says basalt only in nether, but we are not in nether,
             // then what should it form? Fallback to stone? Or cancel?
-            // Original Iridium code seems to just 'return', meaning no change from original BASALT.
+            // Original code seems to just 'return', meaning no change from original BASALT.
             // This might be desired, or you might want to force it to STONE or COBBLESTONE.
             // For now, let's keep it simple: if it's basalt, nether-only, and not in nether, let it form basalt.
             // The check above was `if (isBasaltGenerator && netherOnlyBasalt && ... ) return;`

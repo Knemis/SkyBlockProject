@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.corefeatures;
 
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.gui.GUI;
-import com.iridium.iridiumcore.multiversion.IridiumInventory;
+import com.iridium.iridiumcore.multiversion.IridiumInventory; // Assuming this is an external lib, not renaming the class itself
 import com.iridium.iridiumcore.multiversion.MultiVersion;
 import com.iridium.iridiumcore.nms.NMS;
 import io.papermc.lib.PaperLib;
@@ -24,23 +24,23 @@ import java.io.File;
  */
 @Getter
 @NoArgsConstructor
-public class IridiumCore extends JavaPlugin {
+public class SkyBlockFeatureManager extends JavaPlugin {
 
     private Persist persist;
     private NMS nms;
     private MultiVersion multiVersion;
-    private IridiumInventory iridiumInventory;
+    private IridiumInventory skyBlockInventory;
     @Setter
     @Getter
     private static boolean testing = false;
     private BukkitTask saveTask;
 
-    private static IridiumCore instance;
+    private static SkyBlockFeatureManager instance;
 
     /**
      * Constructor used for UnitTests
      */
-    public IridiumCore(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+    public SkyBlockFeatureManager(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
         setTesting(true);
         // Disable logging
@@ -87,9 +87,9 @@ public class IridiumCore extends JavaPlugin {
 
         // Automatically update all inventories
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> Bukkit.getServer().getOnlinePlayers().forEach(player -> {
-            InventoryHolder inventoryHolder = iridiumInventory.getTopInventory(player).getHolder();
+            InventoryHolder inventoryHolder = skyBlockInventory.getTopInventory(player).getHolder();
             if (inventoryHolder instanceof GUI) {
-                ((GUI) inventoryHolder).addContent(iridiumInventory.getTopInventory(player));
+                ((GUI) inventoryHolder).addContent(skyBlockInventory.getTopInventory(player));
             }
         }), 0, 1);
     }
@@ -130,7 +130,7 @@ public class IridiumCore extends JavaPlugin {
         if (Bukkit.getVersion().contains("1.20.5") || Bukkit.getVersion().contains("1.20.6")) {
             this.nms = MinecraftVersion.V1_20_R4.getNms();
             this.multiVersion = MinecraftVersion.V1_20_R4.getMultiVersion(this);
-            this.iridiumInventory = MinecraftVersion.V1_20_R4.getInventory();
+            this.skyBlockInventory = MinecraftVersion.V1_20_R4.getInventory();
             return;
         }
 
@@ -140,11 +140,11 @@ public class IridiumCore extends JavaPlugin {
 
             this.nms = minecraftVersion.getNms();
             this.multiVersion = minecraftVersion.getMultiVersion(this);
-            this.iridiumInventory = minecraftVersion.getInventory();
+            this.skyBlockInventory = minecraftVersion.getInventory();
         } catch (Exception exception) {
             this.nms = MinecraftVersion.DEFAULT.getNms();
             this.multiVersion = MinecraftVersion.DEFAULT.getMultiVersion(this);
-            this.iridiumInventory = MinecraftVersion.DEFAULT.getInventory();
+            this.skyBlockInventory = MinecraftVersion.DEFAULT.getInventory();
         }
     }
 
@@ -165,7 +165,7 @@ public class IridiumCore extends JavaPlugin {
     public void saveConfigs() {
     }
 
-    public static IridiumCore getInstance() {
+    public static SkyBlockFeatureManager getInstance() {
         return instance;
     }
 }

@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.corefeatures.gui;
 
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.Background;
-import com.knemis.skyblock.skyblockcoreproject.corefeatures.IridiumCore;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.SkyBlockFeatureManager;
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.Item;
-import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.CoreInventoryUtils;
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.ItemStackUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -22,14 +22,14 @@ public abstract class BackGUI implements GUI {
         if (player == null) {
             this.previousInventory = null;
         } else {
-            Inventory previousInventory = IridiumCore.getInstance().getIridiumInventory().getTopInventory(player);
+            Inventory previousInventory = SkyBlockFeatureManager.getInstance().getSkyBlockInventory().getTopInventory(player);
             this.previousInventory = previousInventory.getType() == InventoryType.CHEST ? previousInventory : null;
         }
     }
 
     @Override
     public void addContent(Inventory inventory) {
-        InventoryUtils.fillInventory(inventory, background);
+        CoreInventoryUtils.fillInventory(inventory, background);
         if (previousInventory != null) {
             inventory.setItem(inventory.getSize() + backButton.slot, ItemStackUtils.makeItem(backButton));
         }

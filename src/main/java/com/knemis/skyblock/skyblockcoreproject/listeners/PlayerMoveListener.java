@@ -71,7 +71,7 @@ public class PlayerMoveListener implements Listener {
 
                 if (islandAtFallLocation != null) {
                     // Player fell into the void while on an island.
-                    // The original Iridium code had a complex Void Enhancement system.
+                    // The original code had a complex Void Enhancement system.
                     // This is now stubbed: always teleport to the island's spawn (the one they fell from).
                     // Item loss logic is omitted.
 

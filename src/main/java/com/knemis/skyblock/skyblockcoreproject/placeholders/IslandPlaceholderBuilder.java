@@ -81,7 +81,7 @@ public class IslandPlaceholderBuilder implements PlaceholderBuilder<Island> {
             placeholderList.add(new Placeholder("island_experience", nullPlaceholderMsg)); // Stubbed - SkyBlockProject.Island doesn't have direct experience field
             placeholderList.add(new Placeholder("island_experienceToLevelUp", nullPlaceholderMsg)); // Stubbed
             placeholderList.add(new Placeholder("island_experienceForNextLevel", nullPlaceholderMsg)); // Stubbed
-            placeholderList.add(new Placeholder("island_value_rank", nullPlaceholderMsg)); // Stubbed - Rank system specific to Iridium
+            placeholderList.add(new Placeholder("island_value_rank", nullPlaceholderMsg)); // Stubbed - Rank system specific to the original system
             placeholderList.add(new Placeholder("island_experience_rank", nullPlaceholderMsg)); // Stubbed
 
             // Members

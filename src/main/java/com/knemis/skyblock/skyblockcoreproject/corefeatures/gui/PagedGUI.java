@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.corefeatures.gui;
 
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.Background;
-import com.knemis.skyblock.skyblockcoreproject.corefeatures.IridiumCore;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.SkyBlockFeatureManager;
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.Item;
-import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.CoreInventoryUtils;
 import com.knemis.skyblock.skyblockcoreproject.corefeatures.utils.ItemStackUtils;
 import lombok.Getter;
 import org.bukkit.entity.Player;
@@ -48,7 +48,7 @@ public abstract class PagedGUI<T> implements GUI {
         if (player == null) {
             this.previousInventory = null;
         } else {
-            Inventory previousInventory = IridiumCore.getInstance().getIridiumInventory().getTopInventory(player);
+            Inventory previousInventory = SkyBlockFeatureManager.getInstance().getSkyBlockInventory().getTopInventory(player);
             this.previousInventory = previousInventory.getType() == InventoryType.CHEST ? previousInventory : null;
         }
 
@@ -58,7 +58,7 @@ public abstract class PagedGUI<T> implements GUI {
     @Override
     public void addContent(Inventory inventory) {
         items.clear();
-        InventoryUtils.fillInventory(inventory, background);
+        CoreInventoryUtils.fillInventory(inventory, background);
 
         if (isPaged()) {
             inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(nextPage));

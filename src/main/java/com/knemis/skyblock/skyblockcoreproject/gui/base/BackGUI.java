@@ -49,7 +49,7 @@ public abstract class BackGUI implements InventoryHolder {
         // Other item clicks handled by subclasses.
     }
 
-    // Example, actual slot would be from config in IridiumCore or layout manager
+    // Example, actual slot would be from config in SkyBlockFeatureManager or layout manager
     // Typically bottom-left (inventory.getSize() - 9) or bottom-center (inventory.getSize() - 5)
     protected int getBackButtonSlot() { return 0; }
 

@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore.multiversion;
+package com.knemis.skyblock.skyblockcoreproject.corefeatures.multiversion.v1_13_R2.corefeatures.multiversion;
 
 import com.cryptomorin.xseries.XMaterial;
 import io.papermc.lib.PaperLib;
