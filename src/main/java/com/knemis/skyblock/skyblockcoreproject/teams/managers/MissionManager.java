@@ -2,11 +2,9 @@ package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamMission;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamMissionData;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamReward;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.*;
 import com.knemis.skyblock.skyblockcoreproject.teams.gui.MissionGUI;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission;
 import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData;
 import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
 import org.bukkit.World;
@@ -18,6 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+
+
 
 public class MissionManager<T extends Team, U extends SkyBlockProjectTeamsUser<T>> {
     private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
@@ -75,6 +75,7 @@ public class MissionManager<T extends Team, U extends SkyBlockProjectTeamsUser<T
         String[] missionConditions = condition.toUpperCase().split(":");
 
         for (Map.Entry<String, Mission> entry : SkyBlockProjectTeams.getMissions().missions.entrySet()) {
+
             Optional<TeamMission> teamMission = teamMissions.stream()
                     .filter(mission -> mission.getMissionName().equals(entry.getKey()))
                     .findFirst();

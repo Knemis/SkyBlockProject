@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.support;
+import com.earth2me.essentials.spawn.EssentialsSpawn;
 
 import com.earth2me.essentials.Essentials;
-import com.earth2me.essentials.spawn.EssentialsSpawn;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;

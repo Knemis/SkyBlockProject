@@ -3,6 +3,7 @@ package com.knemis.skyblock.skyblockcoreproject.teams.sorting;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import lombok.NoArgsConstructor;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import java.util.Comparator;
 import java.util.List;

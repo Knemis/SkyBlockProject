@@ -3,7 +3,9 @@ package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.TimeUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.commands.Command;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.Getter;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,7 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 
 public abstract class CommandManager<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements CommandExecutor, TabCompleter {

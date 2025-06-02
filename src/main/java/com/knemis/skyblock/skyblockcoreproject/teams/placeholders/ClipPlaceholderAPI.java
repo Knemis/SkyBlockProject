@@ -5,6 +5,7 @@ import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import java.util.List;
 

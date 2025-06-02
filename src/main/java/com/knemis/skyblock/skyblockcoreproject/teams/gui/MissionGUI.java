@@ -1,5 +1,4 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.BackGUI;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
@@ -8,7 +7,9 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamMission;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission;
 import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData;
 import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
 import lombok.Getter;

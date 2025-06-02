@@ -56,6 +56,9 @@ dependencies {
     compileOnly('net.essentialsx:EssentialsX:2.21.0') {
         exclude group: 'org.spigotmc', module: 'spigot-api'
     }
+    compileOnly('net.essentialsx:EssentialsXSpawn:2.21.0') {
+        exclude group: 'org.spigotmc', module: 'spigot-api'
+    }
 
     // Annotations ve Lombok
     compileOnly 'org.jetbrains:annotations:26.0.2'

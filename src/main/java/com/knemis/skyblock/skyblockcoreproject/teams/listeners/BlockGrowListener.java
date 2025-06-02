@@ -1,10 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
 import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData;
 import lombok.AllArgsConstructor;
 import org.bukkit.Effect;
