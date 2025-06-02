@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.managers;
+package com.keviin.keviinteams.managers;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.iridiumteams.commands.Command;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.commands.TestCommand;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.keviinteams.commands.Command;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.commands.TestCommand;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,7 +91,7 @@ class CommandManagerTest {
 
     @Test
     public void CommandManager__NotInTeam() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.test").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.test").build();
 
         serverMock.dispatchCommand(playerMock, "test test");
 
@@ -103,7 +103,7 @@ class CommandManagerTest {
 
     @Test
     public void CommandManager__Success() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.test").withTeam(new TeamBuilder().build()).build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.test").withTeam(new TeamBuilder().build()).build();
 
         serverMock.dispatchCommand(playerMock, "test test");
 
@@ -116,7 +116,7 @@ class CommandManagerTest {
         // Lets change the message so it doesnt include the exact timings to avoid flakey tests
         TestPlugin.getInstance().getMessages().activeCooldown = "%prefix% &7You cannot do that due to a running cooldown, please wait";
 
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.test").withTeam(new TeamBuilder().build()).build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.test").withTeam(new TeamBuilder().build()).build();
 
         serverMock.dispatchCommand(playerMock, "test test");
 
@@ -153,13 +153,13 @@ class CommandManagerTest {
 
     @Test
     public void CommandManager__TabComplete__WithPermissions() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.reload", "iridiumteams.bypass", "iridiumteams.test").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.reload", "keviinteams.bypass", "keviinteams.test").build();
         assertEquals(Arrays.asList("about", "bypass", "reload", "test"), serverMock.getCommandTabComplete(playerMock, "test "));
     }
 
     @Test
     public void CommandManager__TabComplete__Command() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.test").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.test").build();
         assertEquals(Arrays.asList("A", "c", "d"), serverMock.getCommandTabComplete(playerMock, "test test "));
     }
 

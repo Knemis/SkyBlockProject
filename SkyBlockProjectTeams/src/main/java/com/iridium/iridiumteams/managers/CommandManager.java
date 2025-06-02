@@ -1,11 +1,11 @@
-package com.iridium.iridiumteams.managers;
+package com.keviin.keviinteams.managers;
 
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumcore.utils.TimeUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.commands.Command;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviincore.utils.TimeUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.commands.Command;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.Getter;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,7 +17,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class CommandManager<T extends Team, U extends IridiumUser<T>> implements CommandExecutor, TabCompleter {
+public abstract class CommandManager<T extends Team, U extends keviinUser<T>> implements CommandExecutor, TabCompleter {
 
     @Getter
     private final List<Command<T, U>> commands = new ArrayList<>();
@@ -25,65 +25,65 @@ public abstract class CommandManager<T extends Team, U extends IridiumUser<T>> i
     private final String command;
     @Getter
     private final String color;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public CommandManager(IridiumTeams<T, U> iridiumTeams, String color, String command) {
-        this.iridiumTeams = iridiumTeams;
+    public CommandManager(keviinTeams<T, U> keviinTeams, String color, String command) {
+        this.keviinTeams = keviinTeams;
         this.command = command;
         this.color = color;
-        iridiumTeams.getCommand(command).setExecutor(this);
-        iridiumTeams.getCommand(command).setTabCompleter(this);
+        keviinTeams.getCommand(command).setExecutor(this);
+        keviinTeams.getCommand(command).setTabCompleter(this);
         registerCommands();
     }
 
     public void registerCommands() {
-        registerCommand(iridiumTeams.getCommands().aboutCommand);
-        registerCommand(iridiumTeams.getCommands().createCommand);
-        registerCommand(iridiumTeams.getCommands().membersCommand);
-        registerCommand(iridiumTeams.getCommands().permissionsCommand);
-        registerCommand(iridiumTeams.getCommands().setPermissionCommand);
-        registerCommand(iridiumTeams.getCommands().promoteCommand);
-        registerCommand(iridiumTeams.getCommands().demoteCommand);
-        registerCommand(iridiumTeams.getCommands().helpCommand);
-        registerCommand(iridiumTeams.getCommands().reloadCommand);
-        registerCommand(iridiumTeams.getCommands().inviteCommand);
-        registerCommand(iridiumTeams.getCommands().unInviteCommand);
-        registerCommand(iridiumTeams.getCommands().invitesCommand);
-        registerCommand(iridiumTeams.getCommands().trustCommand);
-        registerCommand(iridiumTeams.getCommands().unTrustCommand);
-        registerCommand(iridiumTeams.getCommands().trustsCommand);
-        registerCommand(iridiumTeams.getCommands().kickCommand);
-        registerCommand(iridiumTeams.getCommands().leaveCommand);
-        registerCommand(iridiumTeams.getCommands().deleteCommand);
-        registerCommand(iridiumTeams.getCommands().infoCommand);
-        registerCommand(iridiumTeams.getCommands().descriptionCommand);
-        registerCommand(iridiumTeams.getCommands().renameCommand);
-        registerCommand(iridiumTeams.getCommands().setHomeCommand);
-        registerCommand(iridiumTeams.getCommands().homeCommand);
-        registerCommand(iridiumTeams.getCommands().bypassCommand);
-        registerCommand(iridiumTeams.getCommands().transferCommand);
-        registerCommand(iridiumTeams.getCommands().joinCommand);
-        registerCommand(iridiumTeams.getCommands().bankCommand);
-        registerCommand(iridiumTeams.getCommands().depositCommand);
-        registerCommand(iridiumTeams.getCommands().withdrawCommand);
-        registerCommand(iridiumTeams.getCommands().chatCommand);
-        registerCommand(iridiumTeams.getCommands().boostersCommand);
-        registerCommand(iridiumTeams.getCommands().upgradesCommand);
-        registerCommand(iridiumTeams.getCommands().flyCommand);
-        registerCommand(iridiumTeams.getCommands().topCommand);
-        registerCommand(iridiumTeams.getCommands().recalculateCommand);
-        registerCommand(iridiumTeams.getCommands().warpsCommand);
-        registerCommand(iridiumTeams.getCommands().warpCommand);
-        registerCommand(iridiumTeams.getCommands().setWarpCommand);
-        registerCommand(iridiumTeams.getCommands().deleteWarpCommand);
-        registerCommand(iridiumTeams.getCommands().editWarpCommand);
-        registerCommand(iridiumTeams.getCommands().missionsCommand);
-        registerCommand(iridiumTeams.getCommands().rewardsCommand);
-        registerCommand(iridiumTeams.getCommands().experienceCommand);
-        registerCommand(iridiumTeams.getCommands().shopCommand);
-        registerCommand(iridiumTeams.getCommands().settingsCommand);
-        registerCommand(iridiumTeams.getCommands().blockValueCommand);
-        registerCommand(iridiumTeams.getCommands().levelCommand);
+        registerCommand(keviinTeams.getCommands().aboutCommand);
+        registerCommand(keviinTeams.getCommands().createCommand);
+        registerCommand(keviinTeams.getCommands().membersCommand);
+        registerCommand(keviinTeams.getCommands().permissionsCommand);
+        registerCommand(keviinTeams.getCommands().setPermissionCommand);
+        registerCommand(keviinTeams.getCommands().promoteCommand);
+        registerCommand(keviinTeams.getCommands().demoteCommand);
+        registerCommand(keviinTeams.getCommands().helpCommand);
+        registerCommand(keviinTeams.getCommands().reloadCommand);
+        registerCommand(keviinTeams.getCommands().inviteCommand);
+        registerCommand(keviinTeams.getCommands().unInviteCommand);
+        registerCommand(keviinTeams.getCommands().invitesCommand);
+        registerCommand(keviinTeams.getCommands().trustCommand);
+        registerCommand(keviinTeams.getCommands().unTrustCommand);
+        registerCommand(keviinTeams.getCommands().trustsCommand);
+        registerCommand(keviinTeams.getCommands().kickCommand);
+        registerCommand(keviinTeams.getCommands().leaveCommand);
+        registerCommand(keviinTeams.getCommands().deleteCommand);
+        registerCommand(keviinTeams.getCommands().infoCommand);
+        registerCommand(keviinTeams.getCommands().descriptionCommand);
+        registerCommand(keviinTeams.getCommands().renameCommand);
+        registerCommand(keviinTeams.getCommands().setHomeCommand);
+        registerCommand(keviinTeams.getCommands().homeCommand);
+        registerCommand(keviinTeams.getCommands().bypassCommand);
+        registerCommand(keviinTeams.getCommands().transferCommand);
+        registerCommand(keviinTeams.getCommands().joinCommand);
+        registerCommand(keviinTeams.getCommands().bankCommand);
+        registerCommand(keviinTeams.getCommands().depositCommand);
+        registerCommand(keviinTeams.getCommands().withdrawCommand);
+        registerCommand(keviinTeams.getCommands().chatCommand);
+        registerCommand(keviinTeams.getCommands().boostersCommand);
+        registerCommand(keviinTeams.getCommands().upgradesCommand);
+        registerCommand(keviinTeams.getCommands().flyCommand);
+        registerCommand(keviinTeams.getCommands().topCommand);
+        registerCommand(keviinTeams.getCommands().recalculateCommand);
+        registerCommand(keviinTeams.getCommands().warpsCommand);
+        registerCommand(keviinTeams.getCommands().warpCommand);
+        registerCommand(keviinTeams.getCommands().setWarpCommand);
+        registerCommand(keviinTeams.getCommands().deleteWarpCommand);
+        registerCommand(keviinTeams.getCommands().editWarpCommand);
+        registerCommand(keviinTeams.getCommands().missionsCommand);
+        registerCommand(keviinTeams.getCommands().rewardsCommand);
+        registerCommand(keviinTeams.getCommands().experienceCommand);
+        registerCommand(keviinTeams.getCommands().shopCommand);
+        registerCommand(keviinTeams.getCommands().settingsCommand);
+        registerCommand(keviinTeams.getCommands().blockValueCommand);
+        registerCommand(keviinTeams.getCommands().levelCommand);
     }
 
     public void registerCommand(Command<T, U> command) {
@@ -107,31 +107,31 @@ public abstract class CommandManager<T extends Team, U extends IridiumUser<T>> i
         }
 
         // Unknown command message
-        commandSender.sendMessage(StringUtils.color(iridiumTeams.getMessages().unknownCommand
-                .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        commandSender.sendMessage(StringUtils.color(keviinTeams.getMessages().unknownCommand
+                .replace("%prefix%", keviinTeams.getConfiguration().prefix)
         ));
         return false;
     }
 
     public boolean executeCommand(CommandSender commandSender, Command<T, U> command, String[] args) {
-        if (!command.hasPermission(commandSender, iridiumTeams)) {
-            commandSender.sendMessage(StringUtils.color(iridiumTeams.getMessages().noPermission
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        if (!command.hasPermission(commandSender, keviinTeams)) {
+            commandSender.sendMessage(StringUtils.color(keviinTeams.getMessages().noPermission
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
-        if (command.isOnCooldown(commandSender, iridiumTeams)) {
+        if (command.isOnCooldown(commandSender, keviinTeams)) {
             Duration remainingTime = command.getCooldownProvider().getRemainingTime(commandSender);
-            String formattedTime = TimeUtils.formatDuration(iridiumTeams.getMessages().activeCooldown, remainingTime);
+            String formattedTime = TimeUtils.formatDuration(keviinTeams.getMessages().activeCooldown, remainingTime);
 
             commandSender.sendMessage(StringUtils.color(formattedTime
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
-        if (command.execute(commandSender, args, iridiumTeams)) {
+        if (command.execute(commandSender, args, keviinTeams)) {
             command.getCooldownProvider().applyCooldown(commandSender);
         }
         return true;
@@ -146,7 +146,7 @@ public abstract class CommandManager<T extends Team, U extends IridiumUser<T>> i
                 if(command.isSuperSecretCommand()) continue;
                 for (String alias : command.aliases) {
                     if (!alias.toLowerCase().startsWith(args[0].toLowerCase())) continue;
-                    if (command.hasPermission(commandSender, iridiumTeams)) {
+                    if (command.hasPermission(commandSender, keviinTeams)) {
                         result.add(alias);
                     }
                 }
@@ -157,8 +157,8 @@ public abstract class CommandManager<T extends Team, U extends IridiumUser<T>> i
         for (Command<T, U> command : commands) {
             if(command.isSuperSecretCommand()) continue;
             if (!command.aliases.contains(args[0].toLowerCase())) continue;
-            if (command.hasPermission(commandSender, iridiumTeams)) {
-                return command.onTabComplete(commandSender, Arrays.copyOfRange(args, 1, args.length), iridiumTeams);
+            if (command.hasPermission(commandSender, keviinTeams)) {
+                return command.onTabComplete(commandSender, Arrays.copyOfRange(args, 1, args.length), keviinTeams);
             }
         }
 

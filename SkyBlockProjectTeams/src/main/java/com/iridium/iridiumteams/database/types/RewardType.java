@@ -1,8 +1,8 @@
-package com.iridium.iridiumteams.database.types;
+package com.keviin.keviinteams.database.types;
 
-import com.iridium.iridiumcore.Persist;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.Reward;
+import com.keviin.keviincore.Persist;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.Reward;
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.field.SqlType;
 import com.j256.ormlite.field.types.StringType;
@@ -14,8 +14,8 @@ public class RewardType extends StringType {
     private static final RewardType instance = new RewardType();
     private static Persist persist;
 
-    public static RewardType getSingleton(IridiumTeams<?, ?> iridiumTeams) {
-        persist = new Persist(Persist.PersistType.JSON, iridiumTeams);
+    public static RewardType getSingleton(keviinTeams<?, ?> keviinTeams) {
+        persist = new Persist(Persist.PersistType.JSON, keviinTeams);
         return instance;
     }
 

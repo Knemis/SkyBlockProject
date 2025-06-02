@@ -1,12 +1,12 @@
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamEnhancement;
-import com.iridium.iridiumteams.enhancements.Enhancement;
-import com.iridium.iridiumteams.enhancements.FarmingEnhancementData;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamEnhancement;
+import com.keviin.keviinteams.enhancements.Enhancement;
+import com.keviin.keviinteams.enhancements.FarmingEnhancementData;
 import lombok.AllArgsConstructor;
 import org.bukkit.Effect;
 import org.bukkit.block.data.Ageable;
@@ -21,23 +21,23 @@ import java.util.List;
 
 
 @AllArgsConstructor
-public class BlockGrowListener<T extends Team, U extends IridiumUser<T>> implements Listener {
-    private final IridiumTeams<T, U> iridiumTeams;
+public class BlockGrowListener<T extends Team, U extends keviinUser<T>> implements Listener {
+    private final keviinTeams<T, U> keviinTeams;
     private final List<XMaterial> ageIgnoreList = Arrays.asList(XMaterial.SUGAR_CANE, XMaterial.CACTUS, XMaterial.BAMBOO, XMaterial.CAVE_VINES);
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorBlockGrow(BlockGrowEvent event) {
         XMaterial material = XMaterial.matchXMaterial(event.getNewState().getType());
-        iridiumTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation()).ifPresent(team -> {
+        keviinTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation()).ifPresent(team -> {
             if (event.getNewState().getBlockData() instanceof Ageable) {
                 Ageable ageable = (Ageable) event.getNewState().getBlockData();
 
                 if (ageable.getAge() >= ageable.getMaximumAge() || ageIgnoreList.contains(material)) {
-                    iridiumTeams.getMissionManager().handleMissionUpdate(team, event.getBlock().getLocation().getWorld(), "GROW", material.name(), 1);
+                    keviinTeams.getMissionManager().handleMissionUpdate(team, event.getBlock().getLocation().getWorld(), "GROW", material.name(), 1);
                 }
 
-                Enhancement<FarmingEnhancementData> farmingEnhancement = iridiumTeams.getEnhancements().farmingEnhancement;
-                TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, "farming");
+                Enhancement<FarmingEnhancementData> farmingEnhancement = keviinTeams.getEnhancements().farmingEnhancement;
+                TeamEnhancement teamEnhancement = keviinTeams.getTeamManager().getTeamEnhancement(team, "farming");
                 FarmingEnhancementData data = farmingEnhancement.levels.get(teamEnhancement.getLevel());
                 if (teamEnhancement.isActive(farmingEnhancement.type) && data != null) {
                     ageable.setAge(Math.min(ageable.getAge() + data.farmingModifier, ageable.getMaximumAge()));
@@ -46,7 +46,7 @@ public class BlockGrowListener<T extends Team, U extends IridiumUser<T>> impleme
                 }
 
             } else {
-                iridiumTeams.getMissionManager().handleMissionUpdate(team, event.getBlock().getLocation().getWorld(), "GROW", material.name(), 1);
+                keviinTeams.getMissionManager().handleMissionUpdate(team, event.getBlock().getLocation().getWorld(), "GROW", material.name(), 1);
             }
         });
 

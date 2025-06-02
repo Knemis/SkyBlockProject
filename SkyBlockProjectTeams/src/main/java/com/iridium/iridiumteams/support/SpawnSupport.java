@@ -1,6 +1,6 @@
-package com.iridium.iridiumteams.support;
+package com.keviin.keviinteams.support;
 
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.database.Team;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 

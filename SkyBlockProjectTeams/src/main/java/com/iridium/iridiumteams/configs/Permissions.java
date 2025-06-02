@@ -1,8 +1,8 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.Permission;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.Permission;
 
 import java.util.Arrays;
 

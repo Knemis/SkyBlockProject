@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.missions;
+package com.keviin.keviinteams.missions;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,15 +1,15 @@
-package com.iridium.iridiumteams.placeholders;
+package com.keviin.keviinteams.placeholders;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
-import com.iridium.testplugin.managers.TeamManager;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
+import com.keviin.testplugin.managers.TeamManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

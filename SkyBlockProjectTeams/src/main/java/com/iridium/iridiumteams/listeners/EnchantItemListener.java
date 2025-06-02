@@ -1,10 +1,10 @@
 
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,15 +12,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 
 @AllArgsConstructor
-public class EnchantItemListener<T extends Team, U extends IridiumUser<T>> implements Listener {
-    private final IridiumTeams<T, U> iridiumTeams;
+public class EnchantItemListener<T extends Team, U extends keviinUser<T>> implements Listener {
+    private final keviinTeams<T, U> keviinTeams;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorItemEnchant(EnchantItemEvent event) {
-        U user = iridiumTeams.getUserManager().getUser(event.getEnchanter());
+        U user = keviinTeams.getUserManager().getUser(event.getEnchanter());
         XMaterial material = XMaterial.matchXMaterial(event.getItem().getType());
-        iridiumTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
-            iridiumTeams.getMissionManager().handleMissionUpdate(team, event.getEnchanter().getLocation().getWorld(), "ENCHANT", material.name(), 1);
+        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
+            keviinTeams.getMissionManager().handleMissionUpdate(team, event.getEnchanter().getLocation().getWorld(), "ENCHANT", material.name(), 1);
         });
 
     }

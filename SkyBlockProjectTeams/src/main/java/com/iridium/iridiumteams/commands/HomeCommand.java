@@ -1,9 +1,9 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.NoArgsConstructor;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -11,30 +11,30 @@ import org.bukkit.entity.Player;
 import java.util.List;
 
 @NoArgsConstructor
-public class HomeCommand<T extends Team, U extends IridiumUser<T>> extends Command<T, U> {
+public class HomeCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
     public HomeCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, T team, String[] args, keviinTeams<T, U> keviinTeams) {
         Player player = user.getPlayer();
         Location home = team.getHome();
         if (home == null) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().homeNotSet
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().homeNotSet
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
-        if (iridiumTeams.getTeamManager().getTeamViaLocation(home).map(T::getId).orElse(0) != team.getId()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().homeNotInTeam
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        if (keviinTeams.getTeamManager().getTeamViaLocation(home).map(T::getId).orElse(0) != team.getId()) {
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().homeNotInTeam
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
-        if (iridiumTeams.getTeamManager().teleport(player, home, team)) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().teleportingHome
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        if (keviinTeams.getTeamManager().teleport(player, home, team)) {
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().teleportingHome
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
         }
         return true;

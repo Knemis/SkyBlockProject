@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumcore.gui.PagedGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.configs.inventories.NoItemGUI;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamReward;
+import com.keviin.keviincore.Item;
+import com.keviin.keviincore.gui.PagedGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.configs.inventories.NoItemGUI;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamReward;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -18,36 +18,36 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public class RewardsGUI<T extends Team, U extends IridiumUser<T>> extends PagedGUI<TeamReward> {
+public class RewardsGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<TeamReward> {
 
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
     private final T team;
 
-    public RewardsGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
+    public RewardsGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
         super(
                 1,
-                iridiumTeams.getInventories().rewardsGUI.size,
-                iridiumTeams.getInventories().rewardsGUI.background,
-                iridiumTeams.getInventories().previousPage,
-                iridiumTeams.getInventories().nextPage,
+                keviinTeams.getInventories().rewardsGUI.size,
+                keviinTeams.getInventories().rewardsGUI.background,
+                keviinTeams.getInventories().previousPage,
+                keviinTeams.getInventories().nextPage,
                 player,
-                iridiumTeams.getInventories().backButton
+                keviinTeams.getInventories().backButton
         );
-        this.iridiumTeams = iridiumTeams;
+        this.keviinTeams = keviinTeams;
         this.team = team;
     }
 
     @Override
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
-        Item item = iridiumTeams.getInventories().rewardsGUI.item;
+        Item item = keviinTeams.getInventories().rewardsGUI.item;
         inventory.setItem(item.slot, ItemStackUtils.makeItem(item));
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().rewardsGUI;
+        NoItemGUI noItemGUI = keviinTeams.getInventories().rewardsGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -55,7 +55,7 @@ public class RewardsGUI<T extends Team, U extends IridiumUser<T>> extends PagedG
 
     @Override
     public Collection<TeamReward> getPageObjects() {
-        return iridiumTeams.getTeamManager().getTeamRewards(team);
+        return keviinTeams.getTeamManager().getTeamRewards(team);
     }
 
     @Override
@@ -72,15 +72,15 @@ public class RewardsGUI<T extends Team, U extends IridiumUser<T>> extends PagedG
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
 
-        if(event.getSlot() == iridiumTeams.getInventories().rewardsGUI.item.slot){
+        if(event.getSlot() == keviinTeams.getInventories().rewardsGUI.item.slot){
             for(TeamReward teamReward : getPageObjects()){
-                iridiumTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
+                keviinTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
             }
             return;
         }
 
         TeamReward teamReward = getItem(event.getSlot());
         if (teamReward == null) return;
-        iridiumTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
+        keviinTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
     }
 }

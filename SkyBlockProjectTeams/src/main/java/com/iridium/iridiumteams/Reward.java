@@ -1,7 +1,7 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
 import com.cryptomorin.xseries.XSound;
-import com.iridium.iridiumcore.Item;
+import com.keviin.keviincore.Item;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

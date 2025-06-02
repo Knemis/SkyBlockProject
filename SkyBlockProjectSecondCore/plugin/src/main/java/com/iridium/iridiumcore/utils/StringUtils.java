@@ -1,7 +1,7 @@
-package com.iridium.iridiumcore.utils;
+package com.keviin.keviincore.utils;
 
-import com.iridium.iridiumcolorapi.IridiumColorAPI;
-import com.iridium.iridiumcore.DefaultFontInfo;
+import com.keviin.keviincolorapi.keviinColorAPI;
+import com.keviin.keviincore.DefaultFontInfo;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,7 +21,7 @@ public class StringUtils {
      * @return The new String with applied colors
      */
     public static String color(String string) {
-        return IridiumColorAPI.process(string);
+        return keviinColorAPI.process(string);
     }
 
     /**

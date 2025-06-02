@@ -1,10 +1,10 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.Rank;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.Rank;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @NoArgsConstructor
-public class DeleteCommand<T extends Team, U extends IridiumUser<T>> extends ConfirmableCommand<T, U> {
+public class DeleteCommand<T extends Team, U extends keviinUser<T>> extends ConfirmableCommand<T, U> {
     public String adminPermission;
 
     public DeleteCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds, String adminPermission, boolean requiresConfirmation) {
@@ -21,38 +21,38 @@ public class DeleteCommand<T extends Team, U extends IridiumUser<T>> extends Con
     }
 
     @Override
-    public boolean execute(U user, String[] arguments, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, String[] arguments, keviinTeams<T, U> keviinTeams) {
         Player player = user.getPlayer();
         if (arguments.length == 1) {
             if (!player.hasPermission(adminPermission)) {
-                player.sendMessage(StringUtils.color(iridiumTeams.getMessages().noPermission
-                        .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                player.sendMessage(StringUtils.color(keviinTeams.getMessages().noPermission
+                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                 ));
                 return false;
             }
 
-            Optional<T> team = iridiumTeams.getTeamManager().getTeamViaNameOrPlayer(arguments[0]);
+            Optional<T> team = keviinTeams.getTeamManager().getTeamViaNameOrPlayer(arguments[0]);
             if (!team.isPresent()) {
-                player.sendMessage(StringUtils.color(iridiumTeams.getMessages().teamDoesntExistByName
-                        .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                player.sendMessage(StringUtils.color(keviinTeams.getMessages().teamDoesntExistByName
+                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                 ));
                 return false;
             }
-            return execute(user, team.get(), arguments, iridiumTeams);
+            return execute(user, team.get(), arguments, keviinTeams);
         }
-        return super.execute(user, arguments, iridiumTeams);
+        return super.execute(user, arguments, keviinTeams);
     }
 
     @Override
-    protected boolean isCommandValid(U user, T team, String[] arguments, IridiumTeams<T, U> iridiumTeams) {
+    protected boolean isCommandValid(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams) {
         Player player = user.getPlayer();
         if (arguments.length == 1) {
             return true;
         }
 
         if (user.getUserRank() != Rank.OWNER.getId() && !user.isBypassing()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotDeleteTeam
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotDeleteTeam
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
@@ -60,31 +60,31 @@ public class DeleteCommand<T extends Team, U extends IridiumUser<T>> extends Con
     }
 
     @Override
-    protected void executeAfterConfirmation(U user, T team, String[] arguments, IridiumTeams<T, U> iridiumTeams) {
+    protected void executeAfterConfirmation(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams) {
         if (arguments.length == 1) {
-            deleteTeam(user, team, iridiumTeams, true);
+            deleteTeam(user, team, keviinTeams, true);
         }
 
-        deleteTeam(user, team, iridiumTeams, false);
+        deleteTeam(user, team, keviinTeams, false);
     }
 
-    private void deleteTeam(U user, T team, IridiumTeams<T, U> iridiumTeams, boolean admin) {
+    private void deleteTeam(U user, T team, keviinTeams<T, U> keviinTeams, boolean admin) {
         Player player = user.getPlayer();
-        if (!iridiumTeams.getTeamManager().deleteTeam(team, user)) return;
+        if (!keviinTeams.getTeamManager().deleteTeam(team, user)) return;
 
-        for (U member : iridiumTeams.getTeamManager().getTeamMembers(team)) {
+        for (U member : keviinTeams.getTeamManager().getTeamMembers(team)) {
             member.setTeamID(0);
             Player teamMember = member.getPlayer();
             if (teamMember != null) {
-                teamMember.sendMessage(StringUtils.color(iridiumTeams.getMessages().teamDeleted
-                        .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                teamMember.sendMessage(StringUtils.color(keviinTeams.getMessages().teamDeleted
+                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                         .replace("%player%", player.getName())
                 ));
             }
         }
         if (admin) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().deletedPlayerTeam
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().deletedPlayerTeam
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                     .replace("%name%", team.getName())
             ));
         }

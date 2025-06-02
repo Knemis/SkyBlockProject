@@ -1,12 +1,12 @@
-package com.iridium.testplugin.managers;
+package com.keviin.testplugin.managers;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.Rank;
-import com.iridium.iridiumteams.Setting;
-import com.iridium.iridiumteams.database.*;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
+import com.keviin.keviinteams.Rank;
+import com.keviin.keviinteams.Setting;
+import com.keviin.keviinteams.database.*;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class TeamManager extends com.iridium.iridiumteams.managers.TeamManager<TestTeam, User> {
+public class TeamManager extends com.keviin.keviinteams.managers.TeamManager<TestTeam, User> {
 
     public static List<TestTeam> teams;
     public static List<TeamPermission> teamPermissions;

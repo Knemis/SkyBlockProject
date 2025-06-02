@@ -1,4 +1,4 @@
-package com.iridium.testplugin;
+package com.keviin.testplugin;
 
 import net.milkbowl.vault.economy.Economy;
 import net.milkbowl.vault.economy.EconomyResponse;

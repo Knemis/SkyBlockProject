@@ -1,8 +1,8 @@
-package com.iridium.iridiumteams.managers;
+package com.keviin.keviinteams.managers;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
-import com.iridium.testplugin.TestPlugin;
+import com.keviin.testplugin.TestPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -1,6 +1,6 @@
-package com.iridium.iridiumteams.enhancements;
+package com.keviin.keviinteams.enhancements;
 
-import com.iridium.iridiumcore.Item;
+import com.keviin.keviincore.Item;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

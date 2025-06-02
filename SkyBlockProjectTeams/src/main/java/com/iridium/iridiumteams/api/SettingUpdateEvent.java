@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.api;
+package com.keviin.keviinteams.api;
 
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class SettingUpdateEvent<T extends Team, U extends IridiumUser<T>> extends Event {
+public class SettingUpdateEvent<T extends Team, U extends keviinUser<T>> extends Event {
 
     private static final HandlerList handlers = new HandlerList();
     private final T team;

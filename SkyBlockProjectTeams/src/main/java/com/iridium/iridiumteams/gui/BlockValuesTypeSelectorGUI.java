@@ -1,34 +1,34 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.BackGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.configs.inventories.BlockValuesTypeSelectorInventoryConfig;
-import com.iridium.iridiumteams.configs.inventories.NoItemGUI;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.gui.BackGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.configs.inventories.BlockValuesTypeSelectorInventoryConfig;
+import com.keviin.keviinteams.configs.inventories.NoItemGUI;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class BlockValuesTypeSelectorGUI<T extends Team, U extends IridiumUser<T>> extends BackGUI {
+public class BlockValuesTypeSelectorGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
 
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
     private final String teamArg;
 
-    public BlockValuesTypeSelectorGUI(String teamArg, Player player, IridiumTeams<T, U> iridiumTeams) {
-        super(iridiumTeams.getInventories().blockValuesTypeSelectorGUI.background, player, iridiumTeams.getInventories().backButton);
-        this.iridiumTeams = iridiumTeams;
+    public BlockValuesTypeSelectorGUI(String teamArg, Player player, keviinTeams<T, U> keviinTeams) {
+        super(keviinTeams.getInventories().blockValuesTypeSelectorGUI.background, player, keviinTeams.getInventories().backButton);
+        this.keviinTeams = keviinTeams;
         this.teamArg = teamArg;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().blockValuesTypeSelectorGUI;
+        NoItemGUI noItemGUI = keviinTeams.getInventories().blockValuesTypeSelectorGUI;
         Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -38,7 +38,7 @@ public class BlockValuesTypeSelectorGUI<T extends Team, U extends IridiumUser<T>
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
 
-        BlockValuesTypeSelectorInventoryConfig blockValuesTypeSelectorInventoryConfig = iridiumTeams.getInventories().blockValuesTypeSelectorGUI;
+        BlockValuesTypeSelectorInventoryConfig blockValuesTypeSelectorInventoryConfig = keviinTeams.getInventories().blockValuesTypeSelectorGUI;
         if (blockValuesTypeSelectorInventoryConfig.blocks.enabled) {
             inventory.setItem(blockValuesTypeSelectorInventoryConfig.blocks.item.slot, ItemStackUtils.makeItem(blockValuesTypeSelectorInventoryConfig.blocks.item));
         }
@@ -51,14 +51,14 @@ public class BlockValuesTypeSelectorGUI<T extends Team, U extends IridiumUser<T>
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
-        BlockValuesTypeSelectorInventoryConfig blockValuesTypeSelectorInventoryConfig = iridiumTeams.getInventories().blockValuesTypeSelectorGUI;
+        BlockValuesTypeSelectorInventoryConfig blockValuesTypeSelectorInventoryConfig = keviinTeams.getInventories().blockValuesTypeSelectorGUI;
 
         if (event.getSlot() == blockValuesTypeSelectorInventoryConfig.blocks.item.slot && blockValuesTypeSelectorInventoryConfig.blocks.enabled) {
-            iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().blockValueCommand, new String[]{"blocks", teamArg});
+            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().blockValueCommand, new String[]{"blocks", teamArg});
         }
 
         if (event.getSlot() == blockValuesTypeSelectorInventoryConfig.spawners.item.slot && blockValuesTypeSelectorInventoryConfig.spawners.enabled) {
-            iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().blockValueCommand, new String[]{"spawners", teamArg});
+            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().blockValueCommand, new String[]{"spawners", teamArg});
         }
     }
 }

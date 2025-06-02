@@ -1,11 +1,11 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import com.iridium.iridiumcore.Item;
+import com.keviin.keviincore.Item;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

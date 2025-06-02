@@ -1,17 +1,17 @@
-package com.iridium.iridiumteams.managers;
+package com.keviin.keviinteams.managers;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.*;
-import com.iridium.iridiumteams.api.EnhancementUpdateEvent;
-import com.iridium.iridiumteams.configs.BlockValues;
-import com.iridium.iridiumteams.database.*;
-import com.iridium.iridiumteams.enhancements.Enhancement;
-import com.iridium.iridiumteams.enhancements.EnhancementData;
-import com.iridium.iridiumteams.missions.Mission;
-import com.iridium.iridiumteams.missions.MissionType;
-import com.iridium.iridiumteams.sorting.TeamSorting;
-import com.iridium.iridiumteams.utils.PlayerUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.*;
+import com.keviin.keviinteams.api.EnhancementUpdateEvent;
+import com.keviin.keviinteams.configs.BlockValues;
+import com.keviin.keviinteams.database.*;
+import com.keviin.keviinteams.enhancements.Enhancement;
+import com.keviin.keviinteams.enhancements.EnhancementData;
+import com.keviin.keviinteams.missions.Mission;
+import com.keviin.keviinteams.missions.MissionType;
+import com.keviin.keviinteams.sorting.TeamSorting;
+import com.keviin.keviinteams.utils.PlayerUtils;
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.NBTType;
 import io.papermc.lib.PaperLib;
@@ -34,13 +34,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
-public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
+public abstract class TeamManager<T extends Team, U extends keviinUser<T>> {
     private final TemporaryCache<TeamSorting<T>, List<T>> teamTopCache = new TemporaryCache<>();
     private final TemporaryCache<T, Double> teamValueCache = new TemporaryCache<>();
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public TeamManager(IridiumTeams<T, U> iridiumTeams) {
-        this.iridiumTeams = iridiumTeams;
+    public TeamManager(keviinTeams<T, U> keviinTeams) {
+        this.keviinTeams = keviinTeams;
     }
 
     public abstract Optional<T> getTeamViaID(int id);
@@ -90,14 +90,14 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
     public boolean canVisit(Player player, T team) {
         TeamSetting teamSetting = getTeamSetting(team, SettingType.TEAM_VISITING.getSettingKey());
         if (teamSetting == null) return true;
-        U user = iridiumTeams.getUserManager().getUser(player);
+        U user = keviinTeams.getUserManager().getUser(player);
         return user.isBypassing() || user.getTeamID() == team.getId() || teamSetting.getValue().equalsIgnoreCase("Enabled");
     }
 
     public abstract List<T> getTeams();
 
     public List<T> getTeams(TeamSorting<T> sortType, boolean excludePrivate) {
-        return teamTopCache.get(sortType, Duration.ofSeconds(10), () -> sortType.getSortedTeams(iridiumTeams).stream()
+        return teamTopCache.get(sortType, Duration.ofSeconds(10), () -> sortType.getSortedTeams(keviinTeams).stream()
                 .filter(team -> {
                     TeamSetting teamSetting = getTeamSetting(team, SettingType.VALUE_VISIBILITY.getSettingKey());
                     return !excludePrivate || (teamSetting == null || teamSetting.getValue().equalsIgnoreCase("Public"));
@@ -113,16 +113,16 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
     public List<T> getTeams(SortType sortType, boolean excludePrivate) {
         switch (sortType) {
             case Value:
-                return getTeams(iridiumTeams.getTop().valueTeamSort, excludePrivate);
+                return getTeams(keviinTeams.getTop().valueTeamSort, excludePrivate);
             case Experience:
-                return getTeams(iridiumTeams.getTop().experienceTeamSort, excludePrivate);
+                return getTeams(keviinTeams.getTop().experienceTeamSort, excludePrivate);
             default:
                 return getTeams();
         }
     }
 
     public List<U> getTeamMembers(T team) {
-        return iridiumTeams.getUserManager().getUsers().stream()
+        return keviinTeams.getUserManager().getUsers().stream()
                 .filter(user -> user.getTeamID() == team.getId())
                 .collect(Collectors.toList());
     }
@@ -184,10 +184,10 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
     public abstract @Nullable TeamSetting getTeamSetting(T team, String setting);
 
     public int getTeamLevel(int experience) {
-        if (!iridiumTeams.getConfiguration().enableLeveling) return 1;
+        if (!keviinTeams.getConfiguration().enableLeveling) return 1;
 
-        int flatExpRequirement = iridiumTeams.getConfiguration().flatExpRequirement;
-        double curvedExpModifier = iridiumTeams.getConfiguration().curvedExpModifier;
+        int flatExpRequirement = keviinTeams.getConfiguration().flatExpRequirement;
+        double curvedExpModifier = keviinTeams.getConfiguration().curvedExpModifier;
 
         // if flatExpRequirement = 0, set experience per level up to 1 (because dividing by 0 is a no-no)
         // if curvedExpModifer = 0, set modifier to 1 (because value ^ 1 = value, and value ^ 0 = 1)
@@ -199,8 +199,8 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
     }
 
     public int getExperienceForLevel(int level) {
-        int flatExpRequirement = iridiumTeams.getConfiguration().flatExpRequirement;
-        double curvedExpModifier = iridiumTeams.getConfiguration().curvedExpModifier;
+        int flatExpRequirement = keviinTeams.getConfiguration().flatExpRequirement;
+        double curvedExpModifier = keviinTeams.getConfiguration().curvedExpModifier;
 
         if (flatExpRequirement == 0) flatExpRequirement = 1;
         if (curvedExpModifier == 0) curvedExpModifier = 1;
@@ -216,11 +216,11 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
         return teamValueCache.get(team, Duration.ofSeconds(1), () -> {
             double value = 0;
 
-            for (Map.Entry<XMaterial, BlockValues.ValuableBlock> valuableBlock : iridiumTeams.getBlockValues().blockValues.entrySet()) {
+            for (Map.Entry<XMaterial, BlockValues.ValuableBlock> valuableBlock : keviinTeams.getBlockValues().blockValues.entrySet()) {
                 value += getTeamBlock(team, valuableBlock.getKey()).getAmount() * valuableBlock.getValue().value;
             }
 
-            for (Map.Entry<EntityType, BlockValues.ValuableBlock> valuableSpawner : iridiumTeams.getBlockValues().spawnerValues.entrySet()) {
+            for (Map.Entry<EntityType, BlockValues.ValuableBlock> valuableSpawner : keviinTeams.getBlockValues().spawnerValues.entrySet()) {
                 value += getTeamSpawners(team, valuableSpawner.getKey()).getAmount() * valuableSpawner.getValue().value;
             }
 
@@ -231,7 +231,7 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
     public abstract TeamEnhancement getTeamEnhancement(T team, String enhancement);
 
     public boolean UpdateEnhancement(T team, String booster, Player player) {
-        Enhancement<?> enhancement = iridiumTeams.getEnhancementList().get(booster);
+        Enhancement<?> enhancement = keviinTeams.getEnhancementList().get(booster);
         TeamEnhancement teamEnhancement = getTeamEnhancement(team, booster);
 
         if (!teamEnhancement.isActive(enhancement.type)) teamEnhancement.setLevel(0);
@@ -240,31 +240,31 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
         if (enhancementData == null) enhancementData = enhancement.levels.get(teamEnhancement.getLevel());
 
         if (enhancementData.minLevel > team.getLevel()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().notHighEnoughLevel
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().notHighEnoughLevel
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                     .replace("%level%", String.valueOf(enhancementData.minLevel))
             ));
             return false;
         }
 
-        if (iridiumTeams.getEconomy().getBalance(player) < enhancementData.money) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().notEnoughMoney
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        if (keviinTeams.getEconomy().getBalance(player) < enhancementData.money) {
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().notEnoughMoney
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
         for (Map.Entry<String, Double> bankCost : enhancementData.bankCosts.entrySet()) {
             if (getTeamBank(team, bankCost.getKey()).getNumber() < bankCost.getValue()) {
-                player.sendMessage(StringUtils.color(iridiumTeams.getMessages().notEnoughBankItem
-                        .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                player.sendMessage(StringUtils.color(keviinTeams.getMessages().notEnoughBankItem
+                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                         .replace("%bank%", bankCost.getKey())
                 ));
                 return false;
             }
         }
 
-        iridiumTeams.getEconomy().withdrawPlayer(player, enhancementData.money);
+        keviinTeams.getEconomy().withdrawPlayer(player, enhancementData.money);
 
         for (Map.Entry<String, Double> bankCost : enhancementData.bankCosts.entrySet()) {
             TeamBank teamBank = getTeamBank(team, bankCost.getKey());
@@ -272,7 +272,7 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
         }
 
         if (enhancement.levels.containsKey(teamEnhancement.getLevel() + 1)) {
-            U user = iridiumTeams.getUserManager().getUser(player);
+            U user = keviinTeams.getUserManager().getUser(player);
             EnhancementUpdateEvent<T, U> enhancementUpdateEvent = new EnhancementUpdateEvent<>(team, user, teamEnhancement.getLevel() + 1, booster);
 
             Bukkit.getPluginManager().callEvent(enhancementUpdateEvent);
@@ -317,9 +317,9 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
     public List<String> getTeamMission(T team, MissionType missionType) {
         // Get list of current missions
         List<TeamMission> teamMissions = getTeamMissions(team).stream()
-                .filter(teamMission -> iridiumTeams.getMissions().missions.containsKey(teamMission.getMissionName()))
-                .filter(teamMission -> iridiumTeams.getMissions().missions.get(teamMission.getMissionName()).getMissionType() == missionType)
-                .filter(teamMission -> iridiumTeams.getMissions().missions.get(teamMission.getMissionName()).getMissionData().get(teamMission.getMissionLevel()).getItem().slot == null)
+                .filter(teamMission -> keviinTeams.getMissions().missions.containsKey(teamMission.getMissionName()))
+                .filter(teamMission -> keviinTeams.getMissions().missions.get(teamMission.getMissionName()).getMissionType() == missionType)
+                .filter(teamMission -> keviinTeams.getMissions().missions.get(teamMission.getMissionName()).getMissionData().get(teamMission.getMissionLevel()).getItem().slot == null)
                 .collect(Collectors.toList());
         // Filter and delete expired ones
         List<String> missions = new ArrayList<>();
@@ -334,13 +334,13 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
 
         // Fill to make sure list is at correct size
         ThreadLocalRandom random = ThreadLocalRandom.current();
-        List<Map.Entry<String, Mission>> availableMissions = iridiumTeams.getMissions().missions.entrySet().stream()
+        List<Map.Entry<String, Mission>> availableMissions = keviinTeams.getMissions().missions.entrySet().stream()
                 .filter(mission -> !mission.getValue().getMissionData().isEmpty())
                 .filter(mission -> mission.getValue().getMissionData().get(1).getItem().slot == null)
                 .filter(mission -> mission.getValue().getMissionType() == missionType)
                 .filter(mission -> !missions.contains(mission.getKey()))
                 .collect(Collectors.toList());
-        while (missions.size() < iridiumTeams.getMissions().dailySlots.size() && availableMissions.size() > 0) {
+        while (missions.size() < keviinTeams.getMissions().dailySlots.size() && availableMissions.size() > 0) {
             Map.Entry<String, Mission> newMission = availableMissions.get(random.nextInt(availableMissions.size()));
             missions.add(newMission.getKey());
             availableMissions.remove(newMission);
@@ -358,7 +358,7 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
         Reward reward = teamReward.getReward();
         deleteTeamReward(teamReward);
         reward.sound.play(player);
-        iridiumTeams.getEconomy().depositPlayer(player, reward.money);
+        keviinTeams.getEconomy().depositPlayer(player, reward.money);
         PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) + reward.experience);
         getTeamViaID(teamReward.getTeamID()).ifPresent(team -> {
             team.setExperience(team.getExperience() + reward.teamExperience);
@@ -454,7 +454,7 @@ public abstract class TeamManager<T extends Team, U extends IridiumUser<T>> {
         }
 
         NBT.get(item, readableItemNBT -> {
-            return readableItemNBT.hasTag(iridiumTeams.getName().toLowerCase(), NBTType.NBTTagCompound);
+            return readableItemNBT.hasTag(keviinTeams.getName().toLowerCase(), NBTType.NBTTagCompound);
         });
 
         return false;

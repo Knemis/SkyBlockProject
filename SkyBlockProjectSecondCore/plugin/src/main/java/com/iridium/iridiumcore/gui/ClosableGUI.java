@@ -1,5 +1,5 @@
 
-package com.iridium.iridiumcore.gui;
+package com.keviin.keviincore.gui;
 
 import org.bukkit.event.inventory.InventoryCloseEvent;
 

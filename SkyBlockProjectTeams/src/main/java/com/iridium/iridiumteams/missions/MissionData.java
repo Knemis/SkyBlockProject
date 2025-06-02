@@ -1,8 +1,8 @@
-package com.iridium.iridiumteams.missions;
+package com.keviin.keviinteams.missions;
 
 import com.cryptomorin.xseries.XSound;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.Reward;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.Reward;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

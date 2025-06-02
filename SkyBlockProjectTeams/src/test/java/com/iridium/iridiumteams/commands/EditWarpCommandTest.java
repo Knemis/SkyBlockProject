@@ -1,17 +1,17 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.PermissionType;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.iridiumteams.database.TeamWarp;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.managers.TeamManager;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.PermissionType;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.keviinteams.database.TeamWarp;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.managers.TeamManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

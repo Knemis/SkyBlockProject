@@ -1,11 +1,11 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.PermissionType;
-import com.iridium.iridiumteams.Rank;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.PermissionType;
+import com.keviin.keviinteams.Rank;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -18,52 +18,52 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class KickCommand<T extends Team, U extends IridiumUser<T>> extends Command<T, U> {
+public class KickCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
     public KickCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, T team, String[] args, keviinTeams<T, U> keviinTeams) {
         Player player = user.getPlayer();
         if (args.length != 1) {
-            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
             return false;
         }
-        if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.KICK)) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotKick
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.KICK)) {
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotKick
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
         OfflinePlayer offlinePlayer = Bukkit.getServer().getOfflinePlayer(args[0]);
-        U kickedPlayer = iridiumTeams.getUserManager().getUser(offlinePlayer);
+        U kickedPlayer = keviinTeams.getUserManager().getUser(offlinePlayer);
         if (team.getId() != kickedPlayer.getTeamID()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().userNotInYourTeam
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().userNotInYourTeam
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
         if (offlinePlayer.getUniqueId() == player.getUniqueId()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotKickYourself
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotKickYourself
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
         if ((kickedPlayer.getUserRank() >= user.getUserRank() || kickedPlayer.getUserRank() == Rank.OWNER.getId()) && !user.isBypassing() && user.getUserRank() != Rank.OWNER.getId()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotKickHigherRank
-                    .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotKickHigherRank
+                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
             ));
             return false;
         }
         kickedPlayer.setTeam(null);
-        Optional.ofNullable(kickedPlayer.getPlayer()).ifPresent(player1 -> player1.sendMessage(StringUtils.color(iridiumTeams.getMessages().youHaveBeenKicked
-                .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        Optional.ofNullable(kickedPlayer.getPlayer()).ifPresent(player1 -> player1.sendMessage(StringUtils.color(keviinTeams.getMessages().youHaveBeenKicked
+                .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                 .replace("%player%", player.getName())
         )));
-        iridiumTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(player1 ->
-                player1.sendMessage(StringUtils.color(iridiumTeams.getMessages().playerKicked
-                        .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        keviinTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(player1 ->
+                player1.sendMessage(StringUtils.color(keviinTeams.getMessages().playerKicked
+                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                         .replace("%player%", kickedPlayer.getName())
                         .replace("%kicker%", player.getName())
                 ))
@@ -72,7 +72,7 @@ public class KickCommand<T extends Team, U extends IridiumUser<T>> extends Comma
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
     }
 

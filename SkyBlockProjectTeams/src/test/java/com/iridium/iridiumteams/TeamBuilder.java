@@ -1,12 +1,12 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.database.TeamEnhancement;
-import com.iridium.iridiumteams.database.TeamReward;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.managers.TeamManager;
+import com.keviin.keviinteams.database.TeamEnhancement;
+import com.keviin.keviinteams.database.TeamReward;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.managers.TeamManager;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
 

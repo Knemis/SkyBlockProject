@@ -1,6 +1,6 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
-import com.iridium.iridiumcore.utils.Placeholder;
+import com.keviin.keviincore.utils.Placeholder;
 import org.bukkit.entity.Player;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 

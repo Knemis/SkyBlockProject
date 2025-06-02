@@ -1,13 +1,13 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.google.common.collect.ImmutableMap;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.missions.MissionType;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.missions.MissionType;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
 import org.bukkit.Material;
 import org.bukkit.inventory.Inventory;
 import org.junit.jupiter.api.AfterEach;

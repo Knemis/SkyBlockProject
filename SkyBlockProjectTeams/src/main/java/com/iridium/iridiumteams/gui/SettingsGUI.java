@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.BackGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.Setting;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamSetting;
+import com.keviin.keviincore.gui.BackGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.Setting;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamSetting;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -18,21 +18,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.Map;
 
-public class SettingsGUI<T extends Team, U extends IridiumUser<T>> extends BackGUI {
+public class SettingsGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
 
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
     private final T team;
 
-    public SettingsGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
-        super(iridiumTeams.getInventories().settingsGUI.background, player, iridiumTeams.getInventories().backButton);
-        this.iridiumTeams = iridiumTeams;
+    public SettingsGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+        super(keviinTeams.getInventories().settingsGUI.background, player, keviinTeams.getInventories().backButton);
+        this.keviinTeams = keviinTeams;
         this.team = team;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        Inventory inventory = Bukkit.createInventory(this, iridiumTeams.getInventories().settingsGUI.size, StringUtils.color(iridiumTeams.getInventories().settingsGUI.title));
+        Inventory inventory = Bukkit.createInventory(this, keviinTeams.getInventories().settingsGUI.size, StringUtils.color(keviinTeams.getInventories().settingsGUI.title));
         addContent(inventory);
         return inventory;
     }
@@ -41,66 +41,66 @@ public class SettingsGUI<T extends Team, U extends IridiumUser<T>> extends BackG
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
 
-        for (Map.Entry<String, Setting> setting : iridiumTeams.getSettingsList().entrySet()) {
-            TeamSetting teamSetting = iridiumTeams.getTeamManager().getTeamSetting(team, setting.getKey());
+        for (Map.Entry<String, Setting> setting : keviinTeams.getSettingsList().entrySet()) {
+            TeamSetting teamSetting = keviinTeams.getTeamManager().getTeamSetting(team, setting.getKey());
             if (teamSetting == null) continue;
 
             String teamSettingDisplay = teamSetting.getValue();
             switch(teamSetting.getValue()) {
                 case "Enabled": {
-                    teamSettingDisplay = iridiumTeams.getMessages().enabledPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().enabledPlaceholder;
                     break;
                 }
                 case "Disabled": {
-                    teamSettingDisplay = iridiumTeams.getMessages().disabledPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().disabledPlaceholder;
                     break;
                 }
                 case "Private": {
-                    teamSettingDisplay = iridiumTeams.getMessages().privatePlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().privatePlaceholder;
                     break;
                 }
                 case "Public": {
-                    teamSettingDisplay = iridiumTeams.getMessages().publicPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().publicPlaceholder;
                     break;
                 }
                 case "Server": {
-                    teamSettingDisplay = iridiumTeams.getMessages().serverPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().serverPlaceholder;
                     break;
                 }
                 case "Sunny": {
-                    teamSettingDisplay = iridiumTeams.getMessages().sunnyPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().sunnyPlaceholder;
                     break;
                 }
                 case "Raining": {
-                    teamSettingDisplay = iridiumTeams.getMessages().rainingPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().rainingPlaceholder;
                     break;
                 }
                 case "Sunrise": {
-                    teamSettingDisplay = iridiumTeams.getMessages().sunrisePlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().sunrisePlaceholder;
                     break;
                 }
                 case "Day": {
-                    teamSettingDisplay = iridiumTeams.getMessages().dayPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().dayPlaceholder;
                     break;
                 }
                 case "Morning": {
-                    teamSettingDisplay = iridiumTeams.getMessages().morningPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().morningPlaceholder;
                     break;
                 }
                 case "Noon": {
-                    teamSettingDisplay = iridiumTeams.getMessages().noonPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().noonPlaceholder;
                     break;
                 }
                 case "Sunset": {
-                    teamSettingDisplay = iridiumTeams.getMessages().sunsetPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().sunsetPlaceholder;
                     break;
                 }
                 case "Night": {
-                    teamSettingDisplay = iridiumTeams.getMessages().nightPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().nightPlaceholder;
                     break;
                 }
                 case "Midnight": {
-                    teamSettingDisplay = iridiumTeams.getMessages().midnightPlaceholder;
+                    teamSettingDisplay = keviinTeams.getMessages().midnightPlaceholder;
                     break;
                 }
             }
@@ -115,14 +115,14 @@ public class SettingsGUI<T extends Team, U extends IridiumUser<T>> extends BackG
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
 
-        for (Map.Entry<String, Setting> setting : iridiumTeams.getSettingsList().entrySet()) {
+        for (Map.Entry<String, Setting> setting : keviinTeams.getSettingsList().entrySet()) {
             if (setting.getValue().getItem().slot != event.getSlot()) continue;
 
-            TeamSetting teamSetting = iridiumTeams.getTeamManager().getTeamSetting(team, setting.getKey());
+            TeamSetting teamSetting = keviinTeams.getTeamManager().getTeamSetting(team, setting.getKey());
             if (teamSetting == null) continue;
             int currentIndex = setting.getValue().getValues().indexOf(teamSetting.getValue());
             String newValue = setting.getValue().getValues().get(setting.getValue().getValues().size() > currentIndex + 1 ? currentIndex + 1 : 0);
-            iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().settingsCommand, new String[]{setting.getValue().getDisplayName(), newValue});
+            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().settingsCommand, new String[]{setting.getValue().getDisplayName(), newValue});
             return;
         }
     }

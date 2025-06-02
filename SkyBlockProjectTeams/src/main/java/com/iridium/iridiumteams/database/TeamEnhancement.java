@@ -1,6 +1,6 @@
-package com.iridium.iridiumteams.database;
+package com.keviin.keviinteams.database;
 
-import com.iridium.iridiumteams.enhancements.EnhancementType;
+import com.keviin.keviinteams.enhancements.EnhancementType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;

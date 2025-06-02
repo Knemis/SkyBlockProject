@@ -1,10 +1,10 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.sorting.ExperienceTeamSort;
-import com.iridium.iridiumteams.sorting.ValueTeamSort;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.sorting.ExperienceTeamSort;
+import com.keviin.keviinteams.sorting.ValueTeamSort;
 
 import java.util.Collections;
 

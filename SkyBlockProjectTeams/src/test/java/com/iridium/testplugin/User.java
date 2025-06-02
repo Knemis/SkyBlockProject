@@ -1,10 +1,10 @@
-package com.iridium.testplugin;
+package com.keviin.testplugin;
 
-import com.iridium.iridiumteams.database.IridiumUser;
+import com.keviin.keviinteams.database.keviinUser;
 
 import java.util.UUID;
 
-public class User extends IridiumUser<TestTeam> {
+public class User extends keviinUser<TestTeam> {
     public User(UUID uuid, String username) {
         super();
         setUuid(uuid);

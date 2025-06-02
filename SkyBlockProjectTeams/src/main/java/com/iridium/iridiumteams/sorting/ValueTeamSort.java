@@ -1,8 +1,8 @@
-package com.iridium.iridiumteams.sorting;
+package com.keviin.keviinteams.sorting;
 
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.Team;
 import lombok.NoArgsConstructor;
 
 import java.util.Comparator;
@@ -18,8 +18,8 @@ public class ValueTeamSort<T extends Team> extends TeamSorting<T> {
     }
 
     @Override
-    public List<T> getSortedTeams(IridiumTeams<T, ?> iridiumTeams) {
-        return iridiumTeams.getTeamManager().getTeams().stream()
+    public List<T> getSortedTeams(keviinTeams<T, ?> keviinTeams) {
+        return keviinTeams.getTeamManager().getTeams().stream()
                 .sorted(Comparator.comparing(T::getValue).reversed())
                 .collect(Collectors.toList());
     }

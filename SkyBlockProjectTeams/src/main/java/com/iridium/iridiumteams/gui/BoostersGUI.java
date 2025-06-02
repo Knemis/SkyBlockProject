@@ -1,17 +1,17 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.BackGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.configs.inventories.NoItemGUI;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamEnhancement;
-import com.iridium.iridiumteams.enhancements.Enhancement;
-import com.iridium.iridiumteams.enhancements.EnhancementData;
-import com.iridium.iridiumteams.enhancements.EnhancementType;
+import com.keviin.keviincore.gui.BackGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.configs.inventories.NoItemGUI;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamEnhancement;
+import com.keviin.keviinteams.enhancements.Enhancement;
+import com.keviin.keviinteams.enhancements.EnhancementData;
+import com.keviin.keviinteams.enhancements.EnhancementType;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -20,22 +20,22 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class BoostersGUI<T extends Team, U extends IridiumUser<T>> extends BackGUI {
+public class BoostersGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
 
     private final T team;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
     private final Map<Integer, String> boosters = new HashMap<>();
 
-    public BoostersGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
-        super(iridiumTeams.getInventories().boostersGUI.background, player, iridiumTeams.getInventories().backButton);
+    public BoostersGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+        super(keviinTeams.getInventories().boostersGUI.background, player, keviinTeams.getInventories().backButton);
         this.team = team;
-        this.iridiumTeams = iridiumTeams;
+        this.keviinTeams = keviinTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().boostersGUI;
+        NoItemGUI noItemGUI = keviinTeams.getInventories().boostersGUI;
         Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -45,19 +45,19 @@ public class BoostersGUI<T extends Team, U extends IridiumUser<T>> extends BackG
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
 
-        for (Map.Entry<String, Enhancement<?>> enhancementEntry : iridiumTeams.getEnhancementList().entrySet()) {
+        for (Map.Entry<String, Enhancement<?>> enhancementEntry : keviinTeams.getEnhancementList().entrySet()) {
             if (enhancementEntry.getValue().type != EnhancementType.BOOSTER) continue;
             boosters.put(enhancementEntry.getValue().item.slot, enhancementEntry.getKey());
-            TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, enhancementEntry.getKey());
+            TeamEnhancement teamEnhancement = keviinTeams.getTeamManager().getTeamEnhancement(team, enhancementEntry.getKey());
             EnhancementData currentData = enhancementEntry.getValue().levels.get(teamEnhancement.getLevel());
             EnhancementData nextData = enhancementEntry.getValue().levels.get(teamEnhancement.getLevel() + 1);
             int seconds = Math.max((int) (teamEnhancement.getRemainingTime() % 60), 0);
             int minutes = Math.max((int) ((teamEnhancement.getRemainingTime() % 3600) / 60), 0);
             int hours = Math.max((int) (teamEnhancement.getRemainingTime() / 3600), 0);
             int currentLevel = teamEnhancement.isActive(enhancementEntry.getValue().type) ? teamEnhancement.getLevel() : 0;
-            String nextLevel = nextData == null ? iridiumTeams.getMessages().nullPlaceholder : String.valueOf(currentLevel + 1);
-            String cost = nextData == null ? currentData == null ? iridiumTeams.getMessages().nullPlaceholder : String.valueOf(currentData.money) : String.valueOf(nextData.money);
-            String minLevel = nextData == null ? iridiumTeams.getMessages().nullPlaceholder : String.valueOf(nextData.minLevel);
+            String nextLevel = nextData == null ? keviinTeams.getMessages().nullPlaceholder : String.valueOf(currentLevel + 1);
+            String cost = nextData == null ? currentData == null ? keviinTeams.getMessages().nullPlaceholder : String.valueOf(currentData.money) : String.valueOf(nextData.money);
+            String minLevel = nextData == null ? keviinTeams.getMessages().nullPlaceholder : String.valueOf(nextData.minLevel);
             List<Placeholder> placeholders = currentData == null ? new ArrayList<>() : new ArrayList<>(currentData.getPlaceholders());
             placeholders.addAll(Arrays.asList(
                     new Placeholder("timeremaining_hours", String.valueOf(hours)),
@@ -86,12 +86,12 @@ public class BoostersGUI<T extends Team, U extends IridiumUser<T>> extends BackG
 
         if (!boosters.containsKey(event.getSlot())) return;
         String booster = boosters.get(event.getSlot());
-        iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().boostersCommand, new String[]{"buy", booster});
+        keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().boostersCommand, new String[]{"buy", booster});
     }
 
     public String formatPrice(double value) {
-        if (iridiumTeams.getShop().abbreviatePrices) {
-            return iridiumTeams.getConfiguration().numberFormatter.format(value);
+        if (keviinTeams.getShop().abbreviatePrices) {
+            return keviinTeams.getConfiguration().numberFormatter.format(value);
         }
         return String.valueOf(value);
     }

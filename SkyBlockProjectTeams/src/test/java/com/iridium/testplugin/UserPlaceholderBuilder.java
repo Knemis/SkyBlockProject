@@ -1,7 +1,7 @@
-package com.iridium.testplugin;
+package com.keviin.testplugin;
 
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumteams.PlaceholderBuilder;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviinteams.PlaceholderBuilder;
 
 import java.util.List;
 import java.util.Optional;

@@ -1,13 +1,13 @@
-package com.iridium.iridiumteams.bank;
+package com.keviin.keviinteams.bank;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.iridiumteams.database.TeamBank;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.keviinteams.database.TeamBank;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

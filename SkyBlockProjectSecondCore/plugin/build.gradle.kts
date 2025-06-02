@@ -1,27 +1,69 @@
+plugins {
+    java
+    `maven-publish`
+    id("io.github.goooler.shadow") version "8.1.8"
+}
+
+group = "com.keviin"
+version = "2.0.9"
+description = "KeviinCore"
+
+allprojects {
+    apply(plugin = "java")
+
+    java.sourceCompatibility = JavaVersion.VERSION_1_8
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven("https://repo.codemc.org/repository/maven-public/")
+        maven("https://repo.rosewooddev.io/repository/public/")
+        maven("https://repo.papermc.io/repository/maven-public/")
+        maven("https://nexus.iridiumdevelopment.net/repository/maven-releases/")
+        maven("https://libraries.minecraft.net")
+    }
+
+    dependencies {
+        // Dependencies that we want to shade in
+        implementation("com.github.cryptomorin:XSeries:13.3.0")
+
+        // Other dependencies that are not required or already available at runtime
+        compileOnly("org.jetbrains:annotations:26.0.2")
+        compileOnly("org.projectlombok:lombok:1.18.38")
+        // This is needed for XSkin, but isnt added to the XSeries jar, potentially a bug that will be fixed in a later release
+        compileOnly("com.mojang:authlib:1.5.25")
+
+        // Enable lombok annotation processing
+        annotationProcessor("org.projectlombok:lombok:1.18.38")
+    }
+}
+
 dependencies {
-    // Include all the multiversion submodules
-    val multiVersionProjects = project(":multiversion").dependencyProject.subprojects
-    multiVersionProjects.forEach { implementation(it) }
-
-    // Dependencies that we want to shade in
-    implementation("de.tr7zw:item-nbt-api:2.15.0")
-    implementation("com.iridium:IridiumColorAPI:1.0.9")
-    implementation("com.fasterxml.jackson.core:jackson-databind:2.19.0")
-    implementation("com.fasterxml.jackson.core:jackson-core:2.19.0")
-    implementation("com.fasterxml.jackson.core:jackson-annotations:2.19.0")
-    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.0")
-    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.19.0")
-    implementation("org.yaml:snakeyaml:2.4")
-    implementation("io.papermc:paperlib:1.0.8")
-    implementation("org.apache.commons:commons-lang3:3.17.0")
-
-    // Other dependencies that are not required or already available at runtime
-    compileOnly("org.jetbrains:annotations:26.0.2")
-    compileOnly("org.spigotmc:spigot-api:1.21.4-R0.1-SNAPSHOT")
+    // Shade all the subprojects into the jar
+    subprojects.forEach { implementation(it) }
+    implementation(project(":SkyBlockProjectTeams"))
 }
 
 tasks {
-    build {
-        dependsOn(processResources)
+    jar {
+        dependsOn(shadowJar)
+        enabled = false
+    }
+
+    shadowJar {
+        archiveClassifier.set("")
+    }
+
+    compileJava {
+        options.encoding = "UTF-8"
+    }
+}
+
+publishing {
+    publications.create<MavenPublication>("maven") {
+        groupId = "com.keviin"
+        artifactId = "KeviinCore"
+        version = version
+        artifact(tasks["shadowJar"])
     }
 }

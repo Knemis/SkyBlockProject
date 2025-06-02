@@ -1,6 +1,6 @@
-package com.iridium.iridiumteams.database;
+package com.keviin.keviinteams.database;
 
-import com.iridium.iridiumteams.Reward;
+import com.keviin.keviinteams.Reward;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;

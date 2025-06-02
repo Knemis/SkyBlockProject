@@ -1,9 +1,9 @@
-package com.iridium.iridiumteams.utils;
+package com.keviin.keviinteams.utils;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.IridiumCore;
-import com.iridium.iridiumcore.multiversion.MultiVersion;
-import com.iridium.iridiumteams.IridiumTeams;
+import com.keviin.keviincore.KeviinCore;
+import com.keviin.keviincore.multiversion.MultiVersion;
+import com.keviin.keviinteams.keviinTeams;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,8 +25,8 @@ public class LocationUtils {
             XMaterial.LAVA
     ).map(XMaterial::parseMaterial).collect(Collectors.toList());
 
-    public static boolean isSafe(@NotNull Location location, IridiumTeams<?, ?> iridiumTeams) {
-        if (IridiumCore.isTesting()) {
+    public static boolean isSafe(@NotNull Location location, keviinTeams<?, ?> keviinTeams) {
+        if (KeviinCore.isTesting()) {
             boolean safe = isSafeTesting;
             isSafeTesting = true;
             return safe;
@@ -34,7 +34,7 @@ public class LocationUtils {
         Block block = location.getBlock();
         Block above = location.clone().add(0, 1, 0).getBlock();
         Block below = location.clone().subtract(0, 1, 0).getBlock();
-        MultiVersion multiVersion = iridiumTeams.getMultiVersion();
+        MultiVersion multiVersion = keviinTeams.getMultiVersion();
         return multiVersion.isPassable(block) && multiVersion.isPassable(above) && !multiVersion.isPassable(below) && !unsafeBlocks.contains(below.getType()) && !unsafeBlocks.contains(block.getType()) && !unsafeBlocks.contains(above.getType());
     }
 

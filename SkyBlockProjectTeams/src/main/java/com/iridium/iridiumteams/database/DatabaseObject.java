@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.database;
+package com.keviin.keviinteams.database;
 
 import lombok.Getter;
 import lombok.Setter;

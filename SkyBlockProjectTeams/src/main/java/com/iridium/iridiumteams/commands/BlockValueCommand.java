@@ -1,15 +1,15 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.SettingType;
-import com.iridium.iridiumteams.configs.inventories.BlockValuesTypeSelectorInventoryConfig;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamSetting;
-import com.iridium.iridiumteams.gui.BlockValueGUI;
-import com.iridium.iridiumteams.gui.BlockValuesTypeSelectorGUI;
-import com.iridium.iridiumteams.gui.SpawnerValueGUI;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.SettingType;
+import com.keviin.keviinteams.configs.inventories.BlockValuesTypeSelectorInventoryConfig;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamSetting;
+import com.keviin.keviinteams.gui.BlockValueGUI;
+import com.keviin.keviinteams.gui.BlockValuesTypeSelectorGUI;
+import com.keviin.keviinteams.gui.SpawnerValueGUI;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -22,67 +22,67 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class BlockValueCommand<T extends Team, U extends IridiumUser<T>> extends Command<T, U> {
+public class BlockValueCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
 
     public BlockValueCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, String[] args, keviinTeams<T, U> keviinTeams) {
 
         Player player = user.getPlayer();
         Optional<T> team;
 
-        BlockValuesTypeSelectorInventoryConfig blockValuesTypeSelectorInventoryConfig = iridiumTeams.getInventories().blockValuesTypeSelectorGUI;
+        BlockValuesTypeSelectorInventoryConfig blockValuesTypeSelectorInventoryConfig = keviinTeams.getInventories().blockValuesTypeSelectorGUI;
 
         String teamArg = args.length > 1 ? args[0] : player.getName();
-        team = iridiumTeams.getTeamManager().getTeamViaNameOrPlayer(teamArg);
+        team = keviinTeams.getTeamManager().getTeamViaNameOrPlayer(teamArg);
 
         if (!team.isPresent() && args.length >= 1) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().teamDoesntExistByName.replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().teamDoesntExistByName.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
             return false;
         }
 
         if (!team.isPresent()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().dontHaveTeam.replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().dontHaveTeam.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
             return false;
         }
 
-        TeamSetting teamSetting = iridiumTeams.getTeamManager().getTeamSetting(team.get(), SettingType.VALUE_VISIBILITY.getSettingKey());
+        TeamSetting teamSetting = keviinTeams.getTeamManager().getTeamSetting(team.get(), SettingType.VALUE_VISIBILITY.getSettingKey());
 
-        if (teamSetting != null && teamSetting.getValue().equalsIgnoreCase("Private") && !iridiumTeams.getTeamManager().getTeamMembers(team.get()).contains(user) && !user.isBypassing()) {
-            player.sendMessage(StringUtils.color(iridiumTeams.getMessages().teamIsPrivate.replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+        if (teamSetting != null && teamSetting.getValue().equalsIgnoreCase("Private") && !keviinTeams.getTeamManager().getTeamMembers(team.get()).contains(user) && !user.isBypassing()) {
+            player.sendMessage(StringUtils.color(keviinTeams.getMessages().teamIsPrivate.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
             return false;
         }
 
         if (args.length == 0) {
-            player.openInventory(new BlockValuesTypeSelectorGUI<>(teamArg, player, iridiumTeams).getInventory());
+            player.openInventory(new BlockValuesTypeSelectorGUI<>(teamArg, player, keviinTeams).getInventory());
             return true;
         }
 
         switch (args[args.length - 1]) {
             case ("blocks"): {
                 if (blockValuesTypeSelectorInventoryConfig.blocks.enabled) {
-                    player.openInventory(new BlockValueGUI<>(team.get(), player, iridiumTeams).getInventory());
+                    player.openInventory(new BlockValueGUI<>(team.get(), player, keviinTeams).getInventory());
                     return true;
                 }
             }
             case ("spawners"): {
                 if (blockValuesTypeSelectorInventoryConfig.spawners.enabled) {
-                    player.openInventory(new SpawnerValueGUI<>(team.get(), player, iridiumTeams).getInventory());
+                    player.openInventory(new SpawnerValueGUI<>(team.get(), player, keviinTeams).getInventory());
                     return true;
                 }
             }
             default: {
-                player.openInventory(new BlockValuesTypeSelectorGUI<>(teamArg, player, iridiumTeams).getInventory());
+                player.openInventory(new BlockValuesTypeSelectorGUI<>(teamArg, player, keviinTeams).getInventory());
                 return true;
             }
         }
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
 
         switch (args.length) {
             case 1:

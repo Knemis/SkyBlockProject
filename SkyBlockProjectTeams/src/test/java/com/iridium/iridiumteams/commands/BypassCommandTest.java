@@ -1,12 +1,12 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.User;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.User;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +43,7 @@ class BypassCommandTest {
 
     @Test
     public void executeBypassCommand__On() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.bypass").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.bypass").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test bypass");
@@ -56,7 +56,7 @@ class BypassCommandTest {
 
     @Test
     public void executeBypassCommand__Off() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.bypass").setBypassing().build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.bypass").setBypassing().build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test bypass");

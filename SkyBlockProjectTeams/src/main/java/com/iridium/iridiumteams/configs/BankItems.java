@@ -1,9 +1,9 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.bank.ExperienceBankItem;
-import com.iridium.iridiumteams.bank.MoneyBankItem;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.bank.ExperienceBankItem;
+import com.keviin.keviinteams.bank.MoneyBankItem;
 
 import java.util.Arrays;
 

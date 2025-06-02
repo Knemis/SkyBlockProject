@@ -1,10 +1,10 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XPotion;
 import com.google.common.collect.ImmutableMap;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.enhancements.*;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.enhancements.*;
 
 import java.util.Arrays;
 import java.util.Collections;

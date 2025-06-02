@@ -1,17 +1,17 @@
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.block.BlockMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.PermissionType;
-import com.iridium.iridiumteams.SettingType;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.managers.TeamManager;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.PermissionType;
+import com.keviin.keviinteams.SettingType;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.managers.TeamManager;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.block.BlockFace;

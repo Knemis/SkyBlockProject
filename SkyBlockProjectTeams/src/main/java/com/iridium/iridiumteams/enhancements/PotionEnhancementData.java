@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.enhancements;
+package com.keviin.keviinteams.enhancements;
 
 import com.cryptomorin.xseries.XPotion;
 import lombok.NoArgsConstructor;

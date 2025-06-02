@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.bank;
+package com.keviin.keviinteams.bank;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

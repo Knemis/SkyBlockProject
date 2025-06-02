@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.sorting;
+package com.keviin.keviinteams.sorting;
 
 class TeamSortingTest {
 

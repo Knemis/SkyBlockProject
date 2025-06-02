@@ -1,11 +1,11 @@
-package com.iridium.iridiumteams.sorting;
+package com.keviin.keviinteams.sorting;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

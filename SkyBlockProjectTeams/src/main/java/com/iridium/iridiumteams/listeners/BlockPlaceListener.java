@@ -1,13 +1,13 @@
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.PermissionType;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamBlock;
-import com.iridium.iridiumteams.database.TeamSpawners;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.PermissionType;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamBlock;
+import com.keviin.keviinteams.database.TeamSpawners;
 import lombok.AllArgsConstructor;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.Player;
@@ -19,41 +19,41 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class BlockPlaceListener<T extends Team, U extends IridiumUser<T>> implements Listener {
-    private final IridiumTeams<T, U> iridiumTeams;
+public class BlockPlaceListener<T extends Team, U extends keviinUser<T>> implements Listener {
+    private final keviinTeams<T, U> keviinTeams;
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (iridiumTeams.getTeamManager().isBankItem(event.getItemInHand())) {
+        if (keviinTeams.getTeamManager().isBankItem(event.getItemInHand())) {
             event.setCancelled(true);
             return;
         }
 
         Player player = event.getPlayer();
-        U user = iridiumTeams.getUserManager().getUser(player);
-        Optional<T> team = iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getBlock().getLocation());
+        U user = keviinTeams.getUserManager().getUser(player);
+        Optional<T> team = keviinTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getBlock().getLocation());
 
         if (team.isPresent()) {
-            if (!iridiumTeams.getTeamManager().getTeamPermission(team.get(), user, PermissionType.BLOCK_PLACE)) {
-                player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotPlaceBlocks
-                        .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            if (!keviinTeams.getTeamManager().getTeamPermission(team.get(), user, PermissionType.BLOCK_PLACE)) {
+                player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotPlaceBlocks
+                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                 ));
                 event.setCancelled(true);
             }
         } else {
-            iridiumTeams.getTeamManager().handleBlockPlaceOutsideTerritory(event);
+            keviinTeams.getTeamManager().handleBlockPlaceOutsideTerritory(event);
         }
     }
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorBlockPlace(BlockPlaceEvent event) {
-        U user = iridiumTeams.getUserManager().getUser(event.getPlayer());
+        U user = keviinTeams.getUserManager().getUser(event.getPlayer());
         XMaterial material = XMaterial.matchXMaterial(event.getBlock().getType());
-        iridiumTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
-            iridiumTeams.getMissionManager().handleMissionUpdate(team, event.getBlock().getLocation().getWorld(), "PLACE", material.name(), 1);
+        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
+            keviinTeams.getMissionManager().handleMissionUpdate(team, event.getBlock().getLocation().getWorld(), "PLACE", material.name(), 1);
         });
-        iridiumTeams.getTeamManager().getTeamViaPlayerLocation(event.getPlayer(), event.getBlock().getLocation()).ifPresent(team -> {
-            TeamBlock teamBlock = iridiumTeams.getTeamManager().getTeamBlock(team, material);
+        keviinTeams.getTeamManager().getTeamViaPlayerLocation(event.getPlayer(), event.getBlock().getLocation()).ifPresent(team -> {
+            TeamBlock teamBlock = keviinTeams.getTeamManager().getTeamBlock(team, material);
             teamBlock.setAmount(teamBlock.getAmount() + 1);
 
             if (event.getBlock().getState() instanceof CreatureSpawner) {
@@ -61,7 +61,7 @@ public class BlockPlaceListener<T extends Team, U extends IridiumUser<T>> implem
 
                 if(creatureSpawner.getSpawnedType() == null) return;
 
-                TeamSpawners teamSpawners = iridiumTeams.getTeamManager().getTeamSpawners(team, creatureSpawner.getSpawnedType());
+                TeamSpawners teamSpawners = keviinTeams.getTeamManager().getTeamSpawners(team, creatureSpawner.getSpawnedType());
                 teamSpawners.setAmount(teamSpawners.getAmount() + 1);
             }
         });

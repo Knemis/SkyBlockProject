@@ -1,7 +1,7 @@
-package com.iridium.iridiumteams.api;
+package com.keviin.keviinteams.api;
 
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 @Setter
-public class EnhancementUpdateEvent<T extends Team, U extends IridiumUser<T>> extends Event implements Cancellable {
+public class EnhancementUpdateEvent<T extends Team, U extends keviinUser<T>> extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private T team;

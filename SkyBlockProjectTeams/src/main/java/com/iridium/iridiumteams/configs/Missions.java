@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableMap;
-import com.iridium.iridiumcore.Item;
-import com.iridium.iridiumteams.Reward;
-import com.iridium.iridiumteams.missions.Mission;
-import com.iridium.iridiumteams.missions.MissionData;
-import com.iridium.iridiumteams.missions.MissionType;
+import com.keviin.keviincore.Item;
+import com.keviin.keviinteams.Reward;
+import com.keviin.keviinteams.missions.Mission;
+import com.keviin.keviinteams.missions.MissionData;
+import com.keviin.keviinteams.missions.MissionType;
 
 import java.util.*;
 

@@ -1,13 +1,13 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
-import com.iridium.iridiumteams.commands.*;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.commands.*;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 
 import java.util.Arrays;
 import java.util.Collections;
 
-public class Commands<T extends Team, U extends IridiumUser<T>> {
+public class Commands<T extends Team, U extends keviinUser<T>> {
     public AboutCommand<T, U> aboutCommand;
     public CreateCommand<T, U> createCommand;
     public MembersCommand<T, U> membersCommand;
@@ -57,7 +57,7 @@ public class Commands<T extends Team, U extends IridiumUser<T>> {
     public LevelCommand<T, U> levelCommand;
 
     public Commands() {
-        this("iridiumteams", "Teams", "team");
+        this("keviinteams", "Teams", "team");
     }
 
     public Commands(String permissionBase, String team, String commandBase) {

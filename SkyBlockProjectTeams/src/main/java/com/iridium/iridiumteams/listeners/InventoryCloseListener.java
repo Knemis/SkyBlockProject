@@ -1,6 +1,6 @@
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
-import com.iridium.iridiumcore.gui.ClosableGUI;
+import com.keviin.keviincore.gui.ClosableGUI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;

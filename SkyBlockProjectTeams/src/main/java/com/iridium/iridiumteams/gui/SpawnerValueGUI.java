@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.gui.PagedGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.configs.BlockValues;
-import com.iridium.iridiumteams.configs.inventories.NoItemGUI;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.gui.PagedGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.configs.BlockValues;
+import com.keviin.keviinteams.configs.inventories.NoItemGUI;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -22,23 +22,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SpawnerValueGUI<T extends Team, U extends IridiumUser<T>> extends PagedGUI<BlockValues.ValuableBlock> {
+public class SpawnerValueGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<BlockValues.ValuableBlock> {
 
     private final T team;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public SpawnerValueGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
+    public SpawnerValueGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
         super(
                 1,
-                iridiumTeams.getInventories().spawnerValueGUI.size,
-                iridiumTeams.getInventories().spawnerValueGUI.background,
-                iridiumTeams.getInventories().previousPage,
-                iridiumTeams.getInventories().nextPage,
+                keviinTeams.getInventories().spawnerValueGUI.size,
+                keviinTeams.getInventories().spawnerValueGUI.background,
+                keviinTeams.getInventories().previousPage,
+                keviinTeams.getInventories().nextPage,
                 player,
-                iridiumTeams.getInventories().backButton
+                keviinTeams.getInventories().backButton
         );
         this.team = team;
-        this.iridiumTeams = iridiumTeams;
+        this.keviinTeams = keviinTeams;
     }
 
     @NotNull
@@ -47,7 +47,7 @@ public class SpawnerValueGUI<T extends Team, U extends IridiumUser<T>> extends P
         int maxPages = getPageObjects().size() / (getSize() - 9);
         if (getPageObjects().size() % (getSize() - 9) > 0) maxPages++;
 
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().spawnerValueGUI;
+        NoItemGUI noItemGUI = keviinTeams.getInventories().spawnerValueGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title
                 .replace("%page%", String.valueOf(getPage()))
                 .replace("%max_pages%", String.valueOf(maxPages))
@@ -59,15 +59,15 @@ public class SpawnerValueGUI<T extends Team, U extends IridiumUser<T>> extends P
     @Override
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
-        for (Map.Entry<EntityType, BlockValues.ValuableBlock> entry : iridiumTeams.getBlockValues().spawnerValues.entrySet().stream().filter(entry -> entry.getValue().page == getPage()).collect(Collectors.toList())) {
+        for (Map.Entry<EntityType, BlockValues.ValuableBlock> entry : keviinTeams.getBlockValues().spawnerValues.entrySet().stream().filter(entry -> entry.getValue().page == getPage()).collect(Collectors.toList())) {
 
             List<String> lore = new ArrayList<>();
-            lore.add(iridiumTeams.getBlockValues().valueLore
+            lore.add(keviinTeams.getBlockValues().valueLore
                     .replace("%block_value%", String.valueOf(entry.getValue().value))
             );
-            lore.add(iridiumTeams.getBlockValues().teamValueLore
-                    .replace("%total_blocks%", String.valueOf(iridiumTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount()))
-                    .replace("%total_block_value%", String.valueOf(iridiumTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount() * entry.getValue().value))
+            lore.add(keviinTeams.getBlockValues().teamValueLore
+                    .replace("%total_blocks%", String.valueOf(keviinTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount()))
+                    .replace("%total_block_value%", String.valueOf(keviinTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount() * entry.getValue().value))
             );
 
             String itemName = entry.getKey().name().toUpperCase() + "_SPAWN_EGG";
@@ -79,7 +79,7 @@ public class SpawnerValueGUI<T extends Team, U extends IridiumUser<T>> extends P
 
     @Override
     public Collection<BlockValues.ValuableBlock> getPageObjects() {
-        return iridiumTeams.getBlockValues().spawnerValues.values();
+        return keviinTeams.getBlockValues().spawnerValues.values();
     }
 
     @Override

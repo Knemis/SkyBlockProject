@@ -1,10 +1,10 @@
 
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @AllArgsConstructor
-public class PlayerCraftListener<T extends Team, U extends IridiumUser<T>> implements Listener {
-    private final IridiumTeams<T, U> iridiumTeams;
+public class PlayerCraftListener<T extends Team, U extends keviinUser<T>> implements Listener {
+    private final keviinTeams<T, U> keviinTeams;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorPlayerCraft(CraftItemEvent event) {
@@ -31,18 +31,18 @@ public class PlayerCraftListener<T extends Team, U extends IridiumUser<T>> imple
                 .orElse(1) * event.getRecipe().getResult().getAmount() : event.getRecipe().getResult().getAmount();
 
         Player player = (Player) event.getWhoClicked();
-        U user = iridiumTeams.getUserManager().getUser(player);
+        U user = keviinTeams.getUserManager().getUser(player);
         XMaterial material = XMaterial.matchXMaterial(event.getRecipe().getResult().getType());
 
-        iridiumTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
-            iridiumTeams.getMissionManager().handleMissionUpdate(team, event.getWhoClicked().getLocation().getWorld(), "CRAFT", material.name(), amount);
+        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
+            keviinTeams.getMissionManager().handleMissionUpdate(team, event.getWhoClicked().getLocation().getWorld(), "CRAFT", material.name(), amount);
         });
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerCraft(PrepareItemCraftEvent event) {
         for (ItemStack item : event.getInventory().getMatrix()) {
-            if (iridiumTeams.getTeamManager().isBankItem(item)) {
+            if (keviinTeams.getTeamManager().isBankItem(item)) {
                 event.getInventory().setResult(null);
                 return;
             }

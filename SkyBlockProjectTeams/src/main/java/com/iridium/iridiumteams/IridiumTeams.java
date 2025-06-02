@@ -1,17 +1,17 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
-import com.iridium.iridiumcore.IridiumCore;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.bank.BankItem;
-import com.iridium.iridiumteams.configs.*;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.enhancements.Enhancement;
-import com.iridium.iridiumteams.enhancements.PotionEnhancementData;
-import com.iridium.iridiumteams.listeners.*;
-import com.iridium.iridiumteams.managers.*;
-import com.iridium.iridiumteams.placeholders.ClipPlaceholderAPI;
-import com.iridium.iridiumteams.sorting.TeamSorting;
+import com.keviin.keviincore.KeviinCore;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.bank.BankItem;
+import com.keviin.keviinteams.configs.*;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.enhancements.Enhancement;
+import com.keviin.keviinteams.enhancements.PotionEnhancementData;
+import com.keviin.keviinteams.listeners.*;
+import com.keviin.keviinteams.managers.*;
+import com.keviin.keviinteams.placeholders.ClipPlaceholderAPI;
+import com.keviin.keviinteams.sorting.TeamSorting;
 import de.jeff_media.updatechecker.UpdateChecker;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
-public abstract class IridiumTeams<T extends Team, U extends IridiumUser<T>> extends IridiumCore {
+public abstract class keviinTeams<T extends Team, U extends keviinUser<T>> extends KeviinCore {
 
     private final Map<Integer, UserRank> userRanks = new HashMap<>();
     private final Map<String, Permission> permissionList = new HashMap<>();
@@ -44,7 +44,7 @@ public abstract class IridiumTeams<T extends Team, U extends IridiumUser<T>> ext
     @Setter
     private boolean recalculating = false;
 
-    public IridiumTeams(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+    public keviinTeams(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
     }
 
@@ -97,7 +97,7 @@ public abstract class IridiumTeams<T extends Team, U extends IridiumUser<T>> ext
 
     public abstract TeamManager<T, U> getTeamManager();
 
-    public abstract IridiumUserManager<T, U> getUserManager();
+    public abstract keviinUserManager<T, U> getUserManager();
 
     public abstract CommandManager<T, U> getCommandManager();
 

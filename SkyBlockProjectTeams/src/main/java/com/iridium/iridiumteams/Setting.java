@@ -1,7 +1,7 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.iridium.iridiumcore.Item;
+import com.keviin.keviincore.Item;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

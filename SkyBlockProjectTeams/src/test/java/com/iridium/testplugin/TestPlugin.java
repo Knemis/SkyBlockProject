@@ -1,16 +1,16 @@
-package com.iridium.testplugin;
+package com.keviin.testplugin;
 
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.PlaceholderBuilder;
-import com.iridium.iridiumteams.TeamChatPlaceholderBuilder;
-import com.iridium.iridiumteams.configs.*;
-import com.iridium.iridiumteams.managers.MissionManager;
-import com.iridium.iridiumteams.managers.ShopManager;
-import com.iridium.iridiumteams.managers.SupportManager;
-import com.iridium.testplugin.api.EnhancementUpdateEvent;
-import com.iridium.testplugin.managers.CommandManager;
-import com.iridium.testplugin.managers.TeamManager;
-import com.iridium.testplugin.managers.UserManager;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.PlaceholderBuilder;
+import com.keviin.keviinteams.TeamChatPlaceholderBuilder;
+import com.keviin.keviinteams.configs.*;
+import com.keviin.keviinteams.managers.MissionManager;
+import com.keviin.keviinteams.managers.ShopManager;
+import com.keviin.keviinteams.managers.SupportManager;
+import com.keviin.testplugin.api.EnhancementUpdateEvent;
+import com.keviin.testplugin.managers.CommandManager;
+import com.keviin.testplugin.managers.TeamManager;
+import com.keviin.testplugin.managers.UserManager;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.PluginDescriptionFile;
@@ -18,7 +18,7 @@ import org.bukkit.plugin.java.JavaPluginLoader;
 
 import java.io.File;
 
-public class TestPlugin extends IridiumTeams<TestTeam, User> {
+public class TestPlugin extends keviinTeams<TestTeam, User> {
     private static TestPlugin instance;
     private TeamManager teamManager;
     private UserManager userManager;
@@ -52,7 +52,7 @@ public class TestPlugin extends IridiumTeams<TestTeam, User> {
 
         this.teamManager = new TeamManager();
         this.userManager = new UserManager();
-        this.commandManager = new CommandManager(this, "&c", "iridiumtest");
+        this.commandManager = new CommandManager(this, "&c", "keviintest");
         this.missionManager = new MissionManager<>(this);
         this.shopManager = new ShopManager<>(this);
         this.supportManager = new SupportManager<>(this);
@@ -94,7 +94,7 @@ public class TestPlugin extends IridiumTeams<TestTeam, User> {
 
     @Override
     public TeamChatPlaceholderBuilder getTeamChatPlaceholderBuilder() {
-        return new com.iridium.testplugin.TeamChatPlaceholderBuilder();
+        return new com.keviin.testplugin.TeamChatPlaceholderBuilder();
     }
 
     public TeamManager getTeamManager() {

@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.PagedGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.configs.inventories.NoItemGUI;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamInvite;
+import com.keviin.keviincore.gui.PagedGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.configs.inventories.NoItemGUI;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamInvite;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -22,29 +22,29 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class InvitesGUI<T extends Team, U extends IridiumUser<T>> extends PagedGUI<TeamInvite> {
+public class InvitesGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<TeamInvite> {
 
     private final T team;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public InvitesGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
+    public InvitesGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
         super(
                 1,
-                iridiumTeams.getInventories().invitesGUI.size,
-                iridiumTeams.getInventories().invitesGUI.background,
-                iridiumTeams.getInventories().previousPage,
-                iridiumTeams.getInventories().nextPage,
+                keviinTeams.getInventories().invitesGUI.size,
+                keviinTeams.getInventories().invitesGUI.background,
+                keviinTeams.getInventories().previousPage,
+                keviinTeams.getInventories().nextPage,
                 player,
-                iridiumTeams.getInventories().backButton
+                keviinTeams.getInventories().backButton
         );
         this.team = team;
-        this.iridiumTeams = iridiumTeams;
+        this.keviinTeams = keviinTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().invitesGUI;
+        NoItemGUI noItemGUI = keviinTeams.getInventories().invitesGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -52,15 +52,15 @@ public class InvitesGUI<T extends Team, U extends IridiumUser<T>> extends PagedG
 
     @Override
     public Collection<TeamInvite> getPageObjects() {
-        return iridiumTeams.getTeamManager().getTeamInvites(team);
+        return keviinTeams.getTeamManager().getTeamInvites(team);
     }
 
     @Override
     public ItemStack getItemStack(TeamInvite teamInvite) {
-        Optional<U> user = iridiumTeams.getUserManager().getUserByUUID(teamInvite.getUser());
-        List<Placeholder> placeholderList = new ArrayList<>(iridiumTeams.getUserPlaceholderBuilder().getPlaceholders(user));
-        placeholderList.add(new Placeholder("invite_time", teamInvite.getTime().format(DateTimeFormatter.ofPattern(iridiumTeams.getConfiguration().dateTimeFormat))));
-        return ItemStackUtils.makeItem(iridiumTeams.getInventories().invitesGUI.item, placeholderList);
+        Optional<U> user = keviinTeams.getUserManager().getUserByUUID(teamInvite.getUser());
+        List<Placeholder> placeholderList = new ArrayList<>(keviinTeams.getUserPlaceholderBuilder().getPlaceholders(user));
+        placeholderList.add(new Placeholder("invite_time", teamInvite.getTime().format(DateTimeFormatter.ofPattern(keviinTeams.getConfiguration().dateTimeFormat))));
+        return ItemStackUtils.makeItem(keviinTeams.getInventories().invitesGUI.item, placeholderList);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class InvitesGUI<T extends Team, U extends IridiumUser<T>> extends PagedG
         TeamInvite teamInvite = getItem(event.getSlot());
         if (teamInvite == null) return;
 
-        String username = iridiumTeams.getUserManager().getUserByUUID(teamInvite.getUser()).map(U::getName).orElse(iridiumTeams.getMessages().nullPlaceholder);
-        iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().unInviteCommand, new String[]{username});
+        String username = keviinTeams.getUserManager().getUserByUUID(teamInvite.getUser()).map(U::getName).orElse(keviinTeams.getMessages().nullPlaceholder);
+        keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().unInviteCommand, new String[]{username});
     }
 }

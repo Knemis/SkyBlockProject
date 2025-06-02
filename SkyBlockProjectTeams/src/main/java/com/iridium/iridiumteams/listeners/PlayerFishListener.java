@@ -1,9 +1,9 @@
 
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -13,17 +13,17 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerFishEvent;
 
 @AllArgsConstructor
-public class PlayerFishListener<T extends Team, U extends IridiumUser<T>> implements Listener {
-    private final IridiumTeams<T, U> iridiumTeams;
+public class PlayerFishListener<T extends Team, U extends keviinUser<T>> implements Listener {
+    private final keviinTeams<T, U> keviinTeams;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorPlayerFish(PlayerFishEvent event) {
         Entity caughtEntity = event.getCaught();
         if (caughtEntity == null || event.getState() != PlayerFishEvent.State.CAUGHT_FISH) return;
-        U user = iridiumTeams.getUserManager().getUser(event.getPlayer());
+        U user = keviinTeams.getUserManager().getUser(event.getPlayer());
 
-        iridiumTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
-            iridiumTeams.getMissionManager().handleMissionUpdate(team, caughtEntity.getLocation().getWorld(), "FISH", ((Item) caughtEntity).getItemStack().getType().name(), 1);
+        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
+            keviinTeams.getMissionManager().handleMissionUpdate(team, caughtEntity.getLocation().getWorld(), "FISH", ((Item) caughtEntity).getItemStack().getType().name(), 1);
         });
 
     }

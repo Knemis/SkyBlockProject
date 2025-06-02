@@ -1,6 +1,6 @@
-package com.iridium.testplugin;
+package com.keviin.testplugin;
 
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.database.Team;
 
 import java.time.LocalDateTime;
 

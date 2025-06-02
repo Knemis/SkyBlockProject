@@ -1,7 +1,7 @@
-package com.iridium.iridiumteams.configs.inventories;
+package com.keviin.keviinteams.configs.inventories;
 
-import com.iridium.iridiumcore.Background;
-import com.iridium.iridiumcore.Item;
+import com.keviin.keviincore.Background;
+import com.keviin.keviincore.Item;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor

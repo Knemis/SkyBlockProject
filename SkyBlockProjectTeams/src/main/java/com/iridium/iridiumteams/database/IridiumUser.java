@@ -1,7 +1,7 @@
-package com.iridium.iridiumteams.database;
+package com.keviin.keviinteams.database;
 
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.enhancements.*;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.enhancements.*;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;
@@ -17,7 +17,7 @@ import java.util.*;
 
 @Getter
 @DatabaseTable(tableName = "users")
-public class IridiumUser<T extends Team> extends DatabaseObject {
+public class keviinUser<T extends Team> extends DatabaseObject {
 
     @DatabaseField(columnName = "uuid", canBeNull = false, id = true)
     private @NotNull UUID uuid;
@@ -54,62 +54,62 @@ public class IridiumUser<T extends Team> extends DatabaseObject {
         return Bukkit.getServer().getPlayer(uuid);
     }
 
-    public boolean canFly(IridiumTeams<T, ?> iridiumTeams) {
+    public boolean canFly(keviinTeams<T, ?> keviinTeams) {
         Player player = getPlayer();
 
         if (isBypassing()) return true; // bypass should be checked first, since this is an admin permission
-        if (player.hasPermission(iridiumTeams.getCommands().flyCommand.getFlyAnywherePermission())) return true;
+        if (player.hasPermission(keviinTeams.getCommands().flyCommand.getFlyAnywherePermission())) return true;
 
-        Optional<T> team = iridiumTeams.getTeamManager().getTeamViaID(getTeamID());
-        Optional<T> visitor = iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player);
-        if (player.hasPermission(iridiumTeams.getCommands().flyCommand.permission) && team.isPresent() && team.map(T::getId).orElse(-1).equals(visitor.map(T::getId).orElse(-1))) {
+        Optional<T> team = keviinTeams.getTeamManager().getTeamViaID(getTeamID());
+        Optional<T> visitor = keviinTeams.getTeamManager().getTeamViaPlayerLocation(player);
+        if (player.hasPermission(keviinTeams.getCommands().flyCommand.permission) && team.isPresent() && team.map(T::getId).orElse(-1).equals(visitor.map(T::getId).orElse(-1))) {
             return true;
         }
-        return canFly(team.orElse(null), iridiumTeams) || canFly(visitor.orElse(null), iridiumTeams);
+        return canFly(team.orElse(null), keviinTeams) || canFly(visitor.orElse(null), keviinTeams);
     }
 
-    private boolean canFly(T team, IridiumTeams<T, ?> iridiumTeams) {
+    private boolean canFly(T team, keviinTeams<T, ?> keviinTeams) {
         if (team == null) return false;
-        Enhancement<FlightEnhancementData> flightEnhancement = iridiumTeams.getEnhancements().flightEnhancement;
-        TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, "flight");
+        Enhancement<FlightEnhancementData> flightEnhancement = keviinTeams.getEnhancements().flightEnhancement;
+        TeamEnhancement teamEnhancement = keviinTeams.getTeamManager().getTeamEnhancement(team, "flight");
         FlightEnhancementData data = flightEnhancement.levels.get(teamEnhancement.getLevel());
 
         if (!teamEnhancement.isActive(flightEnhancement.type)) return false;
         if (data == null) return false;
 
-        return canApply(iridiumTeams, team, data.enhancementAffectsType);
+        return canApply(keviinTeams, team, data.enhancementAffectsType);
     }
 
-    public void initBukkitTask(IridiumTeams<T, ?> iridiumTeams) {
+    public void initBukkitTask(keviinTeams<T, ?> keviinTeams) {
         if (bukkitTask != null) return;
-        bukkitTask = Bukkit.getScheduler().runTaskTimer(iridiumTeams, () -> bukkitTask(iridiumTeams), 0, 20);
+        bukkitTask = Bukkit.getScheduler().runTaskTimer(keviinTeams, () -> bukkitTask(keviinTeams), 0, 20);
     }
 
-    public void bukkitTask(IridiumTeams<T, ?> iridiumTeams) {
+    public void bukkitTask(keviinTeams<T, ?> keviinTeams) {
         bukkitTaskTicks++;
-        applyPotionEffects(iridiumTeams);
+        applyPotionEffects(keviinTeams);
     }
 
-    public void applyPotionEffects(IridiumTeams<T, ?> iridiumTeams) {
+    public void applyPotionEffects(keviinTeams<T, ?> keviinTeams) {
         Player player = getPlayer();
         if (player == null) return;
-        iridiumTeams.getTeamManager().getTeamViaLocation(player.getLocation()).ifPresent(t -> applyPotionEffects(iridiumTeams, t));
-        iridiumTeams.getTeamManager().getTeamViaID(teamID).ifPresent(t -> applyPotionEffects(iridiumTeams, t));
+        keviinTeams.getTeamManager().getTeamViaLocation(player.getLocation()).ifPresent(t -> applyPotionEffects(keviinTeams, t));
+        keviinTeams.getTeamManager().getTeamViaID(teamID).ifPresent(t -> applyPotionEffects(keviinTeams, t));
     }
 
-    public void applyPotionEffects(IridiumTeams<T, ?> iridiumTeams, T team) {
+    public void applyPotionEffects(keviinTeams<T, ?> keviinTeams, T team) {
         int duration = 10;
         Player player = getPlayer();
         if (player == null) return;
         HashMap<PotionEffectType, Integer> potionEffects = new HashMap<>();
 
-        for (Map.Entry<String, Enhancement<?>> enhancement : iridiumTeams.getEnhancementList().entrySet()) {
-            TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, enhancement.getKey());
+        for (Map.Entry<String, Enhancement<?>> enhancement : keviinTeams.getEnhancementList().entrySet()) {
+            TeamEnhancement teamEnhancement = keviinTeams.getTeamManager().getTeamEnhancement(team, enhancement.getKey());
             if (!teamEnhancement.isActive(enhancement.getValue().type)) continue;
             EnhancementData enhancementData = enhancement.getValue().levels.get(teamEnhancement.getLevel());
             if (enhancementData instanceof PotionEnhancementData) {
                 PotionEnhancementData potionEnhancementData = (PotionEnhancementData) enhancementData;
-                if (!canApply(iridiumTeams, team, potionEnhancementData.enhancementAffectsType)) continue;
+                if (!canApply(keviinTeams, team, potionEnhancementData.enhancementAffectsType)) continue;
                 PotionEffectType potionEffectType = potionEnhancementData.potion.getPotionEffectType();
                 if (!potionEffects.containsKey(potionEffectType)) {
                     potionEffects.put(potionEffectType, potionEnhancementData.strength - 1);
@@ -132,10 +132,10 @@ public class IridiumUser<T extends Team> extends DatabaseObject {
         }
     }
 
-    public boolean canApply(IridiumTeams<T, ?> iridiumTeams, T team, List<EnhancementAffectsType> enhancementAffectsTypes) {
+    public boolean canApply(keviinTeams<T, ?> keviinTeams, T team, List<EnhancementAffectsType> enhancementAffectsTypes) {
         Player player = getPlayer();
         if (player == null) return false;
-        int teamLocationID = iridiumTeams.getTeamManager().getTeamViaLocation(player.getLocation()).map(T::getId).orElse(0);
+        int teamLocationID = keviinTeams.getTeamManager().getTeamViaLocation(player.getLocation()).map(T::getId).orElse(0);
         for (EnhancementAffectsType enhancementAffectsType : enhancementAffectsTypes) {
             if (enhancementAffectsType == EnhancementAffectsType.VISITORS && team.getId() == teamLocationID) {
                 return true;

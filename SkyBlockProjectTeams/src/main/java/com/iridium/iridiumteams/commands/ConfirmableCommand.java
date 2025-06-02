@@ -1,15 +1,15 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.gui.ConfirmationGUI;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.gui.ConfirmationGUI;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public abstract class ConfirmableCommand<T extends Team, U extends IridiumUser<T>> extends Command<T, U> {
+public abstract class ConfirmableCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
     public final boolean requiresConfirmation;
 
     public ConfirmableCommand() {
@@ -24,8 +24,8 @@ public abstract class ConfirmableCommand<T extends Team, U extends IridiumUser<T
     }
 
     @Override
-    public final boolean execute(U user, T team, String[] arguments, IridiumTeams<T, U> iridiumTeams) {
-        if (!isCommandValid(user, team, arguments, iridiumTeams)) {
+    public final boolean execute(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams) {
+        if (!isCommandValid(user, team, arguments, keviinTeams)) {
             return false;
         }
 
@@ -33,16 +33,16 @@ public abstract class ConfirmableCommand<T extends Team, U extends IridiumUser<T
             Player player = user.getPlayer();
 
             player.openInventory(new ConfirmationGUI<>(() -> {
-                executeAfterConfirmation(user, team, arguments, iridiumTeams);
-            }, iridiumTeams).getInventory());
+                executeAfterConfirmation(user, team, arguments, keviinTeams);
+            }, keviinTeams).getInventory());
             return true;
         }
 
-        executeAfterConfirmation(user, team, arguments, iridiumTeams);
+        executeAfterConfirmation(user, team, arguments, keviinTeams);
         return true;
     }
 
-    protected abstract boolean isCommandValid(U user, T team, String[] arguments, IridiumTeams<T, U> iridiumTeams);
+    protected abstract boolean isCommandValid(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams);
 
-    protected abstract void executeAfterConfirmation(U user, T team, String[] arguments, IridiumTeams<T, U> iridiumTeams);
+    protected abstract void executeAfterConfirmation(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams);
 }

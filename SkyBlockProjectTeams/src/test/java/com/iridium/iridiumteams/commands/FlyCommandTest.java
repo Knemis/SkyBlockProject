@@ -1,16 +1,16 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.iridiumteams.enhancements.EnhancementAffectsType;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
-import com.iridium.testplugin.managers.TeamManager;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.keviinteams.enhancements.EnhancementAffectsType;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
+import com.keviin.testplugin.managers.TeamManager;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,7 +69,7 @@ class FlyCommandTest {
     @Test
     public void executeFlyCommand_ShouldMakePlayerFly_WhenTheyHaveFlyAnywherePermission() {
         TestTeam team = new TeamBuilder().build();
-        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("iridiumteams.fly.anywhere").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("keviinteams.fly.anywhere").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test fly on");
@@ -87,7 +87,7 @@ class FlyCommandTest {
     public void executeFlyCommand_ShouldMakePlayerFly_WhenTheyHaveFlyPermissionAndTheyAreInTheirTerritory() {
         TestTeam team = new TeamBuilder().build();
         TeamManager.teamViaLocation = Optional.of(team);
-        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("iridiumteams.fly").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("keviinteams.fly").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test fly on");
@@ -104,7 +104,7 @@ class FlyCommandTest {
     @Test
     public void executeFlyCommand_ShouldNotMakePlayerFly_WhenTheyHaveFlyPermissionAndTheyAreNotInTheirTerritory() {
         TestTeam team = new TeamBuilder().build();
-        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("iridiumteams.fly").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("keviinteams.fly").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test fly on");

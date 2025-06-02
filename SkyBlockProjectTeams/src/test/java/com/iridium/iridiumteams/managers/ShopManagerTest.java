@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.managers;
+package com.keviin.keviinteams.managers;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.utils.InventoryUtils;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.iridiumteams.configs.Shop;
-import com.iridium.testplugin.TestPlugin;
+import com.keviin.keviincore.utils.InventoryUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.keviinteams.configs.Shop;
+import com.keviin.testplugin.TestPlugin;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.inventory.ItemStack;

@@ -1,9 +1,9 @@
-package com.iridium.iridiumcore.multiversion;
+package com.keviin.keviincore.multiversion;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
-public class IridiumInventory_V1_19_R2 extends IridiumInventory {
+public class keviinInventory_V1_19_R2 extends keviinInventory {
     @Override
     public Inventory getTopInventory(Player player) {
         return player.getOpenInventory().getTopInventory();

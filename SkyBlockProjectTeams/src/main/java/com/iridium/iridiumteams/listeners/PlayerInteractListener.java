@@ -1,14 +1,14 @@
-package com.iridium.iridiumteams.listeners;
+package com.keviin.keviinteams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.PermissionType;
-import com.iridium.iridiumteams.SettingType;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamSetting;
-import com.iridium.iridiumteams.database.TeamSpawners;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.PermissionType;
+import com.keviin.keviinteams.SettingType;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamSetting;
+import com.keviin.keviinteams.database.TeamSpawners;
 import lombok.AllArgsConstructor;
 import org.bukkit.block.CreatureSpawner;
 import org.bukkit.entity.EntityType;
@@ -28,40 +28,40 @@ import java.util.Arrays;
 import java.util.List;
 
     @AllArgsConstructor
-    public class PlayerInteractListener<T extends Team, U extends IridiumUser<T>> implements Listener {
-        private final IridiumTeams<T, U> iridiumTeams;
+    public class PlayerInteractListener<T extends Team, U extends keviinUser<T>> implements Listener {
+        private final keviinTeams<T, U> keviinTeams;
         private final List<XMaterial> redstoneTriggers = Arrays.asList(XMaterial.LEVER, XMaterial.STRING, XMaterial.TRIPWIRE, XMaterial.TRIPWIRE_HOOK, XMaterial.SCULK_SENSOR, XMaterial.CALIBRATED_SCULK_SENSOR);
 
         @EventHandler(ignoreCancelled = true)
         public void onPlayerInteract(PlayerInteractEvent event) {
             if (event.getClickedBlock() == null) return;
             Player player = event.getPlayer();
-            U user = iridiumTeams.getUserManager().getUser(player);
+            U user = keviinTeams.getUserManager().getUser(player);
 
-            iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getClickedBlock().getLocation()).ifPresent(team -> {
-                if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.OPEN_CONTAINERS.getPermissionKey()) && event.getClickedBlock().getState() instanceof InventoryHolder) {
-                    player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotOpenContainers
-                            .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            keviinTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getClickedBlock().getLocation()).ifPresent(team -> {
+                if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.OPEN_CONTAINERS.getPermissionKey()) && event.getClickedBlock().getState() instanceof InventoryHolder) {
+                    player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotOpenContainers
+                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                     ));
                     event.setCancelled(true);
                 }
 
-                if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.DOORS.getPermissionKey()) && isDoor(XMaterial.matchXMaterial(event.getClickedBlock().getType()))) {
-                    player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotOpenDoors
-                            .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.DOORS.getPermissionKey()) && isDoor(XMaterial.matchXMaterial(event.getClickedBlock().getType()))) {
+                    player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotOpenDoors
+                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                     ));
                     event.setCancelled(true);
                 }
 
-                if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.REDSTONE.getPermissionKey()) && isRedstoneTrigger(XMaterial.matchXMaterial(event.getClickedBlock().getType()))) {
-                    player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotTriggerRedstone
-                            .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.REDSTONE.getPermissionKey()) && isRedstoneTrigger(XMaterial.matchXMaterial(event.getClickedBlock().getType()))) {
+                    player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotTriggerRedstone
+                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                     ));
                     event.setCancelled(true);
                 }
 
                 if (event.getAction() == Action.PHYSICAL) {
-                    TeamSetting cropTrampleTeamSetting = iridiumTeams.getTeamManager().getTeamSetting(team, SettingType.CROP_TRAMPLE.getSettingKey());
+                    TeamSetting cropTrampleTeamSetting = keviinTeams.getTeamManager().getTeamSetting(team, SettingType.CROP_TRAMPLE.getSettingKey());
                     if (cropTrampleTeamSetting == null) return;
                     if (cropTrampleTeamSetting.getValue().equalsIgnoreCase("Disabled") && (XMaterial.matchXMaterial(event.getClickedBlock().getType()) == XMaterial.FARMLAND)) {
                         event.setCancelled(true);
@@ -72,9 +72,9 @@ import java.util.List;
                         && (isSpawnEgg(event.getPlayer().getInventory().getItemInMainHand().getItemMeta())
                         || isSpawnEgg(event.getPlayer().getInventory().getItemInOffHand().getItemMeta()))) {
 
-                    if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.SPAWNERS.getPermissionKey())) {
-                        player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotBreakSpawners
-                                .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+                    if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.SPAWNERS.getPermissionKey())) {
+                        player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotBreakSpawners
+                                .replace("%prefix%", keviinTeams.getConfiguration().prefix)
                         ));
                         event.setCancelled(true);
                     } else {
@@ -90,11 +90,11 @@ import java.util.List;
 
                         TeamSpawners teamSpawners;
                         if(creatureSpawner.getSpawnedType() != null) {
-                            teamSpawners = iridiumTeams.getTeamManager().getTeamSpawners(team, creatureSpawner.getSpawnedType());
+                            teamSpawners = keviinTeams.getTeamManager().getTeamSpawners(team, creatureSpawner.getSpawnedType());
                             teamSpawners.setAmount(Math.max(0, teamSpawners.getAmount() - 1));
                         }
 
-                        teamSpawners = iridiumTeams.getTeamManager().getTeamSpawners(team, newEntityType);
+                        teamSpawners = keviinTeams.getTeamManager().getTeamSpawners(team, newEntityType);
                         teamSpawners.setAmount(teamSpawners.getAmount() + 1);
                     }
                 }
@@ -104,12 +104,12 @@ import java.util.List;
         @EventHandler
         public void onSignChangeEvent(SignChangeEvent event) {
             Player player = event.getPlayer();
-            U user = iridiumTeams.getUserManager().getUser(player);
+            U user = keviinTeams.getUserManager().getUser(player);
 
-            iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getBlock().getLocation()).ifPresent(team -> {
-                if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.INTERACT.getPermissionKey())) {
-                    player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotInteract
-                            .replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+            keviinTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getBlock().getLocation()).ifPresent(team -> {
+                if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.INTERACT.getPermissionKey())) {
+                    player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotInteract
+                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)));
                     event.setCancelled(true);
                 }
             });
@@ -118,12 +118,12 @@ import java.util.List;
         @EventHandler
         public void onPlayerInteractEntityEvent(PlayerInteractEntityEvent event) {
             Player player = event.getPlayer();
-            U user = iridiumTeams.getUserManager().getUser(player);
+            U user = keviinTeams.getUserManager().getUser(player);
 
-            iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getRightClicked().getLocation()).ifPresent(team -> {
-                if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.INTERACT.getPermissionKey())) {
-                    player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotInteract
-                            .replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+            keviinTeams.getTeamManager().getTeamViaPlayerLocation(player, event.getRightClicked().getLocation()).ifPresent(team -> {
+                if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.INTERACT.getPermissionKey())) {
+                    player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotInteract
+                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)));
                     event.setCancelled(true);
                 }
             });
@@ -134,7 +134,7 @@ import java.util.List;
                 return EntityType.valueOf(itemStack.getType().name().toUpperCase().replace("_SPAWN_EGG", ""));
             }
             catch(NullPointerException e) {
-                iridiumTeams.getLogger().warning(e.getMessage());
+                keviinTeams.getLogger().warning(e.getMessage());
                 return EntityType.UNKNOWN;
             }
         }

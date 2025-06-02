@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.configs;
+package com.keviin.keviinteams.configs;
 
 
 import com.cryptomorin.xseries.XMaterial;

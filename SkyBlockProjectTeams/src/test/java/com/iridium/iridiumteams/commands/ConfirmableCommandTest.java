@@ -1,15 +1,15 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.TeamBuilder;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.iridiumteams.gui.ConfirmationGUI;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.TeamBuilder;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.keviinteams.gui.ConfirmationGUI;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.junit.jupiter.api.AfterEach;
@@ -23,13 +23,13 @@ import static org.junit.Assert.*;
 public class ConfirmableCommandTest {
     private ServerMock serverMock;
     private TestConfirmableCommand command;
-    private IridiumTeams<TestTeam, User> iridiumTeams;
+    private keviinTeams<TestTeam, User> keviinTeams;
 
     @BeforeEach
     public void setup() {
         this.serverMock = MockBukkit.mock();
         MockBukkit.load(TestPlugin.class);
-        this.iridiumTeams = TestPlugin.getInstance();
+        this.keviinTeams = TestPlugin.getInstance();
         this.command = new TestConfirmableCommand(true);
     }
 
@@ -45,7 +45,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, iridiumTeams);
+        command.execute(user, team, new String[]{}, keviinTeams);
 
         assertTrue(command.isCommandValidCalled);
         assertTrue(command.executeAfterConfirmationCalled);
@@ -58,7 +58,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(player);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, iridiumTeams);
+        command.execute(user, team, new String[]{}, keviinTeams);
 
         assertTrue(command.isCommandValidCalled);
 
@@ -75,7 +75,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(player);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, iridiumTeams);
+        command.execute(user, team, new String[]{}, keviinTeams);
 
         assertFalse(command.executeAfterConfirmationCalled);
 
@@ -97,7 +97,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(player);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, iridiumTeams);
+        command.execute(user, team, new String[]{}, keviinTeams);
 
         assertFalse(command.executeAfterConfirmationCalled);
 
@@ -121,13 +121,13 @@ public class ConfirmableCommandTest {
         }
 
         @Override
-        protected boolean isCommandValid(User user, TestTeam team, String[] arguments, IridiumTeams<TestTeam, User> iridiumTeams) {
+        protected boolean isCommandValid(User user, TestTeam team, String[] arguments, keviinTeams<TestTeam, User> keviinTeams) {
             isCommandValidCalled = true;
             return true;
         }
 
         @Override
-        protected void executeAfterConfirmation(User user, TestTeam team, String[] arguments, IridiumTeams<TestTeam, User> iridiumTeams) {
+        protected void executeAfterConfirmation(User user, TestTeam team, String[] arguments, keviinTeams<TestTeam, User> keviinTeams) {
             executeAfterConfirmationCalled = true;
         }
     }

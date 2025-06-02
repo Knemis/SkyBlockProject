@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
 import org.junit.jupiter.api.Test;
 

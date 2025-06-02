@@ -1,7 +1,7 @@
-package com.iridium.iridiumteams.support;
+package com.keviin.keviinteams.support;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.database.Team;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 

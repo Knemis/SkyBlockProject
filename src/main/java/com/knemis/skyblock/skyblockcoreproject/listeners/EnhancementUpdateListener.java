@@ -13,7 +13,7 @@ import org.bukkit.event.Listener;
 
 // Placeholder for a Team EnhancementUpdateEvent.
 // If this event were to be integrated, it would need to be defined in the project.
-// import com.iridiumteams.iridiumteams.api.EnhancementUpdateEvent; // This would be a project-specific version
+// import com.keviinteams.keviinteams.api.EnhancementUpdateEvent; // This would be a project-specific version
 
 public class EnhancementUpdateListener implements Listener {
 

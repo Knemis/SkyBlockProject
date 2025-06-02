@@ -1,11 +1,11 @@
-package com.iridium.iridiumteams.commands;
+package com.keviin.keviinteams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.UserBuilder;
-import com.iridium.testplugin.TestPlugin;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.UserBuilder;
+import com.keviin.testplugin.TestPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +37,7 @@ class RecalculateCommandTest {
     @Test
     public void executeRecalculateCommand__AlreadyRecalculating() {
         TestPlugin.getInstance().setRecalculating(true);
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.recalculate").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.recalculate").build();
 
         serverMock.dispatchCommand(playerMock, "test recalculate");
         playerMock.assertSaid(StringUtils.color(TestPlugin.getInstance().getMessages().calculationAlreadyInProcess
@@ -48,7 +48,7 @@ class RecalculateCommandTest {
 
     @Test
     public void executeRecalculateCommand__Success() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("iridiumteams.recalculate").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.recalculate").build();
 
         serverMock.dispatchCommand(playerMock, "test recalculate");
         playerMock.assertSaid(StringUtils.color(TestPlugin.getInstance().getMessages().calculatingTeams

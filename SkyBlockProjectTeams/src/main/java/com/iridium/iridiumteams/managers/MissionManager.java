@@ -1,12 +1,12 @@
-package com.iridium.iridiumteams.managers;
+package com.keviin.keviinteams.managers;
 
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.*;
-import com.iridium.iridiumteams.gui.MissionGUI;
-import com.iridium.iridiumteams.missions.Mission;
-import com.iridium.iridiumteams.missions.MissionData;
-import com.iridium.iridiumteams.missions.MissionType;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.*;
+import com.keviin.keviinteams.gui.MissionGUI;
+import com.keviin.keviinteams.missions.Mission;
+import com.keviin.keviinteams.missions.MissionData;
+import com.keviin.keviinteams.missions.MissionType;
 import org.bukkit.World;
 
 import java.time.DayOfWeek;
@@ -17,11 +17,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class MissionManager<T extends Team, U extends IridiumUser<T>> {
-    private final IridiumTeams<T, U> iridiumTeams;
+public class MissionManager<T extends Team, U extends keviinUser<T>> {
+    private final keviinTeams<T, U> keviinTeams;
 
-    public MissionManager(IridiumTeams<T, U> iridiumTeams) {
-        this.iridiumTeams = iridiumTeams;
+    public MissionManager(keviinTeams<T, U> keviinTeams) {
+        this.keviinTeams = keviinTeams;
     }
 
     public LocalDateTime getExpirationTime(MissionType missionType, LocalDateTime startTime) {
@@ -50,7 +50,7 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
      */
     public void handleMissionUpdate(T team, World missionWorld, String missionType, String identifier, int amount) {
 
-        if (iridiumTeams.getConfiguration().whitelistedWorlds.stream().noneMatch(world -> missionWorld.getName().equalsIgnoreCase(world)) && !iridiumTeams.getConfiguration().whitelistedWorlds.isEmpty()) {
+        if (keviinTeams.getConfiguration().whitelistedWorlds.stream().noneMatch(world -> missionWorld.getName().equalsIgnoreCase(world)) && !keviinTeams.getConfiguration().whitelistedWorlds.isEmpty()) {
             return;
         }
 
@@ -60,7 +60,7 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
         incrementMission(team, missionWorld.getEnvironment().name() + ":" + missionType + ":" + identifier, amount);
         incrementMission(team, missionWorld.getEnvironment().name() + ":" + missionType + ":ANY", amount);
 
-        for (Map.Entry<String, List<String>> itemList : iridiumTeams.getMissions().customMaterialLists.entrySet()) {
+        for (Map.Entry<String, List<String>> itemList : keviinTeams.getMissions().customMaterialLists.entrySet()) {
             if (itemList.getValue().contains(identifier)) {
                 incrementMission(team, missionType + ":" + itemList.getKey(), amount);
                 incrementMission(team, missionWorld.getEnvironment().name() + ":" + missionType + ":" + itemList.getKey(), amount);
@@ -69,10 +69,10 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
     }
 
     private synchronized void incrementMission(T team, String condition, int amount) {
-        List<TeamMission> teamMissions = iridiumTeams.getTeamManager().getTeamMissions(team);
+        List<TeamMission> teamMissions = keviinTeams.getTeamManager().getTeamMissions(team);
         String[] missionConditions = condition.toUpperCase().split(":");
 
-        for (Map.Entry<String, Mission> entry : iridiumTeams.getMissions().missions.entrySet()) {
+        for (Map.Entry<String, Mission> entry : keviinTeams.getMissions().missions.entrySet()) {
             Optional<TeamMission> teamMission = teamMissions.stream()
                     .filter(mission -> mission.getMissionName().equals(entry.getKey()))
                     .findFirst();
@@ -86,7 +86,7 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
 
             List<String> missions = missionData.getMissions();
             for (int missionIndex = 0; missionIndex < missions.size(); missionIndex++) {
-                TeamMissionData teamMissionData = iridiumTeams.getTeamManager().getTeamMissionData(teamMission.get(), missionIndex);
+                TeamMissionData teamMissionData = keviinTeams.getTeamManager().getTeamMissionData(teamMission.get(), missionIndex);
                 String missionRequirement = missions.get(missionIndex).toUpperCase();
                 String[] conditions = missionRequirement.split(":");
                 // If the conditions arnt the same length continue (+1 since we add amount onto the missionConditions dynamically)
@@ -104,22 +104,22 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
                     completedBefore = false;
                     teamMissionData.setProgress(Math.min(teamMissionData.getProgress() + amount, totalAmount));
                 } catch (NumberFormatException exception) {
-                    iridiumTeams.getLogger().warning("Unknown format " + missionRequirement);
-                    iridiumTeams.getLogger().warning(number + " Is not a number");
+                    keviinTeams.getLogger().warning("Unknown format " + missionRequirement);
+                    keviinTeams.getLogger().warning(number + " Is not a number");
                 }
             }
 
             // Check if this mission is now completed
             if (!completedBefore && hasCompletedMission(team, entry.getKey(), missionData)) {
-                iridiumTeams.getTeamManager().addTeamReward(new TeamReward(team, missionData.getReward()));
-                iridiumTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member -> {
-                    member.sendMessage(StringUtils.color(missionData.getMessage().replace("%prefix%", iridiumTeams.getConfiguration().prefix)));
+                keviinTeams.getTeamManager().addTeamReward(new TeamReward(team, missionData.getReward()));
+                keviinTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member -> {
+                    member.sendMessage(StringUtils.color(missionData.getMessage().replace("%prefix%", keviinTeams.getConfiguration().prefix)));
                     missionData.getCompleteSound().play(member);
                 });
                 // Next Mission Level
                 if (entry.getValue().getMissionData().containsKey(level + 1)) {
                     teamMission.get().setMissionLevel(level + 1);
-                    iridiumTeams.getTeamManager().resetTeamMissionData(teamMission.get());
+                    keviinTeams.getTeamManager().resetTeamMissionData(teamMission.get());
                 }
             }
         }
@@ -132,7 +132,7 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
                     .filter(mission -> mission.getMissionLevel() == missionDependency.getLevel())
                     .findFirst();
             if (!teamMission.isPresent()) return false;
-            MissionData missionData = iridiumTeams.getMissions().missions.get(missionDependency.getMission()).getMissionData().get(missionDependency.getLevel());
+            MissionData missionData = keviinTeams.getMissions().missions.get(missionDependency.getMission()).getMissionData().get(missionDependency.getLevel());
             if (!hasCompletedMission(team, missionDependency.getMission(), missionData)) return false;
         }
         return true;
@@ -149,9 +149,9 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
 
     private boolean hasCompletedMission(T team, String missionName, MissionData missionData) {
         List<String> missions = missionData.getMissions();
-        TeamMission teamMission = iridiumTeams.getTeamManager().getTeamMission(team, missionName);
+        TeamMission teamMission = keviinTeams.getTeamManager().getTeamMission(team, missionName);
         for (int missionIndex = 0; missionIndex < missions.size(); missionIndex++) {
-            TeamMissionData teamMissionData = iridiumTeams.getTeamManager().getTeamMissionData(teamMission, missionIndex);
+            TeamMissionData teamMissionData = keviinTeams.getTeamManager().getTeamMissionData(teamMission, missionIndex);
             String missionRequirement = missions.get(missionIndex).toUpperCase();
             String[] conditions = missionRequirement.split(":");
             String number = conditions[conditions.length - 1];
@@ -159,8 +159,8 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
             try {
                 if (teamMissionData.getProgress() < Integer.parseInt(number)) return false;
             } catch (NumberFormatException exception) {
-                iridiumTeams.getLogger().warning("Unknown format " + missionRequirement);
-                iridiumTeams.getLogger().warning(number + " Is not a number");
+                keviinTeams.getLogger().warning("Unknown format " + missionRequirement);
+                keviinTeams.getLogger().warning(number + " Is not a number");
             }
         }
         return true;
@@ -168,8 +168,8 @@ public class MissionManager<T extends Team, U extends IridiumUser<T>> {
 
     public void generateMissionData(T team) {
         // Generate mission data by opening all missionGUI's
-        new MissionGUI<>(team, MissionType.ONCE, null, iridiumTeams).getInventory();
-        new MissionGUI<>(team, MissionType.DAILY, null, iridiumTeams).getInventory();
-        new MissionGUI<>(team, MissionType.WEEKLY, null, iridiumTeams).getInventory();
+        new MissionGUI<>(team, MissionType.ONCE, null, keviinTeams).getInventory();
+        new MissionGUI<>(team, MissionType.DAILY, null, keviinTeams).getInventory();
+        new MissionGUI<>(team, MissionType.WEEKLY, null, keviinTeams).getInventory();
     }
 }

@@ -1,4 +1,4 @@
-package com.iridium.iridiumteams.database.types;
+package com.keviin.keviinteams.database.types;
 
 import com.cryptomorin.xseries.XEnchantment;
 import com.j256.ormlite.field.FieldType;

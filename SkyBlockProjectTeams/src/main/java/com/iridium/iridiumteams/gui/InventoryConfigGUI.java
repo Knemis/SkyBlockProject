@@ -1,10 +1,10 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.GUI;
-import com.iridium.iridiumcore.utils.InventoryUtils;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.configs.inventories.InventoryConfig;
+import com.keviin.keviincore.gui.GUI;
+import com.keviin.keviincore.utils.InventoryUtils;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.configs.inventories.InventoryConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;

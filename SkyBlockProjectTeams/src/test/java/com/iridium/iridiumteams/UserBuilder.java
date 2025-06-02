@@ -1,11 +1,11 @@
-package com.iridium.iridiumteams;
+package com.keviin.keviinteams;
 
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.iridium.iridiumteams.utils.PlayerUtils;
-import com.iridium.testplugin.TestPlugin;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
+import com.keviin.keviinteams.utils.PlayerUtils;
+import com.keviin.testplugin.TestPlugin;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
 
 public class UserBuilder {
     private final ServerMock serverMock;

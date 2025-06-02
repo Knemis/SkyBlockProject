@@ -1,6 +1,6 @@
-package com.iridium.iridiumcore.nms;
+package com.keviin.keviincore.nms;
 
-import com.iridium.iridiumcore.Color;
+import com.keviin.keviincore.Color;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket;
 import net.minecraft.network.protocol.game.PacketPlayOutMapChunk;

@@ -1,4 +1,4 @@
-package com.iridium.testplugin;
+package com.keviin.testplugin;
 
 public class TestRunnable implements Runnable {
     private boolean run = false;

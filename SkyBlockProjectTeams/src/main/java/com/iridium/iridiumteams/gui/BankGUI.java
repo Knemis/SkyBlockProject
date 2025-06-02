@@ -1,15 +1,15 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.BackGUI;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.bank.BankItem;
-import com.iridium.iridiumteams.configs.inventories.NoItemGUI;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
-import com.iridium.iridiumteams.database.TeamBank;
+import com.keviin.keviincore.gui.BackGUI;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.bank.BankItem;
+import com.keviin.keviinteams.configs.inventories.NoItemGUI;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.keviin.keviinteams.database.TeamBank;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -19,21 +19,21 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collections;
 import java.util.Optional;
 
-public class BankGUI<T extends Team, U extends IridiumUser<T>> extends BackGUI {
+public class BankGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
 
     private final T team;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public BankGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
-        super(iridiumTeams.getInventories().bankGUI.background, player, iridiumTeams.getInventories().backButton);
+    public BankGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+        super(keviinTeams.getInventories().bankGUI.background, player, keviinTeams.getInventories().backButton);
         this.team = team;
-        this.iridiumTeams = iridiumTeams;
+        this.keviinTeams = keviinTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().bankGUI;
+        NoItemGUI noItemGUI = keviinTeams.getInventories().bankGUI;
         Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -43,10 +43,10 @@ public class BankGUI<T extends Team, U extends IridiumUser<T>> extends BackGUI {
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
 
-        for (BankItem bankItem : iridiumTeams.getBankItemList()) {
-            TeamBank teamBank = iridiumTeams.getTeamManager().getTeamBank(team, bankItem.getName());
+        for (BankItem bankItem : keviinTeams.getBankItemList()) {
+            TeamBank teamBank = keviinTeams.getTeamManager().getTeamBank(team, bankItem.getName());
             inventory.setItem(bankItem.getItem().slot, ItemStackUtils.makeItem(bankItem.getItem(), Collections.singletonList(
-                    new Placeholder("amount", iridiumTeams.getConfiguration().numberFormatter.format(teamBank.getNumber()))
+                    new Placeholder("amount", keviinTeams.getConfiguration().numberFormatter.format(teamBank.getNumber()))
             )));
         }
     }
@@ -55,21 +55,21 @@ public class BankGUI<T extends Team, U extends IridiumUser<T>> extends BackGUI {
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
 
-        Optional<BankItem> bankItem = iridiumTeams.getBankItemList().stream().filter(item -> item.getItem().slot == event.getSlot()).findFirst();
+        Optional<BankItem> bankItem = keviinTeams.getBankItemList().stream().filter(item -> item.getItem().slot == event.getSlot()).findFirst();
         if (!bankItem.isPresent()) return;
 
         switch (event.getClick()) {
             case LEFT:
-                iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().withdrawCommand, new String[]{bankItem.get().getName(), String.valueOf(bankItem.get().getDefaultAmount())});
+                keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().withdrawCommand, new String[]{bankItem.get().getName(), String.valueOf(bankItem.get().getDefaultAmount())});
                 break;
             case RIGHT:
-                iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().depositCommand, new String[]{bankItem.get().getName(), String.valueOf(bankItem.get().getDefaultAmount())});
+                keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().depositCommand, new String[]{bankItem.get().getName(), String.valueOf(bankItem.get().getDefaultAmount())});
                 break;
             case SHIFT_LEFT:
-                iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().withdrawCommand, new String[]{bankItem.get().getName(), String.valueOf(Double.MAX_VALUE)});
+                keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().withdrawCommand, new String[]{bankItem.get().getName(), String.valueOf(Double.MAX_VALUE)});
                 break;
             case SHIFT_RIGHT:
-                iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().depositCommand, new String[]{bankItem.get().getName(), String.valueOf(Double.MAX_VALUE)});
+                keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().depositCommand, new String[]{bankItem.get().getName(), String.valueOf(Double.MAX_VALUE)});
                 break;
         }
 

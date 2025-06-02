@@ -1,9 +1,9 @@
-package com.iridium.iridiumteams.support;
+package com.keviin.keviinteams.support;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import com.moyskleytech.obsidianstacker.api.Stack;
 import com.moyskleytech.obsidianstacker.api.StackerAPI;
 import org.bukkit.Chunk;
@@ -11,12 +11,12 @@ import org.bukkit.block.Block;
 
 import java.util.*;
 
-public class ObsidianStackerSupport<T extends Team, U extends IridiumUser<T>> implements StackerSupport<T> {
+public class ObsidianStackerSupport<T extends Team, U extends keviinUser<T>> implements StackerSupport<T> {
 
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public ObsidianStackerSupport(IridiumTeams<T, U> iridiumTeams) {
-        this.iridiumTeams = iridiumTeams;
+    public ObsidianStackerSupport(keviinTeams<T, U> keviinTeams) {
+        this.keviinTeams = keviinTeams;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ObsidianStackerSupport<T extends Team, U extends IridiumUser<T>> im
     public int getExtraBlocks(T team, XMaterial material, List<Block> blocks) {
         int stackedBlocks = 0;
         for (Stack stack : getStackedBlocks(blocks)) {
-            if (!iridiumTeams.getTeamManager().isInTeam(team, stack.getEntity().getLocation())) continue;
+            if (!keviinTeams.getTeamManager().isInTeam(team, stack.getEntity().getLocation())) continue;
             if (material != XMaterial.matchXMaterial(stack.getEntity().getLocation().getBlock().getType())) continue;
             stackedBlocks += (stack.getCount() - 1);
         }

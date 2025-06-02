@@ -1,22 +1,22 @@
-package com.iridium.iridiumteams.placeholders;
+package com.keviin.keviinteams.placeholders;
 
-import com.iridium.iridiumcore.utils.Placeholder;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.utils.Placeholder;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 
-public class ClipPlaceholderAPI<T extends Team, U extends IridiumUser<T>> extends PlaceholderExpansion {
+public class ClipPlaceholderAPI<T extends Team, U extends keviinUser<T>> extends PlaceholderExpansion {
 
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
     private final Placeholders<T, U> placeholders;
 
-    public ClipPlaceholderAPI(IridiumTeams<T, U> iridiumTeams) {
-        this.iridiumTeams = iridiumTeams;
-        this.placeholders = new Placeholders<>(iridiumTeams);
+    public ClipPlaceholderAPI(keviinTeams<T, U> keviinTeams) {
+        this.keviinTeams = keviinTeams;
+        this.placeholders = new Placeholders<>(keviinTeams);
     }
 
     @Override
@@ -26,7 +26,7 @@ public class ClipPlaceholderAPI<T extends Team, U extends IridiumUser<T>> extend
 
     @Override
     public String getIdentifier() {
-        return iridiumTeams.getName().toLowerCase();
+        return keviinTeams.getName().toLowerCase();
     }
 
     @Override
@@ -36,7 +36,7 @@ public class ClipPlaceholderAPI<T extends Team, U extends IridiumUser<T>> extend
 
     @Override
     public String getVersion() {
-        return iridiumTeams.getDescription().getVersion();
+        return keviinTeams.getDescription().getVersion();
     }
 
     @Override

@@ -1,32 +1,32 @@
-package com.iridium.iridiumteams.gui;
+package com.keviin.keviinteams.gui;
 
-import com.iridium.iridiumcore.gui.GUI;
-import com.iridium.iridiumcore.utils.InventoryUtils;
-import com.iridium.iridiumcore.utils.ItemStackUtils;
-import com.iridium.iridiumcore.utils.StringUtils;
-import com.iridium.iridiumteams.IridiumTeams;
-import com.iridium.iridiumteams.database.IridiumUser;
-import com.iridium.iridiumteams.database.Team;
+import com.keviin.keviincore.gui.GUI;
+import com.keviin.keviincore.utils.InventoryUtils;
+import com.keviin.keviincore.utils.ItemStackUtils;
+import com.keviin.keviincore.utils.StringUtils;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class ConfirmationGUI<T extends Team, U extends IridiumUser<T>> implements GUI {
+public class ConfirmationGUI<T extends Team, U extends keviinUser<T>> implements GUI {
 
     private final @NotNull Runnable runnable;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final keviinTeams<T, U> keviinTeams;
 
-    public ConfirmationGUI(@NotNull Runnable runnable, IridiumTeams<T, U> iridiumTeams) {
+    public ConfirmationGUI(@NotNull Runnable runnable, keviinTeams<T, U> keviinTeams) {
         this.runnable = runnable;
-        this.iridiumTeams = iridiumTeams;
+        this.keviinTeams = keviinTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        Inventory inventory = Bukkit.createInventory(this, iridiumTeams.getInventories().confirmationGUI.size, StringUtils.color(iridiumTeams.getInventories().confirmationGUI.title));
+        Inventory inventory = Bukkit.createInventory(this, keviinTeams.getInventories().confirmationGUI.size, StringUtils.color(keviinTeams.getInventories().confirmationGUI.title));
         addContent(inventory);
         return inventory;
     }
@@ -34,10 +34,10 @@ public class ConfirmationGUI<T extends Team, U extends IridiumUser<T>> implement
     @Override
     public void addContent(Inventory inventory) {
         inventory.clear();
-        InventoryUtils.fillInventory(inventory, iridiumTeams.getInventories().confirmationGUI.background);
+        InventoryUtils.fillInventory(inventory, keviinTeams.getInventories().confirmationGUI.background);
 
-        inventory.setItem(iridiumTeams.getInventories().confirmationGUI.no.slot, ItemStackUtils.makeItem(iridiumTeams.getInventories().confirmationGUI.no));
-        inventory.setItem(iridiumTeams.getInventories().confirmationGUI.yes.slot, ItemStackUtils.makeItem(iridiumTeams.getInventories().confirmationGUI.yes));
+        inventory.setItem(keviinTeams.getInventories().confirmationGUI.no.slot, ItemStackUtils.makeItem(keviinTeams.getInventories().confirmationGUI.no));
+        inventory.setItem(keviinTeams.getInventories().confirmationGUI.yes.slot, ItemStackUtils.makeItem(keviinTeams.getInventories().confirmationGUI.yes));
     }
 
     /**
@@ -49,9 +49,9 @@ public class ConfirmationGUI<T extends Team, U extends IridiumUser<T>> implement
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        if (event.getSlot() == iridiumTeams.getInventories().confirmationGUI.no.slot) {
+        if (event.getSlot() == keviinTeams.getInventories().confirmationGUI.no.slot) {
             player.closeInventory();
-        } else if (event.getSlot() == iridiumTeams.getInventories().confirmationGUI.yes.slot) {
+        } else if (event.getSlot() == keviinTeams.getInventories().confirmationGUI.yes.slot) {
             runnable.run();
             player.closeInventory();
         }

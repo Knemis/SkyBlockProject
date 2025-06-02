@@ -1,8 +1,8 @@
-package com.iridium.testplugin.managers;
+package com.keviin.testplugin.managers;
 
-import com.iridium.iridiumteams.managers.IridiumUserManager;
-import com.iridium.testplugin.TestTeam;
-import com.iridium.testplugin.User;
+import com.keviin.keviinteams.managers.keviinUserManager;
+import com.keviin.testplugin.TestTeam;
+import com.keviin.testplugin.User;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserManager implements IridiumUserManager<TestTeam, User> {
+public class UserManager implements keviinUserManager<TestTeam, User> {
     public static List<User> users;
 
     public UserManager() {

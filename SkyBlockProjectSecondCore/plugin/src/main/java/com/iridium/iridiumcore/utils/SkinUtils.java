@@ -1,4 +1,4 @@
-package com.iridium.iridiumcore.utils;
+package com.keviin.keviincore.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
