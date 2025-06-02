@@ -1,14 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.BackGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.Shop;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.BackGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -20,26 +16,26 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class ShopCategoryGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
-    private final keviinTeams<T, U> keviinTeams;
+public class ShopCategoryGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends BackGUI {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
     @Getter
     private final String categoryName;
     private final Shop.ShopCategory shopCategory;
     @Getter
     private int page;
 
-    public ShopCategoryGUI(String categoryName, Player player, int page, keviinTeams<T, U> keviinTeams) {
-        super(keviinTeams.getInventories().shopCategoryGUI.background, player, keviinTeams.getInventories().backButton);
-        this.keviinTeams = keviinTeams;
+    public ShopCategoryGUI(String categoryName, Player player, int page, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        super(SkyBlockProjectTeams.getInventories().shopCategoryGUI.background, player, SkyBlockProjectTeams.getInventories().backButton);
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
         this.categoryName = categoryName;
-        this.shopCategory = keviinTeams.getShop().categories.get(categoryName);
+        this.shopCategory = SkyBlockProjectTeams.getShop().categories.get(categoryName);
         this.page = page;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().shopOverviewGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().shopOverviewGUI;
         Inventory inventory = Bukkit.createInventory(this, shopCategory.inventorySize, StringUtils.color(noItemGUI.title.replace("%category_name%", categoryName)));
         addContent(inventory);
         return inventory;
@@ -49,12 +45,12 @@ public class ShopCategoryGUI<T extends Team, U extends keviinUser<T>> extends Ba
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
 
-        if (!keviinTeams.getShop().items.containsKey(categoryName)) {
-            keviinTeams.getLogger().warning("Shop Category " + categoryName + " Is not configured with any items!");
+        if (!SkyBlockProjectTeams.getShop().items.containsKey(categoryName)) {
+            SkyBlockProjectTeams.getLogger().warning("Shop Category " + categoryName + " Is not configured with any items!");
             return;
         }
 
-        for (Shop.ShopItem shopItem : keviinTeams.getShop().items.get(categoryName)) {
+        for (Shop.ShopItem shopItem : SkyBlockProjectTeams.getShop().items.get(categoryName)) {
             if (shopItem.page != this.page) continue;
             ItemStack itemStack = shopItem.type.parseItem();
             ItemMeta itemMeta = itemStack.getItemMeta();
@@ -67,22 +63,22 @@ public class ShopCategoryGUI<T extends Team, U extends keviinUser<T>> extends Ba
             inventory.setItem(shopItem.slot, itemStack);
         }
 
-        inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(this.keviinTeams.getInventories().nextPage));
-        inventory.setItem(inventory.getSize() - 7, ItemStackUtils.makeItem(this.keviinTeams.getInventories().previousPage));
+        inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(this.SkyBlockProjectTeams.getInventories().nextPage));
+        inventory.setItem(inventory.getSize() - 7, ItemStackUtils.makeItem(this.SkyBlockProjectTeams.getInventories().previousPage));
     }
 
     private List<Placeholder> getShopLorePlaceholders(Shop.ShopItem item) {
         List<Placeholder> placeholders = new ArrayList<>(Arrays.asList(
-                new Placeholder("amount", keviinTeams.getShopManager().formatPrice(item.defaultAmount)),
-                new Placeholder("vault_cost", keviinTeams.getShopManager().formatPrice(item.buyCost.money)),
-                new Placeholder("vault_reward", keviinTeams.getShopManager().formatPrice(item.sellCost.money)),
+                new Placeholder("amount", SkyBlockProjectTeams.getShopManager().formatPrice(item.defaultAmount)),
+                new Placeholder("vault_cost", SkyBlockProjectTeams.getShopManager().formatPrice(item.buyCost.money)),
+                new Placeholder("vault_reward", SkyBlockProjectTeams.getShopManager().formatPrice(item.sellCost.money)),
                 new Placeholder("minLevel", String.valueOf(item.minLevel))
         ));
         for (Map.Entry<String, Double> bankItem : item.buyCost.bankItems.entrySet()) {
-            placeholders.add(new Placeholder(bankItem.getKey() + "_cost", keviinTeams.getShopManager().formatPrice(bankItem.getValue())));
+            placeholders.add(new Placeholder(bankItem.getKey() + "_cost", SkyBlockProjectTeams.getShopManager().formatPrice(bankItem.getValue())));
         }
         for (Map.Entry<String, Double> bankItem : item.sellCost.bankItems.entrySet()) {
-            placeholders.add(new Placeholder(bankItem.getKey() + "_reward", keviinTeams.getShopManager().formatPrice(bankItem.getValue())));
+            placeholders.add(new Placeholder(bankItem.getKey() + "_reward", SkyBlockProjectTeams.getShopManager().formatPrice(bankItem.getValue())));
         }
         return placeholders;
     }
@@ -92,22 +88,22 @@ public class ShopCategoryGUI<T extends Team, U extends keviinUser<T>> extends Ba
         List<Placeholder> placeholders = getShopLorePlaceholders(item);
 
         if (item.buyCost.canPurchase()) {
-            lore.add(keviinTeams.getShop().buyPriceLore);
+            lore.add(SkyBlockProjectTeams.getShop().buyPriceLore);
         } else {
-            lore.add(keviinTeams.getShop().notPurchasableLore);
+            lore.add(SkyBlockProjectTeams.getShop().notPurchasableLore);
         }
 
         if(item.minLevel > 1) {
-            lore.add(keviinTeams.getShop().levelRequirementLore);
+            lore.add(SkyBlockProjectTeams.getShop().levelRequirementLore);
         }
 
         if (item.sellCost.canPurchase()) {
-            lore.add(keviinTeams.getShop().sellRewardLore);
+            lore.add(SkyBlockProjectTeams.getShop().sellRewardLore);
         } else {
-            lore.add(keviinTeams.getShop().notSellableLore);
+            lore.add(SkyBlockProjectTeams.getShop().notSellableLore);
         }
 
-        lore.addAll(keviinTeams.getShop().shopItemLore);
+        lore.addAll(SkyBlockProjectTeams.getShop().shopItemLore);
 
         return StringUtils.color(StringUtils.processMultiplePlaceholders(lore, placeholders));
     }
@@ -128,7 +124,7 @@ public class ShopCategoryGUI<T extends Team, U extends keviinUser<T>> extends Ba
             return;
         }
 
-        Optional<Shop.ShopItem> shopItem = keviinTeams.getShop().items.get(categoryName).stream()
+        Optional<Shop.ShopItem> shopItem = SkyBlockProjectTeams.getShop().items.get(categoryName).stream()
                 .filter(item -> item.slot == event.getSlot())
                 .filter(item -> item.page == this.page)
                 .findAny();
@@ -140,19 +136,19 @@ public class ShopCategoryGUI<T extends Team, U extends keviinUser<T>> extends Ba
         Player player = (Player) event.getWhoClicked();
         int amount = event.isShiftClick() ? shopItem.get().type.parseItem().getMaxStackSize() : shopItem.get().defaultAmount;
         if (event.isLeftClick() && shopItem.get().buyCost.canPurchase()) {
-            keviinTeams.getShopManager().buy(player, shopItem.get(), amount);
+            SkyBlockProjectTeams.getShopManager().buy(player, shopItem.get(), amount);
         } else if (event.isRightClick() && shopItem.get().sellCost.canPurchase()) {
-            keviinTeams.getShopManager().sell(player, shopItem.get(), amount);
+            SkyBlockProjectTeams.getShopManager().sell(player, shopItem.get(), amount);
         } else {
-            keviinTeams.getShop().failSound.play(player);
+            SkyBlockProjectTeams.getShop().failSound.play(player);
         }
     }
 
     private boolean doesNextPageExist() {
-        return keviinTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page + 1);
+        return SkyBlockProjectTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page + 1);
     }
 
     private boolean doesPreviousPageExist() {
-        return keviinTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page - 1);
+        return SkyBlockProjectTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page - 1);
     }
 }

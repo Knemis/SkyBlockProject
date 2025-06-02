@@ -3,10 +3,9 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import com.keviin.keviincore.Background;
-import com.keviin.keviincore.Item;
-import com.keviin.keviinteams.configs.inventories.*;
-import com.keviin.keviinteams.missions.MissionType;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Background;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+
 
 import java.util.Arrays;
 import java.util.Collections;

@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
@@ -11,7 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @NoArgsConstructor
-public class DescriptionCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class DescriptionCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
     public String adminPermission;
 
     public DescriptionCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds, String adminPermission) {
@@ -20,44 +20,44 @@ public class DescriptionCommand<T extends Team, U extends keviinUser<T>> extends
     }
 
     @Override
-    public boolean execute(U user, String[] args, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
         if (args.length == 0) {
-            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
             return false;
         }
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaNameOrPlayer(args[0]);
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaNameOrPlayer(args[0]);
         if (team.isPresent() && player.hasPermission(adminPermission)) {
             String description = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-            changeDescription(team.get(), description, player, keviinTeams);
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().changedPlayerDescription
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+            changeDescription(team.get(), description, player, SkyBlockProjectTeams);
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().changedPlayerDescription
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                     .replace("%name%", team.get().getName())
                     .replace("%description%", description)
             ));
             return true;
         }
-        return super.execute(user, args, keviinTeams);
+        return super.execute(user, args, SkyBlockProjectTeams);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, T team, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
-        if (!keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.DESCRIPTION)) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotChangeDescription
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+        if (!SkyBlockProjectTeams.getTeamManager().getTeamPermission(team, user, PermissionType.DESCRIPTION)) {
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().cannotChangeDescription
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             ));
             return false;
         }
-        changeDescription(team, String.join(" ", arguments), player, keviinTeams);
+        changeDescription(team, String.join(" ", arguments), player, SkyBlockProjectTeams);
         return true;
     }
 
-    private void changeDescription(T team, String description, Player player, keviinTeams<T, U> keviinTeams) {
+    private void changeDescription(T team, String description, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         team.setDescription(description);
-        keviinTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member ->
-                member.sendMessage(StringUtils.color(keviinTeams.getMessages().descriptionChanged
-                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+        SkyBlockProjectTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member ->
+                member.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().descriptionChanged
+                        .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                         .replace("%player%", player.getName())
                         .replace("%description%", description)
                 ))

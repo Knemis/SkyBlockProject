@@ -1,9 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.google.common.collect.ImmutableMap;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+
 import lombok.AllArgsConstructor;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -16,8 +14,8 @@ import java.util.Map;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class BlockPistonListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class BlockPistonListener<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     private static final Map<BlockFace, int[]> offsets = ImmutableMap.<BlockFace, int[]>builder()
             .put(BlockFace.EAST, new int[]{1, 0, 0})
@@ -30,11 +28,11 @@ public class BlockPistonListener<T extends Team, U extends keviinUser<T>> implem
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPistonExtend(BlockPistonExtendEvent event) {
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation());
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation());
         int currentTeam = team.map(T::getId).orElse(0);
         for (Block block : event.getBlocks()) {
             int[] offset = offsets.get(event.getDirection());
-            Optional<T> newTeam = keviinTeams.getTeamManager().getTeamViaLocation(block.getLocation().add(offset[0], offset[1], offset[2]), team);
+            Optional<T> newTeam = SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(block.getLocation().add(offset[0], offset[1], offset[2]), team);
             if (newTeam.map(T::getId).orElse(0) != currentTeam) {
                 event.setCancelled(true);
                 return;
@@ -44,10 +42,10 @@ public class BlockPistonListener<T extends Team, U extends keviinUser<T>> implem
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockPistonRetract(BlockPistonRetractEvent event) {
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation());
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation());
         int currentTeam = team.map(T::getId).orElse(0);
         for (Block block : event.getBlocks()) {
-            Optional<T> newTeam = keviinTeams.getTeamManager().getTeamViaLocation(block.getLocation(), team);
+            Optional<T> newTeam = SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(block.getLocation(), team);
             if (newTeam.map(T::getId).orElse(0) != currentTeam) {
                 event.setCancelled(true);
                 return;

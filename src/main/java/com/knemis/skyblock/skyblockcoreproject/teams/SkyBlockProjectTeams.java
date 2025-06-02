@@ -1,17 +1,17 @@
 package com.knemis.skyblock.skyblockcoreproject.teams;
 
-import com.keviin.keviincore.KeviinCore;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.bank.BankItem;
-import com.keviin.keviinteams.configs.*;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.enhancements.Enhancement;
-import com.keviin.keviinteams.enhancements.PotionEnhancementData;
-import com.keviin.keviinteams.listeners.*;
-import com.keviin.keviinteams.managers.*;
-import com.keviin.keviinteams.placeholders.ClipPlaceholderAPI;
-import com.keviin.keviinteams.sorting.TeamSorting;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.bank.BankItem;
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.*;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData;
+import com.knemis.skyblock.skyblockcoreproject.teams.listeners.*;
+import com.knemis.skyblock.skyblockcoreproject.teams.managers.*;
+import com.knemis.skyblock.skyblockcoreproject.teams.placeholders.ClipPlaceholderAPI;
+import com.knemis.skyblock.skyblockcoreproject.teams.sorting.TeamSorting;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import de.jeff_media.updatechecker.UpdateChecker;
 import lombok.Getter;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
-public abstract class SkyBlockProjectTeams<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends KeviinCore {
+public abstract class SkyBlockProjectTeams<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends SkyBlockProjectSecondCore {
 
     private final Map<Integer, UserRank> userRanks = new HashMap<>();
     private final Map<String, Permission> permissionList = new HashMap<>();
@@ -45,7 +45,7 @@ public abstract class SkyBlockProjectTeams<T extends Team, U extends SkyBlockPro
     @Setter
     private boolean recalculating = false;
 
-    public keviinTeams(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+    public SkyBlockProjectTeams(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
     }
 
@@ -98,7 +98,7 @@ public abstract class SkyBlockProjectTeams<T extends Team, U extends SkyBlockPro
 
     public abstract TeamManager<T, U> getTeamManager();
 
-    public abstract keviinUserManager<T, U> getUserManager();
+    public abstract SkyBlockProjectTeamsUserManager<T, U> getUserManager();
 
     public abstract CommandManager<T, U> getCommandManager();
 

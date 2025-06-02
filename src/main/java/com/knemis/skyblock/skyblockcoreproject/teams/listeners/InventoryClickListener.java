@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
-import com.keviin.keviincore.gui.GUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.GUI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;

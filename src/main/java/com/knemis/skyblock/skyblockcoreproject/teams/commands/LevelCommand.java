@@ -1,10 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -15,53 +13,53 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class LevelCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class LevelCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
 
     public LevelCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, String[] args, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
         if (args.length == 0) {
-            Optional<T> userTeam = keviinTeams.getTeamManager().getTeamViaID(user.getTeamID());
+            Optional<T> userTeam = SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID());
             if (!userTeam.isPresent()) {
-                player.sendMessage(StringUtils.color(keviinTeams.getMessages().dontHaveTeam
-                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+                player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().dontHaveTeam
+                        .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                 ));
                 return false;
             }
-            sendTeamLevel(player, userTeam.get(), keviinTeams);
+            sendTeamLevel(player, userTeam.get(), SkyBlockProjectTeams);
             return true;
         }
 
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaNameOrPlayer(String.join(" ", args));
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaNameOrPlayer(String.join(" ", args));
         if(args[0].equals("location")) {
-            team = keviinTeams.getTeamManager().getTeamViaPlayerLocation(player);
+            team = SkyBlockProjectTeams.getTeamManager().getTeamViaPlayerLocation(player);
         }
 
         if (!team.isPresent()) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().teamDoesntExistByName
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().teamDoesntExistByName
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
-        sendTeamLevel(player, team.get(), keviinTeams);
+        sendTeamLevel(player, team.get(), SkyBlockProjectTeams);
         return true;
     }
 
-    public void sendTeamLevel(Player player, T team, keviinTeams<T, U> keviinTeams) {
-        List<Placeholder> placeholderList = keviinTeams.getTeamsPlaceholderBuilder().getPlaceholders(team);
-        player.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(StringUtils.processMultiplePlaceholders(keviinTeams.getConfiguration().teamInfoTitle, placeholderList), keviinTeams.getConfiguration().teamInfoTitleFiller)));
-        for (String line : keviinTeams.getConfiguration().levelInfo) {
+    public void sendTeamLevel(Player player, T team, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        List<Placeholder> placeholderList = SkyBlockProjectTeams.getTeamsPlaceholderBuilder().getPlaceholders(team);
+        player.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(StringUtils.processMultiplePlaceholders(SkyBlockProjectTeams.getConfiguration().teamInfoTitle, placeholderList), SkyBlockProjectTeams.getConfiguration().teamInfoTitleFiller)));
+        for (String line : SkyBlockProjectTeams.getConfiguration().levelInfo) {
             player.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(line, placeholderList)));
         }
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
     }
 }

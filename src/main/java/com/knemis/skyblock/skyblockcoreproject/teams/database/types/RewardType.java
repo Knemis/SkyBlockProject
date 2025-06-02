@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database.types;
 
-import com.keviin.keviincore.Persist;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.Reward;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Persist;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.field.SqlType;
 import com.j256.ormlite.field.types.StringType;
@@ -14,8 +14,8 @@ public class RewardType extends StringType {
     private static final RewardType instance = new RewardType();
     private static Persist persist;
 
-    public static RewardType getSingleton(keviinTeams<?, ?> keviinTeams) {
-        persist = new Persist(Persist.PersistType.JSON, keviinTeams);
+    public static RewardType getSingleton(SkyBlockProjectTeams<?, ?> SkyBlockProjectTeams) {
+        persist = new Persist(Persist.PersistType.JSON, SkyBlockProjectTeams);
         return instance;
     }
 

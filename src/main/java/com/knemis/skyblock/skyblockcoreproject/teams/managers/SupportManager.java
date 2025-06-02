@@ -1,20 +1,17 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.support.*;
+
 import lombok.Getter;
 import org.bukkit.Bukkit;
 
 import java.util.HashSet;
 
-public class SupportManager<T extends Team, U extends keviinUser<T>> {
+public class SupportManager<T extends Team, U extends SkyBlockProjectTeamsUser<T>> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public SupportManager(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
+    public SupportManager(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @Getter
@@ -32,26 +29,26 @@ public class SupportManager<T extends Team, U extends keviinUser<T>> {
 
     private void registerBlockStackerSupport() {
         if (supportedPluginEnabled("RoseStacker"))
-            stackerSupport.add(new RoseStackerSupport<>(keviinTeams));
+            stackerSupport.add(new RoseStackerSupport<>(SkyBlockProjectTeams));
 
         if (supportedPluginEnabled("WildStacker"))
-            stackerSupport.add(new WildStackerSupport<>(keviinTeams));
+            stackerSupport.add(new WildStackerSupport<>(SkyBlockProjectTeams));
 
         if(supportedPluginEnabled("ObsidianStacker"))
-            stackerSupport.add(new ObsidianStackerSupport<>(keviinTeams));
+            stackerSupport.add(new ObsidianStackerSupport<>(SkyBlockProjectTeams));
     }
 
     private void registerSpawnerSupport() {
         if (supportedPluginEnabled("RoseStacker"))
-            spawnerSupport.add(new RoseStackerSupport<>(keviinTeams));
+            spawnerSupport.add(new RoseStackerSupport<>(SkyBlockProjectTeams));
 
         if (supportedPluginEnabled("WildStacker"))
-            spawnerSupport.add(new WildStackerSupport<>(keviinTeams));
+            spawnerSupport.add(new WildStackerSupport<>(SkyBlockProjectTeams));
     }
 
     private void registerSpawnSupport() {
         if (supportedPluginEnabled("EssentialsSpawn"))
-            spawnSupport.add(new EssentialsSpawnSupport<>(keviinTeams));
+            spawnSupport.add(new EssentialsSpawnSupport<>(SkyBlockProjectTeams));
     }
 
     public void registerSupport() {

@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database;
 
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.enhancements.*;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.*;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;
@@ -54,62 +54,62 @@ public class SkyBlockProjectTeamsUser<T extends Team> extends DatabaseObject {
         return Bukkit.getServer().getPlayer(uuid);
     }
 
-    public boolean canFly(keviinTeams<T, ?> keviinTeams) {
+    public boolean canFly(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams) {
         Player player = getPlayer();
 
         if (isBypassing()) return true; // bypass should be checked first, since this is an admin permission
-        if (player.hasPermission(keviinTeams.getCommands().flyCommand.getFlyAnywherePermission())) return true;
+        if (player.hasPermission(SkyBlockProjectTeams.getCommands().flyCommand.getFlyAnywherePermission())) return true;
 
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaID(getTeamID());
-        Optional<T> visitor = keviinTeams.getTeamManager().getTeamViaPlayerLocation(player);
-        if (player.hasPermission(keviinTeams.getCommands().flyCommand.permission) && team.isPresent() && team.map(T::getId).orElse(-1).equals(visitor.map(T::getId).orElse(-1))) {
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaID(getTeamID());
+        Optional<T> visitor = SkyBlockProjectTeams.getTeamManager().getTeamViaPlayerLocation(player);
+        if (player.hasPermission(SkyBlockProjectTeams.getCommands().flyCommand.permission) && team.isPresent() && team.map(T::getId).orElse(-1).equals(visitor.map(T::getId).orElse(-1))) {
             return true;
         }
-        return canFly(team.orElse(null), keviinTeams) || canFly(visitor.orElse(null), keviinTeams);
+        return canFly(team.orElse(null), SkyBlockProjectTeams) || canFly(visitor.orElse(null), SkyBlockProjectTeams);
     }
 
-    private boolean canFly(T team, keviinTeams<T, ?> keviinTeams) {
+    private boolean canFly(T team, SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams) {
         if (team == null) return false;
-        Enhancement<FlightEnhancementData> flightEnhancement = keviinTeams.getEnhancements().flightEnhancement;
-        TeamEnhancement teamEnhancement = keviinTeams.getTeamManager().getTeamEnhancement(team, "flight");
+        Enhancement<FlightEnhancementData> flightEnhancement = SkyBlockProjectTeams.getEnhancements().flightEnhancement;
+        TeamEnhancement teamEnhancement = SkyBlockProjectTeams.getTeamManager().getTeamEnhancement(team, "flight");
         FlightEnhancementData data = flightEnhancement.levels.get(teamEnhancement.getLevel());
 
         if (!teamEnhancement.isActive(flightEnhancement.type)) return false;
         if (data == null) return false;
 
-        return canApply(keviinTeams, team, data.enhancementAffectsType);
+        return canApply(SkyBlockProjectTeams, team, data.enhancementAffectsType);
     }
 
-    public void initBukkitTask(keviinTeams<T, ?> keviinTeams) {
+    public void initBukkitTask(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams) {
         if (bukkitTask != null) return;
-        bukkitTask = Bukkit.getScheduler().runTaskTimer(keviinTeams, () -> bukkitTask(keviinTeams), 0, 20);
+        bukkitTask = Bukkit.getScheduler().runTaskTimer(SkyBlockProjectTeams, () -> bukkitTask(SkyBlockProjectTeams), 0, 20);
     }
 
-    public void bukkitTask(keviinTeams<T, ?> keviinTeams) {
+    public void bukkitTask(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams) {
         bukkitTaskTicks++;
-        applyPotionEffects(keviinTeams);
+        applyPotionEffects(SkyBlockProjectTeams);
     }
 
-    public void applyPotionEffects(keviinTeams<T, ?> keviinTeams) {
+    public void applyPotionEffects(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams) {
         Player player = getPlayer();
         if (player == null) return;
-        keviinTeams.getTeamManager().getTeamViaLocation(player.getLocation()).ifPresent(t -> applyPotionEffects(keviinTeams, t));
-        keviinTeams.getTeamManager().getTeamViaID(teamID).ifPresent(t -> applyPotionEffects(keviinTeams, t));
+        SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(player.getLocation()).ifPresent(t -> applyPotionEffects(SkyBlockProjectTeams, t));
+        SkyBlockProjectTeams.getTeamManager().getTeamViaID(teamID).ifPresent(t -> applyPotionEffects(SkyBlockProjectTeams, t));
     }
 
-    public void applyPotionEffects(keviinTeams<T, ?> keviinTeams, T team) {
+    public void applyPotionEffects(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams, T team) {
         int duration = 10;
         Player player = getPlayer();
         if (player == null) return;
         HashMap<PotionEffectType, Integer> potionEffects = new HashMap<>();
 
-        for (Map.Entry<String, Enhancement<?>> enhancement : keviinTeams.getEnhancementList().entrySet()) {
-            TeamEnhancement teamEnhancement = keviinTeams.getTeamManager().getTeamEnhancement(team, enhancement.getKey());
+        for (Map.Entry<String, Enhancement<?>> enhancement : SkyBlockProjectTeams.getEnhancementList().entrySet()) {
+            TeamEnhancement teamEnhancement = SkyBlockProjectTeams.getTeamManager().getTeamEnhancement(team, enhancement.getKey());
             if (!teamEnhancement.isActive(enhancement.getValue().type)) continue;
             EnhancementData enhancementData = enhancement.getValue().levels.get(teamEnhancement.getLevel());
             if (enhancementData instanceof PotionEnhancementData) {
                 PotionEnhancementData potionEnhancementData = (PotionEnhancementData) enhancementData;
-                if (!canApply(keviinTeams, team, potionEnhancementData.enhancementAffectsType)) continue;
+                if (!canApply(SkyBlockProjectTeams, team, potionEnhancementData.enhancementAffectsType)) continue;
                 PotionEffectType potionEffectType = potionEnhancementData.potion.getPotionEffectType();
                 if (!potionEffects.containsKey(potionEffectType)) {
                     potionEffects.put(potionEffectType, potionEnhancementData.strength - 1);
@@ -132,10 +132,10 @@ public class SkyBlockProjectTeamsUser<T extends Team> extends DatabaseObject {
         }
     }
 
-    public boolean canApply(keviinTeams<T, ?> keviinTeams, T team, List<EnhancementAffectsType> enhancementAffectsTypes) {
+    public boolean canApply(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams, T team, List<EnhancementAffectsType> enhancementAffectsTypes) {
         Player player = getPlayer();
         if (player == null) return false;
-        int teamLocationID = keviinTeams.getTeamManager().getTeamViaLocation(player.getLocation()).map(T::getId).orElse(0);
+        int teamLocationID = SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(player.getLocation()).map(T::getId).orElse(0);
         for (EnhancementAffectsType enhancementAffectsType : enhancementAffectsTypes) {
             if (enhancementAffectsType == EnhancementAffectsType.VISITORS && team.getId() == teamLocationID) {
                 return true;

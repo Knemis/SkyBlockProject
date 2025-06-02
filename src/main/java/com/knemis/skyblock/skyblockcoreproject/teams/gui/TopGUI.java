@@ -1,13 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.BackGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.sorting.TeamSorting;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.BackGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,24 +17,24 @@ import java.util.List;
 
 @Getter
 @Setter
-public class TopGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
+public class TopGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends BackGUI {
 
     private TeamSorting<T> sortingType;
     private int page = 1;
     @Setter(AccessLevel.NONE)
     @Getter(AccessLevel.NONE)
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public TopGUI(TeamSorting<T> sortingType, Player player, keviinTeams<T, U> keviinTeams) {
-        super(keviinTeams.getInventories().topGUI.background, player, keviinTeams.getInventories().backButton);
+    public TopGUI(TeamSorting<T> sortingType, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        super(SkyBlockProjectTeams.getInventories().topGUI.background, player, SkyBlockProjectTeams.getInventories().backButton);
         this.sortingType = sortingType;
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().topGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().topGUI;
         Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -48,43 +44,43 @@ public class TopGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
 
-        List<T> teams = keviinTeams.getTeamManager().getTeams(sortingType, true);
+        List<T> teams = SkyBlockProjectTeams.getTeamManager().getTeams(sortingType, true);
 
-        for (int rank : keviinTeams.getConfiguration().teamTopSlots.keySet()) {
-            int slot = keviinTeams.getConfiguration().teamTopSlots.get(rank);
-            int actualRank = rank + (keviinTeams.getConfiguration().teamTopSlots.size() * (page - 1));
+        for (int rank : SkyBlockProjectTeams.getConfiguration().teamTopSlots.keySet()) {
+            int slot = SkyBlockProjectTeams.getConfiguration().teamTopSlots.get(rank);
+            int actualRank = rank + (SkyBlockProjectTeams.getConfiguration().teamTopSlots.size() * (page - 1));
             if (teams.size() >= actualRank) {
                 T team = teams.get(actualRank - 1);
-                inventory.setItem(slot, ItemStackUtils.makeItem(keviinTeams.getInventories().topGUI.item, keviinTeams.getTeamsPlaceholderBuilder().getPlaceholders(team)));
+                inventory.setItem(slot, ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().topGUI.item, SkyBlockProjectTeams.getTeamsPlaceholderBuilder().getPlaceholders(team)));
             } else {
-                inventory.setItem(slot, ItemStackUtils.makeItem(keviinTeams.getInventories().topGUI.filler));
+                inventory.setItem(slot, ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().topGUI.filler));
             }
         }
 
-        for (TeamSorting<T> sortingType : keviinTeams.getSortingTypes()) {
+        for (TeamSorting<T> sortingType : SkyBlockProjectTeams.getSortingTypes()) {
             inventory.setItem(sortingType.getItem().slot, ItemStackUtils.makeItem(sortingType.getItem()));
         }
 
-        inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(keviinTeams.getInventories().nextPage));
-        inventory.setItem(inventory.getSize() - 7, ItemStackUtils.makeItem(keviinTeams.getInventories().previousPage));
+        inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().nextPage));
+        inventory.setItem(inventory.getSize() - 7, ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().previousPage));
     }
 
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
 
-        if (event.getSlot() == keviinTeams.getInventories().topGUI.size - 7 && page > 1) {
+        if (event.getSlot() == SkyBlockProjectTeams.getInventories().topGUI.size - 7 && page > 1) {
             page--;
             event.getWhoClicked().openInventory(getInventory());
             return;
         }
 
-        if (event.getSlot() == keviinTeams.getInventories().topGUI.size - 3 && keviinTeams.getTeamManager().getTeams().size() >= 1 + (keviinTeams.getConfiguration().teamTopSlots.size() * page)) {
+        if (event.getSlot() == SkyBlockProjectTeams.getInventories().topGUI.size - 3 && SkyBlockProjectTeams.getTeamManager().getTeams().size() >= 1 + (SkyBlockProjectTeams.getConfiguration().teamTopSlots.size() * page)) {
             page++;
             event.getWhoClicked().openInventory(getInventory());
         }
 
-        keviinTeams.getSortingTypes().stream().filter(sorting -> sorting.item.slot == event.getSlot()).findFirst().ifPresent(sortingType -> {
+        SkyBlockProjectTeams.getSortingTypes().stream().filter(sorting -> sorting.item.slot == event.getSlot()).findFirst().ifPresent(sortingType -> {
             this.sortingType = sortingType;
             addContent(event.getInventory());
         });

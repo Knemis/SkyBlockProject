@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.support;
 
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 

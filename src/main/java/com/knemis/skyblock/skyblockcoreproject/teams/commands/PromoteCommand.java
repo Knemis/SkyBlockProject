@@ -1,11 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.PermissionType;
-import com.keviin.keviinteams.Rank;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -16,51 +12,51 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class PromoteCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class PromoteCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
     public PromoteCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, T team, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
         if (args.length != 1) {
-            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
             return false;
         }
 
         OfflinePlayer targetPlayer = Bukkit.getServer().getOfflinePlayer(args[0]);
-        U targetUser = keviinTeams.getUserManager().getUser(targetPlayer);
+        U targetUser = SkyBlockProjectTeams.getUserManager().getUser(targetPlayer);
 
         if (targetUser.getTeamID() != team.getId()) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().userNotInYourTeam.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().userNotInYourTeam.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
             return false;
         }
 
         int nextRank = targetUser.getUserRank() + 1;
 
-        if (!DoesRankExist(nextRank, keviinTeams) || IsHigherRank(targetUser, user) || !keviinTeams.getTeamManager().getTeamPermission(team, user, PermissionType.PROMOTE)) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotPromoteUser.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+        if (!DoesRankExist(nextRank, SkyBlockProjectTeams) || IsHigherRank(targetUser, user) || !SkyBlockProjectTeams.getTeamManager().getTeamPermission(team, user, PermissionType.PROMOTE)) {
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().cannotPromoteUser.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
             return false;
         }
 
         targetUser.setUserRank(nextRank);
 
-        for (U member : keviinTeams.getTeamManager().getTeamMembers(team)) {
+        for (U member : SkyBlockProjectTeams.getTeamManager().getTeamMembers(team)) {
             Player teamMember = Bukkit.getPlayer(member.getUuid());
             if (teamMember != null) {
                 if (teamMember.equals(player)) {
-                    teamMember.sendMessage(StringUtils.color(keviinTeams.getMessages().promotedPlayer
+                    teamMember.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().promotedPlayer
                             .replace("%player%", targetUser.getName())
-                            .replace("%rank%", keviinTeams.getUserRanks().get(nextRank).name)
-                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+                            .replace("%rank%", SkyBlockProjectTeams.getUserRanks().get(nextRank).name)
+                            .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                     ));
                 } else {
-                    teamMember.sendMessage(StringUtils.color(keviinTeams.getMessages().userPromotedPlayer
+                    teamMember.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().userPromotedPlayer
                             .replace("%promoter%", player.getName())
                             .replace("%player%", targetUser.getName())
-                            .replace("%rank%", keviinTeams.getUserRanks().get(nextRank).name)
-                            .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+                            .replace("%rank%", SkyBlockProjectTeams.getUserRanks().get(nextRank).name)
+                            .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                     ));
                 }
             }
@@ -69,13 +65,13 @@ public class PromoteCommand<T extends Team, U extends keviinUser<T>> extends Com
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
     }
 
-    private boolean DoesRankExist(int rank, keviinTeams<T, U> keviinTeams) {
+    private boolean DoesRankExist(int rank, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         if (rank < 1) return false;
-        return keviinTeams.getUserRanks().containsKey(rank);
+        return SkyBlockProjectTeams.getUserRanks().containsKey(rank);
     }
 
     private boolean IsHigherRank(U target, U user) {

@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.keviin.keviincore.CooldownProvider;
-import com.keviin.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.CooldownProvider;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.OfflinePlayer;
@@ -15,7 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class Command<T extends Team, U extends keviinUser<T>> {
+public class Command<T extends Team, U extends SkyBlockProjectTeamsUser<T>> {
 
     public final @NotNull List<String> aliases;
     public final @NotNull String description;
@@ -54,54 +54,54 @@ public class Command<T extends Team, U extends keviinUser<T>> {
     }
 
 
-    public boolean execute(CommandSender sender, String[] arguments, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(CommandSender sender, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         if (!(sender instanceof Player)) {
-            sender.sendMessage(StringUtils.color(keviinTeams.getMessages().mustBeAPlayer
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix))
+            sender.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().mustBeAPlayer
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix))
             );
             return false;
         }
-        return execute(keviinTeams.getUserManager().getUser((OfflinePlayer) sender), arguments, keviinTeams);
+        return execute(SkyBlockProjectTeams.getUserManager().getUser((OfflinePlayer) sender), arguments, SkyBlockProjectTeams);
     }
 
-    public boolean execute(U user, String[] arguments, keviinTeams<T, U> keviinTeams) {
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaID(user.getTeamID());
+    public boolean execute(U user, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID());
         if (!team.isPresent()) {
-            user.getPlayer().sendMessage(StringUtils.color(keviinTeams.getMessages().dontHaveTeam
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix))
+            user.getPlayer().sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().dontHaveTeam
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix))
             );
             return false;
         }
-        return execute(user, team.get(), arguments, keviinTeams);
+        return execute(user, team.get(), arguments, SkyBlockProjectTeams);
     }
 
-    public boolean execute(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, T team, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         throw new NotImplementedException();
     }
 
-    public boolean hasPermission(CommandSender commandSender, keviinTeams<T, U> keviinTeams) {
+    public boolean hasPermission(CommandSender commandSender, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         return commandSender.hasPermission(permission) || permission.equalsIgnoreCase("");
     }
 
-    public boolean isOnCooldown(CommandSender commandSender, keviinTeams<T, U> keviinTeams) {
+    public boolean isOnCooldown(CommandSender commandSender, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         if (!(commandSender instanceof Player)) return false;
         Player player = (Player) commandSender;
-        U user = keviinTeams.getUserManager().getUser(player);
+        U user = SkyBlockProjectTeams.getUserManager().getUser(player);
         return getCooldownProvider().isOnCooldown(commandSender) && !user.isBypassing();
     }
 
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         if (commandSender instanceof Player) {
-            U user = keviinTeams.getUserManager().getUser((OfflinePlayer) commandSender);
-            Optional<T> team = keviinTeams.getTeamManager().getTeamViaID(user.getTeamID());
+            U user = SkyBlockProjectTeams.getUserManager().getUser((OfflinePlayer) commandSender);
+            Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID());
             if (team.isPresent()) {
-                return onTabComplete(user, team.get(), args, keviinTeams);
+                return onTabComplete(user, team.get(), args, SkyBlockProjectTeams);
             }
         }
         return Collections.emptyList();
     }
 
-    public List<String> onTabComplete(U user, T team, String[] args, keviinTeams<T, U> keviinTeams) {
+    public List<String> onTabComplete(U user, T team, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         return Collections.emptyList();
     }
 

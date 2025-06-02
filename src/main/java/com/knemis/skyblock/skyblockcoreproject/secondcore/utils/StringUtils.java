@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.secondcore.utils;
 
-import com.keviin.keviincolorapi.keviinColorAPI;
+import com.knemis.skyblock.skyblockcoreproject.SkyBlockProjectcolorapi.SkyBlockProjectColorAPI;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.DefaultFontInfo;
 
 import java.util.List;
@@ -21,7 +21,7 @@ public class StringUtils {
      * @return The new String with applied colors
      */
     public static String color(String string) {
-        return keviinColorAPI.process(string);
+        return SkyBlockProjectColorAPI.process(string);
     }
 
     /**

@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.enhancements;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.keviin.keviincore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

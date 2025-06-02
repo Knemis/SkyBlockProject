@@ -4,9 +4,9 @@ import com.bgsoftware.wildstacker.api.WildStackerAPI;
 import com.bgsoftware.wildstacker.api.objects.StackedBarrel;
 import com.bgsoftware.wildstacker.api.objects.StackedSpawner;
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;
@@ -15,12 +15,12 @@ import org.bukkit.entity.EntityType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class WildStackerSupport<T extends Team, U extends keviinUser<T>> implements StackerSupport<T>, SpawnerSupport<T> {
+public class WildStackerSupport<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements StackerSupport<T>, SpawnerSupport<T> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public WildStackerSupport(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
+    public WildStackerSupport(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class WildStackerSupport<T extends Team, U extends keviinUser<T>> impleme
         HashMap<XMaterial, Integer> hashMap = new HashMap<>();
 
         WildStackerAPI.getWildStacker().getSystemManager().getStackedBarrels(chunk).forEach(stackedBarrel -> {
-            if (!keviinTeams.getTeamManager().isInTeam(team, stackedBarrel.getLocation())) return;
+            if (!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stackedBarrel.getLocation())) return;
 
             XMaterial xMaterial = XMaterial.matchXMaterial(stackedBarrel.getType());
             hashMap.put(xMaterial, hashMap.getOrDefault(xMaterial, 0) + stackedBarrel.getStackAmount());
@@ -101,7 +101,7 @@ public class WildStackerSupport<T extends Team, U extends keviinUser<T>> impleme
 
         int stackedBlocks = 0;
         for (StackedBarrel stackedBarrel : getStackedBarrels(blocks)) {
-            if (!keviinTeams.getTeamManager().isInTeam(team, stackedBarrel.getLocation())) continue;
+            if (!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stackedBarrel.getLocation())) continue;
             if (material != XMaterial.matchXMaterial(stackedBarrel.getType())) continue;
             stackedBlocks += stackedBarrel.getStackAmount();
         }
@@ -114,7 +114,7 @@ public class WildStackerSupport<T extends Team, U extends keviinUser<T>> impleme
 
         int stackedSpawners = 0;
         for (StackedSpawner stackedSpawner : getStackedSpawners(spawners)) {
-            if (!keviinTeams.getTeamManager().isInTeam(team, stackedSpawner.getLocation())) continue;
+            if (!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stackedSpawner.getLocation())) continue;
             if (stackedSpawner.getSpawnedType() != entityType) continue;
             stackedSpawners += stackedSpawner.getStackAmount();
         }

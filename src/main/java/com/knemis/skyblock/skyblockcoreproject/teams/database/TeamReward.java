@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database;
 
-import com.keviin.keviinteams.Reward;
+import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;

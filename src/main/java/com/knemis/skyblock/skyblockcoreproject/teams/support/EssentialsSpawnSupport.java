@@ -2,22 +2,22 @@ package com.knemis.skyblock.skyblockcoreproject.teams.support;
 
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.spawn.EssentialsSpawn;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-public class EssentialsSpawnSupport<T extends Team, U extends keviinUser<T>> implements SpawnSupport<T> {
+public class EssentialsSpawnSupport<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements SpawnSupport<T> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     EssentialsSpawn essentialsSpawn = (EssentialsSpawn) Bukkit.getPluginManager().getPlugin("EssentialsSpawn");
     Essentials essentials = (Essentials) Bukkit.getPluginManager().getPlugin("Essentials");
 
-    public EssentialsSpawnSupport(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
+    public EssentialsSpawnSupport(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @Override

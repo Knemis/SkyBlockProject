@@ -3,10 +3,9 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.collect.ImmutableMap;
-import com.keviin.keviincore.Item;
-import com.keviin.keviincore.utils.NumberFormatter;
-import com.keviin.keviinteams.Reward;
-import com.keviin.keviinteams.UserRank;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.NumberFormatter;
+
 
 import java.util.*;
 
@@ -54,7 +53,7 @@ public class Configuration {
     public List<String> whitelistedWorlds;
 
     public Configuration() {
-        this("&c", "Team", "keviinTeams");
+        this("&c", "Team", "SkyBlockProjectTeams");
     }
 
     public Configuration(String color, String team, String pluginName) {

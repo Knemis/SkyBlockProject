@@ -1,11 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviincore.utils.TimeUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.commands.Command;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.TimeUtils;
+
 import lombok.Getter;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -17,7 +14,7 @@ import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public abstract class CommandManager<T extends Team, U extends keviinUser<T>> implements CommandExecutor, TabCompleter {
+public abstract class CommandManager<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements CommandExecutor, TabCompleter {
 
     @Getter
     private final List<Command<T, U>> commands = new ArrayList<>();
@@ -25,65 +22,65 @@ public abstract class CommandManager<T extends Team, U extends keviinUser<T>> im
     private final String command;
     @Getter
     private final String color;
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public CommandManager(keviinTeams<T, U> keviinTeams, String color, String command) {
-        this.keviinTeams = keviinTeams;
+    public CommandManager(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams, String color, String command) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
         this.command = command;
         this.color = color;
-        keviinTeams.getCommand(command).setExecutor(this);
-        keviinTeams.getCommand(command).setTabCompleter(this);
+        SkyBlockProjectTeams.getCommand(command).setExecutor(this);
+        SkyBlockProjectTeams.getCommand(command).setTabCompleter(this);
         registerCommands();
     }
 
     public void registerCommands() {
-        registerCommand(keviinTeams.getCommands().aboutCommand);
-        registerCommand(keviinTeams.getCommands().createCommand);
-        registerCommand(keviinTeams.getCommands().membersCommand);
-        registerCommand(keviinTeams.getCommands().permissionsCommand);
-        registerCommand(keviinTeams.getCommands().setPermissionCommand);
-        registerCommand(keviinTeams.getCommands().promoteCommand);
-        registerCommand(keviinTeams.getCommands().demoteCommand);
-        registerCommand(keviinTeams.getCommands().helpCommand);
-        registerCommand(keviinTeams.getCommands().reloadCommand);
-        registerCommand(keviinTeams.getCommands().inviteCommand);
-        registerCommand(keviinTeams.getCommands().unInviteCommand);
-        registerCommand(keviinTeams.getCommands().invitesCommand);
-        registerCommand(keviinTeams.getCommands().trustCommand);
-        registerCommand(keviinTeams.getCommands().unTrustCommand);
-        registerCommand(keviinTeams.getCommands().trustsCommand);
-        registerCommand(keviinTeams.getCommands().kickCommand);
-        registerCommand(keviinTeams.getCommands().leaveCommand);
-        registerCommand(keviinTeams.getCommands().deleteCommand);
-        registerCommand(keviinTeams.getCommands().infoCommand);
-        registerCommand(keviinTeams.getCommands().descriptionCommand);
-        registerCommand(keviinTeams.getCommands().renameCommand);
-        registerCommand(keviinTeams.getCommands().setHomeCommand);
-        registerCommand(keviinTeams.getCommands().homeCommand);
-        registerCommand(keviinTeams.getCommands().bypassCommand);
-        registerCommand(keviinTeams.getCommands().transferCommand);
-        registerCommand(keviinTeams.getCommands().joinCommand);
-        registerCommand(keviinTeams.getCommands().bankCommand);
-        registerCommand(keviinTeams.getCommands().depositCommand);
-        registerCommand(keviinTeams.getCommands().withdrawCommand);
-        registerCommand(keviinTeams.getCommands().chatCommand);
-        registerCommand(keviinTeams.getCommands().boostersCommand);
-        registerCommand(keviinTeams.getCommands().upgradesCommand);
-        registerCommand(keviinTeams.getCommands().flyCommand);
-        registerCommand(keviinTeams.getCommands().topCommand);
-        registerCommand(keviinTeams.getCommands().recalculateCommand);
-        registerCommand(keviinTeams.getCommands().warpsCommand);
-        registerCommand(keviinTeams.getCommands().warpCommand);
-        registerCommand(keviinTeams.getCommands().setWarpCommand);
-        registerCommand(keviinTeams.getCommands().deleteWarpCommand);
-        registerCommand(keviinTeams.getCommands().editWarpCommand);
-        registerCommand(keviinTeams.getCommands().missionsCommand);
-        registerCommand(keviinTeams.getCommands().rewardsCommand);
-        registerCommand(keviinTeams.getCommands().experienceCommand);
-        registerCommand(keviinTeams.getCommands().shopCommand);
-        registerCommand(keviinTeams.getCommands().settingsCommand);
-        registerCommand(keviinTeams.getCommands().blockValueCommand);
-        registerCommand(keviinTeams.getCommands().levelCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().aboutCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().createCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().membersCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().permissionsCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().setPermissionCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().promoteCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().demoteCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().helpCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().reloadCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().inviteCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().unInviteCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().invitesCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().trustCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().unTrustCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().trustsCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().kickCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().leaveCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().deleteCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().infoCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().descriptionCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().renameCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().setHomeCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().homeCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().bypassCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().transferCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().joinCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().bankCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().depositCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().withdrawCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().chatCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().boostersCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().upgradesCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().flyCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().topCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().recalculateCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().warpsCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().warpCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().setWarpCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().deleteWarpCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().editWarpCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().missionsCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().rewardsCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().experienceCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().shopCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().settingsCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().blockValueCommand);
+        registerCommand(SkyBlockProjectTeams.getCommands().levelCommand);
     }
 
     public void registerCommand(Command<T, U> command) {
@@ -107,31 +104,31 @@ public abstract class CommandManager<T extends Team, U extends keviinUser<T>> im
         }
 
         // Unknown command message
-        commandSender.sendMessage(StringUtils.color(keviinTeams.getMessages().unknownCommand
-                .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+        commandSender.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().unknownCommand
+                .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
         ));
         return false;
     }
 
     public boolean executeCommand(CommandSender commandSender, Command<T, U> command, String[] args) {
-        if (!command.hasPermission(commandSender, keviinTeams)) {
-            commandSender.sendMessage(StringUtils.color(keviinTeams.getMessages().noPermission
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+        if (!command.hasPermission(commandSender, SkyBlockProjectTeams)) {
+            commandSender.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().noPermission
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
-        if (command.isOnCooldown(commandSender, keviinTeams)) {
+        if (command.isOnCooldown(commandSender, SkyBlockProjectTeams)) {
             Duration remainingTime = command.getCooldownProvider().getRemainingTime(commandSender);
-            String formattedTime = TimeUtils.formatDuration(keviinTeams.getMessages().activeCooldown, remainingTime);
+            String formattedTime = TimeUtils.formatDuration(SkyBlockProjectTeams.getMessages().activeCooldown, remainingTime);
 
             commandSender.sendMessage(StringUtils.color(formattedTime
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
-        if (command.execute(commandSender, args, keviinTeams)) {
+        if (command.execute(commandSender, args, SkyBlockProjectTeams)) {
             command.getCooldownProvider().applyCooldown(commandSender);
         }
         return true;
@@ -146,7 +143,7 @@ public abstract class CommandManager<T extends Team, U extends keviinUser<T>> im
                 if(command.isSuperSecretCommand()) continue;
                 for (String alias : command.aliases) {
                     if (!alias.toLowerCase().startsWith(args[0].toLowerCase())) continue;
-                    if (command.hasPermission(commandSender, keviinTeams)) {
+                    if (command.hasPermission(commandSender, SkyBlockProjectTeams)) {
                         result.add(alias);
                     }
                 }
@@ -157,8 +154,8 @@ public abstract class CommandManager<T extends Team, U extends keviinUser<T>> im
         for (Command<T, U> command : commands) {
             if(command.isSuperSecretCommand()) continue;
             if (!command.aliases.contains(args[0].toLowerCase())) continue;
-            if (command.hasPermission(commandSender, keviinTeams)) {
-                return command.onTabComplete(commandSender, Arrays.copyOfRange(args, 1, args.length), keviinTeams);
+            if (command.hasPermission(commandSender, SkyBlockProjectTeams)) {
+                return command.onTabComplete(commandSender, Arrays.copyOfRange(args, 1, args.length), SkyBlockProjectTeams);
             }
         }
 

@@ -1,12 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.*;
-import com.keviin.keviinteams.gui.MissionGUI;
-import com.keviin.keviinteams.missions.Mission;
-import com.keviin.keviinteams.missions.MissionData;
-import com.keviin.keviinteams.missions.MissionType;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import org.bukkit.World;
 
 import java.time.DayOfWeek;
@@ -17,11 +12,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-public class MissionManager<T extends Team, U extends keviinUser<T>> {
-    private final keviinTeams<T, U> keviinTeams;
+public class MissionManager<T extends Team, U extends SkyBlockProjectTeamsUser<T>> {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public MissionManager(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
+    public MissionManager(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     public LocalDateTime getExpirationTime(MissionType missionType, LocalDateTime startTime) {
@@ -50,7 +45,7 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
      */
     public void handleMissionUpdate(T team, World missionWorld, String missionType, String identifier, int amount) {
 
-        if (keviinTeams.getConfiguration().whitelistedWorlds.stream().noneMatch(world -> missionWorld.getName().equalsIgnoreCase(world)) && !keviinTeams.getConfiguration().whitelistedWorlds.isEmpty()) {
+        if (SkyBlockProjectTeams.getConfiguration().whitelistedWorlds.stream().noneMatch(world -> missionWorld.getName().equalsIgnoreCase(world)) && !SkyBlockProjectTeams.getConfiguration().whitelistedWorlds.isEmpty()) {
             return;
         }
 
@@ -60,7 +55,7 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
         incrementMission(team, missionWorld.getEnvironment().name() + ":" + missionType + ":" + identifier, amount);
         incrementMission(team, missionWorld.getEnvironment().name() + ":" + missionType + ":ANY", amount);
 
-        for (Map.Entry<String, List<String>> itemList : keviinTeams.getMissions().customMaterialLists.entrySet()) {
+        for (Map.Entry<String, List<String>> itemList : SkyBlockProjectTeams.getMissions().customMaterialLists.entrySet()) {
             if (itemList.getValue().contains(identifier)) {
                 incrementMission(team, missionType + ":" + itemList.getKey(), amount);
                 incrementMission(team, missionWorld.getEnvironment().name() + ":" + missionType + ":" + itemList.getKey(), amount);
@@ -69,10 +64,10 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
     }
 
     private synchronized void incrementMission(T team, String condition, int amount) {
-        List<TeamMission> teamMissions = keviinTeams.getTeamManager().getTeamMissions(team);
+        List<TeamMission> teamMissions = SkyBlockProjectTeams.getTeamManager().getTeamMissions(team);
         String[] missionConditions = condition.toUpperCase().split(":");
 
-        for (Map.Entry<String, Mission> entry : keviinTeams.getMissions().missions.entrySet()) {
+        for (Map.Entry<String, Mission> entry : SkyBlockProjectTeams.getMissions().missions.entrySet()) {
             Optional<TeamMission> teamMission = teamMissions.stream()
                     .filter(mission -> mission.getMissionName().equals(entry.getKey()))
                     .findFirst();
@@ -86,7 +81,7 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
 
             List<String> missions = missionData.getMissions();
             for (int missionIndex = 0; missionIndex < missions.size(); missionIndex++) {
-                TeamMissionData teamMissionData = keviinTeams.getTeamManager().getTeamMissionData(teamMission.get(), missionIndex);
+                TeamMissionData teamMissionData = SkyBlockProjectTeams.getTeamManager().getTeamMissionData(teamMission.get(), missionIndex);
                 String missionRequirement = missions.get(missionIndex).toUpperCase();
                 String[] conditions = missionRequirement.split(":");
                 // If the conditions arnt the same length continue (+1 since we add amount onto the missionConditions dynamically)
@@ -104,22 +99,22 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
                     completedBefore = false;
                     teamMissionData.setProgress(Math.min(teamMissionData.getProgress() + amount, totalAmount));
                 } catch (NumberFormatException exception) {
-                    keviinTeams.getLogger().warning("Unknown format " + missionRequirement);
-                    keviinTeams.getLogger().warning(number + " Is not a number");
+                    SkyBlockProjectTeams.getLogger().warning("Unknown format " + missionRequirement);
+                    SkyBlockProjectTeams.getLogger().warning(number + " Is not a number");
                 }
             }
 
             // Check if this mission is now completed
             if (!completedBefore && hasCompletedMission(team, entry.getKey(), missionData)) {
-                keviinTeams.getTeamManager().addTeamReward(new TeamReward(team, missionData.getReward()));
-                keviinTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member -> {
-                    member.sendMessage(StringUtils.color(missionData.getMessage().replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+                SkyBlockProjectTeams.getTeamManager().addTeamReward(new TeamReward(team, missionData.getReward()));
+                SkyBlockProjectTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member -> {
+                    member.sendMessage(StringUtils.color(missionData.getMessage().replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
                     missionData.getCompleteSound().play(member);
                 });
                 // Next Mission Level
                 if (entry.getValue().getMissionData().containsKey(level + 1)) {
                     teamMission.get().setMissionLevel(level + 1);
-                    keviinTeams.getTeamManager().resetTeamMissionData(teamMission.get());
+                    SkyBlockProjectTeams.getTeamManager().resetTeamMissionData(teamMission.get());
                 }
             }
         }
@@ -132,7 +127,7 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
                     .filter(mission -> mission.getMissionLevel() == missionDependency.getLevel())
                     .findFirst();
             if (!teamMission.isPresent()) return false;
-            MissionData missionData = keviinTeams.getMissions().missions.get(missionDependency.getMission()).getMissionData().get(missionDependency.getLevel());
+            MissionData missionData = SkyBlockProjectTeams.getMissions().missions.get(missionDependency.getMission()).getMissionData().get(missionDependency.getLevel());
             if (!hasCompletedMission(team, missionDependency.getMission(), missionData)) return false;
         }
         return true;
@@ -149,9 +144,9 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
 
     private boolean hasCompletedMission(T team, String missionName, MissionData missionData) {
         List<String> missions = missionData.getMissions();
-        TeamMission teamMission = keviinTeams.getTeamManager().getTeamMission(team, missionName);
+        TeamMission teamMission = SkyBlockProjectTeams.getTeamManager().getTeamMission(team, missionName);
         for (int missionIndex = 0; missionIndex < missions.size(); missionIndex++) {
-            TeamMissionData teamMissionData = keviinTeams.getTeamManager().getTeamMissionData(teamMission, missionIndex);
+            TeamMissionData teamMissionData = SkyBlockProjectTeams.getTeamManager().getTeamMissionData(teamMission, missionIndex);
             String missionRequirement = missions.get(missionIndex).toUpperCase();
             String[] conditions = missionRequirement.split(":");
             String number = conditions[conditions.length - 1];
@@ -159,8 +154,8 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
             try {
                 if (teamMissionData.getProgress() < Integer.parseInt(number)) return false;
             } catch (NumberFormatException exception) {
-                keviinTeams.getLogger().warning("Unknown format " + missionRequirement);
-                keviinTeams.getLogger().warning(number + " Is not a number");
+                SkyBlockProjectTeams.getLogger().warning("Unknown format " + missionRequirement);
+                SkyBlockProjectTeams.getLogger().warning(number + " Is not a number");
             }
         }
         return true;
@@ -168,8 +163,8 @@ public class MissionManager<T extends Team, U extends keviinUser<T>> {
 
     public void generateMissionData(T team) {
         // Generate mission data by opening all missionGUI's
-        new MissionGUI<>(team, MissionType.ONCE, null, keviinTeams).getInventory();
-        new MissionGUI<>(team, MissionType.DAILY, null, keviinTeams).getInventory();
-        new MissionGUI<>(team, MissionType.WEEKLY, null, keviinTeams).getInventory();
+        new MissionGUI<>(team, MissionType.ONCE, null, SkyBlockProjectTeams).getInventory();
+        new MissionGUI<>(team, MissionType.DAILY, null, SkyBlockProjectTeams).getInventory();
+        new MissionGUI<>(team, MissionType.WEEKLY, null, SkyBlockProjectTeams).getInventory();
     }
 }

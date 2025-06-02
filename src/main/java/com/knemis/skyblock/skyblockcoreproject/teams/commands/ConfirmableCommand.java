@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public abstract class ConfirmableCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public abstract class ConfirmableCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
     public final boolean requiresConfirmation;
 
     public ConfirmableCommand() {
@@ -21,8 +21,8 @@ public abstract class ConfirmableCommand<T extends Team, U extends keviinUser<T>
     }
 
     @Override
-    public final boolean execute(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams) {
-        if (!isCommandValid(user, team, arguments, keviinTeams)) {
+    public final boolean execute(U user, T team, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        if (!isCommandValid(user, team, arguments, SkyBlockProjectTeams)) {
             return false;
         }
 
@@ -30,16 +30,16 @@ public abstract class ConfirmableCommand<T extends Team, U extends keviinUser<T>
             Player player = user.getPlayer();
 
             player.openInventory(new ConfirmationGUI<>(() -> {
-                executeAfterConfirmation(user, team, arguments, keviinTeams);
-            }, keviinTeams).getInventory());
+                executeAfterConfirmation(user, team, arguments, SkyBlockProjectTeams);
+            }, SkyBlockProjectTeams).getInventory());
             return true;
         }
 
-        executeAfterConfirmation(user, team, arguments, keviinTeams);
+        executeAfterConfirmation(user, team, arguments, SkyBlockProjectTeams);
         return true;
     }
 
-    protected abstract boolean isCommandValid(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams);
+    protected abstract boolean isCommandValid(U user, T team, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams);
 
-    protected abstract void executeAfterConfirmation(U user, T team, String[] arguments, keviinTeams<T, U> keviinTeams);
+    protected abstract void executeAfterConfirmation(U user, T team, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams);
 }

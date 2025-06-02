@@ -1,11 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.gui.ShopCategoryGUI;
-import com.keviin.keviinteams.gui.ShopOverviewGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
@@ -13,35 +9,35 @@ import java.util.List;
 import java.util.Optional;
 
 @NoArgsConstructor
-public class ShopCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class ShopCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
 
     public ShopCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, String[] arguments, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
         if (arguments.length == 0) {
-            player.openInventory(new ShopOverviewGUI<>(player, keviinTeams).getInventory());
+            player.openInventory(new ShopOverviewGUI<>(player, SkyBlockProjectTeams).getInventory());
             return true;
         }
 
-        Optional<String> categoryName = getCategoryName(String.join(" ", arguments), keviinTeams);
+        Optional<String> categoryName = getCategoryName(String.join(" ", arguments), SkyBlockProjectTeams);
 
         if (!categoryName.isPresent()) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().noShopCategory
-                    .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().noShopCategory
+                    .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             ));
             return false;
         }
 
-        player.openInventory(new ShopCategoryGUI<>(categoryName.get(), player, 1, keviinTeams).getInventory());
+        player.openInventory(new ShopCategoryGUI<>(categoryName.get(), player, 1, SkyBlockProjectTeams).getInventory());
         return true;
     }
 
-    private Optional<String> getCategoryName(String name, keviinTeams<T, U> keviinTeams) {
-        for (String category : keviinTeams.getShop().categories.keySet()) {
+    private Optional<String> getCategoryName(String name, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        for (String category : SkyBlockProjectTeams.getShop().categories.keySet()) {
             if (category.equalsIgnoreCase(name)) {
                 return Optional.of(category);
             }

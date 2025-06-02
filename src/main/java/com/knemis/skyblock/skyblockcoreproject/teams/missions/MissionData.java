@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.missions;
 
 import com.cryptomorin.xseries.XSound;
-import com.keviin.keviincore.Item;
-import com.keviin.keviinteams.Reward;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -4,8 +4,8 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.profiles.builder.XSkull;
 import com.cryptomorin.xseries.profiles.objects.Profileable;
 import com.cryptomorin.xseries.reflection.XReflection;
-import com.keviin.keviincore.KeviinCore;
-import com.keviin.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.NBTItem;
 import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;
@@ -66,7 +66,7 @@ public class ItemStackUtils {
         ItemStack itemStack = makeItem(item.material, item.amount, StringUtils.processMultiplePlaceholders(item.displayName, placeholders), StringUtils.processMultiplePlaceholders(item.lore, placeholders));
 
 //        Removed until https://github.com/CryptoMorin/XSeries/issues/266 is fixed
-        if (item.material == XMaterial.PLAYER_HEAD && item.skullData != null && !item.skullData.isEmpty() && !KeviinCore.isTesting()) {
+        if (item.material == XMaterial.PLAYER_HEAD && item.skullData != null && !item.skullData.isEmpty() && !SkyBlockProjectSecondCore.isTesting()) {
             String skullData = StringUtils.processMultiplePlaceholders(item.skullData, placeholders);
             if (username.matcher(skullData).matches()) {
                 skullData = SkinUtils.getHeadData(SkinUtils.getUUID(skullData));
@@ -133,7 +133,7 @@ public class ItemStackUtils {
      * @return A new ItemStack which is similar to the provided one but has the head data
      */
     private static ItemStack setHeadData(String headData, ItemStack itemStack) {
-        if (KeviinCore.isTesting()) return itemStack;
+        if (SkyBlockProjectSecondCore.isTesting()) return itemStack;
         if (headData == null) return itemStack;
 
         NBTItem nbtItem = new NBTItem(itemStack);
@@ -168,7 +168,7 @@ public class ItemStackUtils {
      * @return A new ItemStack which is similar to the provided one but has the model data
      */
     private static ItemStack setModel(int model, ItemStack itemStack) {
-        if (KeviinCore.isTesting()) return itemStack;
+        if (SkyBlockProjectSecondCore.isTesting()) return itemStack;
         ItemMeta itemMeta = itemStack.getItemMeta();
         if (itemMeta == null) return itemStack;
         itemMeta.setCustomModelData(model);

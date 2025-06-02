@@ -64,7 +64,7 @@ dependencies {
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'
 
-    // XSeries (Senin versiyonunla devam ediyoruz, keviinCore kodu hata verirse 13.x'e yükseltilebilir)
+    // XSeries (Senin versiyonunla devam ediyoruz, SkyBlockProjectSecondCore kodu hata verirse 13.x'e yükseltilebilir)
     implementation 'com.github.cryptomorin:XSeries:9.8.0'
 
     // Kyori Adventure
@@ -72,10 +72,10 @@ dependencies {
     compileOnly "net.kyori:adventure-text-serializer-plain:4.17.0"
     compileOnly "net.kyori:adventure-text-serializer-legacy:4.17.0"
 
-    // keviinCore'dan gelen Authlib
+    // SkyBlockProjectSecondCore'dan gelen Authlib
     compileOnly("com.mojang:authlib:1.5.25")
 
-    // keviinTeams'den gelenler
+    // SkyBlockProjectTeams'den gelenler
     implementation("com.j256.ormlite:ormlite-core:6.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
     compileOnly("me.clip:placeholderapi:2.11.6")

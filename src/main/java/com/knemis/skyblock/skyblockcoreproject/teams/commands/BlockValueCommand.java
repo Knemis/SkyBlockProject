@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 
 import com.knemis.skyblock.skyblockcoreproject.teams.SettingType;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;

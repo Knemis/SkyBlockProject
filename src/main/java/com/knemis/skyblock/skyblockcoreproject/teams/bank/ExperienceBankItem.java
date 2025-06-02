@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.bank;
 
-import com.keviin.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
 
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank;
@@ -27,7 +27,7 @@ public class ExperienceBankItem extends BankItem {
     }
 
     @Override
-    public BankResponse deposit(Player player, Number amount, TeamBank teamBank, keviinTeams<?, ?> keviinTeams) {
+    public BankResponse deposit(Player player, Number amount, TeamBank teamBank, SkyBlockProjectTeams<?, ?> SkyBlockProjectTeams) {
         int experience = Math.min(amount.intValue(), PlayerUtils.getTotalExperience(player));
         if (experience > 0) {
             PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) - experience);

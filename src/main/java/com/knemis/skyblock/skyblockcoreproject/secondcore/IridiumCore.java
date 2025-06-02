@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.secondcore;
 
-import com.keviin.keviincore.gui.GUI;
-import com.keviin.keviincore.multiversion.keviinInventory;
-import com.keviin.keviincore.multiversion.MultiVersion;
-import com.keviin.keviincore.nms.NMS;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.GUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.SkyBlockProjectInventory;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.nms.NMS;
 import io.papermc.lib.PaperLib;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,23 +24,23 @@ import java.io.File;
  */
 @Getter
 @NoArgsConstructor
-public class keviinCore extends JavaPlugin {
+public class SkyBlockProjectSecondCore extends JavaPlugin {
 
     private Persist persist;
     private NMS nms;
     private MultiVersion multiVersion;
-    private keviinInventory keviinInventory;
+    private SkyBlockProjectInventory SkyBlockProjectInventory;
     @Setter
     @Getter
     private static boolean testing = false;
     private BukkitTask saveTask;
 
-    private static KeviinCore instance;
+    private static SkyBlockProjectSecondCore instance;
 
     /**
      * Constructor used for UnitTests
      */
-    public KeviinCore(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+    public SkyBlockProjectSecondCore(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
         setTesting(true);
         // Disable logging
@@ -87,9 +87,9 @@ public class keviinCore extends JavaPlugin {
 
         // Automatically update all inventories
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> Bukkit.getServer().getOnlinePlayers().forEach(player -> {
-            InventoryHolder inventoryHolder = keviinInventory.getTopInventory(player).getHolder();
+            InventoryHolder inventoryHolder = SkyBlockProjectInventory.getTopInventory(player).getHolder();
             if (inventoryHolder instanceof GUI) {
-                ((GUI) inventoryHolder).addContent(keviinInventory.getTopInventory(player));
+                ((GUI) inventoryHolder).addContent(SkyBlockProjectInventory.getTopInventory(player));
             }
         }), 0, 1);
     }
@@ -130,7 +130,7 @@ public class keviinCore extends JavaPlugin {
         if (Bukkit.getVersion().contains("1.20.5") || Bukkit.getVersion().contains("1.20.6")) {
             this.nms = MinecraftVersion.V1_20_R4.getNms();
             this.multiVersion = MinecraftVersion.V1_20_R4.getMultiVersion(this);
-            this.keviinInventory = MinecraftVersion.V1_20_R4.getInventory();
+            this.SkyBlockProjectInventory = MinecraftVersion.V1_20_R4.getInventory();
             return;
         }
 
@@ -140,11 +140,11 @@ public class keviinCore extends JavaPlugin {
 
             this.nms = minecraftVersion.getNms();
             this.multiVersion = minecraftVersion.getMultiVersion(this);
-            this.keviinInventory = minecraftVersion.getInventory();
+            this.SkyBlockProjectInventory = minecraftVersion.getInventory();
         } catch (Exception exception) {
             this.nms = MinecraftVersion.DEFAULT.getNms();
             this.multiVersion = MinecraftVersion.DEFAULT.getMultiVersion(this);
-            this.keviinInventory = MinecraftVersion.DEFAULT.getInventory();
+            this.SkyBlockProjectInventory = MinecraftVersion.DEFAULT.getInventory();
         }
     }
 
@@ -165,7 +165,7 @@ public class keviinCore extends JavaPlugin {
     public void saveConfigs() {
     }
 
-    public static KeviinCore getInstance() {
+    public static SkyBlockProjectSecondCore getInstance() {
         return instance;
     }
 }

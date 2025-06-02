@@ -1,10 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviincore.Item;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.sorting.ExperienceTeamSort;
-import com.keviin.keviinteams.sorting.ValueTeamSort;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+
 
 import java.util.Collections;
 

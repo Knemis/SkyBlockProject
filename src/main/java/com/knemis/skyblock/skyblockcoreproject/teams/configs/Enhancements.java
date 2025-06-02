@@ -3,8 +3,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XPotion;
 import com.google.common.collect.ImmutableMap;
-import com.keviin.keviincore.Item;
-import com.keviin.keviinteams.enhancements.*;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+
 
 import java.util.Arrays;
 import java.util.Collections;

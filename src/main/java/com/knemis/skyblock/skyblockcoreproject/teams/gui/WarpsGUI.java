@@ -1,14 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.BackGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.database.TeamWarp;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.BackGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -23,21 +19,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class WarpsGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
+public class WarpsGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends BackGUI {
 
     private final T team;
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public WarpsGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
-        super(keviinTeams.getInventories().warpsGUI.background, player, keviinTeams.getInventories().backButton);
+    public WarpsGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        super(SkyBlockProjectTeams.getInventories().warpsGUI.background, player, SkyBlockProjectTeams.getInventories().backButton);
         this.team = team;
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().warpsGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().warpsGUI;
         Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -48,15 +44,15 @@ public class WarpsGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
         super.addContent(inventory);
 
         AtomicInteger atomicInteger = new AtomicInteger(1);
-        List<TeamWarp> teamWarps = keviinTeams.getTeamManager().getTeamWarps(team);
+        List<TeamWarp> teamWarps = SkyBlockProjectTeams.getTeamManager().getTeamWarps(team);
         for (TeamWarp teamWarp : teamWarps) {
-            int slot = keviinTeams.getConfiguration().teamWarpSlots.get(atomicInteger.getAndIncrement());
-            ItemStack itemStack = ItemStackUtils.makeItem(keviinTeams.getInventories().warpsGUI.item, Arrays.asList(
+            int slot = SkyBlockProjectTeams.getConfiguration().teamWarpSlots.get(atomicInteger.getAndIncrement());
+            ItemStack itemStack = ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().warpsGUI.item, Arrays.asList(
                     new Placeholder("island_name", team.getName()),
                     new Placeholder("warp_name", teamWarp.getName()),
                     new Placeholder("warp_description", teamWarp.getDescription() != null ? teamWarp.getDescription() : ""),
                     new Placeholder("warp_creator", Bukkit.getServer().getOfflinePlayer(teamWarp.getUser()).getName()),
-                    new Placeholder("warp_create_time", teamWarp.getCreateTime().format(DateTimeFormatter.ofPattern(keviinTeams.getConfiguration().dateTimeFormat)))
+                    new Placeholder("warp_create_time", teamWarp.getCreateTime().format(DateTimeFormatter.ofPattern(SkyBlockProjectTeams.getConfiguration().dateTimeFormat)))
             ));
             Material material = teamWarp.getIcon().parseMaterial();
             if (material != null) itemStack.setType(material);
@@ -68,17 +64,17 @@ public class WarpsGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
 
-        List<TeamWarp> teamWarps = keviinTeams.getTeamManager().getTeamWarps(team);
-        for (Map.Entry<Integer, Integer> entrySet : keviinTeams.getConfiguration().teamWarpSlots.entrySet()) {
+        List<TeamWarp> teamWarps = SkyBlockProjectTeams.getTeamManager().getTeamWarps(team);
+        for (Map.Entry<Integer, Integer> entrySet : SkyBlockProjectTeams.getConfiguration().teamWarpSlots.entrySet()) {
             if (entrySet.getValue() != event.getSlot()) continue;
             if (teamWarps.size() < entrySet.getKey()) continue;
             TeamWarp teamWarp = teamWarps.get(entrySet.getKey() - 1);
             switch (event.getClick()) {
                 case LEFT:
-                    keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().warpCommand, new String[]{teamWarp.getName()});
+                    SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().warpCommand, new String[]{teamWarp.getName()});
                     return;
                 case RIGHT:
-                    keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().deleteWarpCommand, new String[]{teamWarp.getName()});
+                    SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().deleteWarpCommand, new String[]{teamWarp.getName()});
             }
         }
     }

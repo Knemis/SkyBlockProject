@@ -1,13 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
-import com.keviin.keviinteams.commands.*;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+
 
 import java.util.Arrays;
 import java.util.Collections;
 
-public class Commands<T extends Team, U extends keviinUser<T>> {
+public class Commands<T extends Team, U extends SkyBlockProjectTeamsUser<T>> {
     public AboutCommand<T, U> aboutCommand;
     public CreateCommand<T, U> createCommand;
     public MembersCommand<T, U> membersCommand;
@@ -57,7 +55,7 @@ public class Commands<T extends Team, U extends keviinUser<T>> {
     public LevelCommand<T, U> levelCommand;
 
     public Commands() {
-        this("keviinteams", "Teams", "team");
+        this("SkyBlockProjectTeams", "Teams", "team");
     }
 
     public Commands(String permissionBase, String team, String commandBase) {

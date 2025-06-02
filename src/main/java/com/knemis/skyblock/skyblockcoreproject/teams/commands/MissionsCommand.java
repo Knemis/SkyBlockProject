@@ -1,12 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.MissionTypeSelectorInventoryConfig;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.gui.MissionGUI;
-import com.keviin.keviinteams.gui.MissionTypeSelectorGUI;
-import com.keviin.keviinteams.missions.MissionType;
+
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -15,54 +9,54 @@ import java.util.ArrayList;
 import java.util.List;
 
 @NoArgsConstructor
-public class MissionsCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class MissionsCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
     public MissionsCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, T team, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
-        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = keviinTeams.getInventories().missionTypeSelectorGUI;
+        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = SkyBlockProjectTeams.getInventories().missionTypeSelectorGUI;
         if (args.length == 1) {
             switch (args[0].toLowerCase()) {
                 case "daily":
                     if (missionTypeSelectorInventoryConfig.daily.enabled) {
-                        player.openInventory(new MissionGUI<>(team, MissionType.DAILY, player, keviinTeams).getInventory());
+                        player.openInventory(new MissionGUI<>(team, MissionType.DAILY, player, SkyBlockProjectTeams).getInventory());
                     } else {
-                        player.openInventory(new MissionTypeSelectorGUI<>(player, keviinTeams).getInventory());
+                        player.openInventory(new MissionTypeSelectorGUI<>(player, SkyBlockProjectTeams).getInventory());
                     }
                     return true;
                 case "weekly":
                     if (missionTypeSelectorInventoryConfig.weekly.enabled) {
-                        player.openInventory(new MissionGUI<>(team, MissionType.WEEKLY, player, keviinTeams).getInventory());
+                        player.openInventory(new MissionGUI<>(team, MissionType.WEEKLY, player, SkyBlockProjectTeams).getInventory());
                     } else {
-                        player.openInventory(new MissionTypeSelectorGUI<>(player, keviinTeams).getInventory());
+                        player.openInventory(new MissionTypeSelectorGUI<>(player, SkyBlockProjectTeams).getInventory());
                     }
                     return true;
                 case "infinite":
                     if (missionTypeSelectorInventoryConfig.infinite.enabled) {
-                        player.openInventory(new MissionGUI<>(team, MissionType.INFINITE, player, keviinTeams).getInventory());
+                        player.openInventory(new MissionGUI<>(team, MissionType.INFINITE, player, SkyBlockProjectTeams).getInventory());
                     } else {
-                        player.openInventory(new MissionTypeSelectorGUI<>(player, keviinTeams).getInventory());
+                        player.openInventory(new MissionTypeSelectorGUI<>(player, SkyBlockProjectTeams).getInventory());
                     }
                     return true;
                 case "once":
                     if (missionTypeSelectorInventoryConfig.once.enabled) {
-                        player.openInventory(new MissionGUI<>(team, MissionType.ONCE, player, keviinTeams).getInventory());
+                        player.openInventory(new MissionGUI<>(team, MissionType.ONCE, player, SkyBlockProjectTeams).getInventory());
                     } else {
-                        player.openInventory(new MissionTypeSelectorGUI<>(player, keviinTeams).getInventory());
+                        player.openInventory(new MissionTypeSelectorGUI<>(player, SkyBlockProjectTeams).getInventory());
                     }
                     return true;
             }
         }
-        player.openInventory(new MissionTypeSelectorGUI<>(player, keviinTeams).getInventory());
+        player.openInventory(new MissionTypeSelectorGUI<>(player, SkyBlockProjectTeams).getInventory());
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
-        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = keviinTeams.getInventories().missionTypeSelectorGUI;
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = SkyBlockProjectTeams.getInventories().missionTypeSelectorGUI;
         List<String> missionTypes = new ArrayList<>();
         if (missionTypeSelectorInventoryConfig.daily.enabled) {
             missionTypes.add("Daily");

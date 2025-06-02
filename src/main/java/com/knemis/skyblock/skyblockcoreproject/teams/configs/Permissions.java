@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviincore.Item;
-import com.keviin.keviinteams.Permission;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+
 
 import java.util.Arrays;
 

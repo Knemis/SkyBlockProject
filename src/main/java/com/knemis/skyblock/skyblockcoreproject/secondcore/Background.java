@@ -9,14 +9,14 @@ import java.util.Map;
 @NoArgsConstructor
 public class Background {
 
-    public com.keviin.keviincore.Item filler = new com.keviin.keviincore.Item(XMaterial.BLACK_STAINED_GLASS_PANE, 1, " ", Collections.emptyList());
-    public Map<Integer, com.keviin.keviincore.Item> items;
+    public com.SkyBlockProject.SkyBlockProjectSecondCore.Item filler = new com.SkyBlockProject.SkyBlockProjectSecondCore.Item(XMaterial.BLACK_STAINED_GLASS_PANE, 1, " ", Collections.emptyList());
+    public Map<Integer, com.SkyBlockProject.SkyBlockProjectSecondCore.Item> items;
 
-    public Background(Map<Integer, com.keviin.keviincore.Item> items) {
+    public Background(Map<Integer, com.SkyBlockProject.SkyBlockProjectSecondCore.Item> items) {
         this.items = items;
     }
 
-    public Background(Map<Integer, com.keviin.keviincore.Item> items, com.keviin.keviincore.Item filler) {
+    public Background(Map<Integer, com.SkyBlockProject.SkyBlockProjectSecondCore.Item> items, com.SkyBlockProject.SkyBlockProjectSecondCore.Item filler) {
         this.items = items;
         this.filler = filler;
     }

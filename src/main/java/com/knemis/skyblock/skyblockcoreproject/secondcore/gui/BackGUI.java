@@ -1,10 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.secondcore.gui;
 
-import com.keviin.keviincore.Background;
-import com.keviin.keviincore.KeviinCore;
-import com.keviin.keviincore.Item;
-import com.keviin.keviincore.utils.InventoryUtils;
-import com.keviin.keviincore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Background;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -22,7 +22,7 @@ public abstract class BackGUI implements GUI {
         if (player == null) {
             this.previousInventory = null;
         } else {
-            Inventory previousInventory = KeviinCore.getInstance().getkeviinInventory().getTopInventory(player);
+            Inventory previousInventory = SkyBlockProjectSecondCore.getInstance().getSkyBlockProjectInventory().getTopInventory(player);
             this.previousInventory = previousInventory.getType() == InventoryType.CHEST ? previousInventory : null;
         }
     }

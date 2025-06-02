@@ -1,8 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.sorting;
 
-import com.keviin.keviincore.Item;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+
 import lombok.NoArgsConstructor;
 
 import java.util.Comparator;
@@ -18,8 +17,8 @@ public class ExperienceTeamSort<T extends Team> extends TeamSorting<T> {
     }
 
     @Override
-    public List<T> getSortedTeams(keviinTeams<T, ?> keviinTeams) {
-        return keviinTeams.getTeamManager().getTeams().stream()
+    public List<T> getSortedTeams(SkyBlockProjectTeams<T, ?> SkyBlockProjectTeams) {
+        return SkyBlockProjectTeams.getTeamManager().getTeams().stream()
                 .sorted(Comparator.comparing(T::getExperience).reversed())
                 .collect(Collectors.toList());
     }

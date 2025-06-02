@@ -1,10 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.PermissionType;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -15,20 +12,20 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class EntityDamageListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class EntityDamageListener<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     @EventHandler(ignoreCancelled = true)
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         Entity damager = event.getDamager();
         if (!(damager instanceof Player)) return;
         Player player = (Player) damager;
-        U user = keviinTeams.getUserManager().getUser(player);
-        Optional<T> team = keviinTeams.getTeamManager().getTeamViaLocation(event.getEntity().getLocation());
+        U user = SkyBlockProjectTeams.getUserManager().getUser(player);
+        Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(event.getEntity().getLocation());
         if (team.isPresent()) {
-            if (!keviinTeams.getTeamManager().getTeamPermission(team.get(), user, PermissionType.KILL_MOBS)) {
-                player.sendMessage(StringUtils.color(keviinTeams.getMessages().cannotKillMobs
-                        .replace("%prefix%", keviinTeams.getConfiguration().prefix)
+            if (!SkyBlockProjectTeams.getTeamManager().getTeamPermission(team.get(), user, PermissionType.KILL_MOBS)) {
+                player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().cannotKillMobs
+                        .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                 ));
                 event.setCancelled(true);
             }

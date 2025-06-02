@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @NoArgsConstructor
-public class FlyCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class FlyCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
 
     @Getter
     String flyAnywherePermission;
@@ -22,21 +22,21 @@ public class FlyCommand<T extends Team, U extends keviinUser<T>> extends Command
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(U user, T team, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
 
         boolean flight = !user.isFlying();
         if (args.length == 1) {
             if (!args[0].equalsIgnoreCase("enable") && !args[0].equalsIgnoreCase("disable") && !args[0].equalsIgnoreCase("on") && !args[0].equalsIgnoreCase("off")) {
-                player.sendMessage(StringUtils.color(syntax.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+                player.sendMessage(StringUtils.color(syntax.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
                 return false;
             }
 
             flight = args[0].equalsIgnoreCase("enable") || args[0].equalsIgnoreCase("on");
         }
 
-        if (!canFly(player, keviinTeams)) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().flightNotActive.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+        if (!canFly(player, SkyBlockProjectTeams)) {
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().flightNotActive.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
             return false;
         }
 
@@ -45,25 +45,25 @@ public class FlyCommand<T extends Team, U extends keviinUser<T>> extends Command
         player.setFlying(flight);
 
         if (flight) {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().flightEnabled.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().flightEnabled.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
         } else {
-            player.sendMessage(StringUtils.color(keviinTeams.getMessages().flightDisabled.replace("%prefix%", keviinTeams.getConfiguration().prefix)));
+            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().flightDisabled.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)));
         }
         return true;
     }
 
     @Override
-    public boolean hasPermission(CommandSender commandSender, keviinTeams<T, U> keviinTeams) {
+    public boolean hasPermission(CommandSender commandSender, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         return true;
     }
 
-    public boolean canFly(Player player, keviinTeams<T, U> keviinTeams) {
-        U user = keviinTeams.getUserManager().getUser(player);
-        return user.canFly(keviinTeams);
+    public boolean canFly(Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        U user = SkyBlockProjectTeams.getUserManager().getUser(player);
+        return user.canFly(SkyBlockProjectTeams);
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         return Arrays.asList("enable", "disable", "on", "off");
     }
 }

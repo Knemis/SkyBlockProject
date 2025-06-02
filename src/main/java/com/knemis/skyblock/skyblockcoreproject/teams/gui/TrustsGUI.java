@@ -1,14 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.PagedGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.database.TeamTrust;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.PagedGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -22,29 +18,29 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class TrustsGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<TeamTrust> {
+public class TrustsGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends PagedGUI<TeamTrust> {
 
     private final T team;
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public TrustsGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+    public TrustsGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         super(
                 1,
-                keviinTeams.getInventories().trustsGUI.size,
-                keviinTeams.getInventories().trustsGUI.background,
-                keviinTeams.getInventories().previousPage,
-                keviinTeams.getInventories().nextPage,
+                SkyBlockProjectTeams.getInventories().trustsGUI.size,
+                SkyBlockProjectTeams.getInventories().trustsGUI.background,
+                SkyBlockProjectTeams.getInventories().previousPage,
+                SkyBlockProjectTeams.getInventories().nextPage,
                 player,
-                keviinTeams.getInventories().backButton
+                SkyBlockProjectTeams.getInventories().backButton
         );
         this.team = team;
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().trustsGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().trustsGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -52,17 +48,17 @@ public class TrustsGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI
 
     @Override
     public Collection<TeamTrust> getPageObjects() {
-        return keviinTeams.getTeamManager().getTeamTrusts(team);
+        return SkyBlockProjectTeams.getTeamManager().getTeamTrusts(team);
     }
 
     @Override
     public ItemStack getItemStack(TeamTrust teamTrust) {
-        Optional<U> user = keviinTeams.getUserManager().getUserByUUID(teamTrust.getUser());
-        Optional<U> truster = keviinTeams.getUserManager().getUserByUUID(teamTrust.getTruster());
-        List<Placeholder> placeholderList = new ArrayList<>(keviinTeams.getUserPlaceholderBuilder().getPlaceholders(user));
-        placeholderList.add(new Placeholder("trusted_time", teamTrust.getTime().format(DateTimeFormatter.ofPattern(keviinTeams.getConfiguration().dateTimeFormat))));
-        placeholderList.add(new Placeholder("truster", truster.map(U::getName).orElse(keviinTeams.getMessages().nullPlaceholder)));
-        return ItemStackUtils.makeItem(keviinTeams.getInventories().trustsGUI.item, placeholderList);
+        Optional<U> user = SkyBlockProjectTeams.getUserManager().getUserByUUID(teamTrust.getUser());
+        Optional<U> truster = SkyBlockProjectTeams.getUserManager().getUserByUUID(teamTrust.getTruster());
+        List<Placeholder> placeholderList = new ArrayList<>(SkyBlockProjectTeams.getUserPlaceholderBuilder().getPlaceholders(user));
+        placeholderList.add(new Placeholder("trusted_time", teamTrust.getTime().format(DateTimeFormatter.ofPattern(SkyBlockProjectTeams.getConfiguration().dateTimeFormat))));
+        placeholderList.add(new Placeholder("truster", truster.map(U::getName).orElse(SkyBlockProjectTeams.getMessages().nullPlaceholder)));
+        return ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().trustsGUI.item, placeholderList);
     }
 
     @Override
@@ -72,7 +68,7 @@ public class TrustsGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI
         TeamTrust teamTrust = getItem(event.getSlot());
         if (teamTrust == null) return;
 
-        String username = keviinTeams.getUserManager().getUserByUUID(teamTrust.getUser()).map(U::getName).orElse(keviinTeams.getMessages().nullPlaceholder);
-        keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().unTrustCommand, new String[]{username});
+        String username = SkyBlockProjectTeams.getUserManager().getUserByUUID(teamTrust.getUser()).map(U::getName).orElse(SkyBlockProjectTeams.getMessages().nullPlaceholder);
+        SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().unTrustCommand, new String[]{username});
     }
 }

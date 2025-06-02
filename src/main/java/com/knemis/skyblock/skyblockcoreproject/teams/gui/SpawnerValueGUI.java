@@ -1,14 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviincore.gui.PagedGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.BlockValues;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.PagedGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -22,23 +18,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class SpawnerValueGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<BlockValues.ValuableBlock> {
+public class SpawnerValueGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends PagedGUI<BlockValues.ValuableBlock> {
 
     private final T team;
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public SpawnerValueGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+    public SpawnerValueGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         super(
                 1,
-                keviinTeams.getInventories().spawnerValueGUI.size,
-                keviinTeams.getInventories().spawnerValueGUI.background,
-                keviinTeams.getInventories().previousPage,
-                keviinTeams.getInventories().nextPage,
+                SkyBlockProjectTeams.getInventories().spawnerValueGUI.size,
+                SkyBlockProjectTeams.getInventories().spawnerValueGUI.background,
+                SkyBlockProjectTeams.getInventories().previousPage,
+                SkyBlockProjectTeams.getInventories().nextPage,
                 player,
-                keviinTeams.getInventories().backButton
+                SkyBlockProjectTeams.getInventories().backButton
         );
         this.team = team;
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @NotNull
@@ -47,7 +43,7 @@ public class SpawnerValueGUI<T extends Team, U extends keviinUser<T>> extends Pa
         int maxPages = getPageObjects().size() / (getSize() - 9);
         if (getPageObjects().size() % (getSize() - 9) > 0) maxPages++;
 
-        NoItemGUI noItemGUI = keviinTeams.getInventories().spawnerValueGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().spawnerValueGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title
                 .replace("%page%", String.valueOf(getPage()))
                 .replace("%max_pages%", String.valueOf(maxPages))
@@ -59,15 +55,15 @@ public class SpawnerValueGUI<T extends Team, U extends keviinUser<T>> extends Pa
     @Override
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
-        for (Map.Entry<EntityType, BlockValues.ValuableBlock> entry : keviinTeams.getBlockValues().spawnerValues.entrySet().stream().filter(entry -> entry.getValue().page == getPage()).collect(Collectors.toList())) {
+        for (Map.Entry<EntityType, BlockValues.ValuableBlock> entry : SkyBlockProjectTeams.getBlockValues().spawnerValues.entrySet().stream().filter(entry -> entry.getValue().page == getPage()).collect(Collectors.toList())) {
 
             List<String> lore = new ArrayList<>();
-            lore.add(keviinTeams.getBlockValues().valueLore
+            lore.add(SkyBlockProjectTeams.getBlockValues().valueLore
                     .replace("%block_value%", String.valueOf(entry.getValue().value))
             );
-            lore.add(keviinTeams.getBlockValues().teamValueLore
-                    .replace("%total_blocks%", String.valueOf(keviinTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount()))
-                    .replace("%total_block_value%", String.valueOf(keviinTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount() * entry.getValue().value))
+            lore.add(SkyBlockProjectTeams.getBlockValues().teamValueLore
+                    .replace("%total_blocks%", String.valueOf(SkyBlockProjectTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount()))
+                    .replace("%total_block_value%", String.valueOf(SkyBlockProjectTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount() * entry.getValue().value))
             );
 
             String itemName = entry.getKey().name().toUpperCase() + "_SPAWN_EGG";
@@ -79,7 +75,7 @@ public class SpawnerValueGUI<T extends Team, U extends keviinUser<T>> extends Pa
 
     @Override
     public Collection<BlockValues.ValuableBlock> getPageObjects() {
-        return keviinTeams.getBlockValues().spawnerValues.values();
+        return SkyBlockProjectTeams.getBlockValues().spawnerValues.values();
     }
 
     @Override

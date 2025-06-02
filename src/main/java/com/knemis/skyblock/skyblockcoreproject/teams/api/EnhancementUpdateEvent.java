@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 @Getter
 @Setter
-public class EnhancementUpdateEvent<T extends Team, U extends keviinUser<T>> extends Event implements Cancellable {
+public class EnhancementUpdateEvent<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Event implements Cancellable {
 
     private static final HandlerList handlers = new HandlerList();
     private T team;

@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.enhancements;
 
-import com.keviin.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

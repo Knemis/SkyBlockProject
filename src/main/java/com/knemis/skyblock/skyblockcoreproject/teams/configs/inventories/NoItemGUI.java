@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories;
 
-import com.keviin.keviincore.Background;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Background;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

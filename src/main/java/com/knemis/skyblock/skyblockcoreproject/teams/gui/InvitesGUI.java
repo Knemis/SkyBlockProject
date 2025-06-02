@@ -1,14 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.PagedGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.database.TeamInvite;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.PagedGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -22,29 +19,29 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
-public class InvitesGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<TeamInvite> {
+public class InvitesGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends PagedGUI<TeamInvite> {
 
     private final T team;
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public InvitesGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+    public InvitesGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         super(
                 1,
-                keviinTeams.getInventories().invitesGUI.size,
-                keviinTeams.getInventories().invitesGUI.background,
-                keviinTeams.getInventories().previousPage,
-                keviinTeams.getInventories().nextPage,
+                SkyBlockProjectTeams.getInventories().invitesGUI.size,
+                SkyBlockProjectTeams.getInventories().invitesGUI.background,
+                SkyBlockProjectTeams.getInventories().previousPage,
+                SkyBlockProjectTeams.getInventories().nextPage,
                 player,
-                keviinTeams.getInventories().backButton
+                SkyBlockProjectTeams.getInventories().backButton
         );
         this.team = team;
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().invitesGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().invitesGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -52,15 +49,15 @@ public class InvitesGUI<T extends Team, U extends keviinUser<T>> extends PagedGU
 
     @Override
     public Collection<TeamInvite> getPageObjects() {
-        return keviinTeams.getTeamManager().getTeamInvites(team);
+        return SkyBlockProjectTeams.getTeamManager().getTeamInvites(team);
     }
 
     @Override
     public ItemStack getItemStack(TeamInvite teamInvite) {
-        Optional<U> user = keviinTeams.getUserManager().getUserByUUID(teamInvite.getUser());
-        List<Placeholder> placeholderList = new ArrayList<>(keviinTeams.getUserPlaceholderBuilder().getPlaceholders(user));
-        placeholderList.add(new Placeholder("invite_time", teamInvite.getTime().format(DateTimeFormatter.ofPattern(keviinTeams.getConfiguration().dateTimeFormat))));
-        return ItemStackUtils.makeItem(keviinTeams.getInventories().invitesGUI.item, placeholderList);
+        Optional<U> user = SkyBlockProjectTeams.getUserManager().getUserByUUID(teamInvite.getUser());
+        List<Placeholder> placeholderList = new ArrayList<>(SkyBlockProjectTeams.getUserPlaceholderBuilder().getPlaceholders(user));
+        placeholderList.add(new Placeholder("invite_time", teamInvite.getTime().format(DateTimeFormatter.ofPattern(SkyBlockProjectTeams.getConfiguration().dateTimeFormat))));
+        return ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().invitesGUI.item, placeholderList);
     }
 
     @Override
@@ -70,7 +67,7 @@ public class InvitesGUI<T extends Team, U extends keviinUser<T>> extends PagedGU
         TeamInvite teamInvite = getItem(event.getSlot());
         if (teamInvite == null) return;
 
-        String username = keviinTeams.getUserManager().getUserByUUID(teamInvite.getUser()).map(U::getName).orElse(keviinTeams.getMessages().nullPlaceholder);
-        keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().unInviteCommand, new String[]{username});
+        String username = SkyBlockProjectTeams.getUserManager().getUserByUUID(teamInvite.getUser()).map(U::getName).orElse(SkyBlockProjectTeams.getMessages().nullPlaceholder);
+        SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().unInviteCommand, new String[]{username});
     }
 }

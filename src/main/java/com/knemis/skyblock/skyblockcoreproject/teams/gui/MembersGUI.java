@@ -1,12 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.PagedGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.PagedGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -16,29 +13,29 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public class MembersGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<U> {
+public class MembersGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends PagedGUI<U> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
     private final T team;
 
-    public MembersGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+    public MembersGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         super(
                 1,
-                keviinTeams.getInventories().membersGUI.size,
-                keviinTeams.getInventories().membersGUI.background,
-                keviinTeams.getInventories().previousPage,
-                keviinTeams.getInventories().nextPage,
+                SkyBlockProjectTeams.getInventories().membersGUI.size,
+                SkyBlockProjectTeams.getInventories().membersGUI.background,
+                SkyBlockProjectTeams.getInventories().previousPage,
+                SkyBlockProjectTeams.getInventories().nextPage,
                 player,
-                keviinTeams.getInventories().backButton
+                SkyBlockProjectTeams.getInventories().backButton
         );
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
         this.team = team;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().membersGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().membersGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -46,12 +43,12 @@ public class MembersGUI<T extends Team, U extends keviinUser<T>> extends PagedGU
 
     @Override
     public Collection<U> getPageObjects() {
-        return keviinTeams.getTeamManager().getTeamMembers(team);
+        return SkyBlockProjectTeams.getTeamManager().getTeamMembers(team);
     }
 
     @Override
     public ItemStack getItemStack(U user) {
-        return ItemStackUtils.makeItem(keviinTeams.getInventories().membersGUI.item, keviinTeams.getUserPlaceholderBuilder().getPlaceholders(user));
+        return ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().membersGUI.item, SkyBlockProjectTeams.getUserPlaceholderBuilder().getPlaceholders(user));
     }
 
     @Override
@@ -64,13 +61,13 @@ public class MembersGUI<T extends Team, U extends keviinUser<T>> extends PagedGU
         switch (event.getClick()) {
             case LEFT:
                 if (user.getUserRank() != 1) {
-                    keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().demoteCommand, new String[]{user.getName()});
+                    SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().demoteCommand, new String[]{user.getName()});
                 } else {
-                    keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().kickCommand, new String[]{user.getName()});
+                    SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().kickCommand, new String[]{user.getName()});
                 }
                 break;
             case RIGHT:
-                keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().promoteCommand, new String[]{user.getName()});
+                SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().promoteCommand, new String[]{user.getName()});
                 break;
         }
     }

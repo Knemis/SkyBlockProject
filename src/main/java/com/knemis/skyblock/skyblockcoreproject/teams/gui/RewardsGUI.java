@@ -1,14 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.Item;
-import com.keviin.keviincore.gui.PagedGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.database.TeamReward;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.PagedGUI;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -18,36 +14,36 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
-public class RewardsGUI<T extends Team, U extends keviinUser<T>> extends PagedGUI<TeamReward> {
+public class RewardsGUI<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends PagedGUI<TeamReward> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
     private final T team;
 
-    public RewardsGUI(T team, Player player, keviinTeams<T, U> keviinTeams) {
+    public RewardsGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         super(
                 1,
-                keviinTeams.getInventories().rewardsGUI.size,
-                keviinTeams.getInventories().rewardsGUI.background,
-                keviinTeams.getInventories().previousPage,
-                keviinTeams.getInventories().nextPage,
+                SkyBlockProjectTeams.getInventories().rewardsGUI.size,
+                SkyBlockProjectTeams.getInventories().rewardsGUI.background,
+                SkyBlockProjectTeams.getInventories().previousPage,
+                SkyBlockProjectTeams.getInventories().nextPage,
                 player,
-                keviinTeams.getInventories().backButton
+                SkyBlockProjectTeams.getInventories().backButton
         );
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
         this.team = team;
     }
 
     @Override
     public void addContent(Inventory inventory) {
         super.addContent(inventory);
-        Item item = keviinTeams.getInventories().rewardsGUI.item;
+        Item item = SkyBlockProjectTeams.getInventories().rewardsGUI.item;
         inventory.setItem(item.slot, ItemStackUtils.makeItem(item));
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().rewardsGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().rewardsGUI;
         Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
@@ -55,7 +51,7 @@ public class RewardsGUI<T extends Team, U extends keviinUser<T>> extends PagedGU
 
     @Override
     public Collection<TeamReward> getPageObjects() {
-        return keviinTeams.getTeamManager().getTeamRewards(team);
+        return SkyBlockProjectTeams.getTeamManager().getTeamRewards(team);
     }
 
     @Override
@@ -72,15 +68,15 @@ public class RewardsGUI<T extends Team, U extends keviinUser<T>> extends PagedGU
     public void onInventoryClick(InventoryClickEvent event) {
         super.onInventoryClick(event);
 
-        if(event.getSlot() == keviinTeams.getInventories().rewardsGUI.item.slot){
+        if(event.getSlot() == SkyBlockProjectTeams.getInventories().rewardsGUI.item.slot){
             for(TeamReward teamReward : getPageObjects()){
-                keviinTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
+                SkyBlockProjectTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
             }
             return;
         }
 
         TeamReward teamReward = getItem(event.getSlot());
         if (teamReward == null) return;
-        keviinTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
+        SkyBlockProjectTeams.getTeamManager().claimTeamReward(teamReward, (Player) event.getWhoClicked());
     }
 }

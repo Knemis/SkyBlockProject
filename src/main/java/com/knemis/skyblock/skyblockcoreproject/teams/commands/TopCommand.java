@@ -1,13 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.Rank;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.gui.TopGUI;
-import com.keviin.keviinteams.sorting.TeamSorting;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -19,7 +14,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class TopCommand<T extends Team, U extends keviinUser<T>> extends Command<T, U> {
+public class TopCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {
 
     public String adminPermission;
 
@@ -29,12 +24,12 @@ public class TopCommand<T extends Team, U extends keviinUser<T>> extends Command
     }
 
     @Override
-    public boolean execute(CommandSender sender, String[] arguments, keviinTeams<T, U> keviinTeams) {
+    public boolean execute(CommandSender sender, String[] arguments, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         int listLength = 10;
-        TeamSorting<T> sortingType = keviinTeams.getSortingTypes().get(0);
+        TeamSorting<T> sortingType = SkyBlockProjectTeams.getSortingTypes().get(0);
         boolean excludePrivate = !sender.hasPermission(adminPermission);
 
-        if (sender instanceof Player && arguments.length == 0) return sendGUI((Player) sender, keviinTeams);
+        if (sender instanceof Player && arguments.length == 0) return sendGUI((Player) sender, SkyBlockProjectTeams);
 
         switch (arguments.length) {
             case 3: {
@@ -43,71 +38,71 @@ public class TopCommand<T extends Team, U extends keviinUser<T>> extends Command
                 } catch (NumberFormatException ignored) {}
             }
             case 2: {
-                for(TeamSorting<T> pluginSortingType : keviinTeams.getSortingTypes()) {
+                for(TeamSorting<T> pluginSortingType : SkyBlockProjectTeams.getSortingTypes()) {
                     if (arguments[1].equalsIgnoreCase(pluginSortingType.getName())) sortingType = pluginSortingType;
                 }
             }
             case 1: {
                 if (!arguments[0].equalsIgnoreCase("list")) {
-                    sender.sendMessage(StringUtils.color(syntax.replace("prefix", keviinTeams.getConfiguration().prefix)));
+                    sender.sendMessage(StringUtils.color(syntax.replace("prefix", SkyBlockProjectTeams.getConfiguration().prefix)));
                     return false;
                 }
             }
             default: {
-                sendList(sender, keviinTeams, sortingType, listLength, excludePrivate);
+                sendList(sender, SkyBlockProjectTeams, sortingType, listLength, excludePrivate);
                 return true;
             }
         }
     }
 
-     public boolean sendGUI(Player player, keviinTeams<T, U> keviinTeams) {
-         player.openInventory(new TopGUI<>(keviinTeams.getTop().valueTeamSort, player, keviinTeams).getInventory());
+     public boolean sendGUI(Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+         player.openInventory(new TopGUI<>(SkyBlockProjectTeams.getTop().valueTeamSort, player, SkyBlockProjectTeams).getInventory());
          return true;
     }
 
-    public void sendList(CommandSender sender, keviinTeams<T, U> keviinTeams, TeamSorting<T> sortingType, int listLength, boolean excludePrivate) {
-        List<T> teamList = keviinTeams.getTeamManager().getTeams(sortingType, excludePrivate);
+    public void sendList(CommandSender sender, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams, TeamSorting<T> sortingType, int listLength, boolean excludePrivate) {
+        List<T> teamList = SkyBlockProjectTeams.getTeamManager().getTeams(sortingType, excludePrivate);
 
-        sender.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(keviinTeams.getMessages().topCommandHeader.replace("%sort_type%", sortingType.getName()), keviinTeams.getMessages().topCommandFiller)));
+        sender.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(SkyBlockProjectTeams.getMessages().topCommandHeader.replace("%sort_type%", sortingType.getName()), SkyBlockProjectTeams.getMessages().topCommandFiller)));
 
         for (int i = 0; i < listLength;  i++) {
-            if(i == sortingType.getSortedTeams(keviinTeams).size()) break;
+            if(i == sortingType.getSortedTeams(SkyBlockProjectTeams).size()) break;
             T team = teamList.get(i);
-            List<Placeholder> placeholders = keviinTeams.getTeamsPlaceholderBuilder().getPlaceholders(team);
-            placeholders.add(new Placeholder("value", keviinTeams.getConfiguration().numberFormatter.format(sortingType.getValue(team))));
+            List<Placeholder> placeholders = SkyBlockProjectTeams.getTeamsPlaceholderBuilder().getPlaceholders(team);
+            placeholders.add(new Placeholder("value", SkyBlockProjectTeams.getConfiguration().numberFormatter.format(sortingType.getValue(team))));
             placeholders.add(new Placeholder("rank", String.valueOf(i+1)));
 
             String color = "&7";
             switch(i) {
                 case 0: {
-                    color = keviinTeams.getMessages().topFirstColor;
+                    color = SkyBlockProjectTeams.getMessages().topFirstColor;
                     break;
                 }
                 case 1: {
-                    color = keviinTeams.getMessages().topSecondColor;
+                    color = SkyBlockProjectTeams.getMessages().topSecondColor;
                     break;
                 }
                 case 2: {
-                    color = keviinTeams.getMessages().topThirdColor;
+                    color = SkyBlockProjectTeams.getMessages().topThirdColor;
                     break;
                 }
             }
             placeholders.add(new Placeholder("color", color));
 
 
-            sender.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(keviinTeams.getMessages().topCommandMessage, placeholders)));
+            sender.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(SkyBlockProjectTeams.getMessages().topCommandMessage, placeholders)));
         }
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<T, U> keviinTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         if (!commandSender.hasPermission(adminPermission)) return Collections.singletonList("");
         switch(args.length) {
             case 1: {
                 return Collections.singletonList("list");
             }
             case 2: {
-                return keviinTeams.getSortingTypes().stream().map(TeamSorting::getName).collect(Collectors.toList());
+                return SkyBlockProjectTeams.getSortingTypes().stream().map(TeamSorting::getName).collect(Collectors.toList());
             }
             case 3: {
                 return Collections.singletonList("10");
