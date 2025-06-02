@@ -1,0 +1,68 @@
+package com.knemis.skyblock.skyblockcoreproject.teams.support;
+
+import com.cryptomorin.xseries.XMaterial;
+import com.keviin.keviinteams.keviinTeams;
+import com.keviin.keviinteams.database.keviinUser;
+import com.keviin.keviinteams.database.Team;
+import com.moyskleytech.obsidianstacker.api.Stack;
+import com.moyskleytech.obsidianstacker.api.StackerAPI;
+import org.bukkit.Chunk;
+import org.bukkit.block.Block;
+
+import java.util.*;
+
+public class ObsidianStackerSupport<T extends Team, U extends keviinUser<T>> implements StackerSupport<T> {
+
+    private final keviinTeams<T, U> keviinTeams;
+
+    public ObsidianStackerSupport(keviinTeams<T, U> keviinTeams) {
+        this.keviinTeams = keviinTeams;
+    }
+
+    @Override
+    public String supportProvider() {
+        return "ObsidianStacker";
+    }
+
+    @Override
+    public boolean isStackedBlock(Block block) {
+        Optional<Stack> stackedBlock = StackerAPI.getInstance().getStack(block);
+        return stackedBlock.isPresent();
+    }
+
+    private Stack getStackedBlock(Block block) {
+        return StackerAPI.getInstance().getStack(block).get();
+    }
+
+    private List<Stack> getStackedBlocks(List<Block> blocks) {
+        List<Stack> stackedBlocks = new ArrayList<>(Collections.emptyList());
+        for(Block block : blocks) {
+            stackedBlocks.add(getStackedBlock(block));
+        }
+        return stackedBlocks;
+    }
+
+    @Override
+    public int getStackAmount(Block block) {
+        return getStackedBlock(block).getCount();
+    }
+
+    @Override
+    public Map<XMaterial, Integer> getBlocksStacked(Chunk chunk, T team) {
+        HashMap<XMaterial, Integer> hashMap = new HashMap<>();
+
+        return hashMap;
+    }
+
+    @Override
+    public int getExtraBlocks(T team, XMaterial material, List<Block> blocks) {
+        int stackedBlocks = 0;
+        for (Stack stack : getStackedBlocks(blocks)) {
+            if (!keviinTeams.getTeamManager().isInTeam(team, stack.getEntity().getLocation())) continue;
+            if (material != XMaterial.matchXMaterial(stack.getEntity().getLocation().getBlock().getType())) continue;
+            stackedBlocks += (stack.getCount() - 1);
+        }
+
+        return stackedBlocks;
+    }
+}
