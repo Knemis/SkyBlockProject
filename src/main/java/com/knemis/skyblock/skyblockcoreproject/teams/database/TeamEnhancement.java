@@ -1,0 +1,59 @@
+package com.knemis.skyblock.skyblockcoreproject.teams.database;
+
+// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType; // TODO: Update to actual EnhancementType class
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.jetbrains.annotations.NotNull;
+
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+
+@Getter
+@NoArgsConstructor
+@DatabaseTable(tableName = "team_enhancements")
+public final class TeamEnhancement extends com.knemis.skyblock.skyblockcoreproject.teams.database.TeamData { // TODO: Ensure TeamData is correctly referenced or imported
+
+    @DatabaseField(columnName = "id", generatedId = true, canBeNull = false)
+    private int id;
+
+    @DatabaseField(columnName = "enhancement_name", canBeNull = false, uniqueCombo = true)
+    private String enhancementName;
+
+    @DatabaseField(columnName = "level", canBeNull = false)
+    private int level;
+
+    @DatabaseField(columnName = "start_time", canBeNull = false)
+    private LocalDateTime expirationTime;
+
+    public TeamEnhancement(@NotNull com.knemis.skyblock.skyblockcoreproject.teams.database.Team team, String enhancementName, int level) { // TODO: Update Team to actual class
+        super(team);
+        this.enhancementName = enhancementName;
+        this.level = level;
+        this.expirationTime = LocalDateTime.now();
+    }
+
+    public boolean isActive() {
+        return LocalDateTime.now().until(expirationTime, ChronoUnit.SECONDS) > 0;
+    }
+
+    public boolean isActive(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType enhancementType) { // TODO: Update to actual EnhancementType class
+        return enhancementType == com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.UPGRADE || isActive(); // TODO: Update to actual EnhancementType class
+    }
+
+
+    public long getRemainingTime() {
+        return LocalDateTime.now().until(expirationTime, ChronoUnit.SECONDS);
+    }
+
+    public void setLevel(int level) {
+        this.level = level;
+        setChanged(true);
+    }
+
+    public void setExpirationTime(LocalDateTime expirationTime) {
+        this.expirationTime = expirationTime;
+        setChanged(true);
+    }
+}

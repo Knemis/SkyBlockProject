@@ -1,0 +1,32 @@
+package com.knemis.skyblock.skyblockcoreproject.teams.database;
+
+import com.j256.ormlite.field.DatabaseField;
+import com.j256.ormlite.table.DatabaseTable;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
+@Getter
+@NoArgsConstructor
+@DatabaseTable(tableName = "team_settings")
+public final class TeamSetting extends com.knemis.skyblock.skyblockcoreproject.teams.database.TeamData { // TODO: Ensure TeamData is correctly referenced or imported
+
+    @DatabaseField(columnName = "id", generatedId = true, canBeNull = false)
+    private int id;
+
+    @DatabaseField(columnName = "setting", canBeNull = false, uniqueCombo = true)
+    private String setting;
+
+    @DatabaseField(columnName = "value", canBeNull = false)
+    private String value;
+
+    public TeamSetting(com.knemis.skyblock.skyblockcoreproject.teams.database.Team team, String setting, String value) { // TODO: Update Team to actual class
+        super(team);
+        this.setting = setting;
+        this.value = value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
+        setChanged(true);
+    }
+}
