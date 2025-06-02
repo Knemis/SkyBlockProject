@@ -1,4 +1,5 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.PagedGUI;

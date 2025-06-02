@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 @NoArgsConstructor
 public class RewardsCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {

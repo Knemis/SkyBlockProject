@@ -6,6 +6,8 @@ import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTea
 import com.knemis.skyblock.skyblockcoreproject.teams.gui.InvitesGUI;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+
 
 import java.util.List;
 

@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import java.util.List;
 import java.util.Optional;

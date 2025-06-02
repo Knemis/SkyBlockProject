@@ -4,6 +4,7 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.bank.BankItem;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank;
 import com.knemis.skyblock.skyblockcoreproject.teams.gui.BankGUI;
 import lombok.NoArgsConstructor;

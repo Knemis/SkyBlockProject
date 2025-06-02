@@ -10,6 +10,7 @@ import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import java.util.ArrayList;
 import java.util.List;

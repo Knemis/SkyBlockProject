@@ -7,6 +7,8 @@ import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTea
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+
 
 import java.util.List;
 

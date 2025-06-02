@@ -1,4 +1,5 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.GUI;
 import org.bukkit.event.EventHandler;

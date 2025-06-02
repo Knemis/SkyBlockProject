@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.stream.Collectors;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+
 
 @NoArgsConstructor
 public class InviteCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> extends Command<T, U> {

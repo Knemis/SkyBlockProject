@@ -1,4 +1,5 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;

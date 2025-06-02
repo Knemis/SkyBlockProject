@@ -5,6 +5,7 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamWarp;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;

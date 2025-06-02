@@ -14,6 +14,8 @@ import org.jetbrains.annotations.Nullable;
 import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+
 
 public abstract class CommandManager<T extends Team, U extends SkyBlockProjectTeamsUser<T>> implements CommandExecutor, TabCompleter {
 

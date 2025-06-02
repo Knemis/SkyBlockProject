@@ -7,6 +7,7 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement;
 import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
 import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData;
