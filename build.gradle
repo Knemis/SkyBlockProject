@@ -60,8 +60,6 @@ dependencies {
     // Annotations ve Lombok
     compileOnly 'org.jetbrains:annotations:26.0.2'
     compileOnly 'org.projectlombok:lombok:1.18.38'
-    compileOnly(project(":SkyBlockProjectSecondCore"))
-    compileOnly(project(":SkyBlockProjectTeams"))
     annotationProcessor 'org.projectlombok:lombok:1.18.38'
     testCompileOnly 'org.projectlombok:lombok:1.18.38'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.38'

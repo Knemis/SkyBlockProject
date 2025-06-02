@@ -1,7 +1,5 @@
 plugins {
     java
-    `maven-publish`
-    id("io.github.goooler.shadow") version "8.1.8"
 }
 
 group = "com.iridium"
@@ -41,29 +39,15 @@ allprojects {
 dependencies {
     // Shade all the subprojects into the jar
     subprojects.forEach { implementation(it) }
-    implementation(project(":SkyBlockProjectTeams"))
 }
 }
 
 tasks {
     jar {
-        dependsOn(shadowJar)
-        enabled = false
-    }
-
-    shadowJar {
-        archiveClassifier.set("")
+        enabled = true
     }
 
     compileJava {
         options.encoding = "UTF-8"
-    }
-}
-
-publishing {
-    publications.create<MavenPublication>("maven") {
-        groupId = "com.keviin"
-        artifactId = "KeviinCore"
-        version = version
     }
 }

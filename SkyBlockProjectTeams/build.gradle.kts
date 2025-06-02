@@ -1,7 +1,5 @@
 plugins {
     java
-    `maven-publish`
-    id("com.github.johnrengelman.shadow") version "8.1.1"
 }
 
 group = "com.iridium"
@@ -29,7 +27,6 @@ dependencies {
     implementation("org.jetbrains:annotations:26.0.2")
     implementation("com.j256.ormlite:ormlite-core:6.1")
     implementation("com.j256.ormlite:ormlite-jdbc:6.1")
-    implementation("com.iridium:IridiumCore:2.0.9")
 
     // Other dependencies that are not required or already available at runtime
     compileOnly("org.projectlombok:lombok:1.18.38")
@@ -55,16 +52,6 @@ dependencies {
 }
 
 tasks {
-    // Add the shadowJar task to the build task
-    build {
-        dependsOn(shadowJar)
-    }
-
-    shadowJar {
-        // Remove the archive classifier suffix
-        archiveClassifier.set("")
-    }
-
     // Set UTF-8 as the encoding
     compileJava {
         options.encoding = "UTF-8"
@@ -93,15 +80,5 @@ tasks {
     compileTestJava {
         sourceCompatibility = JavaVersion.VERSION_17.toString()
         targetCompatibility = JavaVersion.VERSION_17.toString()
-    }
-}
-
-// Maven publishing
-publishing {
-    publications.create<MavenPublication>("maven") {
-        groupId = "com.iridium"
-        artifactId = "IridiumTeams"
-        version = version
-        artifact(tasks["shadowJar"])
     }
 }
