@@ -1,11 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
 import com.knemis.skyblock.skyblockcoreproject.teams.SettingType;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.BlockValuesTypeSelectorInventoryConfig;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting;
 import com.knemis.skyblock.skyblockcoreproject.teams.gui.BlockValueGUI;
 import com.knemis.skyblock.skyblockcoreproject.teams.gui.BlockValuesTypeSelectorGUI;

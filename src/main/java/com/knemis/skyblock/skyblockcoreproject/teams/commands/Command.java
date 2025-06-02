@@ -3,7 +3,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.CooldownProvider;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import org.apache.commons.lang.NotImplementedException;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
@@ -106,7 +107,7 @@ public class Command<T extends Team, U extends SkyBlockProjectTeamsUser<T>> {
     }
 
     @JsonIgnore
-    public boolean isSuperSecretCommand(){
+    public boolean isSuperSecretCommand() {
         return false;
     }
 

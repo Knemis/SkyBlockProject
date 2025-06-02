@@ -1,8 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 
@@ -24,7 +25,7 @@ public class AboutCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>>
         sender.sendMessage(StringUtils.color("&7Plugin Donations: " + SkyBlockProjectTeams.getCommandManager().getColor() + "www.patreon.com/Peaches_MLG"));
 
         HashSet<String> providerList = SkyBlockProjectTeams.getSupportManager().getProviderList();
-        if(!providerList.isEmpty())
+        if (!providerList.isEmpty())
             sender.sendMessage(StringUtils.color("&7Detected Plugins Supported: " + SkyBlockProjectTeams.getCommandManager().getColor() + String.join(", ", providerList)));
 
         return true;

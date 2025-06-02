@@ -179,7 +179,7 @@ public class Messages {
         unknownCommand = "%prefix% &7Unknown Command, Try /" + command + " help.";
         topCommandHeader = "&8[" + color + "&l" + pluginName + "&r" + color + " Leaderboard - &l&a%sort_type%&8]";
         topCommandFiller = "&8&m ";
-        topCommandMessage = "%color%#%rank% &7: %"+team.toLowerCase()+"_name%: &a%value%";
+        topCommandMessage = "%color%#%rank% &7: %" + team.toLowerCase() + "_name%: &a%value%";
         helpCommandHeader = "&8[" + color + "&l" + pluginName + " Help&8]";
         helpCommandFiller = "&8&m ";
         helpCommandMessage = color + "/" + command + " %command%&r: &7%description%";

@@ -2,6 +2,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.AllArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.event.EventHandler;

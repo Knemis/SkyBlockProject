@@ -2,7 +2,6 @@ package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
 import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
 import com.knemis.skyblock.skyblockcoreproject.teams.SettingType;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;

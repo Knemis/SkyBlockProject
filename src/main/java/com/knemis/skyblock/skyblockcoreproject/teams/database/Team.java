@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database;
 
-import com.knemis.skyblock.skyblockcoreproject.teams.api.TeamLevelUpEvent;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
+import com.knemis.skyblock.skyblockcoreproject.teams.api.TeamLevelUpEvent;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

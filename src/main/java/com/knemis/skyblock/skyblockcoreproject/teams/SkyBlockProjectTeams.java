@@ -12,7 +12,6 @@ import com.knemis.skyblock.skyblockcoreproject.teams.listeners.*;
 import com.knemis.skyblock.skyblockcoreproject.teams.managers.*;
 import com.knemis.skyblock.skyblockcoreproject.teams.placeholders.ClipPlaceholderAPI;
 import com.knemis.skyblock.skyblockcoreproject.teams.sorting.TeamSorting;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import de.jeff_media.updatechecker.UpdateChecker;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

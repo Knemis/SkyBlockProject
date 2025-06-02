@@ -1,7 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -59,7 +61,7 @@ public class TrustCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>>
                 .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                 .replace("%player%", player.getName())
         ));
-        
+
         return true;
     }
 

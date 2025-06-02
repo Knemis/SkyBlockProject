@@ -1,7 +1,12 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.BoostersGUI;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 

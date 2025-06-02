@@ -24,6 +24,8 @@ public class BlockValues {
     public Map<EntityType, ValuableBlock> spawnerValues = ImmutableMap.<EntityType, ValuableBlock>builder()
             .put(EntityType.PIG, new ValuableBlock(100.00, "&b&lPig Spawner", 1, 10))
             .build();
+    public String valueLore = "&9Value: &7%block_value%";
+    public String teamValueLore = "&9Team Value: &7%total_block_value% (%total_blocks%)";
 
     @AllArgsConstructor
     @NoArgsConstructor
@@ -33,8 +35,5 @@ public class BlockValues {
         public int page;
         public int slot;
     }
-
-    public String valueLore = "&9Value: &7%block_value%";
-    public String teamValueLore = "&9Team Value: &7%total_block_value% (%total_blocks%)";
 
 }

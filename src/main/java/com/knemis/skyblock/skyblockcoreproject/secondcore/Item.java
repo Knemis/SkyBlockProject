@@ -102,17 +102,17 @@ public class Item {
      */
     public void migrateData() {
         if (headOwner != null && !headOwner.isEmpty()) {
-            com.SkyBlockProject.SkyBlockProjectSecondCore.SkyBlockProjectSecondCore.getInstance().getLogger().warning("\"headOwner\" is now deprecated, automatically mapping to \"skullData\"");
+            com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore.getInstance().getLogger().warning("\"headOwner\" is now deprecated, automatically mapping to \"skullData\"");
             skullData = headOwner;
             headOwner = null;
         }
         if (headOwnerUUID != null) {
-            com.SkyBlockProject.SkyBlockProjectSecondCore.SkyBlockProjectSecondCore.getInstance().getLogger().warning("\"headOwnerUUID\" is now deprecated, automatically mapping to \"skullData\"");
+            com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore.getInstance().getLogger().warning("\"headOwnerUUID\" is now deprecated, automatically mapping to \"skullData\"");
             skullData = headOwnerUUID.toString();
             headOwnerUUID = null;
         }
         if (headData != null && !headData.isEmpty()) {
-            com.SkyBlockProject.SkyBlockProjectSecondCore.SkyBlockProjectSecondCore.getInstance().getLogger().warning("\"headData\" is now deprecated, automatically mapping to \"skullData\"");
+            com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore.getInstance().getLogger().warning("\"headData\" is now deprecated, automatically mapping to \"skullData\"");
             skullData = headData;
             headData = null;
         }

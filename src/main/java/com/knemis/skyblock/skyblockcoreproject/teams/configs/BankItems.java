@@ -2,7 +2,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.bank.ExperienceBankItem;
+import com.knemis.skyblock.skyblockcoreproject.teams.bank.MoneyBankItem;
 
 import java.util.Arrays;
 

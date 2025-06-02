@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.api;
 
-import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.Getter;
 import lombok.Setter;
 import org.bukkit.event.Cancellable;
@@ -28,12 +28,12 @@ public class EnhancementUpdateEvent<T extends Team, U extends SkyBlockProjectTea
         this.cancelled = false;
     }
 
-    public @NotNull HandlerList getHandlers() {
+    @NotNull
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 
-    @NotNull
-    public static HandlerList getHandlerList() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
 }

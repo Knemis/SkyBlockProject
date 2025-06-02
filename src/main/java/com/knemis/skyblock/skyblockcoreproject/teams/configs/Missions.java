@@ -5,7 +5,9 @@ import com.cryptomorin.xseries.XSound;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableMap;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
 
 import java.util.*;
 
@@ -292,7 +294,7 @@ public class Missions {
                                         color + "&l* &75 Island Crystals",
                                         color + "&l* &7$1000"
                                 )
-                        ), Collections.singletonList("MINE:LOGS:100"), 1,  new Reward(new Item(XMaterial.DIAMOND, 1, color + "&lPotionBrewer Reward",
+                        ), Collections.singletonList("MINE:LOGS:100"), 1, new Reward(new Item(XMaterial.DIAMOND, 1, color + "&lPotionBrewer Reward",
                                 Arrays.asList(
                                         color + "&l Rewards",
                                         color + "&l* &75 Island Crystals",

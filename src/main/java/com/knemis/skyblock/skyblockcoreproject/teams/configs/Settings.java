@@ -2,7 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.Setting;
 
 import java.util.Arrays;
 

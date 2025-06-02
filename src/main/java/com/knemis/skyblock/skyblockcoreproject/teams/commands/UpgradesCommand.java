@@ -1,7 +1,12 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.UpgradesGUI;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
@@ -33,7 +38,7 @@ public class UpgradesCommand<T extends Team, U extends SkyBlockProjectTeamsUser<
             return false;
         }
         TeamEnhancement teamEnhancement = SkyBlockProjectTeams.getTeamManager().getTeamEnhancement(team, booster);
-        if(enhancement.levels.get(teamEnhancement.getLevel() + 1) == null){
+        if (enhancement.levels.get(teamEnhancement.getLevel() + 1) == null) {
             player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().maxUpgradeLevelReached
                     .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             ));

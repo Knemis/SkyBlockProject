@@ -2,7 +2,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.TimeUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.Getter;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

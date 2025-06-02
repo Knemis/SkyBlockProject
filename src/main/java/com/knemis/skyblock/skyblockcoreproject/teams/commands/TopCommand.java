@@ -2,13 +2,15 @@ package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.TopGUI;
+import com.knemis.skyblock.skyblockcoreproject.teams.sorting.TeamSorting;
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -35,10 +37,11 @@ public class TopCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> e
             case 3: {
                 try {
                     listLength = Math.min(Integer.parseInt(arguments[2]), 100);
-                } catch (NumberFormatException ignored) {}
+                } catch (NumberFormatException ignored) {
+                }
             }
             case 2: {
-                for(TeamSorting<T> pluginSortingType : SkyBlockProjectTeams.getSortingTypes()) {
+                for (TeamSorting<T> pluginSortingType : SkyBlockProjectTeams.getSortingTypes()) {
                     if (arguments[1].equalsIgnoreCase(pluginSortingType.getName())) sortingType = pluginSortingType;
                 }
             }
@@ -55,9 +58,9 @@ public class TopCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> e
         }
     }
 
-     public boolean sendGUI(Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
-         player.openInventory(new TopGUI<>(SkyBlockProjectTeams.getTop().valueTeamSort, player, SkyBlockProjectTeams).getInventory());
-         return true;
+    public boolean sendGUI(Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        player.openInventory(new TopGUI<>(SkyBlockProjectTeams.getTop().valueTeamSort, player, SkyBlockProjectTeams).getInventory());
+        return true;
     }
 
     public void sendList(CommandSender sender, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams, TeamSorting<T> sortingType, int listLength, boolean excludePrivate) {
@@ -65,15 +68,15 @@ public class TopCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> e
 
         sender.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(SkyBlockProjectTeams.getMessages().topCommandHeader.replace("%sort_type%", sortingType.getName()), SkyBlockProjectTeams.getMessages().topCommandFiller)));
 
-        for (int i = 0; i < listLength;  i++) {
-            if(i == sortingType.getSortedTeams(SkyBlockProjectTeams).size()) break;
+        for (int i = 0; i < listLength; i++) {
+            if (i == sortingType.getSortedTeams(SkyBlockProjectTeams).size()) break;
             T team = teamList.get(i);
             List<Placeholder> placeholders = SkyBlockProjectTeams.getTeamsPlaceholderBuilder().getPlaceholders(team);
             placeholders.add(new Placeholder("value", SkyBlockProjectTeams.getConfiguration().numberFormatter.format(sortingType.getValue(team))));
-            placeholders.add(new Placeholder("rank", String.valueOf(i+1)));
+            placeholders.add(new Placeholder("rank", String.valueOf(i + 1)));
 
             String color = "&7";
-            switch(i) {
+            switch (i) {
                 case 0: {
                     color = SkyBlockProjectTeams.getMessages().topFirstColor;
                     break;
@@ -97,7 +100,7 @@ public class TopCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>> e
     @Override
     public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         if (!commandSender.hasPermission(adminPermission)) return Collections.singletonList("");
-        switch(args.length) {
+        switch (args.length) {
             case 1: {
                 return Collections.singletonList("list");
             }

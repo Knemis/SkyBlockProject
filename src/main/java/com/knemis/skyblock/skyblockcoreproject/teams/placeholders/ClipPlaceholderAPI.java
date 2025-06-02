@@ -1,7 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.placeholders;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 

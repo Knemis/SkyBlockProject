@@ -40,18 +40,18 @@ public class Persist {
 
         // Registering the XSeries (de)serializers.
         SimpleModule xSeriesModule = new SimpleModule();
-        xSeriesModule.addSerializer(XMaterial.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XMaterialSerializer());
-        xSeriesModule.addDeserializer(XMaterial.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XMaterialDeserializer());
-        xSeriesModule.addSerializer(XPotion.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XPotionSerializer());
-        xSeriesModule.addDeserializer(XPotion.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XPotionDeserializer());
-        xSeriesModule.addSerializer(XEnchantment.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XEnchantmentSerializer());
-        xSeriesModule.addDeserializer(XEnchantment.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XEnchantmentDeserializer());
-        xSeriesModule.addSerializer(XBiome.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XBiomeSerializer());
-        xSeriesModule.addDeserializer(XBiome.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XBiomeDeserializer());
-        xSeriesModule.addSerializer(XSound.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XSoundSerializer());
-        xSeriesModule.addDeserializer(XSound.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XSoundDeserializer());
-        xSeriesModule.addSerializer(XEntityType.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XEntityTypeSerializer());
-        xSeriesModule.addDeserializer(XEntityType.class, new com.SkyBlockProject.SkyBlockProjectSecondCore.XSeriesSerialSupplier.XEntityTypeDeserializer());
+        xSeriesModule.addSerializer(XMaterial.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XMaterialSerializer());
+        xSeriesModule.addDeserializer(XMaterial.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XMaterialDeserializer());
+        xSeriesModule.addSerializer(XPotion.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XPotionSerializer());
+        xSeriesModule.addDeserializer(XPotion.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XPotionDeserializer());
+        xSeriesModule.addSerializer(XEnchantment.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XEnchantmentSerializer());
+        xSeriesModule.addDeserializer(XEnchantment.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XEnchantmentDeserializer());
+        xSeriesModule.addSerializer(XBiome.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XBiomeSerializer());
+        xSeriesModule.addDeserializer(XBiome.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XBiomeDeserializer());
+        xSeriesModule.addSerializer(XSound.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XSoundSerializer());
+        xSeriesModule.addDeserializer(XSound.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XSoundDeserializer());
+        xSeriesModule.addSerializer(XEntityType.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XEntityTypeSerializer());
+        xSeriesModule.addDeserializer(XEntityType.class, new com.knemis.skyblock.skyblockcoreproject.secondcore.XSeriesSerialSupplier.XEntityTypeDeserializer());
         objectMapper.registerModule(xSeriesModule);
     }
 

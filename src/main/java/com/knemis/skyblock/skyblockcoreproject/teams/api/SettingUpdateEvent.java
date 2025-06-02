@@ -24,12 +24,12 @@ public class SettingUpdateEvent<T extends Team, U extends SkyBlockProjectTeamsUs
         this.value = value;
     }
 
-    public @NotNull HandlerList getHandlers() {
+    @NotNull
+    public static HandlerList getHandlerList() {
         return handlers;
     }
 
-    @NotNull
-    public static HandlerList getHandlerList() {
+    public @NotNull HandlerList getHandlers() {
         return handlers;
     }
 }

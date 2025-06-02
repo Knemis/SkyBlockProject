@@ -2,7 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.teams.missions;
 
 import com.cryptomorin.xseries.XSound;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

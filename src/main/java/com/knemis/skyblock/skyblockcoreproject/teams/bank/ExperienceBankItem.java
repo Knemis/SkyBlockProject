@@ -1,7 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.bank;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
-
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank;
 import com.knemis.skyblock.skyblockcoreproject.teams.utils.PlayerUtils;

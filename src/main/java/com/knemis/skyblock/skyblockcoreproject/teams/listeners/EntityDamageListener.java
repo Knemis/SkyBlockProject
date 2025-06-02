@@ -1,7 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;

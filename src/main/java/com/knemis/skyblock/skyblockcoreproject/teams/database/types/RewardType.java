@@ -1,11 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database.types;
 
-import com.knemis.skyblock.skyblockcoreproject.secondcore.Persist;
-import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
-import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.field.SqlType;
 import com.j256.ormlite.field.types.StringType;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.Persist;
+import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 
 import java.sql.SQLException;
 

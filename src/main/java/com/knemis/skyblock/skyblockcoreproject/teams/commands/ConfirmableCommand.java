@@ -1,6 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.ConfirmationGUI;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 

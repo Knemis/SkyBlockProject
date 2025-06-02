@@ -1,7 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
@@ -29,7 +31,7 @@ public class RenameCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>
         Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaNameOrPlayer(args[0]);
         if (team.isPresent() && player.hasPermission(adminPermission)) {
             String name = String.join(" ", Arrays.copyOfRange(args, 1, args.length));
-            if(changeName(team.get(), name, player, SkyBlockProjectTeams)){
+            if (changeName(team.get(), name, player, SkyBlockProjectTeams)) {
                 player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().changedPlayerName
                         .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                         .replace("%name%", team.get().getName())

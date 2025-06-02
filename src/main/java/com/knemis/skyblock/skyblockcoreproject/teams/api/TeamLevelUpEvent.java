@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.api;
 
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
-import com.knemis.skyblock.skyblockcoreproject.teams.database.Team
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -19,16 +19,16 @@ public class TeamLevelUpEvent<T extends Team, U extends SkyBlockProjectTeamsUser
         this.level = level;
     }
 
+    @NotNull
+    public static HandlerList getHandlerList() {
+        return handlers;
+    }
+
     public boolean isFirstTimeAsLevel() {
         return team.getExperience() > team.getMaxExperience();
     }
 
     public @NotNull HandlerList getHandlers() {
-        return handlers;
-    }
-
-    @NotNull
-    public static HandlerList getHandlerList() {
         return handlers;
     }
 }

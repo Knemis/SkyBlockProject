@@ -4,8 +4,7 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.GUI;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.InventoryUtils;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
-
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.InventoryConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;

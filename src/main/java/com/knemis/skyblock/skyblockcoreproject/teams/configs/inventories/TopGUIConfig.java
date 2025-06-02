@@ -5,7 +5,7 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
 import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
-public class TopGUIConfig extends SingleItemGUI{
+public class TopGUIConfig extends SingleItemGUI {
     public Item filler;
 
     public TopGUIConfig(int size, String title, Background background, Item item, Item filter) {

@@ -2,7 +2,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.Placeholder;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -35,7 +36,7 @@ public class LevelCommand<T extends Team, U extends SkyBlockProjectTeamsUser<T>>
         }
 
         Optional<T> team = SkyBlockProjectTeams.getTeamManager().getTeamViaNameOrPlayer(String.join(" ", args));
-        if(args[0].equals("location")) {
+        if (args[0].equals("location")) {
             team = SkyBlockProjectTeams.getTeamManager().getTeamViaPlayerLocation(player);
         }
 

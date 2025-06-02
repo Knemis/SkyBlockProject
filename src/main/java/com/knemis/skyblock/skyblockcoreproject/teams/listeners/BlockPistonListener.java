@@ -1,7 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.google.common.collect.ImmutableMap;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.AllArgsConstructor;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;

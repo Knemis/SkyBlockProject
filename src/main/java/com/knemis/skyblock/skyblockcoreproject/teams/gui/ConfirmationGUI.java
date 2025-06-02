@@ -4,7 +4,6 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.GUI;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.InventoryUtils;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.ItemStackUtils;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
-
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import org.bukkit.Bukkit;

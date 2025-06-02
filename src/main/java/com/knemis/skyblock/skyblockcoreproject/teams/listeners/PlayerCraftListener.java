@@ -2,7 +2,8 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

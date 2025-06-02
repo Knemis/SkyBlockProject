@@ -3,7 +3,6 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
 
-
 import java.util.Arrays;
 
 public class Permissions {
@@ -59,7 +58,7 @@ public class Permissions {
         this.spawners = new Permission(new Item(XMaterial.SPAWNER, 31, 1, "" + color + "Break Spawners", Arrays.asList("&7Grant the ability to mine spawners in your " + team + ".", "", "" + color + "&lPermission", "%permission%")), 1, 1);
         this.settings = new Permission(new Item(XMaterial.GUNPOWDER, 32, 1, "" + color + "Change Settings", Arrays.asList("&7Grant the ability to change your " + team + " settings.", "", "" + color + "&lPermission", "%permission%")), 1, 3);
         this.manageWarps = new Permission(new Item(XMaterial.END_PORTAL_FRAME, 33, 1, "" + color + "Manage Warps", Arrays.asList("&7Grant the ability to create edit and delete " + team + " Warps.", "", "" + color + "&lPermission", "%permission%")), 1, 2);
-        this.interact = new Permission(new Item(XMaterial.OAK_SIGN, 40, 1 , "" + color + "Edit Signs", Arrays.asList("Grants the ability to edit signs and item frames in the " + team + ".", "" + color + "&lPermission", "%permission%")), 1, 2);
+        this.interact = new Permission(new Item(XMaterial.OAK_SIGN, 40, 1, "" + color + "Edit Signs", Arrays.asList("Grants the ability to edit signs and item frames in the " + team + ".", "" + color + "&lPermission", "%permission%")), 1, 2);
     }
 
 }

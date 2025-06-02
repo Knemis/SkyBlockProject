@@ -9,14 +9,14 @@ import java.util.Map;
 @NoArgsConstructor
 public class Background {
 
-    public com.SkyBlockProject.SkyBlockProjectSecondCore.Item filler = new com.SkyBlockProject.SkyBlockProjectSecondCore.Item(XMaterial.BLACK_STAINED_GLASS_PANE, 1, " ", Collections.emptyList());
-    public Map<Integer, com.SkyBlockProject.SkyBlockProjectSecondCore.Item> items;
+    public com.knemis.skyblock.skyblockcoreproject.secondcore.Item filler = new com.knemis.skyblock.skyblockcoreproject.secondcore.Item(XMaterial.BLACK_STAINED_GLASS_PANE, 1, " ", Collections.emptyList());
+    public Map<Integer, com.knemis.skyblock.skyblockcoreproject.secondcore.Item> items;
 
-    public Background(Map<Integer, com.SkyBlockProject.SkyBlockProjectSecondCore.Item> items) {
+    public Background(Map<Integer, com.knemis.skyblock.skyblockcoreproject.secondcore.Item> items) {
         this.items = items;
     }
 
-    public Background(Map<Integer, com.SkyBlockProject.SkyBlockProjectSecondCore.Item> items, com.SkyBlockProject.SkyBlockProjectSecondCore.Item filler) {
+    public Background(Map<Integer, com.knemis.skyblock.skyblockcoreproject.secondcore.Item> items, com.knemis.skyblock.skyblockcoreproject.secondcore.Item filler) {
         this.items = items;
         this.filler = filler;
     }

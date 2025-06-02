@@ -4,7 +4,7 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XPotion;
 import com.google.common.collect.ImmutableMap;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
-
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.*;
 
 import java.util.Arrays;
 import java.util.Collections;
