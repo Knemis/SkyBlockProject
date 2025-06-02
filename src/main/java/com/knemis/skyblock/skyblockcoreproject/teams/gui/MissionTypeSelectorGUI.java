@@ -1,79 +1,82 @@
-package com.keviin.keviinteams.gui;
+package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.BackGUI;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.configs.inventories.MissionTypeSelectorInventoryConfig;
-import com.keviin.keviinteams.configs.inventories.NoItemGUI;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+// import com.keviin.keviincore.gui.BackGUI; // TODO: Replace with actual BackGUI class or remove extension
+// import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
+// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
+import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.MissionTypeSelectorInventoryConfig;
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class MissionTypeSelectorGUI<T extends Team, U extends keviinUser<T>> extends BackGUI {
+public class MissionTypeSelectorGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.BackGUI */ { // TODO: Update Team and IridiumUser to actual classes, resolve BackGUI
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final IridiumTeams<T, U> iridiumTeams;
+    private Player player; // Added player field
 
-    public MissionTypeSelectorGUI(Player player, keviinTeams<T, U> keviinTeams) {
-        super(keviinTeams.getInventories().missionTypeSelectorGUI.background, player, keviinTeams.getInventories().backButton);
-        this.keviinTeams = keviinTeams;
+    public MissionTypeSelectorGUI(Player player, IridiumTeams<T, U> iridiumTeams) {
+        // super(iridiumTeams.getInventories().missionTypeSelectorGUI.background, player, iridiumTeams.getInventories().backButton); // TODO: Uncomment when BackGUI and inventories are refactored
+        this.player = player; // Added
+        this.iridiumTeams = iridiumTeams;
     }
 
-    @NotNull
-    @Override
-    public Inventory getInventory() {
-        NoItemGUI noItemGUI = keviinTeams.getInventories().missionTypeSelectorGUI;
-        Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
+    // @NotNull //TODO: Uncomment if super class method has it
+    // @Override //TODO: Uncomment if super class method has it
+    public Inventory getInventory() { // TODO: This method likely needs to be @Override if BackGUI is a proper GUI base class
+        NoItemGUI noItemGUI = iridiumTeams.getInventories().missionTypeSelectorGUI;
+        // Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title)); // TODO: Replace StringUtils.color. 'this' might not be an InventoryHolder if BackGUI is not extended.
+        Inventory inventory = Bukkit.createInventory(null, noItemGUI.size, "MissionTypeSelector GUI Title Placeholder"); // Placeholder
         addContent(inventory);
         return inventory;
     }
 
-    @Override
+    // @Override //TODO: Uncomment if super class method has it
     public void addContent(Inventory inventory) {
-        super.addContent(inventory);
+        // super.addContent(inventory); // TODO: Uncomment if BackGUI is extended and has this method
 
 
-        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = keviinTeams.getInventories().missionTypeSelectorGUI;
-        if (missionTypeSelectorInventoryConfig.daily.enabled) {
-            inventory.setItem(missionTypeSelectorInventoryConfig.daily.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.daily.item));
-        }
+        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = iridiumTeams.getInventories().missionTypeSelectorGUI;
+        // if (missionTypeSelectorInventoryConfig.daily.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // inventory.setItem(missionTypeSelectorInventoryConfig.daily.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.daily.item)); // TODO: Replace ItemStackUtils.makeItem
+        // }
 
-        if (missionTypeSelectorInventoryConfig.weekly.enabled) {
-            inventory.setItem(missionTypeSelectorInventoryConfig.weekly.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.weekly.item));
-        }
+        // if (missionTypeSelectorInventoryConfig.weekly.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // inventory.setItem(missionTypeSelectorInventoryConfig.weekly.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.weekly.item)); // TODO: Replace ItemStackUtils.makeItem
+        // }
 
-        if (missionTypeSelectorInventoryConfig.infinite.enabled) {
-            inventory.setItem(missionTypeSelectorInventoryConfig.infinite.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.infinite.item));
-        }
+        // if (missionTypeSelectorInventoryConfig.infinite.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // inventory.setItem(missionTypeSelectorInventoryConfig.infinite.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.infinite.item)); // TODO: Replace ItemStackUtils.makeItem
+        // }
 
-        if (missionTypeSelectorInventoryConfig.once.enabled) {
-            inventory.setItem(missionTypeSelectorInventoryConfig.once.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.once.item));
-        }
+        // if (missionTypeSelectorInventoryConfig.once.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // inventory.setItem(missionTypeSelectorInventoryConfig.once.item.slot, ItemStackUtils.makeItem(missionTypeSelectorInventoryConfig.once.item)); // TODO: Replace ItemStackUtils.makeItem
+        // }
     }
 
-    @Override
+    // @Override //TODO: Uncomment if super class method has it
     public void onInventoryClick(InventoryClickEvent event) {
-        super.onInventoryClick(event);
-        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = keviinTeams.getInventories().missionTypeSelectorGUI;
+        // super.onInventoryClick(event); // TODO: Uncomment if BackGUI is extended and has this method
+        MissionTypeSelectorInventoryConfig missionTypeSelectorInventoryConfig = iridiumTeams.getInventories().missionTypeSelectorGUI;
 
-        if (event.getSlot() == missionTypeSelectorInventoryConfig.daily.item.slot && missionTypeSelectorInventoryConfig.daily.enabled) {
-            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().missionsCommand, new String[]{"Daily"});
-        }
+        // if (event.getSlot() == missionTypeSelectorInventoryConfig.daily.item.slot && missionTypeSelectorInventoryConfig.daily.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().missionsCommand, new String[]{"Daily"}); // TODO: Uncomment when CommandManager and Commands are refactored
+        // }
 
-        if (event.getSlot() == missionTypeSelectorInventoryConfig.weekly.item.slot && missionTypeSelectorInventoryConfig.weekly.enabled) {
-            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().missionsCommand, new String[]{"Weekly"});
-        }
+        // if (event.getSlot() == missionTypeSelectorInventoryConfig.weekly.item.slot && missionTypeSelectorInventoryConfig.weekly.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().missionsCommand, new String[]{"Weekly"}); // TODO: Uncomment when CommandManager and Commands are refactored
+        // }
 
-        if (event.getSlot() == missionTypeSelectorInventoryConfig.infinite.item.slot && missionTypeSelectorInventoryConfig.infinite.enabled) {
-            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().missionsCommand, new String[]{"Infinite"});
-        }
+        // if (event.getSlot() == missionTypeSelectorInventoryConfig.infinite.item.slot && missionTypeSelectorInventoryConfig.infinite.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().missionsCommand, new String[]{"Infinite"}); // TODO: Uncomment when CommandManager and Commands are refactored
+        // }
 
-        if (event.getSlot() == missionTypeSelectorInventoryConfig.once.item.slot && missionTypeSelectorInventoryConfig.once.enabled) {
-            keviinTeams.getCommandManager().executeCommand(event.getWhoClicked(), keviinTeams.getCommands().missionsCommand, new String[]{"Once"});
-        }
+        // if (event.getSlot() == missionTypeSelectorInventoryConfig.once.item.slot && missionTypeSelectorInventoryConfig.once.enabled) { // TODO: Uncomment when missionTypeSelectorInventoryConfig is available
+            // iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().missionsCommand, new String[]{"Once"}); // TODO: Uncomment when CommandManager and Commands are refactored
+        // }
     }
 }
