@@ -69,6 +69,15 @@ dependencies {
     // XSeries (Senin versiyonunla devam ediyoruz, IridiumCore kodu hata verirse 13.x'e yükseltilebilir)
     implementation 'com.github.cryptomorin:XSeries:9.8.0'
 
+    implementation platform("com.fasterxml.jackson:jackson-bom:2.17.1")
+    implementation 'org.apache.commons:commons-text:1.11.0'   // or the latest version
+
+    // If you only need annotations at compile time this is enough:
+    implementation "com.fasterxml.jackson.core:jackson-annotations"
+
+    // If you will also serialise/deserialize objects at runtime add databind:
+    implementation "com.fasterxml.jackson.core:jackson-databind"
+
     // Kyori Adventure
     compileOnly "net.kyori:adventure-api:4.17.0"
     compileOnly "net.kyori:adventure-text-serializer-plain:4.17.0"

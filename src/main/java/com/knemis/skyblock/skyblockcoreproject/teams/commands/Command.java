@@ -6,7 +6,7 @@ import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
-import org.apache.commons.lang.NotImplementedException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

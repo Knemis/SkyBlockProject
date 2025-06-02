@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.secondcore;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.gui.GUI;
-import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.SkyBlockProjectInventory;
-import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.common.src.main.java.com.iridium.iridiumcore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.common.src.main.java.com.iridium.iridiumcore.multiversion.SkyBlockProjectInventory;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.nms.NMS;
 import io.papermc.lib.PaperLib;
 import lombok.Getter;

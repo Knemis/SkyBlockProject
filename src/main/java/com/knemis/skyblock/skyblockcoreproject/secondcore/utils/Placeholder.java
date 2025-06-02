@@ -1,10 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.secondcore.utils;
 
-import java.util.function.Consumer;
+import lombok.Getter;
+
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import lombok.Getter;
 
 /**
  * Represents a placeholder used in configuration files.

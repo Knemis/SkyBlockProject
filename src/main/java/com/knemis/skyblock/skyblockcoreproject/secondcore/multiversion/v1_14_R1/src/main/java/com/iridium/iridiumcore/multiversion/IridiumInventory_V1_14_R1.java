@@ -1,5 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.v1_14_R1.src.main.java.com.iridium.iridiumcore.multiversion;
 
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.common.src.main.java.com.iridium.iridiumcore.multiversion.SkyBlockProjectInventory;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 

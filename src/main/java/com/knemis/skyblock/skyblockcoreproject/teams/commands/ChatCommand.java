@@ -1,11 +1,12 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.secondcore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.ChatType;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectTeamsUser;
 import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang.WordUtils;
+import org.apache.commons.text.WordUtils;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 

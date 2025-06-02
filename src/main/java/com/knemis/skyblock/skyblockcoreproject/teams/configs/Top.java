@@ -2,6 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.Item;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.knemis.skyblock.skyblockcoreproject.teams.sorting.ExperienceTeamSort;
 import com.knemis.skyblock.skyblockcoreproject.teams.sorting.ValueTeamSort;
 
