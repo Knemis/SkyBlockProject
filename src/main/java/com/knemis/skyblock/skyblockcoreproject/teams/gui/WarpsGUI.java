@@ -4,23 +4,14 @@ package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 // import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
 // import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
 // import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
+
 import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamWarp; // TODO: Update to actual TeamWarp class
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class WarpsGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.BackGUI */ { // TODO: Update Team and IridiumUser to actual classes, resolve BackGUI

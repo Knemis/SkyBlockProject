@@ -1,12 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.gui;
 
+import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.gui.base.PagedGUI;
 import com.knemis.skyblock.skyblockcoreproject.island.Island;
 import com.knemis.skyblock.skyblockcoreproject.placeholders.IslandPlaceholderBuilder;
-
-import com.cryptomorin.xseries.XMaterial; // For default background material
-
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -15,15 +13,10 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.SkullMeta; // For setting skull owner
+import org.bukkit.inventory.meta.SkullMeta;
+import org.jetbrains.annotations.NotNull;
 
-import org.jetbrains.annotations.NotNull; // For @NotNull annotation on getInventory
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class VisitGUI extends PagedGUI<Island> {

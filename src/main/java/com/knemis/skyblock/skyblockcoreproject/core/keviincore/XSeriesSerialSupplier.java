@@ -12,20 +12,14 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 
 import java.io.IOException;
 import java.util.Optional;
+import org.bukkit.entity.EntityType;
 
 public class XSeriesSerialSupplier {
 
-    // These are required because XEnchants changed their enums for version 10.0.0.
-    // We added the other XSeries libraries we use here in the event that they change in the future.
+    // Updated for XSeries 9.0.0+ compatibility
 
-    /**
-     * XMaterial serializer for XSeries version < 10.0.0.
-     */
     public static class XMaterialSerializer extends StdSerializer<XMaterial> {
-
-        public XMaterialSerializer() {
-            super(XMaterial.class);
-        }
+        public XMaterialSerializer() { super(XMaterial.class); }
 
         @Override
         public void serialize(XMaterial xMaterial, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
@@ -33,35 +27,23 @@ public class XSeriesSerialSupplier {
         }
     }
 
-    /**
-     * XMaterial deserializer for XSeries version >= 10.0.0.
-     */
     public static class XMaterialDeserializer extends StdDeserializer<XMaterial> {
-
-        public XMaterialDeserializer() {
-            super(XMaterial.class);
-        }
+        public XMaterialDeserializer() { super(XMaterial.class); }
 
         @Override
-        public XMaterial deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+        public XMaterial deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-            String xMaterial = node.toString().replace("\"", "");
-            Optional<XMaterial> optional = XMaterial.matchXMaterial(xMaterial);
-            if(!optional.isPresent()){
-                com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize "+xMaterial+" to a Material, defaulting to AIR");
+            String materialName = node.asText();
+            Optional<XMaterial> material = XMaterial.matchXMaterial(materialName);
+            if (!material.isPresent()) {
+                SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize " + materialName + " to a Material, defaulting to AIR");
             }
-            return optional.orElse(XMaterial.AIR);
+            return material.orElse(XMaterial.AIR);
         }
     }
 
-    /**
-     * XPotion serializer for XSeries version < 10.0.0.
-     */
     public static class XPotionSerializer extends StdSerializer<XPotion> {
-
-        public XPotionSerializer() {
-            super(XPotion.class);
-        }
+        public XPotionSerializer() { super(XPotion.class); }
 
         @Override
         public void serialize(XPotion xPotion, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
@@ -69,71 +51,47 @@ public class XSeriesSerialSupplier {
         }
     }
 
-    /**
-     * XPotion deserializer for XSeries version >= 10.0.0.
-     */
     public static class XPotionDeserializer extends StdDeserializer<XPotion> {
-
-        public XPotionDeserializer() {
-            super(XPotion.class);
-        }
+        public XPotionDeserializer() { super(XPotion.class); }
 
         @Override
-        public XPotion deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+        public XPotion deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-            String xPotion = node.toString().replace("\"", "");
-            Optional<XPotion> optional = XPotion.of(xPotion);
-            if(!optional.isPresent()){
-                com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize "+xPotion+" to a Potion, defaulting to LUCK");
+            String potionName = node.asText();
+            Optional<XPotion> potion = XPotion.matchXPotion(potionName);
+            if (!potion.isPresent()) {
+                SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize " + potionName + " to a Potion, defaulting to LUCK");
             }
-            return optional.orElse(XPotion.LUCK);
+            return potion.orElse(XPotion.LUCK);
         }
     }
 
-    /**
-     * XEnchantment serializer for XSeries version < 10.0.0.
-     */
     public static class XEnchantmentSerializer extends StdSerializer<XEnchantment> {
-
-        public XEnchantmentSerializer() {
-            super(XEnchantment.class);
-        }
+        public XEnchantmentSerializer() { super(XEnchantment.class); }
 
         @Override
         public void serialize(XEnchantment xEnchantment, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            jsonGenerator.writeString(xEnchantment.name());
+            jsonGenerator.writeString(xEnchantment.getEnchant().getName());
         }
     }
 
-    /**
-     * XEnchantment deserializer for XSeries version >= 10.0.0.
-     */
     public static class XEnchantmentDeserializer extends StdDeserializer<XEnchantment> {
-
-        public XEnchantmentDeserializer() {
-            super(XEnchantment.class);
-        }
+        public XEnchantmentDeserializer() { super(XEnchantment.class); }
 
         @Override
-        public XEnchantment deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+        public XEnchantment deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-            String xEnchantment = node.toString().replace("\"", "");
-            Optional<XEnchantment> optional = XEnchantment.of(xEnchantment);
-            if(!optional.isPresent()){
-                com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize "+xEnchantment+" to an Enchantment, defaulting to WIND_BURST");
+            String enchantName = node.asText();
+            Optional<XEnchantment> enchant = XEnchantment.matchXEnchantment(enchantName);
+            if (!enchant.isPresent()) {
+                SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize " + enchantName + " to an Enchantment, defaulting to PROTECTION_ENVIRONMENTAL");
             }
-            return optional.orElse(XEnchantment.WIND_BURST);
+            return enchant.orElse(XEnchantment.PROTECTION_ENVIRONMENTAL);
         }
     }
 
-    /**
-     * XBiome serializer for XSeries version < 10.0.0.
-     */
     public static class XBiomeSerializer extends StdSerializer<XBiome> {
-
-        public XBiomeSerializer() {
-            super(XBiome.class);
-        }
+        public XBiomeSerializer() { super(XBiome.class); }
 
         @Override
         public void serialize(XBiome xBiome, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
@@ -141,35 +99,23 @@ public class XSeriesSerialSupplier {
         }
     }
 
-    /**
-     * XBiome deserializer for XSeries version >= 10.0.0.
-     */
     public static class XBiomeDeserializer extends StdDeserializer<XBiome> {
-
-        public XBiomeDeserializer() {
-            super(XBiome.class);
-        }
+        public XBiomeDeserializer() { super(XBiome.class); }
 
         @Override
-        public XBiome deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+        public XBiome deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-            String xBiome = node.toString().replace("\"", "");
-            Optional<XBiome> optional = XBiome.of(xBiome);
-            if(!optional.isPresent()){
-                com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize "+xBiome+" to a Biome, defaulting to Plains");
+            String biomeName = node.asText();
+            Optional<XBiome> biome = XBiome.matchXBiome(biomeName);
+            if (!biome.isPresent()) {
+                SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize " + biomeName + " to a Biome, defaulting to PLAINS");
             }
-            return optional.orElse(XBiome.PLAINS);
+            return biome.orElse(XBiome.PLAINS);
         }
     }
 
-    /**
-     * XSound serializer for XSeries version < 10.0.0.
-     */
     public static class XSoundSerializer extends StdSerializer<XSound> {
-
-        public XSoundSerializer() {
-            super(XSound.class);
-        }
+        public XSoundSerializer() { super(XSound.class); }
 
         @Override
         public void serialize(XSound xSound, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
@@ -177,60 +123,43 @@ public class XSeriesSerialSupplier {
         }
     }
 
-    /**
-     * XSound deserializer for XSeries version >= 10.0.0.
-     */
     public static class XSoundDeserializer extends StdDeserializer<XSound> {
-
-        public XSoundDeserializer() {
-            super(XSound.class);
-        }
+        public XSoundDeserializer() { super(XSound.class); }
 
         @Override
-        public XSound deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+        public XSound deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-            String xSound = node.toString().replace("\"", "");
-            Optional<XSound> optional = XSound.of(xSound);
-            if(!optional.isPresent()){
-                com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize "+xSound+" to a Sound, defaulting to ENTITY_PLAYER_LEVELUP");
+            String soundName = node.asText();
+            Optional<XSound> sound = XSound.matchXSound(soundName);
+            if (!sound.isPresent()) {
+                SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize " + soundName + " to a Sound, defaulting to ENTITY_PLAYER_LEVELUP");
             }
-            return optional.orElse(XSound.ENTITY_PLAYER_LEVELUP);
+            return sound.orElse(XSound.ENTITY_PLAYER_LEVELUP);
         }
     }
 
-    /**
-     * XSound serializer for XSeries version < 10.0.0.
-     */
-    public static class XEntityTypeSerializer extends StdSerializer<XEntityType> {
-
-        public XEntityTypeSerializer() {
-            super(XEntityType.class);
-        }
+    public static class EntityTypeSerializer extends StdSerializer<EntityType> {
+        public EntityTypeSerializer() { super(EntityType.class); }
 
         @Override
-        public void serialize(XEntityType xEntityType, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            jsonGenerator.writeString(xEntityType.name());
+        public void serialize(EntityType entityType, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
+            jsonGenerator.writeString(entityType.name());
         }
     }
 
-    /**
-     * XSound deserializer for XSeries version >= 10.0.0.
-     */
-    public static class XEntityTypeDeserializer extends StdDeserializer<XEntityType> {
-
-        public XEntityTypeDeserializer() {
-            super(XEntityType.class);
-        }
+    public static class EntityTypeDeserializer extends StdDeserializer<EntityType> {
+        public EntityTypeDeserializer() { super(EntityType.class); }
 
         @Override
-        public XEntityType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException, JacksonException {
+        public EntityType deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
             JsonNode node = jsonParser.getCodec().readTree(jsonParser);
-            String xEntityType = node.toString().replace("\"", "");
-            Optional<XEntityType> optional = XEntityType.of(xEntityType);
-            if(!optional.isPresent()){
-                com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize "+xEntityType+" to an EntityType, defaulting to WOLF");
+            String entityTypeName = node.asText();
+            try {
+                return EntityType.valueOf(entityTypeName);
+            } catch (IllegalArgumentException e) {
+                SkyBlockSecondCore.getInstance().getLogger().warning("Could not deserialize " + entityTypeName + " to an EntityType, defaulting to WOLF");
+                return EntityType.WOLF;
             }
-            return optional.orElse(XEntityType.WOLF);
         }
     }
 }

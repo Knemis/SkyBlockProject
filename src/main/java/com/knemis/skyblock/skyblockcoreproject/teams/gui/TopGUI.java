@@ -3,11 +3,9 @@ package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 // import com.keviin.keviincore.gui.BackGUI; // TODO: Replace with actual BackGUI class or remove extension
 // import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
 // import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
+
 import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
-// import com.knemis.skyblock.skyblockcoreproject.teams.sorting.TeamSorting; // TODO: Update to actual TeamSorting class
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,9 +13,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.List;
 
 @Getter
 @Setter

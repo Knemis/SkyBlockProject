@@ -16,6 +16,6 @@
 [submodule "IridiumFactions"]
 	path = IridiumFactions
 	url = https://github.com/Iridium-Development/IridiumFactions
-[submodule "IridiumTeams"]
-	path = IridiumTeams
-	url = https://github.com/Iridium-Development/IridiumTeams
+[submodule "com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams"]
+	path = com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams
+	url = https://github.com/Iridium-Development/com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams

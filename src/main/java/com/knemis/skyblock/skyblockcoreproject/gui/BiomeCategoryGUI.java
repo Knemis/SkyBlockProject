@@ -1,15 +1,13 @@
 package com.knemis.skyblock.skyblockcoreproject.gui;
 
-import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
-import com.knemis.skyblock.skyblockcoreproject.gui.base.BackGUI;
-
 import com.cryptomorin.xseries.XBiome;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
-
+import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
+import com.knemis.skyblock.skyblockcoreproject.gui.base.BackGUI;
 import org.bukkit.Bukkit;
-import org.bukkit.Sound;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
@@ -18,13 +16,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class BiomeCategoryGUI extends BackGUI {
 

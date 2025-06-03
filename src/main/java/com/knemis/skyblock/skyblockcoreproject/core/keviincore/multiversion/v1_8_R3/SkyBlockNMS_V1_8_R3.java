@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.v1_8_R3;
 
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Color;
-import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.NMS; // Assuming NMS interface location
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.NMS;
 import net.minecraft.server.v1_8_R3.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;

@@ -1,21 +1,18 @@
 // com/knemis/skyblock/skyblockcoreproject/gui/shopvisit/ShopVisitGUIManager.java
 package com.knemis.skyblock.skyblockcoreproject.gui.shopvisit;
 
-import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject; // SkyBlockProject import (for plugin reference)
+import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopInventoryManager;
-import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager; // Added for stock information
-import com.knemis.skyblock.skyblockcoreproject.shop.ShopMode; // Required for checking shop mode
-
+import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
+import com.knemis.skyblock.skyblockcoreproject.shop.ShopMode;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
-
 import org.bukkit.Bukkit;
-// import org.bukkit.ChatColor; // Will be removed
 import org.bukkit.Material;
-import org.bukkit.OfflinePlayer; // Import OfflinePlayer
+import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Chest;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;

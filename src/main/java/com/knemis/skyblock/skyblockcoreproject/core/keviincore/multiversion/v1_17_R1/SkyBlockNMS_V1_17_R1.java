@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.v1_17_R1;
 
-import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.Color; // Corrected path
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.Color;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.NMS;
 import net.minecraft.core.BlockPosition;
 import net.minecraft.network.protocol.game.ClientboundInitializeBorderPacket;

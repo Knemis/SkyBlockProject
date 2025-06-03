@@ -1,8 +1,8 @@
 package com.knemis.skyblock.skyblockcoreproject.core.keviincore;
 
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.GUI;
-import com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.keviinInventory;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.SkyBlockInventory;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.NMS;
 import io.papermc.lib.PaperLib;
 import lombok.Getter;
@@ -87,9 +87,9 @@ public class SkyBlockSecondCore extends JavaPlugin {
 
         // Automatically update all inventories
         Bukkit.getScheduler().scheduleSyncRepeatingTask(this, () -> Bukkit.getServer().getOnlinePlayers().forEach(player -> {
-            InventoryHolder inventoryHolder = keviinInventory.getTopInventory(player).getHolder();
+            InventoryHolder inventoryHolder = skyBlockInventory.getTopInventory(player).getHolder();
             if (inventoryHolder instanceof GUI) {
-                ((GUI) inventoryHolder).addContent(keviinInventory.getTopInventory(player));
+                ((GUI) inventoryHolder).addContent(skyBlockInventory.getTopInventory(player));
             }
         }), 0, 1);
     }

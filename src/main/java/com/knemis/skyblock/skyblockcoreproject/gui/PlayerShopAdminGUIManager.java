@@ -4,30 +4,20 @@ package com.knemis.skyblock.skyblockcoreproject.gui;
 import com.knemis.skyblock.skyblockcoreproject.SkyBlockProject;
 import com.knemis.skyblock.skyblockcoreproject.shop.Shop;
 import com.knemis.skyblock.skyblockcoreproject.shop.ShopManager;
-
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextDecoration;
-// import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer; // Not directly used after changes
-
 import org.bukkit.Bukkit;
-// import org.bukkit.ChatColor; // Will be removed
-import org.bukkit.Location; // Added import for Location
+import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.Inventory;
-import org.bukkit.event.inventory.InventoryType; // Added for Anvil GUI
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.scheduler.BukkitRunnable; // For chat input timeout or next step GUI opening
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap; // Added for new maps
-import java.util.List;
-import java.util.Map; // Added for new maps
-import java.util.UUID;
+import java.util.*;
 
 public class PlayerShopAdminGUIManager { // Renamed class
 

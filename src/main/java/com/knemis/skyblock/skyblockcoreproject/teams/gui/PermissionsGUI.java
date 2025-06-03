@@ -4,19 +4,13 @@ package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 // import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
 // import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
 // import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
+
 import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
-import com.knemis.skyblock.skyblockcoreproject.teams.Permission;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
-import org.jetbrains.annotations.NotNull;
-
-import java.util.Collections;
-import java.util.Map;
 
 public class PermissionsGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.BackGUI */ { // TODO: Update Team and IridiumUser to actual classes, resolve BackGUI
 

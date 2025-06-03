@@ -5,8 +5,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import java.util.Collection; // Correct import
-import java.util.HashMap; // For items map
+
+import java.util.Collection;
+import java.util.HashMap;
 
 public abstract class PagedGUI<T> implements InventoryHolder {
     protected final Player player;
