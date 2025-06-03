@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.support;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import com.moyskleytech.obsidianstacker.api.Stack;
 import com.moyskleytech.obsidianstacker.api.StackerAPI;
 import org.bukkit.Chunk;
@@ -11,12 +11,12 @@ import org.bukkit.block.Block;
 
 import java.util.*;
 
-public class ObsidianStackerSupport<T extends Team, U extends keviinUser<T>> implements StackerSupport<T> {
+public class ObsidianStackerSupport<T extends Team, U extends SkyBlockProjectUser<T>> implements StackerSupport<T> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public ObsidianStackerSupport(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
+    public ObsidianStackerSupport(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @Override
@@ -58,7 +58,7 @@ public class ObsidianStackerSupport<T extends Team, U extends keviinUser<T>> imp
     public int getExtraBlocks(T team, XMaterial material, List<Block> blocks) {
         int stackedBlocks = 0;
         for (Stack stack : getStackedBlocks(blocks)) {
-            if (!keviinTeams.getTeamManager().isInTeam(team, stack.getEntity().getLocation())) continue;
+            if (!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stack.getEntity().getLocation())) continue;
             if (material != XMaterial.matchXMaterial(stack.getEntity().getLocation().getBlock().getType())) continue;
             stackedBlocks += (stack.getCount() - 1);
         }

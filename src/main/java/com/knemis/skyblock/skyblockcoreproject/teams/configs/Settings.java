@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.cryptomorin.xseries.XMaterial;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
 import com.knemis.skyblock.skyblockcoreproject.teams.Setting;
 
 import java.util.Arrays;

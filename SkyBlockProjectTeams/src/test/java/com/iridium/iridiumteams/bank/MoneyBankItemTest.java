@@ -1,11 +1,11 @@
-package com.keviin.keviinteams.bank;
+package com.knemis.skyblock.skyblockcoreproject.teams.bank;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviinteams.TeamBuilder;
-import com.keviin.keviinteams.UserBuilder;
-import com.keviin.keviinteams.database.TeamBank;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import org.junit.jupiter.api.AfterEach;

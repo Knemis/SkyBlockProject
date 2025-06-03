@@ -1,8 +1,8 @@
-package com.keviin.keviinteams;
+package com.keviin.SkyBlockProjectTeams;
 
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviinteams.utils.PlayerUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.utils.PlayerUtils;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;

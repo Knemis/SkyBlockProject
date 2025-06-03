@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories;
 
-// import com.keviin.keviincore.Background; // TODO: Replace with actual Background class
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Background; // TODO: Replace with actual Background class
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

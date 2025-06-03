@@ -1,8 +1,8 @@
-package com.keviin.keviinteams.database;
+package com.knemis.skyblock.skyblockcoreproject.teams.database;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
-import com.keviin.keviinteams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import org.junit.jupiter.api.AfterEach;

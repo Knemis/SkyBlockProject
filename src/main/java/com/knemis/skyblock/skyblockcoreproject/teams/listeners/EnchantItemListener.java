@@ -2,9 +2,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -12,15 +12,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 
 @AllArgsConstructor
-public class EnchantItemListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class EnchantItemListener<T extends Team, U extends SkyBlockProjectUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorItemEnchant(EnchantItemEvent event) {
-        U user = keviinTeams.getUserManager().getUser(event.getEnchanter());
+        U user = SkyBlockProjectTeams.getUserManager().getUser(event.getEnchanter());
         XMaterial material = XMaterial.matchXMaterial(event.getItem().getType());
-        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
-            keviinTeams.getMissionManager().handleMissionUpdate(team, event.getEnchanter().getLocation().getWorld(), "ENCHANT", material.name(), 1);
+        SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
+            SkyBlockProjectTeams.getMissionManager().handleMissionUpdate(team, event.getEnchanter().getLocation().getWorld(), "ENCHANT", material.name(), 1);
         });
 
     }

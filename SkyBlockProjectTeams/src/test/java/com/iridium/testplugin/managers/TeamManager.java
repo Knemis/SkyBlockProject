@@ -1,9 +1,9 @@
 package com.keviin.testplugin.managers;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.Rank;
-import com.keviin.keviinteams.Setting;
-import com.keviin.keviinteams.database.*;
+import com.knemis.skyblock.skyblockcoreproject.teams.Rank;
+import com.knemis.skyblock.skyblockcoreproject.teams.Setting;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.*;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;
@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
-public class TeamManager extends com.keviin.keviinteams.managers.TeamManager<TestTeam, User> {
+public class TeamManager extends com.knemis.skyblock.skyblockcoreproject.teams.managers.TeamManager<TestTeam, User> {
 
     public static List<TestTeam> teams;
     public static List<TeamPermission> teamPermissions;

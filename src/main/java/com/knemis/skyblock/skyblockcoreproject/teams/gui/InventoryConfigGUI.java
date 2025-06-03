@@ -1,10 +1,10 @@
-package com.keviin.keviinteams.gui;
+package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.GUI;
-import com.keviin.keviincore.utils.InventoryUtils;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.configs.inventories.InventoryConfig;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.GUI;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.InventoryConfig;
 import org.bukkit.Bukkit;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;

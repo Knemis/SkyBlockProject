@@ -2,10 +2,10 @@ package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 import org.apache.commons.lang3.NotImplementedException;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-// import com.keviin.keviincore.CooldownProvider; // TODO: Replace CooldownProvider
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.CooldownProvider; // TODO: Replace CooldownProvider
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser; // TODO: Update to actual SkyBlockProjectUser class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.CooldownProvider;
@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class Command<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> { // TODO: Update Team and IridiumUser to actual classes
+public class Command<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> { // TODO: Update Team and SkyBlockProjectUser to actual classes
 
     public final @NotNull List<String> aliases;
     public final @NotNull String description;

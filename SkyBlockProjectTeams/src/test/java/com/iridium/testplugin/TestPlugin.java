@@ -1,12 +1,12 @@
 package com.keviin.testplugin;
 
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.PlaceholderBuilder;
-import com.keviin.keviinteams.TeamChatPlaceholderBuilder;
-import com.keviin.keviinteams.configs.*;
-import com.keviin.keviinteams.managers.MissionManager;
-import com.keviin.keviinteams.managers.ShopManager;
-import com.keviin.keviinteams.managers.SupportManager;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.PlaceholderBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamChatPlaceholderBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.*;
+import com.knemis.skyblock.skyblockcoreproject.teams.managers.MissionManager;
+import com.knemis.skyblock.skyblockcoreproject.teams.managers.ShopManager;
+import com.knemis.skyblock.skyblockcoreproject.teams.managers.SupportManager;
 import com.keviin.testplugin.api.EnhancementUpdateEvent;
 import com.keviin.testplugin.managers.CommandManager;
 import com.keviin.testplugin.managers.TeamManager;
@@ -18,7 +18,7 @@ import org.bukkit.plugin.java.JavaPluginLoader;
 
 import java.io.File;
 
-public class TestPlugin extends keviinTeams<TestTeam, User> {
+public class TestPlugin extends SkyBlockProjectTeams<TestTeam, User> {
     private static TestPlugin instance;
     private TeamManager teamManager;
     private UserManager userManager;

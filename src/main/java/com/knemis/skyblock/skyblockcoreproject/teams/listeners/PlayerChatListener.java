@@ -1,10 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.ChatType;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.ChatType;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,14 +15,14 @@ import java.util.List;
 import java.util.Optional;
 
 @AllArgsConstructor
-public class PlayerChatListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class PlayerChatListener<T extends Team, U extends SkyBlockProjectUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     @EventHandler
     public void onPlayerChat(AsyncPlayerChatEvent event) {
-        U user = keviinTeams.getUserManager().getUser(event.getPlayer());
-        Optional<T> yourTeam = keviinTeams.getTeamManager().getTeamViaID(user.getTeamID());
-        Optional<ChatType> chatType = keviinTeams.getChatTypes().stream()
+        U user = SkyBlockProjectTeams.getUserManager().getUser(event.getPlayer());
+        Optional<T> yourTeam = SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID());
+        Optional<ChatType> chatType = SkyBlockProjectTeams.getChatTypes().stream()
                 .filter(type -> type.getAliases().stream().anyMatch(s -> s.equalsIgnoreCase(user.getChatType())))
                 .findFirst();
         if (!yourTeam.isPresent() || !chatType.isPresent()) return;
@@ -30,7 +30,7 @@ public class PlayerChatListener<T extends Team, U extends keviinUser<T>> impleme
         if (players == null) return;
         for (Player player : players) {
             if(player == null) return;
-            player.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(keviinTeams.getMessages().chatFormat, keviinTeams.getTeamChatPlaceholderBuilder().getPlaceholders(event, player))));
+            player.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(SkyBlockProjectTeams.getMessages().chatFormat, SkyBlockProjectTeams.getTeamChatPlaceholderBuilder().getPlaceholders(event, player))));
         }
         event.getRecipients().clear();
     }

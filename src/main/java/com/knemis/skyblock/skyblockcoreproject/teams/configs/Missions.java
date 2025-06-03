@@ -4,11 +4,11 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
 import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
-// import com.keviin.keviinteams.missions.Mission; // Will be replaced by specific import below
-// import com.keviin.keviinteams.missions.MissionData; // Will be replaced by specific import below
-// import com.keviin.keviinteams.missions.MissionType; // Will be replaced by specific import below
+// import com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission; // Will be replaced by specific import below
+// import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData; // Will be replaced by specific import below
+// import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType; // Will be replaced by specific import below
 // Specific imports after refactoring (commented out for now as missions package is not yet moved)
 // import com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission;
 // import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData;

@@ -1,4 +1,4 @@
-package com.keviin.keviinteams.managers;
+package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;

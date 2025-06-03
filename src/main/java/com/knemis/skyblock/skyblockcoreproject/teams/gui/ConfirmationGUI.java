@@ -1,32 +1,32 @@
-package com.keviin.keviinteams.gui;
+package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.keviin.keviincore.gui.GUI;
-import com.keviin.keviincore.utils.InventoryUtils;
-import com.keviin.keviincore.utils.ItemStackUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.keviinTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.GUI;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
-public class ConfirmationGUI<T extends Team, U extends keviinUser<T>> implements GUI {
+public class ConfirmationGUI<T extends Team, U extends SkyBlockProjectUser<T>> implements GUI {
 
     private final @NotNull Runnable runnable;
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public ConfirmationGUI(@NotNull Runnable runnable, keviinTeams<T, U> keviinTeams) {
+    public ConfirmationGUI(@NotNull Runnable runnable, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         this.runnable = runnable;
-        this.keviinTeams = keviinTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @NotNull
     @Override
     public Inventory getInventory() {
-        Inventory inventory = Bukkit.createInventory(this, keviinTeams.getInventories().confirmationGUI.size, StringUtils.color(keviinTeams.getInventories().confirmationGUI.title));
+        Inventory inventory = Bukkit.createInventory(this, SkyBlockProjectTeams.getInventories().confirmationGUI.size, StringUtils.color(SkyBlockProjectTeams.getInventories().confirmationGUI.title));
         addContent(inventory);
         return inventory;
     }
@@ -34,10 +34,10 @@ public class ConfirmationGUI<T extends Team, U extends keviinUser<T>> implements
     @Override
     public void addContent(Inventory inventory) {
         inventory.clear();
-        InventoryUtils.fillInventory(inventory, keviinTeams.getInventories().confirmationGUI.background);
+        InventoryUtils.fillInventory(inventory, SkyBlockProjectTeams.getInventories().confirmationGUI.background);
 
-        inventory.setItem(keviinTeams.getInventories().confirmationGUI.no.slot, ItemStackUtils.makeItem(keviinTeams.getInventories().confirmationGUI.no));
-        inventory.setItem(keviinTeams.getInventories().confirmationGUI.yes.slot, ItemStackUtils.makeItem(keviinTeams.getInventories().confirmationGUI.yes));
+        inventory.setItem(SkyBlockProjectTeams.getInventories().confirmationGUI.no.slot, ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().confirmationGUI.no));
+        inventory.setItem(SkyBlockProjectTeams.getInventories().confirmationGUI.yes.slot, ItemStackUtils.makeItem(SkyBlockProjectTeams.getInventories().confirmationGUI.yes));
     }
 
     /**
@@ -49,9 +49,9 @@ public class ConfirmationGUI<T extends Team, U extends keviinUser<T>> implements
     @Override
     public void onInventoryClick(InventoryClickEvent event) {
         Player player = (Player) event.getWhoClicked();
-        if (event.getSlot() == keviinTeams.getInventories().confirmationGUI.no.slot) {
+        if (event.getSlot() == SkyBlockProjectTeams.getInventories().confirmationGUI.no.slot) {
             player.closeInventory();
-        } else if (event.getSlot() == keviinTeams.getInventories().confirmationGUI.yes.slot) {
+        } else if (event.getSlot() == SkyBlockProjectTeams.getInventories().confirmationGUI.yes.slot) {
             runnable.run();
             player.closeInventory();
         }

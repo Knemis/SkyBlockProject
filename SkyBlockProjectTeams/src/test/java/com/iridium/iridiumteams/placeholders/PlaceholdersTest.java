@@ -1,11 +1,11 @@
-package com.keviin.keviinteams.placeholders;
+package com.knemis.skyblock.skyblockcoreproject.teams.placeholders;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviinteams.TeamBuilder;
-import com.keviin.keviinteams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;

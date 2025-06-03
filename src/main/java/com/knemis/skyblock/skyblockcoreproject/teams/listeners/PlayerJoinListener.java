@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -12,28 +12,28 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 @AllArgsConstructor
-public class PlayerJoinListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class PlayerJoinListener<T extends Team, U extends SkyBlockProjectUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        U user = keviinTeams.getUserManager().getUser(player);
+        U user = SkyBlockProjectTeams.getUserManager().getUser(player);
         user.setBypassing(false);
-        user.initBukkitTask(keviinTeams);
+        user.initBukkitTask(SkyBlockProjectTeams);
 
         // Update the internal username in case of name change
         user.setName(event.getPlayer().getName());
 
 
-        if (player.isOp() && keviinTeams.getConfiguration().patreonMessage) {
-            Bukkit.getScheduler().runTaskLater(keviinTeams, () ->
-                            player.sendMessage(StringUtils.color(keviinTeams.getConfiguration().prefix + " &7Thanks for using " + keviinTeams.getDescription().getName() + ", if you like the plugin, consider donating at " + keviinTeams.getCommandManager().getColor() + "www.patreon.com/Peaches_MLG"))
+        if (player.isOp() && SkyBlockProjectTeams.getConfiguration().patreonMessage) {
+            Bukkit.getScheduler().runTaskLater(SkyBlockProjectTeams, () ->
+                            player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getConfiguration().prefix + " &7Thanks for using " + SkyBlockProjectTeams.getDescription().getName() + ", if you like the plugin, consider donating at " + SkyBlockProjectTeams.getCommandManager().getColor() + "www.patreon.com/Peaches_MLG"))
                     , 5);
         }
 
         // This isnt great, but as this requires database operations, we can pre-run it async, otherwise it will have to be loaded sync. I need to recode/rethink this eventually but this should fix some lag caused by missions for now
-        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> Bukkit.getScheduler().runTaskAsynchronously(keviinTeams, () -> keviinTeams.getMissionManager().generateMissionData(team)));
+        SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> Bukkit.getScheduler().runTaskAsynchronously(SkyBlockProjectTeams, () -> SkyBlockProjectTeams.getMissionManager().generateMissionData(team)));
     }
 
 }

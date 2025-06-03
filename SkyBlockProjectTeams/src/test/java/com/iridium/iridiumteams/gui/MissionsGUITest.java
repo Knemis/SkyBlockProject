@@ -1,10 +1,10 @@
-package com.keviin.keviinteams.gui;
+package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.google.common.collect.ImmutableMap;
-import com.keviin.keviinteams.TeamBuilder;
-import com.keviin.keviinteams.missions.MissionType;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;

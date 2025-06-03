@@ -1,34 +1,34 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-// import com.keviin.keviincore.gui.BackGUI; // TODO: Replace with actual BackGUI class or remove extension
-// import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
-// import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.BackGUI; // TODO: Replace with actual BackGUI class or remove extension
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder; // TODO: Replace Placeholder
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils; // TODO: Replace StringUtils
 
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 
-public class SettingsGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.BackGUI */ { // TODO: Update Team and IridiumUser to actual classes, resolve BackGUI
+public class SettingsGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> /* extends com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.BackGUI */ { // TODO: Update Team and SkyBlockProjectUser to actual classes, resolve BackGUI
 
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
     private final T team;
     private Player player; // Added player field
 
-    public SettingsGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
-        // super(iridiumTeams.getInventories().settingsGUI.background, player, iridiumTeams.getInventories().backButton); // TODO: Uncomment when BackGUI and inventories are refactored
+    public SettingsGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        // super(SkyBlockProjectTeams.getInventories().settingsGUI.background, player, SkyBlockProjectTeams.getInventories().backButton); // TODO: Uncomment when BackGUI and inventories are refactored
         this.player = player; // Added
-        this.iridiumTeams = iridiumTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
         this.team = team;
     }
 
     // @NotNull //TODO: Uncomment if super class method has it
     // @Override //TODO: Uncomment if super class method has it
     public Inventory getInventory() { // TODO: This method likely needs to be @Override if BackGUI is a proper GUI base class
-        // Inventory inventory = Bukkit.createInventory(this, iridiumTeams.getInventories().settingsGUI.size, StringUtils.color(iridiumTeams.getInventories().settingsGUI.title)); // TODO: Replace StringUtils.color. 'this' might not be an InventoryHolder if BackGUI is not extended.
-        Inventory inventory = Bukkit.createInventory(null, iridiumTeams.getInventories().settingsGUI.size, "Settings GUI Title Placeholder"); // Placeholder
+        // Inventory inventory = Bukkit.createInventory(this, SkyBlockProjectTeams.getInventories().settingsGUI.size, StringUtils.color(SkyBlockProjectTeams.getInventories().settingsGUI.title)); // TODO: Replace StringUtils.color. 'this' might not be an InventoryHolder if BackGUI is not extended.
+        Inventory inventory = Bukkit.createInventory(null, SkyBlockProjectTeams.getInventories().settingsGUI.size, "Settings GUI Title Placeholder"); // Placeholder
         addContent(inventory);
         return inventory;
     }
@@ -37,66 +37,66 @@ public class SettingsGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams
     public void addContent(Inventory inventory) {
         // super.addContent(inventory); // TODO: Uncomment if BackGUI is extended and has this method
 
-        // for (Map.Entry<String, Setting> setting : iridiumTeams.getSettingsList().entrySet()) { // TODO: Uncomment when getSettingsList is available
-            // com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting teamSetting = iridiumTeams.getTeamManager().getTeamSetting(team, setting.getKey()); // TODO: Uncomment when TeamManager and TeamSetting are refactored
+        // for (Map.Entry<String, Setting> setting : SkyBlockProjectTeams.getSettingsList().entrySet()) { // TODO: Uncomment when getSettingsList is available
+            // com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting teamSetting = SkyBlockProjectTeams.getTeamManager().getTeamSetting(team, setting.getKey()); // TODO: Uncomment when TeamManager and TeamSetting are refactored
             // if (teamSetting == null) continue;
 
             // String teamSettingDisplay = teamSetting.getValue();
             // switch(teamSetting.getValue()) { // TODO: Uncomment when Messages are refactored
                 // case "Enabled": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().enabledPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().enabledPlaceholder;
                     // break;
                 // }
                 // case "Disabled": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().disabledPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().disabledPlaceholder;
                     // break;
                 // }
                 // case "Private": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().privatePlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().privatePlaceholder;
                     // break;
                 // }
                 // case "Public": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().publicPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().publicPlaceholder;
                     // break;
                 // }
                 // case "Server": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().serverPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().serverPlaceholder;
                     // break;
                 // }
                 // case "Sunny": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().sunnyPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().sunnyPlaceholder;
                     // break;
                 // }
                 // case "Raining": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().rainingPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().rainingPlaceholder;
                     // break;
                 // }
                 // case "Sunrise": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().sunrisePlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().sunrisePlaceholder;
                     // break;
                 // }
                 // case "Day": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().dayPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().dayPlaceholder;
                     // break;
                 // }
                 // case "Morning": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().morningPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().morningPlaceholder;
                     // break;
                 // }
                 // case "Noon": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().noonPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().noonPlaceholder;
                     // break;
                 // }
                 // case "Sunset": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().sunsetPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().sunsetPlaceholder;
                     // break;
                 // }
                 // case "Night": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().nightPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().nightPlaceholder;
                     // break;
                 // }
                 // case "Midnight": {
-                    // teamSettingDisplay = iridiumTeams.getMessages().midnightPlaceholder;
+                    // teamSettingDisplay = SkyBlockProjectTeams.getMessages().midnightPlaceholder;
                     // break;
                 // }
             // }
@@ -111,14 +111,14 @@ public class SettingsGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams
     public void onInventoryClick(InventoryClickEvent event) {
         // super.onInventoryClick(event); // TODO: Uncomment if BackGUI is extended and has this method
 
-        // for (Map.Entry<String, Setting> setting : iridiumTeams.getSettingsList().entrySet()) { // TODO: Uncomment when getSettingsList is available
+        // for (Map.Entry<String, Setting> setting : SkyBlockProjectTeams.getSettingsList().entrySet()) { // TODO: Uncomment when getSettingsList is available
             // if (setting.getValue().getItem().slot != event.getSlot()) continue;
 
-            // com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting teamSetting = iridiumTeams.getTeamManager().getTeamSetting(team, setting.getKey()); // TODO: Uncomment when TeamManager and TeamSetting are refactored
+            // com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting teamSetting = SkyBlockProjectTeams.getTeamManager().getTeamSetting(team, setting.getKey()); // TODO: Uncomment when TeamManager and TeamSetting are refactored
             // if (teamSetting == null) continue;
             // int currentIndex = setting.getValue().getValues().indexOf(teamSetting.getValue());
             // String newValue = setting.getValue().getValues().get(setting.getValue().getValues().size() > currentIndex + 1 ? currentIndex + 1 : 0);
-            // iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().settingsCommand, new String[]{setting.getValue().getDisplayName(), newValue}); // TODO: Uncomment when CommandManager and Commands are refactored
+            // SkyBlockProjectTeams.getCommandManager().executeCommand(event.getWhoClicked(), SkyBlockProjectTeams.getCommands().settingsCommand, new String[]{setting.getValue().getDisplayName(), newValue}); // TODO: Uncomment when CommandManager and Commands are refactored
             // return;
         // }
     }

@@ -2,9 +2,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import lombok.AllArgsConstructor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.Objects;
 
 @AllArgsConstructor
-public class PlayerCraftListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class PlayerCraftListener<T extends Team, U extends SkyBlockProjectUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void monitorPlayerCraft(CraftItemEvent event) {
@@ -31,18 +31,18 @@ public class PlayerCraftListener<T extends Team, U extends keviinUser<T>> implem
                 .orElse(1) * event.getRecipe().getResult().getAmount() : event.getRecipe().getResult().getAmount();
 
         Player player = (Player) event.getWhoClicked();
-        U user = keviinTeams.getUserManager().getUser(player);
+        U user = SkyBlockProjectTeams.getUserManager().getUser(player);
         XMaterial material = XMaterial.matchXMaterial(event.getRecipe().getResult().getType());
 
-        keviinTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
-            keviinTeams.getMissionManager().handleMissionUpdate(team, event.getWhoClicked().getLocation().getWorld(), "CRAFT", material.name(), amount);
+        SkyBlockProjectTeams.getTeamManager().getTeamViaID(user.getTeamID()).ifPresent(team -> {
+            SkyBlockProjectTeams.getMissionManager().handleMissionUpdate(team, event.getWhoClicked().getLocation().getWorld(), "CRAFT", material.name(), amount);
         });
     }
 
     @EventHandler(ignoreCancelled = true)
     public void onPlayerCraft(PrepareItemCraftEvent event) {
         for (ItemStack item : event.getInventory().getMatrix()) {
-            if (keviinTeams.getTeamManager().isBankItem(item)) {
+            if (SkyBlockProjectTeams.getTeamManager().isBankItem(item)) {
                 event.getInventory().setResult(null);
                 return;
             }

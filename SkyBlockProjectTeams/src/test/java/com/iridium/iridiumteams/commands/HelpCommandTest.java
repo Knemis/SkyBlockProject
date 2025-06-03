@@ -1,10 +1,10 @@
-package com.keviin.keviinteams.commands;
+package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
 import com.keviin.testplugin.TestPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,7 +37,7 @@ class HelpCommandTest {
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().reloadCommand);
         PlayerMock playerMock = new UserBuilder(serverMock).build();
         serverMock.dispatchCommand(playerMock, "test help");
-        playerMock.assertSaid(StringUtils.color("&8&m ".repeat(25) + "&8[&c&lkeviinTeams Help&8]" + "&8&m ".repeat(25)));
+        playerMock.assertSaid(StringUtils.color("&8&m ".repeat(25) + "&8[&c&lSkyBlockProjectTeams Help&8]" + "&8&m ".repeat(25)));
         playerMock.assertSaid(StringUtils.color("&c/t about&r: &7View information about the plugin"));
         playerMock.assertSaid(StringUtils.color("&c/t help&r: &7Show all the plugin commands"));
         playerMock.assertSaid(StringUtils.color("&f&c<<"));
@@ -52,9 +52,9 @@ class HelpCommandTest {
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().helpCommand);
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().aboutCommand);
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().reloadCommand);
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.reload").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("SkyBlockProjectTeams.reload").build();
         serverMock.dispatchCommand(playerMock, "test help");
-        playerMock.assertSaid(StringUtils.color("&8&m ".repeat(25) + "&8[&c&lkeviinTeams Help&8]" + "&8&m ".repeat(25)));
+        playerMock.assertSaid(StringUtils.color("&8&m ".repeat(25) + "&8[&c&lSkyBlockProjectTeams Help&8]" + "&8&m ".repeat(25)));
         playerMock.assertSaid(StringUtils.color("&c/t about&r: &7View information about the plugin"));
         playerMock.assertSaid(StringUtils.color("&c/t help&r: &7Show all the plugin commands"));
         playerMock.assertSaid(StringUtils.color("&c/t reload&r: &7Reload the plugin's configurations"));
@@ -70,9 +70,9 @@ class HelpCommandTest {
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().helpCommand);
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().aboutCommand);
         TestPlugin.getInstance().getCommandManager().registerCommand(TestPlugin.getInstance().getCommands().reloadCommand);
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.reload").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("SkyBlockProjectTeams.reload").build();
         serverMock.dispatchCommand(playerMock, "test help 2");
-        playerMock.assertSaid(StringUtils.color("&8&m ".repeat(25) + "&8[&c&lkeviinTeams Help&8]" + "&8&m ".repeat(25)));
+        playerMock.assertSaid(StringUtils.color("&8&m ".repeat(25) + "&8[&c&lSkyBlockProjectTeams Help&8]" + "&8&m ".repeat(25)));
         playerMock.assertSaid(StringUtils.color("&c/t about&r: &7View information about the plugin"));
         playerMock.assertSaid(StringUtils.color("&c/t help&r: &7Show all the plugin commands"));
         playerMock.assertSaid(StringUtils.color("&c/t reload&r: &7Reload the plugin's configurations"));

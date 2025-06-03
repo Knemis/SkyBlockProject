@@ -1,9 +1,9 @@
-package com.keviin.keviinteams.listeners;
+package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
-import com.keviin.keviinteams.SettingType;
-import com.keviin.keviinteams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.SettingType;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.managers.TeamManager;

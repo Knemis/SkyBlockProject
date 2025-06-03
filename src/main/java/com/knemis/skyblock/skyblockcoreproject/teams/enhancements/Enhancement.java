@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.enhancements;
 
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 

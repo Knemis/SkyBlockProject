@@ -1,13 +1,13 @@
-package com.keviin.keviinteams.managers;
+package com.knemis.skyblock.skyblockcoreproject.teams.managers;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviincore.utils.InventoryUtils;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.UserBuilder;
-import com.keviin.keviinteams.configs.Shop;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.InventoryUtils;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.configs.Shop;
 import com.keviin.testplugin.TestPlugin;
 import org.bukkit.Material;
 import org.bukkit.Sound;

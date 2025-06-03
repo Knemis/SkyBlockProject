@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.bank;
 
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank; // TODO: Update to actual TeamBank class
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,8 +18,8 @@ public abstract class BankItem {
     private double defaultAmount;
     private boolean enabled;
 
-    public abstract BankResponse withdraw(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, IridiumTeams<?, ?> teams); // TODO: Update TeamBank to actual class
+    public abstract BankResponse withdraw(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, SkyBlockProjectTeams<?, ?> teams); // TODO: Update TeamBank to actual class
 
-    public abstract BankResponse deposit(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, IridiumTeams<?, ?> teams); // TODO: Update TeamBank to actual class
+    public abstract BankResponse deposit(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, SkyBlockProjectTeams<?, ?> teams); // TODO: Update TeamBank to actual class
 
 }

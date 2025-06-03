@@ -33,7 +33,7 @@ public class Placeholder {
      * The default constructor.
      *
      * @param key   The placeholder without curly brackets.
-     * @param value The actual value of the placeholder
+     * @param supplier The actual value of the placeholder
      */
     public Placeholder(String key, Supplier<String> supplier) {
         this.key = key;
@@ -45,7 +45,7 @@ public class Placeholder {
      * The default constructor.
      *
      * @param key   The placeholder without curly brackets.
-     * @param value The actual value of the placeholder
+     * @param supplier The actual value of the placeholder
      */
     public Placeholder(String key, Function<Integer, String> supplier) {
         this.key = key;

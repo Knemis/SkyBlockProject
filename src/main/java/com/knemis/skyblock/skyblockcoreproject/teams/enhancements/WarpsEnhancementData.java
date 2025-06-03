@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.enhancements;
 
-// import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder; // TODO: Replace Placeholder
 import lombok.NoArgsConstructor;
 
 import java.util.Arrays;

@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database.types;
 
-// import com.keviin.keviincore.Persist; // TODO: Replace with actual Persist class
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Persist; // TODO: Replace with actual Persist class
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
 import com.j256.ormlite.field.FieldType;
 import com.j256.ormlite.field.SqlType;
@@ -14,8 +14,8 @@ public class RewardType extends StringType {
     private static final RewardType instance = new RewardType();
     private static com.knemis.skyblock.skyblockcoreproject.teams.Persist persist; // TODO: Replace with actual Persist class
 
-    public static RewardType getSingleton(IridiumTeams<?, ?> iridiumTeams) { // TODO: Update IridiumTeams generic type if needed
-        persist = new com.knemis.skyblock.skyblockcoreproject.teams.Persist(com.knemis.skyblock.skyblockcoreproject.teams.Persist.PersistType.JSON, iridiumTeams); // TODO: Replace with actual Persist class
+    public static RewardType getSingleton(SkyBlockProjectTeams<?, ?> SkyBlockProjectTeams) { // TODO: Update SkyBlockProjectTeams generic type if needed
+        persist = new com.knemis.skyblock.skyblockcoreproject.teams.Persist(com.knemis.skyblock.skyblockcoreproject.teams.Persist.PersistType.JSON, SkyBlockProjectTeams); // TODO: Replace with actual Persist class
         return instance;
     }
 

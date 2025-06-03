@@ -1,7 +1,7 @@
 package com.keviin.testplugin.commands;
 
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.commands.Command;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.commands.Command;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;
 import org.bukkit.command.CommandSender;
@@ -14,18 +14,18 @@ public class TestCommand extends Command<TestTeam, User> {
     public static boolean hasCalled;
 
     public TestCommand() {
-        super(List.of("test"), "Description", "/test test", "keviinteams.test", 5);
+        super(List.of("test"), "Description", "/test test", "SkyBlockProjectTeams.test", 5);
         hasCalled = false;
     }
 
     @Override
-    public boolean execute(User user, TestTeam team, String[] arguments, keviinTeams<TestTeam, User> keviinTeams) {
+    public boolean execute(User user, TestTeam team, String[] arguments, SkyBlockProjectTeams<TestTeam, User> SkyBlockProjectTeams) {
         hasCalled = true;
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, keviinTeams<TestTeam, User> keviinTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<TestTeam, User> SkyBlockProjectTeams) {
         return Arrays.asList("c", "d", "A");
     }
 }

@@ -1,9 +1,9 @@
-package com.keviin.keviinteams.sorting;
+package com.knemis.skyblock.skyblockcoreproject.teams.sorting;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import org.junit.jupiter.api.AfterEach;

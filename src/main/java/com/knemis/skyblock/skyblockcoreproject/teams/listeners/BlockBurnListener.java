@@ -1,24 +1,24 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.SettingType;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
-import com.keviin.keviinteams.database.TeamSetting;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.SettingType;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting;
 import lombok.AllArgsConstructor;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBurnEvent;
 
 @AllArgsConstructor
-public class BlockBurnListener<T extends Team, U extends keviinUser<T>> implements Listener {
-    private final keviinTeams<T, U> keviinTeams;
+public class BlockBurnListener<T extends Team, U extends SkyBlockProjectUser<T>> implements Listener {
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
     @EventHandler(ignoreCancelled = true)
     public void onBlockBurn(BlockBurnEvent event) {
 
-        keviinTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation()).ifPresent(team -> {
-            TeamSetting teamSetting = keviinTeams.getTeamManager().getTeamSetting(team, SettingType.FIRE_SPREAD.getSettingKey());
+        SkyBlockProjectTeams.getTeamManager().getTeamViaLocation(event.getBlock().getLocation()).ifPresent(team -> {
+            TeamSetting teamSetting = SkyBlockProjectTeams.getTeamManager().getTeamSetting(team, SettingType.FIRE_SPREAD.getSettingKey());
             if (teamSetting == null) return;
             if (teamSetting.getValue().equalsIgnoreCase("Disabled")) {
                 event.setCancelled(true);

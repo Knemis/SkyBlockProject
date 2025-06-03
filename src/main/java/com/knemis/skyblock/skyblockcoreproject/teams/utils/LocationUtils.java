@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.utils;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviincore.KeviinCore;
-import com.keviin.keviincore.multiversion.MultiVersion;
-import com.keviin.keviinteams.keviinTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.KeviinCore;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import lombok.Setter;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -25,7 +25,7 @@ public class LocationUtils {
             XMaterial.LAVA
     ).map(XMaterial::parseMaterial).collect(Collectors.toList());
 
-    public static boolean isSafe(@NotNull Location location, keviinTeams<?, ?> keviinTeams) {
+    public static boolean isSafe(@NotNull Location location, SkyBlockProjectTeams<?, ?> SkyBlockProjectTeams) {
         if (KeviinCore.isTesting()) {
             boolean safe = isSafeTesting;
             isSafeTesting = true;
@@ -34,7 +34,7 @@ public class LocationUtils {
         Block block = location.getBlock();
         Block above = location.clone().add(0, 1, 0).getBlock();
         Block below = location.clone().subtract(0, 1, 0).getBlock();
-        MultiVersion multiVersion = keviinTeams.getMultiVersion();
+        MultiVersion multiVersion = SkyBlockProjectTeams.getMultiVersion();
         return multiVersion.isPassable(block) && multiVersion.isPassable(above) && !multiVersion.isPassable(below) && !unsafeBlocks.contains(below.getType()) && !unsafeBlocks.contains(block.getType()) && !unsafeBlocks.contains(above.getType());
     }
 

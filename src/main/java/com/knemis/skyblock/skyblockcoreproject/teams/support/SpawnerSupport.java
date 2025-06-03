@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.support;
 
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import org.bukkit.Chunk;
 import org.bukkit.block.Block;
 import org.bukkit.block.CreatureSpawner;

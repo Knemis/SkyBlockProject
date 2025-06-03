@@ -168,7 +168,7 @@ public class Messages {
     public String topThirdColor;
 
     public Messages() {
-        this("Team", "t", "keviinTeams", "&c");
+        this("Team", "t", "SkyBlockProjectTeams", "&c");
     }
 
     public Messages(String team, String command, String pluginName, String color) {

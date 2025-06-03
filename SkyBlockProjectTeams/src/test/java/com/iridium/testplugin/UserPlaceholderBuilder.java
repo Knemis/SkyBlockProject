@@ -1,7 +1,7 @@
 package com.keviin.testplugin;
 
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviinteams.PlaceholderBuilder;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.teams.PlaceholderBuilder;
 
 import java.util.List;
 import java.util.Optional;

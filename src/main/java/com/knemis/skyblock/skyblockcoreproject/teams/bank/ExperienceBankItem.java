@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.bank;
 
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank; // TODO: Update to actual TeamBank class
 // import com.knemis.skyblock.skyblockcoreproject.teams.utils.PlayerUtils; // TODO: Update to actual PlayerUtils class
 import lombok.NoArgsConstructor;
@@ -15,7 +15,7 @@ public class ExperienceBankItem extends BankItem {
     }
 
     @Override
-    public BankResponse withdraw(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, IridiumTeams<?, ?> iridiumTeams) { // TODO: Update TeamBank to actual class
+    public BankResponse withdraw(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, SkyBlockProjectTeams<?, ?> SkyBlockProjectTeams) { // TODO: Update TeamBank to actual class
         int experience = Math.min(amount.intValue(), (int) teamBank.getNumber());
         if (experience > 0) {
             // PlayerUtils.setTotalExperience(player, PlayerUtils.getTotalExperience(player) + experience); // TODO: Uncomment when PlayerUtils is available
@@ -26,7 +26,7 @@ public class ExperienceBankItem extends BankItem {
     }
 
     @Override
-    public BankResponse deposit(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, IridiumTeams<?, ?> iridiumTeams) { // TODO: Update TeamBank to actual class
+    public BankResponse deposit(Player player, Number amount, com.knemis.skyblock.skyblockcoreproject.teams.database.TeamBank teamBank, SkyBlockProjectTeams<?, ?> SkyBlockProjectTeams) { // TODO: Update TeamBank to actual class
         // int experience = Math.min(amount.intValue(), PlayerUtils.getTotalExperience(player)); // TODO: Uncomment when PlayerUtils is available
         int experience = amount.intValue(); // Temporary placeholder
         if (experience > 0) {

@@ -1,10 +1,10 @@
-package com.keviin.keviinteams.commands;
+package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviinteams.UserBuilder;
-import com.keviin.keviinteams.gui.TopGUI;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.TopGUI;
 import com.keviin.testplugin.TestPlugin;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

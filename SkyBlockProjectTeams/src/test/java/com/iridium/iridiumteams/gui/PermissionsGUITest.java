@@ -1,13 +1,13 @@
-package com.keviin.keviinteams.gui;
+package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
 import com.cryptomorin.xseries.XMaterial;
 import com.google.common.collect.ImmutableMap;
-import com.keviin.keviincore.Item;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.*;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.*;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;

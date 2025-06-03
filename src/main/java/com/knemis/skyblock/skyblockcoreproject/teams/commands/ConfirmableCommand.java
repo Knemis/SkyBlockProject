@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser; // TODO: Update to actual SkyBlockProjectUser class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 // import com.knemis.skyblock.skyblockcoreproject.teams.gui.ConfirmationGUI; // TODO: Update to actual ConfirmationGUI class
 import org.bukkit.entity.Player;
@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
-public abstract class ConfirmableCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public abstract class ConfirmableCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> extends Command<T, U> { // TODO: Update Team and SkyBlockProjectUser to actual classes
     public final boolean requiresConfirmation;
 
     public ConfirmableCommand() {

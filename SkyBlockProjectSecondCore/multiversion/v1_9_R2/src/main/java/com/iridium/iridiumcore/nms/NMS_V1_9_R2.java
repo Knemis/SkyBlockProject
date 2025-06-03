@@ -1,6 +1,6 @@
-package com.keviin.keviincore.nms;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms;
 
-import com.keviin.keviincore.Color;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Color;
 import net.minecraft.server.v1_9_R2.*;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;

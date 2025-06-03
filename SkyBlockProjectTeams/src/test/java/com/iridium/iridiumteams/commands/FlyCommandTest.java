@@ -1,12 +1,12 @@
-package com.keviin.keviinteams.commands;
+package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.TeamBuilder;
-import com.keviin.keviinteams.UserBuilder;
-import com.keviin.keviinteams.enhancements.EnhancementAffectsType;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;
@@ -69,7 +69,7 @@ class FlyCommandTest {
     @Test
     public void executeFlyCommand_ShouldMakePlayerFly_WhenTheyHaveFlyAnywherePermission() {
         TestTeam team = new TeamBuilder().build();
-        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("keviinteams.fly.anywhere").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("SkyBlockProjectTeams.fly.anywhere").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test fly on");
@@ -87,7 +87,7 @@ class FlyCommandTest {
     public void executeFlyCommand_ShouldMakePlayerFly_WhenTheyHaveFlyPermissionAndTheyAreInTheirTerritory() {
         TestTeam team = new TeamBuilder().build();
         TeamManager.teamViaLocation = Optional.of(team);
-        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("keviinteams.fly").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("SkyBlockProjectTeams.fly").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test fly on");
@@ -104,7 +104,7 @@ class FlyCommandTest {
     @Test
     public void executeFlyCommand_ShouldNotMakePlayerFly_WhenTheyHaveFlyPermissionAndTheyAreNotInTheirTerritory() {
         TestTeam team = new TeamBuilder().build();
-        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("keviinteams.fly").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withTeam(team).withPermission("SkyBlockProjectTeams.fly").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test fly on");

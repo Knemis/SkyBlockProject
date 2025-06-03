@@ -3,8 +3,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XPotion;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
-// import com.keviin.keviinteams.enhancements.*; // Will be replaced by specific imports below
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
+// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.*; // Will be replaced by specific imports below
 // Specific imports after refactoring (commented out for now as enhancements package is not yet moved)
 // import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
 // import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType;

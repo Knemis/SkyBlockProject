@@ -1,6 +1,6 @@
 package com.keviin.testplugin;
 
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 
 import java.time.LocalDateTime;
 

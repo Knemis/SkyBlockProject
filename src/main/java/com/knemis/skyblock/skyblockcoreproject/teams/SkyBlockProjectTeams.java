@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams;
 
-// import com.keviin.keviincore.KeviinCore;
-// import com.keviin.keviincore.utils.StringUtils;
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.KeviinCore;
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
 
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
 import com.knemis.skyblock.skyblockcoreproject.teams.bank.BankItem;

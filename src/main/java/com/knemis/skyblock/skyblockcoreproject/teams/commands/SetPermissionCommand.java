@@ -1,10 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
 import com.knemis.skyblock.skyblockcoreproject.teams.Rank;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser; // TODO: Update to actual SkyBlockProjectUser class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang.WordUtils;
@@ -16,48 +16,48 @@ import java.util.stream.Collectors;
 
 @NoArgsConstructor
 
-public class SetPermissionCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public class SetPermissionCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> extends Command<T, U> { // TODO: Update Team and SkyBlockProjectUser to actual classes
     public SetPermissionCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, T team, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         Player player = user.getPlayer();
         if (args.length != 2 && (args.length != 3 || !args[2].equalsIgnoreCase("true") && !args[2].equalsIgnoreCase("false"))) {
-            // player.sendMessage(StringUtils.color(syntax.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
+            // player.sendMessage(StringUtils.color(syntax.replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
             player.sendMessage("Invalid syntax."); // Placeholder
             return false;
         }
-        // Optional<String> permission = iridiumTeams.getPermissionList().keySet().stream() // TODO: Uncomment when getPermissionList is available
+        // Optional<String> permission = SkyBlockProjectTeams.getPermissionList().keySet().stream() // TODO: Uncomment when getPermissionList is available
                 // .filter(s -> s.equalsIgnoreCase(args[0]))
                 // .findFirst();
         // if (!permission.isPresent()) {
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().invalidPermission // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            // player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().invalidPermission // TODO: Replace StringUtils.color
+                    // .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             // ));
             // return false;
         // }
-        // Optional<Integer> rank = iridiumTeams.getUserRanks().entrySet().stream() // TODO: Uncomment when getUserRanks is available
+        // Optional<Integer> rank = SkyBlockProjectTeams.getUserRanks().entrySet().stream() // TODO: Uncomment when getUserRanks is available
                 // .filter(r -> r.getValue().name.equalsIgnoreCase(args[1]))
                 // .findAny()
                 // .map(Map.Entry::getKey);
         // if (!rank.isPresent()) {
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().invalidUserRank // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+            // player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().invalidUserRank // TODO: Replace StringUtils.color
+                    // .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             // ));
             // return false;
         // }
-        // boolean allowed = args.length == 2 ? !iridiumTeams.getTeamManager().getTeamPermission(team, rank.get(), permission.get()) : args[2].equalsIgnoreCase("true"); // TODO: Uncomment when TeamManager, rank and permission are available
-        // if ((user.getUserRank() <= rank.get() && user.getUserRank() != Rank.OWNER.getId()) || !iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.CHANGE_PERMISSIONS) || rank.get() == Rank.OWNER.getId()) { // TODO: Uncomment when TeamManager and rank are available
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotChangePermissions // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        // boolean allowed = args.length == 2 ? !SkyBlockProjectTeams.getTeamManager().getTeamPermission(team, rank.get(), permission.get()) : args[2].equalsIgnoreCase("true"); // TODO: Uncomment when TeamManager, rank and permission are available
+        // if ((user.getUserRank() <= rank.get() && user.getUserRank() != Rank.OWNER.getId()) || !SkyBlockProjectTeams.getTeamManager().getTeamPermission(team, user, PermissionType.CHANGE_PERMISSIONS) || rank.get() == Rank.OWNER.getId()) { // TODO: Uncomment when TeamManager and rank are available
+            // player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().cannotChangePermissions // TODO: Replace StringUtils.color
+                    // .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
             // ));
             // return false;
         // }
-        // iridiumTeams.getTeamManager().setTeamPermission(team, rank.get(), permission.get(), allowed); // TODO: Uncomment when TeamManager, rank, permission and allowed are available
-        // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().permissionSet // TODO: Replace StringUtils.color
-                // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
+        // SkyBlockProjectTeams.getTeamManager().setTeamPermission(team, rank.get(), permission.get(), allowed); // TODO: Uncomment when TeamManager, rank, permission and allowed are available
+        // player.sendMessage(StringUtils.color(SkyBlockProjectTeams.getMessages().permissionSet // TODO: Replace StringUtils.color
+                // .replace("%prefix%", SkyBlockProjectTeams.getConfiguration().prefix)
                 // .replace("%permission%", permission.get())
                 // .replace("%rank%", WordUtils.capitalizeFully(args[1]))
                 // .replace("%allowed%", String.valueOf(allowed))
@@ -67,12 +67,12 @@ public class SetPermissionCommand<T extends com.knemis.skyblock.skyblockcoreproj
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         // switch (args.length) { // TODO: Uncomment when getPermissionList and getUserRanks are available
             // case 1:
-                // return new ArrayList<>(iridiumTeams.getPermissionList().keySet());
+                // return new ArrayList<>(SkyBlockProjectTeams.getPermissionList().keySet());
             // case 2:
-                // return iridiumTeams.getUserRanks().values().stream().map(com.knemis.skyblock.skyblockcoreproject.teams.UserRank::name).collect(Collectors.toList()); // Adjusted to new UserRank path
+                // return SkyBlockProjectTeams.getUserRanks().values().stream().map(com.knemis.skyblock.skyblockcoreproject.teams.UserRank::name).collect(Collectors.toList()); // Adjusted to new UserRank path
             // case 3:
                 // return Arrays.asList("true", "false");
             // default:

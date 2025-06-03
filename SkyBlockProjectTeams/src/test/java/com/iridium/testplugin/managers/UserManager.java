@@ -1,6 +1,6 @@
 package com.keviin.testplugin.managers;
 
-import com.keviin.keviinteams.managers.keviinUserManager;
+import com.knemis.skyblock.skyblockcoreproject.teams.managers.SkyBlockProjectUserManager;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;
 import org.bukkit.OfflinePlayer;
@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-public class UserManager implements keviinUserManager<TestTeam, User> {
+public class UserManager implements SkyBlockProjectUserManager<TestTeam, User> {
     public static List<User> users;
 
     public UserManager() {

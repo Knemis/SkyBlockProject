@@ -1,12 +1,12 @@
-package com.keviin.keviinteams.commands;
+package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.TeamBuilder;
-import com.keviin.keviinteams.UserBuilder;
-import com.keviin.keviinteams.gui.ConfirmationGUI;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.TeamBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.ConfirmationGUI;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.User;
@@ -23,13 +23,13 @@ import static org.junit.Assert.*;
 public class ConfirmableCommandTest {
     private ServerMock serverMock;
     private TestConfirmableCommand command;
-    private keviinTeams<TestTeam, User> keviinTeams;
+    private SkyBlockProjectTeams<TestTeam, User> SkyBlockProjectTeams;
 
     @BeforeEach
     public void setup() {
         this.serverMock = MockBukkit.mock();
         MockBukkit.load(TestPlugin.class);
-        this.keviinTeams = TestPlugin.getInstance();
+        this.SkyBlockProjectTeams = TestPlugin.getInstance();
         this.command = new TestConfirmableCommand(true);
     }
 
@@ -45,7 +45,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, keviinTeams);
+        command.execute(user, team, new String[]{}, SkyBlockProjectTeams);
 
         assertTrue(command.isCommandValidCalled);
         assertTrue(command.executeAfterConfirmationCalled);
@@ -58,7 +58,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(player);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, keviinTeams);
+        command.execute(user, team, new String[]{}, SkyBlockProjectTeams);
 
         assertTrue(command.isCommandValidCalled);
 
@@ -75,7 +75,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(player);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, keviinTeams);
+        command.execute(user, team, new String[]{}, SkyBlockProjectTeams);
 
         assertFalse(command.executeAfterConfirmationCalled);
 
@@ -97,7 +97,7 @@ public class ConfirmableCommandTest {
         User user = TestPlugin.getInstance().getUserManager().getUser(player);
         TestTeam team = new TeamBuilder().build();
 
-        command.execute(user, team, new String[]{}, keviinTeams);
+        command.execute(user, team, new String[]{}, SkyBlockProjectTeams);
 
         assertFalse(command.executeAfterConfirmationCalled);
 
@@ -121,13 +121,13 @@ public class ConfirmableCommandTest {
         }
 
         @Override
-        protected boolean isCommandValid(User user, TestTeam team, String[] arguments, keviinTeams<TestTeam, User> keviinTeams) {
+        protected boolean isCommandValid(User user, TestTeam team, String[] arguments, SkyBlockProjectTeams<TestTeam, User> SkyBlockProjectTeams) {
             isCommandValidCalled = true;
             return true;
         }
 
         @Override
-        protected void executeAfterConfirmation(User user, TestTeam team, String[] arguments, keviinTeams<TestTeam, User> keviinTeams) {
+        protected void executeAfterConfirmation(User user, TestTeam team, String[] arguments, SkyBlockProjectTeams<TestTeam, User> SkyBlockProjectTeams) {
             executeAfterConfirmationCalled = true;
         }
     }

@@ -3,8 +3,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Background; // TODO: Replace with actual Background class
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Background; // TODO: Replace with actual Background class
+// import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // TODO: Replace with actual Item class
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.*; // Will be refactored later
 // import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType; // TODO: Update to actual MissionType class
 

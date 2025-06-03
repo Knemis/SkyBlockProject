@@ -10,7 +10,7 @@ public class EnhancementUpdateEvent implements Listener {
     public static boolean called = false;
 
     @EventHandler
-    public void onEnhancementUpdate(com.keviin.keviinteams.api.EnhancementUpdateEvent<TestTeam, User> event){
+    public void onEnhancementUpdate(com.knemis.skyblock.skyblockcoreproject.teams.api.EnhancementUpdateEvent<TestTeam, User> event){
         called = true;
     }
 

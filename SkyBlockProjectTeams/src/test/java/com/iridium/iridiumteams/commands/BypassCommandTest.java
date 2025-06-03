@@ -1,10 +1,10 @@
-package com.keviin.keviinteams.commands;
+package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.User;
 import org.junit.jupiter.api.AfterEach;
@@ -43,7 +43,7 @@ class BypassCommandTest {
 
     @Test
     public void executeBypassCommand__On() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.bypass").build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("SkyBlockProjectTeams.bypass").build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test bypass");
@@ -56,7 +56,7 @@ class BypassCommandTest {
 
     @Test
     public void executeBypassCommand__Off() {
-        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("keviinteams.bypass").setBypassing().build();
+        PlayerMock playerMock = new UserBuilder(serverMock).withPermission("SkyBlockProjectTeams.bypass").setBypassing().build();
         User user = TestPlugin.getInstance().getUserManager().getUser(playerMock);
 
         serverMock.dispatchCommand(playerMock, "test bypass");

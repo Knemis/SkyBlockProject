@@ -1,9 +1,9 @@
-package com.keviin.keviinteams;
+package com.keviin.SkyBlockProjectTeams;
 
 import be.seeseemelk.mockbukkit.ServerMock;
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.database.TeamEnhancement;
-import com.keviin.keviinteams.database.TeamReward;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamReward;
 import com.keviin.testplugin.TestPlugin;
 import com.keviin.testplugin.TestTeam;
 import com.keviin.testplugin.managers.TeamManager;

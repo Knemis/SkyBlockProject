@@ -1,22 +1,22 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.placeholders;
 
-import com.keviin.keviincore.utils.Placeholder;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.entity.Player;
 
 import java.util.List;
 
-public class ClipPlaceholderAPI<T extends Team, U extends keviinUser<T>> extends PlaceholderExpansion {
+public class ClipPlaceholderAPI<T extends Team, U extends SkyBlockProjectUser<T>> extends PlaceholderExpansion {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
     private final Placeholders<T, U> placeholders;
 
-    public ClipPlaceholderAPI(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
-        this.placeholders = new Placeholders<>(keviinTeams);
+    public ClipPlaceholderAPI(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
+        this.placeholders = new Placeholders<>(SkyBlockProjectTeams);
     }
 
     @Override
@@ -26,7 +26,7 @@ public class ClipPlaceholderAPI<T extends Team, U extends keviinUser<T>> extends
 
     @Override
     public String getIdentifier() {
-        return keviinTeams.getName().toLowerCase();
+        return SkyBlockProjectTeams.getName().toLowerCase();
     }
 
     @Override
@@ -36,7 +36,7 @@ public class ClipPlaceholderAPI<T extends Team, U extends keviinUser<T>> extends
 
     @Override
     public String getVersion() {
-        return keviinTeams.getDescription().getVersion();
+        return SkyBlockProjectTeams.getDescription().getVersion();
     }
 
     @Override

@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.support;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviinteams.keviinTeams;
-import com.keviin.keviinteams.database.keviinUser;
-import com.keviin.keviinteams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
 import dev.rosewood.rosestacker.api.RoseStackerAPI;
 import dev.rosewood.rosestacker.stack.StackedBlock;
 import dev.rosewood.rosestacker.stack.StackedSpawner;
@@ -15,12 +15,12 @@ import org.bukkit.entity.EntityType;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class RoseStackerSupport<T extends Team, U extends keviinUser<T>> implements StackerSupport<T>, SpawnerSupport<T> {
+public class RoseStackerSupport<T extends Team, U extends SkyBlockProjectUser<T>> implements StackerSupport<T>, SpawnerSupport<T> {
 
-    private final keviinTeams<T, U> keviinTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
 
-    public RoseStackerSupport(keviinTeams<T, U> keviinTeams) {
-        this.keviinTeams = keviinTeams;
+    public RoseStackerSupport(SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     @Override
@@ -82,7 +82,7 @@ public class RoseStackerSupport<T extends Team, U extends keviinUser<T>> impleme
         HashMap<XMaterial, Integer> hashMap = new HashMap<>();
 
         RoseStackerAPI.getInstance().getStackedBlocks(Collections.singletonList(chunk)).forEach(stackedBlock -> {
-            if(!keviinTeams.getTeamManager().isInTeam(team, stackedBlock.getLocation())) return;
+            if(!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stackedBlock.getLocation())) return;
 
             XMaterial xMaterial = XMaterial.matchXMaterial(stackedBlock.getStackSettings().getType());
             hashMap.put(xMaterial, hashMap.getOrDefault(xMaterial, 0) + stackedBlock.getStackSize());
@@ -101,7 +101,7 @@ public class RoseStackerSupport<T extends Team, U extends keviinUser<T>> impleme
 
         int stackedBlocks = 0;
         for (StackedBlock stackedBlock : getStackedBlocks(blocks)) {
-            if (!keviinTeams.getTeamManager().isInTeam(team, stackedBlock.getLocation())) continue;
+            if (!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stackedBlock.getLocation())) continue;
             if (material != XMaterial.matchXMaterial(stackedBlock.getBlock().getType())) continue;
             stackedBlocks += (stackedBlock.getStackSize() - 1);
         }
@@ -114,7 +114,7 @@ public class RoseStackerSupport<T extends Team, U extends keviinUser<T>> impleme
 
         int stackedSpawners = 0;
         for (StackedSpawner stackedSpawner : getStackedSpawners(spawners)) {
-            if (!keviinTeams.getTeamManager().isInTeam(team, stackedSpawner.getLocation())) continue;
+            if (!SkyBlockProjectTeams.getTeamManager().isInTeam(team, stackedSpawner.getLocation())) continue;
             if (stackedSpawner.getSpawner().getSpawnedType() != entityType) continue;
             stackedSpawners += (stackedSpawner.getStackSize() - 1);
         }

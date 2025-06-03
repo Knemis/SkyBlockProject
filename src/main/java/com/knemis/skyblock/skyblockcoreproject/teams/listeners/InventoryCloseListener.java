@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.listeners;
 
-import com.keviin.keviincore.gui.ClosableGUI;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.ClosableGUI;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryCloseEvent;

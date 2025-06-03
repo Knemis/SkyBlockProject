@@ -1,4 +1,4 @@
-package com.keviin.keviincore.multiversion;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion;
 
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;

@@ -1,12 +1,12 @@
-package com.keviin.keviinteams.commands;
+package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
 import be.seeseemelk.mockbukkit.MockBukkit;
 import be.seeseemelk.mockbukkit.ServerMock;
 import be.seeseemelk.mockbukkit.entity.PlayerMock;
-import com.keviin.keviincore.utils.StringUtils;
-import com.keviin.keviinteams.UserBuilder;
-import com.keviin.keviinteams.gui.ShopCategoryGUI;
-import com.keviin.keviinteams.gui.ShopOverviewGUI;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.UserBuilder;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.ShopCategoryGUI;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.ShopOverviewGUI;
 import com.keviin.testplugin.TestPlugin;
 import org.bukkit.inventory.InventoryHolder;
 import org.junit.jupiter.api.AfterEach;

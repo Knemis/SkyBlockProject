@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.api;
 
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser; // TODO: Update to actual SkyBlockProjectUser class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 import lombok.Getter;
 import org.bukkit.event.Event;
@@ -8,7 +8,7 @@ import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class SettingUpdateEvent<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Event { // TODO: Update Team and IridiumUser to actual classes
+public class SettingUpdateEvent<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> extends Event { // TODO: Update Team and SkyBlockProjectUser to actual classes
 
     private static final HandlerList handlers = new HandlerList();
     private final T team;

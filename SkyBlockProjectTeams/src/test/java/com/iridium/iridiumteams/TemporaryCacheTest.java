@@ -1,4 +1,4 @@
-package com.keviin.keviinteams;
+package com.keviin.SkyBlockProjectTeams;
 
 import org.junit.jupiter.api.Test;
 

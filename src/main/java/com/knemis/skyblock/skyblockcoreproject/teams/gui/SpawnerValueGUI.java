@@ -1,6 +1,6 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.BlockValues;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
 import org.bukkit.Bukkit;
@@ -11,27 +11,27 @@ import org.bukkit.inventory.ItemStack;
 import java.util.Collection;
 import java.util.Collections;
 
-public class SpawnerValueGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.PagedGUI<BlockValues.ValuableBlock> */ { // TODO: Update Team and IridiumUser to actual classes, resolve PagedGUI
+public class SpawnerValueGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.SkyBlockProjectUser<T>> /* extends com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.PagedGUI<BlockValues.ValuableBlock> */ { // TODO: Update Team and SkyBlockProjectUser to actual classes, resolve PagedGUI
 
     private final T team;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final SkyBlockProjectTeams<T, U> SkyBlockProjectTeams;
     private Player player; // Added player field
     private int page; // Added page field
 
-    public SpawnerValueGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
+    public SpawnerValueGUI(T team, Player player, SkyBlockProjectTeams<T, U> SkyBlockProjectTeams) {
         // super( // TODO: Uncomment when PagedGUI is refactored
                 // 1,
-                // iridiumTeams.getInventories().spawnerValueGUI.size,
-                // iridiumTeams.getInventories().spawnerValueGUI.background,
-                // iridiumTeams.getInventories().previousPage,
-                // iridiumTeams.getInventories().nextPage,
+                // SkyBlockProjectTeams.getInventories().spawnerValueGUI.size,
+                // SkyBlockProjectTeams.getInventories().spawnerValueGUI.background,
+                // SkyBlockProjectTeams.getInventories().previousPage,
+                // SkyBlockProjectTeams.getInventories().nextPage,
                 // player,
-                // iridiumTeams.getInventories().backButton
+                // SkyBlockProjectTeams.getInventories().backButton
         // );
         this.player = player; // Added
         this.page = 1; // Added
         this.team = team;
-        this.iridiumTeams = iridiumTeams;
+        this.SkyBlockProjectTeams = SkyBlockProjectTeams;
     }
 
     // @NotNull //TODO: Uncomment if super class method has it
@@ -40,7 +40,7 @@ public class SpawnerValueGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
         // int maxPages = getPageObjects().size() / (getSize() - 9); // TODO: Uncomment when getPageObjects and getSize are available
         // if (getPageObjects().size() % (getSize() - 9) > 0) maxPages++;
 
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().spawnerValueGUI;
+        NoItemGUI noItemGUI = SkyBlockProjectTeams.getInventories().spawnerValueGUI;
         // Inventory inventory = Bukkit.createInventory(this, getSize(), StringUtils.color(noItemGUI.title // TODO: Replace StringUtils.color. 'this' might not be an InventoryHolder. getSize() might not be available.
                 // .replace("%page%", String.valueOf(getPage())) // TODO: Uncomment when getPage is available
                 // .replace("%max_pages%", String.valueOf(maxPages))
@@ -53,15 +53,15 @@ public class SpawnerValueGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
     // @Override //TODO: Uncomment if super class method has it
     public void addContent(Inventory inventory) {
         // super.addContent(inventory); // TODO: Uncomment if PagedGUI is extended and has this method
-        // for (Map.Entry<EntityType, BlockValues.ValuableBlock> entry : iridiumTeams.getBlockValues().spawnerValues.entrySet().stream().filter(entry -> entry.getValue().page == getPage()).collect(Collectors.toList())) { // TODO: Uncomment when getBlockValues and getPage are available
+        // for (Map.Entry<EntityType, BlockValues.ValuableBlock> entry : SkyBlockProjectTeams.getBlockValues().spawnerValues.entrySet().stream().filter(entry -> entry.getValue().page == getPage()).collect(Collectors.toList())) { // TODO: Uncomment when getBlockValues and getPage are available
 
             // List<String> lore = new ArrayList<>();
-            // lore.add(iridiumTeams.getBlockValues().valueLore // TODO: Uncomment when getBlockValues is available
+            // lore.add(SkyBlockProjectTeams.getBlockValues().valueLore // TODO: Uncomment when getBlockValues is available
                     // .replace("%block_value%", String.valueOf(entry.getValue().value))
             // );
-            // lore.add(iridiumTeams.getBlockValues().teamValueLore // TODO: Uncomment when getBlockValues and TeamManager are refactored
-                    // .replace("%total_blocks%", String.valueOf(iridiumTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount()))
-                    // .replace("%total_block_value%", String.valueOf(iridiumTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount() * entry.getValue().value))
+            // lore.add(SkyBlockProjectTeams.getBlockValues().teamValueLore // TODO: Uncomment when getBlockValues and TeamManager are refactored
+                    // .replace("%total_blocks%", String.valueOf(SkyBlockProjectTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount()))
+                    // .replace("%total_block_value%", String.valueOf(SkyBlockProjectTeams.getTeamManager().getTeamSpawners(team, entry.getKey()).getAmount() * entry.getValue().value))
             // );
 
             // String itemName = entry.getKey().name().toUpperCase() + "_SPAWN_EGG";
@@ -73,7 +73,7 @@ public class SpawnerValueGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
 
     // @Override //TODO: Uncomment if super class method has it
     public Collection<BlockValues.ValuableBlock> getPageObjects() {
-        // return iridiumTeams.getBlockValues().spawnerValues.values(); // TODO: Uncomment when getBlockValues is available
+        // return SkyBlockProjectTeams.getBlockValues().spawnerValues.values(); // TODO: Uncomment when getBlockValues is available
         return Collections.emptyList(); // Placeholder
     }
 
@@ -89,6 +89,6 @@ public class SpawnerValueGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
 
     public int getSize(){
         // Return a default size or size from config
-        return iridiumTeams.getInventories().spawnerValueGUI.size;
+        return SkyBlockProjectTeams.getInventories().spawnerValueGUI.size;
     }
 }
