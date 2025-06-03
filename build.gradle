@@ -46,7 +46,35 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.3'
     implementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.15.3'
     // Sunucu API'si
-    compileOnly "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
+    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT") {
+        exclude group: 'org.spigotmc', module: 'spigot-api'
+    }
+
+    // NMS/CraftBukkit versions for keviincore multiversion classes
+    compileOnly("org.spigotmc:spigot-api:1.8.3-R0.1-SNAPSHOT") { version { strictly '1.8.3-R0.1-SNAPSHOT' } } // For v1_8_R2
+    compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT") { version { strictly '1.8.8-R0.1-SNAPSHOT' } } // For v1_8_R3
+    compileOnly("org.spigotmc:spigot-api:1.9-R0.1-SNAPSHOT")   { version { strictly '1.9-R0.1-SNAPSHOT'   } } // For v1_9_R1
+    compileOnly("org.spigotmc:spigot-api:1.9.4-R0.1-SNAPSHOT") { version { strictly '1.9.4-R0.1-SNAPSHOT' } } // For v1_9_R2
+    // compileOnly "org.spigotmc:spigot-api:1.10.2-R0.1-SNAPSHOT" // For v1_10_R1 (Not in keviincore ls)
+    // compileOnly "org.spigotmc:spigot-api:1.11.2-R0.1-SNAPSHOT" // For v1_11_R1 (Not in keviincore ls)
+    // compileOnly "org.spigotmc:spigot-api:1.12.2-R0.1-SNAPSHOT" // For v1_12_R1 (Not in keviincore ls)
+    compileOnly("org.spigotmc:spigot-api:1.13.1-R0.1-SNAPSHOT") { version { strictly '1.13.1-R0.1-SNAPSHOT' } } // For v1_13_R1
+    compileOnly("org.spigotmc:spigot-api:1.13.2-R0.1-SNAPSHOT") { version { strictly '1.13.2-R0.1-SNAPSHOT' } } // For v1_13_R2
+    compileOnly("org.spigotmc:spigot-api:1.14.4-R0.1-SNAPSHOT") { version { strictly '1.14.4-R0.1-SNAPSHOT' } } // For v1_14_R1
+    compileOnly("org.spigotmc:spigot-api:1.15.2-R0.1-SNAPSHOT") { version { strictly '1.15.2-R0.1-SNAPSHOT' } } // For v1_15_R1
+    compileOnly("org.spigotmc:spigot-api:1.16.1-R0.1-SNAPSHOT") { version { strictly '1.16.1-R0.1-SNAPSHOT' } } // For v1_16_R1
+    compileOnly("org.spigotmc:spigot-api:1.16.3-R0.1-SNAPSHOT") { version { strictly '1.16.3-R0.1-SNAPSHOT' } } // For v1_16_R2
+    compileOnly("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT") { version { strictly '1.16.5-R0.1-SNAPSHOT' } } // For v1_16_R3
+    compileOnly("org.spigotmc:spigot-api:1.17.1-R0.1-SNAPSHOT") { version { strictly '1.17.1-R0.1-SNAPSHOT' } } // For v1_17_R1
+    compileOnly("org.spigotmc:spigot-api:1.18.1-R0.1-SNAPSHOT") { version { strictly '1.18.1-R0.1-SNAPSHOT' } } // For v1_18_R1
+    compileOnly("org.spigotmc:spigot-api:1.18.2-R0.1-SNAPSHOT") { version { strictly '1.18.2-R0.1-SNAPSHOT' } } // For v1_18_R2
+    compileOnly("org.spigotmc:spigot-api:1.19-R0.1-SNAPSHOT")   { version { strictly '1.19-R0.1-SNAPSHOT'   } } // For v1_19_R1
+    compileOnly("org.spigotmc:spigot-api:1.19.3-R0.1-SNAPSHOT") { version { strictly '1.19.3-R0.1-SNAPSHOT' } } // For v1_19_R2
+    compileOnly("org.spigotmc:spigot-api:1.19.4-R0.1-SNAPSHOT") { version { strictly '1.19.4-R0.1-SNAPSHOT' } } // For v1_19_R3
+    compileOnly("org.spigotmc:spigot-api:1.20.1-R0.1-SNAPSHOT") { version { strictly '1.20.1-R0.1-SNAPSHOT' } } // For v1_20_R1
+    compileOnly("org.spigotmc:spigot-api:1.20.2-R0.1-SNAPSHOT") { version { strictly '1.20.2-R0.1-SNAPSHOT' } } // For v1_20_R2
+    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT") { version { strictly '1.20.4-R0.1-SNAPSHOT' } } // For v1_20_R3
+    compileOnly("org.spigotmc:spigot-api:1.20.4-R0.1-SNAPSHOT") { version { strictly '1.20.4-R0.1-SNAPSHOT' } } // For v1_20_R4
 
     // Temel Plugin Bağımlılıkları
     compileOnly 'com.fastasyncworldedit:FastAsyncWorldEdit-Bukkit:2.13.0'
@@ -112,7 +140,13 @@ dependencies {
     testImplementation 'org.mockito:mockito-core:5.11.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.11.0'
 
-    testImplementation "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT"
+    // testImplementation "io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT" // Removed for main compile, also remove for test?
+    // Re-add paper-api for tests, but with exclude as well if it was causing issues there.
+    // Or, test classpath might need its own spigot api if specific tests rely on it.
+    // For now, let's make test compile consistent with main compile.
+    testImplementation("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT") {
+        exclude group: 'org.spigotmc', module: 'spigot-api'
+    }
     testImplementation "net.luckperms:api:5.5"
     testImplementation('com.github.MilkBowl:VaultAPI:1.7') {
         exclude group: 'org.bukkit', module: 'bukkit'

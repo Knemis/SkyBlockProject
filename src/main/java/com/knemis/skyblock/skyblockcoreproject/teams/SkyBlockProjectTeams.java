@@ -43,10 +43,6 @@ public abstract class SkyBlockProjectTeams<T extends Team, U extends SkyBlockPro
     @Setter
     private boolean recalculating = false;
 
-    public SkyBlockProjectTeams(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
-        // super(loader, description, dataFolder, file);
-    }
-
     // @Override
     public void onEnable() {
         // super.onEnable();

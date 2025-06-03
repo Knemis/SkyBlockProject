@@ -71,7 +71,7 @@ public class XSeriesSerialSupplier {
 
         @Override
         public void serialize(XEnchantment xEnchantment, JsonGenerator jsonGenerator, SerializerProvider serializerProvider) throws IOException {
-            jsonGenerator.writeString(xEnchantment.getEnchant().getName());
+            jsonGenerator.writeString(xEnchantment.getEnchant().getKey().toString());
         }
     }
 

@@ -38,16 +38,6 @@ public class SkyBlockSecondCore extends JavaPlugin {
     private static SkyBlockSecondCore instance;
 
     /**
-     * Constructor used for UnitTests
-     */
-    public SkyBlockSecondCore(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
-        super(loader, description, dataFolder, file);
-        setTesting(true);
-        // Disable logging
-        getLogger().setFilter(record -> false);
-    }
-
-    /**
      * Code that should be executed before this plugin gets enabled.
      * Initializes the configurations and sets the default world generator.
      */
