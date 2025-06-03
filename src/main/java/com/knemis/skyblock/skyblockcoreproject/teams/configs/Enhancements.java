@@ -3,19 +3,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XPotion;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
-// import com.keviin.keviinteams.enhancements.*; // Will be replaced by specific imports below
-// Specific imports after refactoring (commented out for now as enhancements package is not yet moved)
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.SpawnerEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.ExperienceEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.*; // Import all from enhancements
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -24,21 +13,21 @@ import java.util.Map;
 
 public class Enhancements {
 
-    public com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData> farmingEnhancement; // TODO: Update to actual classes
-    public com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.SpawnerEnhancementData> spawnerEnhancement; // TODO: Update to actual classes
-    public com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.ExperienceEnhancementData> experienceEnhancement; // TODO: Update to actual classes
-    public com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData> flightEnhancement; // TODO: Update to actual classes
-    public com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData> membersEnhancement; // TODO: Update to actual classes
+    public Enhancement<FarmingEnhancementData> farmingEnhancement;
+    public Enhancement<SpawnerEnhancementData> spawnerEnhancement;
+    public Enhancement<ExperienceEnhancementData> experienceEnhancement;
+    public Enhancement<FlightEnhancementData> flightEnhancement;
+    public Enhancement<MembersEnhancementData> membersEnhancement;
 
-    public com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData> warpsEnhancement; // TODO: Update to actual classes
-    public Map<String, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData>> potionEnhancements; // TODO: Update to actual classes
+    public Enhancement<WarpsEnhancementData> warpsEnhancement;
+    public Map<String, Enhancement<PotionEnhancementData>> potionEnhancements;
 
     public Enhancements() {
         this("&c");
     }
 
     public Enhancements(String color) {
-        farmingEnhancement = new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>(true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.BOOSTER, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.WHEAT, 10, 1, color + "&lFarming Booster", Arrays.asList( // TODO: Replace with actual Item class
+        farmingEnhancement = new Enhancement<>(true, EnhancementType.BOOSTER, new Item(XMaterial.WHEAT, 10, 1, color + "&lFarming Booster", Arrays.asList(
                 "&7Increase the speed at which crops grow.",
                 "",
                 color + "&lInformation:",
@@ -48,13 +37,13 @@ public class Enhancements {
                 "",
                 color + "[!] &7Must be level %minLevel% to purchase",
                 color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-        )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData>() // TODO: Update to actual class
-                .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData(5, 10000, new HashMap<>(), 1)) // TODO: Update to actual class
-                .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData(10, 10000, new HashMap<>(), 2)) // TODO: Update to actual class
-                .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FarmingEnhancementData(15, 10000, new HashMap<>(), 3)) // TODO: Update to actual class
+        )), new ImmutableMap.Builder<Integer, FarmingEnhancementData>()
+                .put(1, new FarmingEnhancementData(5, 10000, new HashMap<>(), 1))
+                .put(2, new FarmingEnhancementData(10, 10000, new HashMap<>(), 2))
+                .put(3, new FarmingEnhancementData(15, 10000, new HashMap<>(), 3))
                 .build());
 
-        spawnerEnhancement = new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>(true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.BOOSTER, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.SPAWNER, 12, 1, color + "&lSpawner Booster", Arrays.asList( // TODO: Replace with actual Item class
+        spawnerEnhancement = new Enhancement<>(true, EnhancementType.BOOSTER, new Item(XMaterial.SPAWNER, 12, 1, color + "&lSpawner Booster", Arrays.asList(
                 "&7Increase your spawner speeds.",
                 "",
                 color + "&lInformation:",
@@ -64,13 +53,13 @@ public class Enhancements {
                 "",
                 color + "[!] &7Must be level %minLevel% to purchase",
                 color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-        )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.SpawnerEnhancementData>() // TODO: Update to actual class
-                .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.SpawnerEnhancementData(5, 10000, new HashMap<>(), 6, 0)) // TODO: Update to actual class
-                .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.SpawnerEnhancementData(10, 10000, new HashMap<>(), 8, 0)) // TODO: Update to actual class
-                .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.SpawnerEnhancementData(15, 10000, new HashMap<>(), 10, 0)) // TODO: Update to actual class
+        )), new ImmutableMap.Builder<Integer, SpawnerEnhancementData>()
+                .put(1, new SpawnerEnhancementData(5, 10000, new HashMap<>(), 6, 0))
+                .put(2, new SpawnerEnhancementData(10, 10000, new HashMap<>(), 8, 0))
+                .put(3, new SpawnerEnhancementData(15, 10000, new HashMap<>(), 10, 0))
                 .build());
 
-        experienceEnhancement = new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>(true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.BOOSTER, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.EXPERIENCE_BOTTLE, 14, 1, color + "&lExperience Booster", Arrays.asList( // TODO: Replace with actual Item class
+        experienceEnhancement = new Enhancement<>(true, EnhancementType.BOOSTER, new Item(XMaterial.EXPERIENCE_BOTTLE, 14, 1, color + "&lExperience Booster", Arrays.asList(
                 "&7Increase how much experience you get.",
                 "",
                 color + "&lInformation:",
@@ -80,13 +69,13 @@ public class Enhancements {
                 "",
                 color + "[!] &7Must be level %minLevel% to purchase",
                 color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-        )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.ExperienceEnhancementData>() // TODO: Update to actual class
-                .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.ExperienceEnhancementData(5, 10000, new HashMap<>(), 1.5)) // TODO: Update to actual class
-                .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.ExperienceEnhancementData(10, 10000, new HashMap<>(), 2)) // TODO: Update to actual class
-                .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.ExperienceEnhancementData(15, 10000, new HashMap<>(), 2.5)) // TODO: Update to actual class
+        )), new ImmutableMap.Builder<Integer, ExperienceEnhancementData>()
+                .put(1, new ExperienceEnhancementData(5, 10000, new HashMap<>(), 1.5))
+                .put(2, new ExperienceEnhancementData(10, 10000, new HashMap<>(), 2))
+                .put(3, new ExperienceEnhancementData(15, 10000, new HashMap<>(), 2.5))
                 .build());
 
-        flightEnhancement = new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>(true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.BOOSTER, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.FEATHER, 16, 1, color + "&lFlight Booster", Arrays.asList( // TODO: Replace with actual Item class
+        flightEnhancement = new Enhancement<>(true, EnhancementType.BOOSTER, new Item(XMaterial.FEATHER, 16, 1, color + "&lFlight Booster", Arrays.asList(
                 "&7Gain access to fly.",
                 "",
                 color + "&lInformation:",
@@ -96,12 +85,12 @@ public class Enhancements {
                 "",
                 color + "[!] &7Must be level %minLevel% to purchase",
                 color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-        )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData>() // TODO: Update to actual class
-                .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.MEMBERS_IN_TERRITORY))) // TODO: Update to actual class
-                .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.MEMBERS_ANYWHERE))) // TODO: Update to actual class
+        )), new ImmutableMap.Builder<Integer, FlightEnhancementData>()
+                .put(1, new FlightEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.MEMBERS_IN_TERRITORY)))
+                .put(2, new FlightEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.MEMBERS_ANYWHERE)))
                 .build());
 
-        membersEnhancement = new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>(true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.UPGRADE, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.PLAYER_HEAD, 11, "Peaches_MLG", 1, color + "&lMember Upgrade", Arrays.asList( // TODO: Replace with actual Item class
+        membersEnhancement = new Enhancement<>(true, EnhancementType.UPGRADE, new Item(XMaterial.PLAYER_HEAD, 11, "Peaches_MLG", 1, color + "&lMember Upgrade", Arrays.asList(
                 "&7Need more members? Buy this",
                 "&7upgrade to increase your member count.",
                 "",
@@ -117,14 +106,14 @@ public class Enhancements {
                 "",
                 color + "[!] &7Must be level %minLevel% to purchase",
                 color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-        )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData>() // TODO: Update to actual class
-                .put(0, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData(5, 10000, new HashMap<>(), 5)) // TODO: Update to actual class
-                .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData(5, 10000, new HashMap<>(), 10)) // TODO: Update to actual class
-                .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData(10, 10000, new HashMap<>(), 15)) // TODO: Update to actual class
-                .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData(15, 10000, new HashMap<>(), 20)) // TODO: Update to actual class
+        )), new ImmutableMap.Builder<Integer, MembersEnhancementData>()
+                .put(0, new MembersEnhancementData(5, 10000, new HashMap<>(), 5))
+                .put(1, new MembersEnhancementData(5, 10000, new HashMap<>(), 10))
+                .put(2, new MembersEnhancementData(10, 10000, new HashMap<>(), 15))
+                .put(3, new MembersEnhancementData(15, 10000, new HashMap<>(), 20))
                 .build());
 
-        warpsEnhancement = new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>(true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.UPGRADE, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.END_PORTAL_FRAME, 13, 1, color + "&lWarps Upgrade", Arrays.asList( // TODO: Replace with actual Item class
+        warpsEnhancement = new Enhancement<>(true, EnhancementType.UPGRADE, new Item(XMaterial.END_PORTAL_FRAME, 13, 1, color + "&lWarps Upgrade", Arrays.asList(
                 "&7Need more members? Buy this",
                 "&7upgrade to increase your member count.",
                 "",
@@ -141,17 +130,17 @@ public class Enhancements {
                 "",
                 color + "[!] &7Must be level %minLevel% to purchase",
                 color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-        )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData>() // TODO: Update to actual class
-                .put(0, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData(5, 10000, new HashMap<>(), 1)) // TODO: Update to actual class
-                .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData(5, 10000, new HashMap<>(), 3)) // TODO: Update to actual class
-                .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData(10, 10000, new HashMap<>(), 5)) // TODO: Update to actual class
-                .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData(15, 10000, new HashMap<>(), 7)) // TODO: Update to actual class
-                .put(4, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.WarpsEnhancementData(15, 10000, new HashMap<>(), 9)) // TODO: Update to actual class
+        )), new ImmutableMap.Builder<Integer, WarpsEnhancementData>()
+                .put(0, new WarpsEnhancementData(5, 10000, new HashMap<>(), 1))
+                .put(1, new WarpsEnhancementData(5, 10000, new HashMap<>(), 3))
+                .put(2, new WarpsEnhancementData(10, 10000, new HashMap<>(), 5))
+                .put(3, new WarpsEnhancementData(15, 10000, new HashMap<>(), 7))
+                .put(4, new WarpsEnhancementData(15, 10000, new HashMap<>(), 9))
                 .build());
 
-        potionEnhancements = new ImmutableMap.Builder<String, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData>>() // TODO: Update to actual classes
-                .put("haste", new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>( // TODO: Update to actual class
-                        true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.UPGRADE, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.DIAMOND_PICKAXE, 10, 1, color + "&lHaste Booster", Arrays.asList( // TODO: Replace with actual Item class
+        potionEnhancements = new ImmutableMap.Builder<String, Enhancement<PotionEnhancementData>>()
+                .put("haste", new Enhancement<>(
+                        true, EnhancementType.UPGRADE, new Item(XMaterial.DIAMOND_PICKAXE, 10, 1, color + "&lHaste Booster", Arrays.asList(
                         "&7Gain a Haste Potion Effect.",
                         "",
                         color + "&lInformation:",
@@ -160,14 +149,14 @@ public class Enhancements {
                         "",
                         color + "[!] &7Must be level %minLevel% to purchase",
                         color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-                )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData>() // TODO: Update to actual class
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 1, XPotion.HASTE)) // TODO: Update to actual class
-                        .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 2, XPotion.HASTE)) // TODO: Update to actual class
-                        .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(15, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 3, XPotion.HASTE)) // TODO: Update to actual class
+                )), new ImmutableMap.Builder<Integer, PotionEnhancementData>()
+                        .put(1, new PotionEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 1, XPotion.HASTE))
+                        .put(2, new PotionEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 2, XPotion.HASTE))
+                        .put(3, new PotionEnhancementData(15, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 3, XPotion.HASTE))
                         .build()
                 ))
-                .put("speed", new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>( // TODO: Update to actual class
-                        true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.UPGRADE, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.SUGAR, 12, 1, color + "&lSpeed Booster", Arrays.asList( // TODO: Replace with actual Item class
+                .put("speed", new Enhancement<>(
+                        true, EnhancementType.UPGRADE, new Item(XMaterial.SUGAR, 12, 1, color + "&lSpeed Booster", Arrays.asList(
                         "&7Gain a Speed Potion Effect.",
                         "",
                         color + "&lInformation:",
@@ -176,14 +165,14 @@ public class Enhancements {
                         "",
                         color + "[!] &7Must be level %minLevel% to purchase",
                         color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-                )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData>() // TODO: Update to actual class
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 1, XPotion.SPEED)) // TODO: Update to actual class
-                        .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 2, XPotion.SPEED)) // TODO: Update to actual class
-                        .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(15, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 3, XPotion.SPEED)) // TODO: Update to actual class
+                )), new ImmutableMap.Builder<Integer, PotionEnhancementData>()
+                        .put(1, new PotionEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 1, XPotion.SPEED))
+                        .put(2, new PotionEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 2, XPotion.SPEED))
+                        .put(3, new PotionEnhancementData(15, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 3, XPotion.SPEED))
                         .build()
                 ))
-                .put("jump", new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<>( // TODO: Update to actual class
-                        true, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.UPGRADE, new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.FEATHER, 14, 1, color + "&lJump Booster", Arrays.asList( // TODO: Replace with actual Item class
+                .put("jump", new Enhancement<>(
+                        true, EnhancementType.UPGRADE, new Item(XMaterial.FEATHER, 14, 1, color + "&lJump Booster", Arrays.asList(
                         "&7Gain a Jump Boost Potion Effect.",
                         "",
                         color + "&lInformation:",
@@ -192,10 +181,10 @@ public class Enhancements {
                         "",
                         color + "[!] &7Must be level %minLevel% to purchase",
                         color + "&l[!] " + color + "Left Click to Purchase Level %next_level%."
-                )), new ImmutableMap.Builder<Integer, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData>() // TODO: Update to actual class
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 1, XPotion.JUMP_BOOST)) // TODO: Update to actual class
-                        .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 2, XPotion.JUMP_BOOST)) // TODO: Update to actual class
-                        .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData(15, 10000, new HashMap<>(), Collections.singletonList(com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS), 3, XPotion.JUMP_BOOST)) // TODO: Update to actual class
+                )), new ImmutableMap.Builder<Integer, PotionEnhancementData>()
+                        .put(1, new PotionEnhancementData(5, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 1, XPotion.JUMP_BOOST))
+                        .put(2, new PotionEnhancementData(10, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 2, XPotion.JUMP_BOOST))
+                        .put(3, new PotionEnhancementData(15, 10000, new HashMap<>(), Collections.singletonList(EnhancementAffectsType.VISITORS), 3, XPotion.JUMP_BOOST))
                         .build()
                 ))
                 .build();

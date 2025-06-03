@@ -6,6 +6,9 @@ import com.cryptomorin.xseries.profiles.objects.Profileable;
 import com.cryptomorin.xseries.reflection.XReflection;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder; // Added import
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.SkinUtils; // Added import
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils; // Added import
 import de.tr7zw.changeme.nbtapi.NBT;
 import de.tr7zw.changeme.nbtapi.NBTItem;
 import de.tr7zw.changeme.nbtapi.iface.ReadWriteNBT;

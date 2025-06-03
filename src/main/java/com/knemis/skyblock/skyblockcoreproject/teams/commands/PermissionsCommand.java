@@ -1,12 +1,12 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.UserRank;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
-// import com.knemis.skyblock.skyblockcoreproject.teams.gui.PermissionsGUI; // TODO: Update to actual PermissionsGUI class
-// import com.knemis.skyblock.skyblockcoreproject.teams.gui.RanksGUI; // TODO: Update to actual RanksGUI class
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.PermissionsGUI;
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.RanksGUI;
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

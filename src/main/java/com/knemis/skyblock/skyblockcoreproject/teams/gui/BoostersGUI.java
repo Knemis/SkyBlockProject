@@ -1,12 +1,12 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 
-// import com.keviin.keviincore.gui.BackGUI; // TODO: Replace with actual BackGUI class or remove extension
-// import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
-// import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.BackGUI;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.ItemStackUtils;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder; // This is for core.keviincore.utils.Placeholder
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.User; // TODO: Update to actual User class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement; // TODO: Update to actual TeamEnhancement class
 // import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement; // TODO: Update to actual Enhancement class
@@ -20,81 +20,81 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class BoostersGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.BackGUI */ { // TODO: Update Team and IridiumUser to actual classes, resolve BackGUI
+// TODO: Update Team and User to actual classes
+public class BoostersGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.User<T>> extends BackGUI {
 
     private final T team;
-    private final IridiumTeams<T, U> iridiumTeams;
+    private final SkyBlockTeams<T, U> skyblockTeams;
     private final Map<Integer, String> boosters = new HashMap<>();
-    private Player player; // Added player field
+    // private Player player; // Player field is likely handled by BackGUI constructor
 
-    public BoostersGUI(T team, Player player, IridiumTeams<T, U> iridiumTeams) {
-        // super(iridiumTeams.getInventories().boostersGUI.background, player, iridiumTeams.getInventories().backButton); // TODO: Uncomment when BackGUI and inventories are refactored
-        this.player = player; // Added
+    public BoostersGUI(T team, Player player, SkyBlockTeams<T, U> skyblockTeams) {
+        super(skyblockTeams.getInventories().boostersGUI.background, player, skyblockTeams.getInventories().backButton);
+        // this.player = player;
         this.team = team;
-        this.iridiumTeams = iridiumTeams;
+        this.skyblockTeams = skyblockTeams;
     }
 
-    // @NotNull //TODO: Uncomment if super class method has it
-    // @Override //TODO: Uncomment if super class method has it
-    public Inventory getInventory() { // TODO: This method likely needs to be @Override if BackGUI is a proper GUI base class
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().boostersGUI;
-        // Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title)); // TODO: Replace StringUtils.color. 'this' might not be an InventoryHolder if BackGUI is not extended.
-        Inventory inventory = Bukkit.createInventory(null, noItemGUI.size, "Boosters GUI Title Placeholder"); // Placeholder
+    @NotNull
+    @Override
+    public Inventory getInventory() {
+        NoItemGUI noItemGUI = skyblockTeams.getInventories().boostersGUI;
+        Inventory inventory = Bukkit.createInventory(this, noItemGUI.size, StringUtils.color(noItemGUI.title));
         addContent(inventory);
         return inventory;
     }
 
-    // @Override //TODO: Uncomment if super class method has it
+    @Override
     public void addContent(Inventory inventory) {
-        // super.addContent(inventory); // TODO: Uncomment if BackGUI is extended and has this method
+        super.addContent(inventory);
 
-        // for (Map.Entry<String, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<?>> enhancementEntry : iridiumTeams.getEnhancementList().entrySet()) { // TODO: Uncomment when getEnhancementList and Enhancement are available
-            // if (enhancementEntry.getValue().type != com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.BOOSTER) continue; // TODO: Uncomment when EnhancementType is available
-            // boosters.put(enhancementEntry.getValue().item.slot, enhancementEntry.getKey()); // TODO: Uncomment when item is available
-            // com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, enhancementEntry.getKey()); // TODO: Uncomment when TeamManager and TeamEnhancement are refactored
-            // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData currentData = enhancementEntry.getValue().levels.get(teamEnhancement.getLevel()); // TODO: Uncomment when EnhancementData and teamEnhancement are available
-            // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData nextData = enhancementEntry.getValue().levels.get(teamEnhancement.getLevel() + 1); // TODO: Uncomment when EnhancementData and teamEnhancement are available
-            // int seconds = Math.max((int) (teamEnhancement.getRemainingTime() % 60), 0);
-            // int minutes = Math.max((int) ((teamEnhancement.getRemainingTime() % 3600) / 60), 0);
-            // int hours = Math.max((int) (teamEnhancement.getRemainingTime() / 3600), 0);
-            // int currentLevel = teamEnhancement.isActive(enhancementEntry.getValue().type) ? teamEnhancement.getLevel() : 0;
-            // String nextLevel = nextData == null ? iridiumTeams.getMessages().nullPlaceholder : String.valueOf(currentLevel + 1);
-            // String cost = nextData == null ? currentData == null ? iridiumTeams.getMessages().nullPlaceholder : String.valueOf(currentData.money) : String.valueOf(nextData.money);
-            // String minLevel = nextData == null ? iridiumTeams.getMessages().nullPlaceholder : String.valueOf(nextData.minLevel);
-            // List<com.knemis.skyblock.skyblockcoreproject.teams.Placeholder> placeholders = currentData == null ? new ArrayList<>() : new ArrayList<>(currentData.getPlaceholders()); // TODO: Replace Placeholder
-            // placeholders.addAll(Arrays.asList(
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("timeremaining_hours", String.valueOf(hours)), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("timeremaining_minutes", String.valueOf(minutes)), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("timeremaining_seconds", String.valueOf(seconds)), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("current_level", String.valueOf(currentLevel)), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("minLevel", minLevel), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("next_level", nextLevel), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("cost", cost), // TODO: Replace Placeholder
-                    // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("vault_cost", cost) // TODO: Replace Placeholder
-            // ));
+        for (Map.Entry<String, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<?>> enhancementEntry : skyblockTeams.getEnhancementList().entrySet()) { // TODO: Ensure Enhancement class is correctly referenced/imported
+            if (enhancementEntry.getValue().type != com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementType.BOOSTER) continue; // TODO: Ensure EnhancementType is correctly referenced/imported
+            boosters.put(enhancementEntry.getValue().item.slot, enhancementEntry.getKey());
+            com.knemis.skyblock.skyblockcoreproject.teams.database.TeamEnhancement teamEnhancement = skyblockTeams.getTeamManager().getTeamEnhancement(team, enhancementEntry.getKey()); // TODO: Ensure TeamEnhancement is correctly referenced/imported
+            com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData currentData = enhancementEntry.getValue().levels.get(teamEnhancement.getLevel()); // TODO: Ensure EnhancementData is correctly referenced/imported
+            com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData nextData = enhancementEntry.getValue().levels.get(teamEnhancement.getLevel() + 1);
+            int seconds = Math.max((int) (teamEnhancement.getRemainingTime() % 60), 0);
+            int minutes = Math.max((int) ((teamEnhancement.getRemainingTime() % 3600) / 60), 0);
+            int hours = Math.max((int) (teamEnhancement.getRemainingTime() / 3600), 0);
+            int currentLevel = teamEnhancement.isActive(enhancementEntry.getValue().type) ? teamEnhancement.getLevel() : 0;
+            String nextLevel = nextData == null ? skyblockTeams.getMessages().nullPlaceholder : String.valueOf(currentLevel + 1);
+            String cost = nextData == null ? currentData == null ? skyblockTeams.getMessages().nullPlaceholder : String.valueOf(currentData.money) : String.valueOf(nextData.money);
+            String minLevel = nextData == null ? skyblockTeams.getMessages().nullPlaceholder : String.valueOf(nextData.minLevel);
+            List<com.knemis.skyblock.skyblockcoreproject.teams.Placeholder> placeholders = currentData == null ? new ArrayList<>() : new ArrayList<>(currentData.getPlaceholders()); // This is teams.Placeholder
+            placeholders.addAll(Arrays.asList(
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("timeremaining_hours", String.valueOf(hours)),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("timeremaining_minutes", String.valueOf(minutes)),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("timeremaining_seconds", String.valueOf(seconds)),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("current_level", String.valueOf(currentLevel)),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("minLevel", minLevel),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("next_level", nextLevel),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("cost", cost),
+                    new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("vault_cost", cost)
+            ));
 
-            // if(nextData != null) {
-                // for (Map.Entry<String, Double> bankItem : nextData.bankCosts.entrySet()) {
-                    // placeholders.add(new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder(bankItem.getKey() + "_cost", formatPrice(bankItem.getValue()))); // TODO: Replace Placeholder
-                // }
-            // }
+            if(nextData != null) {
+                for (Map.Entry<String, Double> bankItem : nextData.bankCosts.entrySet()) {
+                    placeholders.add(new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder(bankItem.getKey() + "_cost", formatPrice(bankItem.getValue())));
+                }
+            }
 
-            // inventory.setItem(enhancementEntry.getValue().item.slot, ItemStackUtils.makeItem(enhancementEntry.getValue().item, placeholders)); // TODO: Replace ItemStackUtils.makeItem
-        // }
+            inventory.setItem(enhancementEntry.getValue().item.slot, ItemStackUtils.makeItem(enhancementEntry.getValue().item, placeholders));
+        }
     }
 
-    // @Override //TODO: Uncomment if super class method has it
+    @Override
     public void onInventoryClick(InventoryClickEvent event) {
-        // super.onInventoryClick(event); // TODO: Uncomment if BackGUI is extended and has this method
+        super.onInventoryClick(event);
 
         if (!boosters.containsKey(event.getSlot())) return;
         String booster = boosters.get(event.getSlot());
-        // iridiumTeams.getCommandManager().executeCommand(event.getWhoClicked(), iridiumTeams.getCommands().boostersCommand, new String[]{"buy", booster}); // TODO: Uncomment when CommandManager and Commands are refactored
+        skyblockTeams.getCommandManager().executeCommand(event.getWhoClicked(), skyblockTeams.getCommands().boostersCommand, new String[]{"buy", booster});
     }
 
     public String formatPrice(double value) {
-        // if (iridiumTeams.getShop().abbreviatePrices) { // TODO: Uncomment when getShop is available
-            // return iridiumTeams.getConfiguration().numberFormatter.format(value); // TODO: Uncomment when Configuration and NumberFormatter are refactored
+        // if (skyblockTeams.getShop().abbreviatePrices) { // TODO: Uncomment when getShop is available
+            // return skyblockTeams.getConfiguration().numberFormatter.format(value); // TODO: Uncomment when Configuration and NumberFormatter are refactored
         // }
         return String.valueOf(value); // Placeholder
     }

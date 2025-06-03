@@ -2,6 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import com.keviin.keviincolorapi.keviinColorAPI;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.DefaultFontInfo;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder; // Added import
 
 import java.util.List;
 import java.util.stream.Collectors;

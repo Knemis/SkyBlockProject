@@ -1,13 +1,13 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.SettingType;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamInvite; // TODO: Update to actual TeamInvite class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting; // TODO: Update to actual TeamSetting class
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData; // TODO: Update to actual MembersEnhancementData class
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamInvite;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamSetting;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData;
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -18,73 +18,73 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class JoinCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public class JoinCommand<T extends Team, U extends User<T>> extends Command<T, U> {
     public JoinCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
         Player player = user.getPlayer();
         if (args.length != 1) {
-            // player.sendMessage(StringUtils.color(syntax.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
-            player.sendMessage("Invalid syntax."); // Placeholder
+            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", skyblockTeams.getConfiguration().prefix)));
+            // player.sendMessage("Invalid syntax."); // Placeholder
             return false;
         }
-        // if (iridiumTeams.getTeamManager().getTeamViaID(user.getTeamID()).isPresent()) { // TODO: Uncomment when TeamManager is refactored
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().alreadyHaveTeam // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
-        // Optional<T> team = iridiumTeams.getTeamManager().getTeamViaNameOrPlayer(args[0]); // TODO: Uncomment when TeamManager is refactored
-        // if (!team.isPresent()) {
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().teamDoesntExistByName // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
-        // TeamSetting teamSetting = iridiumTeams.getTeamManager().getTeamSetting(team.get(), SettingType.TEAM_TYPE.getSettingKey()); // TODO: Uncomment when TeamManager and TeamSetting are refactored
-        // Optional<com.knemis.skyblock.skyblockcoreproject.teams.database.TeamInvite> teamInvite = iridiumTeams.getTeamManager().getTeamInvite(team.get(), user); // TODO: Uncomment when TeamManager and TeamInvite are refactored
-        // if (!teamInvite.isPresent() && !user.isBypassing() && teamSetting != null && !teamSetting.getValue().equalsIgnoreCase("public")) { // TODO: Uncomment when teamInvite and teamSetting are available
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().noActiveInvite // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
+        if (skyblockTeams.getTeamManager().getTeamViaID(user.getTeamID()).isPresent()) { // TODO: Ensure TeamManager is functional
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().alreadyHaveTeam
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
+        Optional<T> team = skyblockTeams.getTeamManager().getTeamViaNameOrPlayer(args[0]); // TODO: Ensure TeamManager is functional
+        if (!team.isPresent()) {
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().teamDoesntExistByName
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
+        TeamSetting teamSetting = skyblockTeams.getTeamManager().getTeamSetting(team.get(), SettingType.TEAM_TYPE.getSettingKey()); // TODO: Ensure TeamManager and TeamSetting are functional
+        Optional<TeamInvite> teamInvite = skyblockTeams.getTeamManager().getTeamInvite(team.get(), user); // TODO: Ensure TeamManager and TeamInvite are functional
+        if (!teamInvite.isPresent() && !user.isBypassing() && teamSetting != null && !teamSetting.getValue().equalsIgnoreCase("public")) {
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().noActiveInvite
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
 
-        // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.MembersEnhancementData data = iridiumTeams.getEnhancements().membersEnhancement.levels.get(iridiumTeams.getTeamManager().getTeamEnhancement(team.get(), "members").getLevel()); // TODO: Uncomment when Enhancements and TeamManager are refactored
-        // if (iridiumTeams.getTeamManager().getTeamMembers(team.get()).size() >= (data == null ? 0 : data.members)) { // TODO: Uncomment when TeamManager and data are available
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().memberLimitReached // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
+        MembersEnhancementData data = skyblockTeams.getEnhancements().membersEnhancement.levels.get(skyblockTeams.getTeamManager().getTeamEnhancement(team.get(), "members").getLevel()); // TODO: Ensure Enhancements and TeamManager are functional
+        if (skyblockTeams.getTeamManager().getTeamMembers(team.get()).size() >= (data == null ? 0 : data.members)) { // TODO: Ensure TeamManager is functional
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().memberLimitReached
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
 
-        // user.setTeam(team.get()); // TODO: Uncomment when team is available
-        // teamInvite.ifPresent(invite -> iridiumTeams.getTeamManager().deleteTeamInvite(invite)); // TODO: Uncomment when teamInvite and TeamManager are available
+        user.setTeam(team.get());
+        teamInvite.ifPresent(invite -> skyblockTeams.getTeamManager().deleteTeamInvite(invite)); // TODO: Ensure TeamManager is functional
 
-        // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().joinedTeam // TODO: Replace StringUtils.color
-                // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-                // .replace("%name%", team.get().getName())
-        // ));
+        player.sendMessage(StringUtils.color(skyblockTeams.getMessages().joinedTeam
+                .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+                .replace("%name%", team.get().getName())
+        ));
 
-        // iridiumTeams.getTeamManager().getTeamMembers(team.get()).stream() // TODO: Uncomment when TeamManager and team are available
-                // .map(U::getPlayer)
-                // .forEach(teamMember -> {
-                    // if (teamMember != null && teamMember != player) {
-                        // teamMember.sendMessage(StringUtils.color(iridiumTeams.getMessages().userJoinedTeam // TODO: Replace StringUtils.color
-                                // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-                                // .replace("%player%", player.getName())
-                        // ));
-                    // }
-                // });
-        player.sendMessage("Join command needs to be reimplemented after refactoring."); // Placeholder
+        skyblockTeams.getTeamManager().getTeamMembers(team.get()).stream() // TODO: Ensure TeamManager is functional
+                .map(U::getPlayer)
+                .forEach(teamMember -> {
+                    if (teamMember != null && teamMember != player) {
+                        teamMember.sendMessage(StringUtils.color(skyblockTeams.getMessages().userJoinedTeam
+                                .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+                                .replace("%player%", player.getName())
+                        ));
+                    }
+                });
+        // player.sendMessage("Join command needs to be reimplemented after refactoring."); // Placeholder
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
     }
 

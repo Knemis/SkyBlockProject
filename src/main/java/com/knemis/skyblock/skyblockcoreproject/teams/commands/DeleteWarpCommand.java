@@ -1,11 +1,11 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamWarp; // TODO: Update to actual TeamWarp class
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
+import com.knemis.skyblock.skyblockcoreproject.teams.database.TeamWarp;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
@@ -15,50 +15,50 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class DeleteWarpCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public class DeleteWarpCommand<T extends Team, U extends User<T>> extends Command<T, U> {
     public DeleteWarpCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, T team, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
         Player player = user.getPlayer();
-        if (args.length != 1 && args.length != 2) {
-            // player.sendMessage(StringUtils.color(syntax.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
-            player.sendMessage("Invalid syntax."); // Placeholder
+        if (args.length != 1 && args.length != 2) { // args.length != 2 seems to be for an optional password which is not used here
+            player.sendMessage(StringUtils.color(syntax.replace("%prefix%", skyblockTeams.getConfiguration().prefix)));
+            // player.sendMessage("Invalid syntax."); // Placeholder
             return false;
         }
-        // if (!iridiumTeams.getTeamManager().getTeamPermission(team, user, PermissionType.MANAGE_WARPS)) { // TODO: Uncomment when TeamManager is refactored
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().cannotManageWarps // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
+        if (!skyblockTeams.getTeamManager().getTeamPermission(team, user, PermissionType.MANAGE_WARPS)) { // TODO: Ensure TeamManager is functional
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().cannotManageWarps
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
 
-        // Optional<TeamWarp> teamWarp = iridiumTeams.getTeamManager().getTeamWarp(team, args[0]); // TODO: Uncomment when TeamManager and TeamWarp are refactored
-        // if (!teamWarp.isPresent()) {
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().unknownWarp // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
+        Optional<TeamWarp> teamWarp = skyblockTeams.getTeamManager().getTeamWarp(team, args[0]); // TODO: Ensure TeamManager and TeamWarp are functional
+        if (!teamWarp.isPresent()) {
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().unknownWarp
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
 
-        // iridiumTeams.getTeamManager().deleteWarp(teamWarp.get()); // TODO: Uncomment when TeamManager and TeamWarp are refactored
-        // iridiumTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member -> // TODO: Uncomment when TeamManager is refactored
-                // member.sendMessage(StringUtils.color(iridiumTeams.getMessages().deletedWarp // TODO: Replace StringUtils.color
-                        // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-                        // .replace("%player%", player.getName())
-                        // .replace("%name%", teamWarp.get().getName())
-                // ))
-        // );
-        player.sendMessage("DeleteWarp command needs to be reimplemented after refactoring."); // Placeholder
+        skyblockTeams.getTeamManager().deleteWarp(teamWarp.get()); // TODO: Ensure TeamManager and TeamWarp are functional
+        skyblockTeams.getTeamManager().getTeamMembers(team).stream().map(U::getPlayer).filter(Objects::nonNull).forEach(member -> // TODO: Ensure TeamManager is functional
+                member.sendMessage(StringUtils.color(skyblockTeams.getMessages().deletedWarp
+                        .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+                        .replace("%player%", player.getName())
+                        .replace("%name%", teamWarp.get().getName())
+                ))
+        );
+        // player.sendMessage("DeleteWarp command needs to be reimplemented after refactoring."); // Placeholder
         return true;
     }
 
     @Override
-    public List<String> onTabComplete(U user, T team, String[] args, IridiumTeams<T, U> iridiumTeams) {
-        // List<TeamWarp> teamWarps = iridiumTeams.getTeamManager().getTeamWarps(team); // TODO: Uncomment when TeamManager and TeamWarp are refactored
-        // return teamWarps.stream().map(TeamWarp::getName).collect(Collectors.toList()); // TODO: Uncomment when TeamWarp is refactored
-        return Collections.emptyList(); // Placeholder
+    public List<String> onTabComplete(U user, T team, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
+        List<TeamWarp> teamWarps = skyblockTeams.getTeamManager().getTeamWarps(team); // TODO: Ensure TeamManager and TeamWarp are functional
+        return teamWarps.stream().map(TeamWarp::getName).collect(Collectors.toList());
+        // return Collections.emptyList(); // Placeholder
     }
 }

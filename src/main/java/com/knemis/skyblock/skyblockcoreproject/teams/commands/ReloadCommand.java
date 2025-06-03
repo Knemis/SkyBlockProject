@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
 

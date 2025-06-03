@@ -3,8 +3,8 @@ package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
-// import com.keviin.keviincore.utils.NumberFormatter; // TODO: Replace with actual NumberFormatter class
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.NumberFormatter;
 import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
 import com.knemis.skyblock.skyblockcoreproject.teams.UserRank;
 
@@ -15,7 +15,7 @@ public class Configuration {
     public boolean updateChecks;
 
     public String dateTimeFormat;
-    public com.knemis.skyblock.skyblockcoreproject.teams.utils.NumberFormatter numberFormatter; // TODO: Replace with actual NumberFormatter class
+    public NumberFormatter numberFormatter;
     public boolean createRequiresName;
     public boolean preventTntGriefing;
     public boolean patreonMessage;
@@ -61,7 +61,7 @@ public class Configuration {
         this.prefix = color + "&l" + pluginName + " &8»";
         this.updateChecks = true;
         this.dateTimeFormat = "EEEE, MMMM dd HH:mm:ss";
-        // this.numberFormatter = new com.knemis.skyblock.skyblockcoreproject.teams.utils.NumberFormatter(); // TODO: Replace with actual NumberFormatter class
+        this.numberFormatter = new NumberFormatter();
         this.createRequiresName = true;
         this.preventTntGriefing = true;
         this.patreonMessage = true;
@@ -74,12 +74,12 @@ public class Configuration {
         this.flatExpRequirement = 10;
         this.curvedExpModifier = 0.95;
         this.userRanks = new ImmutableMap.Builder<Integer, UserRank>()
-                .put(1, new UserRank("Member", new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.STONE_AXE, 12, 1, "&9&lMember", Collections.emptyList()))) // TODO: Replace with actual Item class
-                .put(2, new UserRank("Moderator", new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.IRON_AXE, 13, 1, "&5&lModerator", Collections.emptyList()))) // TODO: Replace with actual Item class
-                .put(3, new UserRank("CoOwner", new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.GOLDEN_AXE, 14, 1, "&2&lCoOwner", Collections.emptyList()))) // TODO: Replace with actual Item class
+                .put(1, new UserRank("Member", new Item(XMaterial.STONE_AXE, 12, 1, "&9&lMember", Collections.emptyList())))
+                .put(2, new UserRank("Moderator", new Item(XMaterial.IRON_AXE, 13, 1, "&5&lModerator", Collections.emptyList())))
+                .put(3, new UserRank("CoOwner", new Item(XMaterial.GOLDEN_AXE, 14, 1, "&2&lCoOwner", Collections.emptyList())))
                 .build();
-        this.visitor = new UserRank("Visitor", new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.WOODEN_AXE, 11, 1, "&7&lVisitor", Collections.emptyList())); // TODO: Replace with actual Item class
-        this.owner = new UserRank("Owner", new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.DIAMOND_AXE, 15, 1, "&c&lOwner", Collections.emptyList())); // TODO: Replace with actual Item class
+        this.visitor = new UserRank("Visitor", new Item(XMaterial.WOODEN_AXE, 11, 1, "&7&lVisitor", Collections.emptyList()));
+        this.owner = new UserRank("Owner", new Item(XMaterial.DIAMOND_AXE, 15, 1, "&c&lOwner", Collections.emptyList()));
         this.teamInfoTitle = "&8[ " + color + "&l%" + team.toLowerCase() + "_name% &8]";
         this.teamInfoTitleFiller = "&8&m ";
         this.teamInfo = Arrays.asList(
@@ -116,14 +116,14 @@ public class Configuration {
                 .build();
 
         this.levelRewards = ImmutableMap.<Integer, Reward>builder()
-                .put(1, new Reward(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.EXPERIENCE_BOTTLE, 1, "&b&lLevel %"+team.toLowerCase()+"_level% Reward", Arrays.asList( // TODO: Replace with actual Item class
+                 .put(1, new Reward(new Item(XMaterial.EXPERIENCE_BOTTLE, 1, "&b&lLevel %"+team.toLowerCase()+"_level% Reward", Arrays.asList(
                         "&7"+team+" Level %"+team.toLowerCase()+"_level% Rewards:",
                         "&b&l* &b200 Money",
                         "",
                         "&b&l[!] &bLeft click to redeem"
                 )), Collections.emptyList(), 0, new HashMap<>(), 200, 0, XSound.ENTITY_PLAYER_LEVELUP))
 
-                .put(5, new Reward(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.EXPERIENCE_BOTTLE, 1, "&b&lLevel %"+team.toLowerCase()+"_level% Reward", Arrays.asList( // TODO: Replace with actual Item class
+                .put(5, new Reward(new Item(XMaterial.EXPERIENCE_BOTTLE, 1, "&b&lLevel %"+team.toLowerCase()+"_level% Reward", Arrays.asList(
                         "&7"+team+" Level %"+team.toLowerCase()+"_level% Rewards:",
                         "&b&l* &b2000 Money",
                         "",

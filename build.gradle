@@ -153,6 +153,8 @@ processResources {
 //    relocate 'org.bstats', 'com.knemis.skyblock.libs.bstats'
 //    relocate 'de.jeff_media.updatechecker', 'com.knemis.skyblock.libs.updatechecker'
 //    relocate 'com.j256.ormlite', 'com.knemis.skyblock.libs.ormlite'
+    // relocate 'com.fasterxml.jackson', 'com.knemis.skyblock.libs.jackson' // Jackson relocate
+    // relocate 'org.apache.commons.lang3', 'com.knemis.skyblock.libs.commonslang3' // Commons Lang relocate
 //    // XSeries zaten implementation, eğer sorun çıkarırsa veya başka pluginle çakışırsa relocate edilebilir.
 //    // relocate 'com.github.cryptomorin.xseries', 'com.knemis.skyblock.libs.xseries'
 //

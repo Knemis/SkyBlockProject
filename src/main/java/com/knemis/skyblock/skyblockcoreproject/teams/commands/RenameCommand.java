@@ -1,10 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.PermissionType;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 
@@ -14,7 +14,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @NoArgsConstructor
-public class RenameCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public class RenameCommand<T extends Team, U extends User<T>> extends Command<T, U> {
     public String adminPermission;
 
     public RenameCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds, String adminPermission) {

@@ -1,14 +1,14 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.api;
 
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User; // Updated IridiumUser to User
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
 import lombok.Getter;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
 @Getter
-public class TeamLevelUpEvent<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Event { // TODO: Update Team and IridiumUser to actual classes
+public class TeamLevelUpEvent<T extends Team, U extends User<T>> extends Event { // TODO: Update Team to actual class if necessary
 
     private static final HandlerList handlers = new HandlerList();
     private final T team;

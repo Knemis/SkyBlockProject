@@ -4,21 +4,17 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item;
 import com.knemis.skyblock.skyblockcoreproject.teams.Reward;
-// import com.keviin.keviinteams.missions.Mission; // Will be replaced by specific import below
-// import com.keviin.keviinteams.missions.MissionData; // Will be replaced by specific import below
-// import com.keviin.keviinteams.missions.MissionType; // Will be replaced by specific import below
-// Specific imports after refactoring (commented out for now as missions package is not yet moved)
-// import com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission;
-// import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData;
-// import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData;
+import com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType;
 
 import java.util.*;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Missions {
-    public Map<String, com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission> missions; // TODO: Update to actual Mission class
+    public Map<String, Mission> missions;
 
     public List<Integer> dailySlots = Arrays.asList(10, 12, 14, 16);
     public Map<String, List<String>> customMaterialLists = ImmutableMap.<String, List<String>>builder()
@@ -39,10 +35,10 @@ public class Missions {
     }
 
     public Missions(String color) {
-        missions = ImmutableMap.<String, com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission>builder() // TODO: Update to actual Mission class
+        missions = ImmutableMap.<String, Mission>builder()
 
-                .put("farmer", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.SUGAR_CANE, 1, color + "&lFarmer", // TODO: Replace with actual Item class
+                .put("farmer", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.SUGAR_CANE, 1, color + "&lFarmer",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -71,10 +67,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("hunter", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.BONE, 1, color + "&lHunter", // TODO: Replace with actual Item class
+                .put("hunter", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.BONE, 1, color + "&lHunter",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -103,10 +99,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("baker", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.BREAD, 1, color + "&lBaker", // TODO: Replace with actual Item class
+                .put("baker", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.BREAD, 1, color + "&lBaker",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -133,10 +129,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("miner", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.GOLD_ORE, 1, color + "&lMiner", // TODO: Replace with actual Item class
+                .put("miner", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.GOLD_ORE, 1, color + "&lMiner",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -165,10 +161,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("fisherman", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.FISHING_ROD, 1, color + "&lFisherman", // TODO: Replace with actual Item class
+                .put("fisherman", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.FISHING_ROD, 1, color + "&lFisherman",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -195,10 +191,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("blacksmith", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.IRON_INGOT, 1, color + "&lBlacksmith", // TODO: Replace with actual Item class
+                .put("blacksmith", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.IRON_INGOT, 1, color + "&lBlacksmith",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -225,10 +221,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("brewer", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.POTION, 1, color + "&lPotion Brewer", // TODO: Replace with actual Item class
+                .put("brewer", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.POTION, 1, color + "&lPotion Brewer",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -256,10 +252,10 @@ public class Missions {
                                         color + "&l* &7+5 Island Crystals\n" +
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
-                        )).build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.DAILY)) // TODO: Update to actual MissionType class
+                        )).build(), MissionType.DAILY))
 
-                .put("mine_oak", new com.knemis.skyblock.skyblockcoreproject.teams.missions.Mission(ImmutableMap.<Integer, com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData>builder() // TODO: Update to actual Mission and MissionData classes
-                        .put(1, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.OAK_LOG, 0, 1, color + "&lMine 10 Logs", // TODO: Replace with actual Item class
+                .put("mine_oak", new Mission(ImmutableMap.<Integer, MissionData>builder()
+                        .put(1, new MissionData(new Item(XMaterial.OAK_LOG, 0, 1, color + "&lMine 10 Logs",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -285,7 +281,7 @@ public class Missions {
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
                         ))
-                        .put(2, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.OAK_LOG, 0, 1, color + "&lMine 100 Logs", // TODO: Replace with actual Item class
+                        .put(2, new MissionData(new Item(XMaterial.OAK_LOG, 0, 1, color + "&lMine 100 Logs",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -311,7 +307,7 @@ public class Missions {
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
                         ))
-                        .put(3, new com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionData(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.OAK_LOG, 0, 1, color + "&lMine 1000 Logs", // TODO: Replace with actual Item class
+                        .put(3, new MissionData(new Item(XMaterial.OAK_LOG, 0, 1, color + "&lMine 1000 Logs",
                                 Arrays.asList(
                                         "&7Complete Island Missions to gain rewards",
                                         "&7Which can be used to purchase Island Upgrades",
@@ -337,7 +333,7 @@ public class Missions {
                                         color + "&l* &7+1000 Money\n" +
                                         "&7/is rewards to redeem rewards"
                         ))
-                        .build(), com.knemis.skyblock.skyblockcoreproject.teams.missions.MissionType.ONCE)) // TODO: Update to actual MissionType class
+                        .build(), MissionType.ONCE))
                 .build();
     }
 

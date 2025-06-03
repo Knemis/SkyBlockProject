@@ -1,13 +1,13 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.configs;
 
 import com.knemis.skyblock.skyblockcoreproject.teams.commands.*;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User; // Assuming User is the correct class name
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is the correct class name
 
 import java.util.Arrays;
 import java.util.Collections;
 
-public class Commands<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> { // TODO: Update Team and IridiumUser to actual classes
+public class Commands<T extends Team, U extends User<T>> {
     public AboutCommand<T, U> aboutCommand;
     public CreateCommand<T, U> createCommand;
     public MembersCommand<T, U> membersCommand;

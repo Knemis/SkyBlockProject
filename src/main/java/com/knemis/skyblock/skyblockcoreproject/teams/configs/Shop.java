@@ -5,7 +5,7 @@ import com.cryptomorin.xseries.XMaterial;
 import com.cryptomorin.xseries.XSound;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-// import com.keviin.keviincore.Item; // TODO: Replace with actual Item class
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // Added import
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
@@ -33,12 +33,12 @@ public class Shop {
 
     public Shop(String color) {
         categories = ImmutableMap.<String, ShopCategory>builder()
-                .put("Blocks", new ShopCategory(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.GRASS_BLOCK, 12, 1, color + "&lBlocks", Collections.emptyList()), 54)) // TODO: Replace with actual Item class
-                .put("Food", new ShopCategory(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.COOKED_CHICKEN, 13, 1, color + "&lFood", Collections.emptyList()), 36)) // TODO: Replace with actual Item class
-                .put("Ores", new ShopCategory(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.GOLD_INGOT, 14, 1, color + "&lOres", Collections.emptyList()), 36)) // TODO: Replace with actual Item class
-                .put("Farming", new ShopCategory(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.WHEAT, 21, 1, color + "&lFarming", Collections.emptyList()), 45)) // TODO: Replace with actual Item class
-                .put("Mob Drops", new ShopCategory(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.SPIDER_EYE, 22, 1, color + "&lMob Drops", Collections.emptyList()), 45)) // TODO: Replace with actual Item class
-                .put("Miscellaneous", new ShopCategory(new com.knemis.skyblock.skyblockcoreproject.teams.Item(XMaterial.SADDLE, 23, 1, color + "&lMiscellaneous", Collections.emptyList()), 36)) // TODO: Replace with actual Item class
+                .put("Blocks", new ShopCategory(new Item(XMaterial.GRASS_BLOCK, 12, 1, color + "&lBlocks", Collections.emptyList()), 54))
+                .put("Food", new ShopCategory(new Item(XMaterial.COOKED_CHICKEN, 13, 1, color + "&lFood", Collections.emptyList()), 36))
+                .put("Ores", new ShopCategory(new Item(XMaterial.GOLD_INGOT, 14, 1, color + "&lOres", Collections.emptyList()), 36))
+                .put("Farming", new ShopCategory(new Item(XMaterial.WHEAT, 21, 1, color + "&lFarming", Collections.emptyList()), 45))
+                .put("Mob Drops", new ShopCategory(new Item(XMaterial.SPIDER_EYE, 22, 1, color + "&lMob Drops", Collections.emptyList()), 45))
+                .put("Miscellaneous", new ShopCategory(new Item(XMaterial.SADDLE, 23, 1, color + "&lMiscellaneous", Collections.emptyList()), 36))
                 .build();
 
         items = ImmutableMap.<String, List<ShopItem>>builder()

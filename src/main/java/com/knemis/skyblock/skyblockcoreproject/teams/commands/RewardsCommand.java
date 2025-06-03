@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
-// import com.knemis.skyblock.skyblockcoreproject.teams.gui.RewardsGUI; // TODO: Update to actual RewardsGUI class
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
+import com.knemis.skyblock.skyblockcoreproject.teams.gui.RewardsGUI;
 import lombok.NoArgsConstructor;
 import org.bukkit.entity.Player;
 

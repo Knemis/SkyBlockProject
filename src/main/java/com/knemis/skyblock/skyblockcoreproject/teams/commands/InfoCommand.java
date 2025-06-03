@@ -1,10 +1,10 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color and StringUtils.getCenteredMessage and StringUtils.processMultiplePlaceholders
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
 import lombok.NoArgsConstructor;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
@@ -15,53 +15,56 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @NoArgsConstructor
-public class InfoCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public class InfoCommand<T extends Team, U extends User<T>> extends Command<T, U> {
     public InfoCommand(List<String> args, String description, String syntax, String permission, long cooldownInSeconds) {
         super(args, description, syntax, permission, cooldownInSeconds);
     }
 
     @Override
-    public boolean execute(U user, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
         Player player = user.getPlayer();
-        // if (args.length == 0) { // TODO: Uncomment when TeamManager is refactored
-            // Optional<T> userTeam = iridiumTeams.getTeamManager().getTeamViaID(user.getTeamID());
-            // if (!userTeam.isPresent()) {
-                // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().dontHaveTeam // TODO: Replace StringUtils.color
-                        // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-                // ));
-                // return false;
-            // }
-            // sendTeamInfo(player, userTeam.get(), iridiumTeams);
-            // return true;
-        // }
+        if (args.length == 0) {
+            Optional<T> userTeam = skyblockTeams.getTeamManager().getTeamViaID(user.getTeamID()); // TODO: Ensure TeamManager is functional
+            if (!userTeam.isPresent()) {
+                player.sendMessage(StringUtils.color(skyblockTeams.getMessages().dontHaveTeam
+                        .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+                ));
+                return false;
+            }
+            sendTeamInfo(player, userTeam.get(), skyblockTeams);
+            return true;
+        }
 
-        // Optional<T> team = iridiumTeams.getTeamManager().getTeamViaNameOrPlayer(String.join(" ", args)); // TODO: Uncomment when TeamManager is refactored
-        // if(args[0].equals("location")) {
-            // team = iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player); // TODO: Uncomment when TeamManager is refactored
-        // }
+        Optional<T> team;
+        if(args[0].equalsIgnoreCase("location")) { // Make case-insensitive
+            team = skyblockTeams.getTeamManager().getTeamViaPlayerLocation(player); // TODO: Ensure TeamManager is functional
+        } else {
+            team = skyblockTeams.getTeamManager().getTeamViaNameOrPlayer(String.join(" ", args)); // TODO: Ensure TeamManager is functional
+        }
 
-        // if (!team.isPresent()) { // TODO: Uncomment when team is available
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().teamDoesntExistByName // TODO: Replace StringUtils.color
-                    // .replace("%prefix%", iridiumTeams.getConfiguration().prefix)
-            // ));
-            // return false;
-        // }
 
-        // sendTeamInfo(player, team.get(), iridiumTeams); // TODO: Uncomment when team is available
-        player.sendMessage("Info command needs to be reimplemented after refactoring."); // Placeholder
+        if (!team.isPresent()) {
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().teamDoesntExistByName
+                    .replace("%prefix%", skyblockTeams.getConfiguration().prefix)
+            ));
+            return false;
+        }
+
+        sendTeamInfo(player, team.get(), skyblockTeams);
+        // player.sendMessage("Info command needs to be reimplemented after refactoring."); // Placeholder
         return true;
     }
 
-    public void sendTeamInfo(Player player, T team, IridiumTeams<T, U> iridiumTeams) {
-        // List<com.knemis.skyblock.skyblockcoreproject.teams.Placeholder> placeholderList = iridiumTeams.getTeamsPlaceholderBuilder().getPlaceholders(team); // TODO: Replace Placeholder, uncomment when getTeamsPlaceholderBuilder is available
-        // player.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(StringUtils.processMultiplePlaceholders(iridiumTeams.getConfiguration().teamInfoTitle, placeholderList), iridiumTeams.getConfiguration().teamInfoTitleFiller))); // TODO: Replace StringUtils methods
-        // for (String line : iridiumTeams.getConfiguration().teamInfo) { // TODO: Uncomment when Configuration is refactored
-            // player.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(line, placeholderList))); // TODO: Replace StringUtils methods
-        // }
+    public void sendTeamInfo(Player player, T team, SkyBlockTeams<T, U> skyblockTeams) {
+        List<Placeholder> placeholderList = skyblockTeams.getTeamsPlaceholderBuilder().getPlaceholders(team); // Using core Placeholder
+        player.sendMessage(StringUtils.color(StringUtils.getCenteredMessage(StringUtils.processMultiplePlaceholders(skyblockTeams.getConfiguration().teamInfoTitle, placeholderList), skyblockTeams.getConfiguration().teamInfoTitleFiller)));
+        for (String line : skyblockTeams.getConfiguration().teamInfo) {
+            player.sendMessage(StringUtils.color(StringUtils.processMultiplePlaceholders(line, placeholderList)));
+        }
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
         return Bukkit.getOnlinePlayers().stream().map(Player::getName).collect(Collectors.toList());
     }
 

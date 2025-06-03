@@ -1,11 +1,13 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database;
 
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement; // TODO: Update to actual Enhancement class
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType; // TODO: Update to actual EnhancementAffectsType class
-// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData; // TODO: Update to actual EnhancementData class
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams; // Changed IridiumTeams to SkyBlockTeams
+// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
+// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType;
+// import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData;
 // import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData; // TODO: Update to actual FlightEnhancementData class
 // import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData; // TODO: Update to actual PotionEnhancementData class
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;
@@ -21,7 +23,7 @@ import java.util.*;
 
 @Getter
 @DatabaseTable(tableName = "users")
-public class IridiumUser<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team> extends DatabaseObject { // TODO: Update Team to actual class
+public class User<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team> extends DatabaseObject {
 
     @DatabaseField(columnName = "uuid", canBeNull = false, id = true)
     private @NotNull UUID uuid;
@@ -58,64 +60,64 @@ public class IridiumUser<T extends com.knemis.skyblock.skyblockcoreproject.teams
         return Bukkit.getServer().getPlayer(uuid);
     }
 
-    public boolean canFly(IridiumTeams<T, ?> iridiumTeams) {
+    public boolean canFly(SkyBlockTeams<T, ?> skyBlockTeams) { // Changed IridiumTeams to SkyBlockTeams
         Player player = getPlayer();
 
         if (isBypassing()) return true; // bypass should be checked first, since this is an admin permission
-        // if (player.hasPermission(iridiumTeams.getCommands().flyCommand.getFlyAnywherePermission())) return true; // TODO: Uncomment when Commands are refactored
+        // if (player.hasPermission(skyBlockTeams.getCommands().flyCommand.getFlyAnywherePermission())) return true; // TODO: Uncomment when Commands are refactored
 
-        // Optional<T> team = iridiumTeams.getTeamManager().getTeamViaID(getTeamID()); // TODO: Uncomment when TeamManager is refactored
-        // Optional<T> visitor = iridiumTeams.getTeamManager().getTeamViaPlayerLocation(player); // TODO: Uncomment when TeamManager is refactored
-        // if (player.hasPermission(iridiumTeams.getCommands().flyCommand.permission) && team.isPresent() && team.map(T::getId).orElse(-1).equals(visitor.map(T::getId).orElse(-1))) { // TODO: Uncomment when Commands and TeamManager are refactored
+        // Optional<T> team = skyBlockTeams.getTeamManager().getTeamViaID(getTeamID()); // TODO: Uncomment when TeamManager is refactored
+        // Optional<T> visitor = skyBlockTeams.getTeamManager().getTeamViaPlayerLocation(player); // TODO: Uncomment when TeamManager is refactored
+        // if (player.hasPermission(skyBlockTeams.getCommands().flyCommand.permission) && team.isPresent() && team.map(T::getId).orElse(-1).equals(visitor.map(T::getId).orElse(-1))) { // TODO: Uncomment when Commands and TeamManager are refactored
             // return true;
         // }
-        // return canFly(team.orElse(null), iridiumTeams) || canFly(visitor.orElse(null), iridiumTeams); // TODO: Uncomment when team and visitor are available
+        // return canFly(team.orElse(null), skyBlockTeams) || canFly(visitor.orElse(null), skyBlockTeams); // TODO: Uncomment when team and visitor are available
         return false; // Placeholder
     }
 
-    private boolean canFly(T team, IridiumTeams<T, ?> iridiumTeams) {
+    private boolean canFly(T team, SkyBlockTeams<T, ?> skyBlockTeams) { // Changed IridiumTeams to SkyBlockTeams
         if (team == null) return false;
-        // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData> flightEnhancement = iridiumTeams.getEnhancements().flightEnhancement; // TODO: Uncomment when Enhancements are refactored
-        // TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, "flight"); // TODO: Uncomment when TeamManager and TeamEnhancement are refactored
-        // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.FlightEnhancementData data = flightEnhancement.levels.get(teamEnhancement.getLevel()); // TODO: Uncomment when flightEnhancement and teamEnhancement are available
+        // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<FlightEnhancementData> flightEnhancement = skyBlockTeams.getEnhancements().flightEnhancement; // TODO: Uncomment when Enhancements are refactored
+        // TeamEnhancement teamEnhancement = skyBlockTeams.getTeamManager().getTeamEnhancement(team, "flight"); // TODO: Uncomment when TeamManager and TeamEnhancement are refactored
+        // FlightEnhancementData data = flightEnhancement.levels.get(teamEnhancement.getLevel()); // TODO: Uncomment when flightEnhancement and teamEnhancement are available
 
         // if (!teamEnhancement.isActive(flightEnhancement.type)) return false; // TODO: Uncomment when flightEnhancement and teamEnhancement are available
         // if (data == null) return false;
 
-        // return canApply(iridiumTeams, team, data.enhancementAffectsType); // TODO: Uncomment when data is available
+        // return canApply(skyBlockTeams, team, data.enhancementAffectsType); // TODO: Uncomment when data is available
         return false; // Placeholder
     }
 
-    public void initBukkitTask(IridiumTeams<T, ?> iridiumTeams) {
+    public void initBukkitTask(SkyBlockTeams<T, ?> skyBlockTeams) { // Changed IridiumTeams to SkyBlockTeams
         if (bukkitTask != null) return;
-        bukkitTask = Bukkit.getScheduler().runTaskTimer(iridiumTeams, () -> bukkitTask(iridiumTeams), 0, 20);
+        bukkitTask = Bukkit.getScheduler().runTaskTimer(skyBlockTeams, () -> bukkitTask(skyBlockTeams), 0, 20);
     }
 
-    public void bukkitTask(IridiumTeams<T, ?> iridiumTeams) {
+    public void bukkitTask(SkyBlockTeams<T, ?> skyBlockTeams) { // Changed IridiumTeams to SkyBlockTeams
         bukkitTaskTicks++;
-        applyPotionEffects(iridiumTeams);
+        applyPotionEffects(skyBlockTeams);
     }
 
-    public void applyPotionEffects(IridiumTeams<T, ?> iridiumTeams) {
+    public void applyPotionEffects(SkyBlockTeams<T, ?> skyBlockTeams) { // Changed IridiumTeams to SkyBlockTeams
         Player player = getPlayer();
         if (player == null) return;
-        // iridiumTeams.getTeamManager().getTeamViaLocation(player.getLocation()).ifPresent(t -> applyPotionEffects(iridiumTeams, t)); // TODO: Uncomment when TeamManager is refactored
-        // iridiumTeams.getTeamManager().getTeamViaID(teamID).ifPresent(t -> applyPotionEffects(iridiumTeams, t)); // TODO: Uncomment when TeamManager is refactored
+        // skyBlockTeams.getTeamManager().getTeamViaLocation(player.getLocation()).ifPresent(t -> applyPotionEffects(skyBlockTeams, t)); // TODO: Uncomment when TeamManager is refactored
+        // skyBlockTeams.getTeamManager().getTeamViaID(teamID).ifPresent(t -> applyPotionEffects(skyBlockTeams, t)); // TODO: Uncomment when TeamManager is refactored
     }
 
-    public void applyPotionEffects(IridiumTeams<T, ?> iridiumTeams, T team) {
+    public void applyPotionEffects(SkyBlockTeams<T, ?> skyBlockTeams, T team) { // Changed IridiumTeams to SkyBlockTeams
         int duration = 10;
         Player player = getPlayer();
         if (player == null) return;
         HashMap<PotionEffectType, Integer> potionEffects = new HashMap<>();
 
-        // for (Map.Entry<String, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<?>> enhancement : iridiumTeams.getEnhancementList().entrySet()) { // TODO: Uncomment when getEnhancementList is available
-            // TeamEnhancement teamEnhancement = iridiumTeams.getTeamManager().getTeamEnhancement(team, enhancement.getKey()); // TODO: Uncomment when TeamManager and TeamEnhancement are refactored
+        // for (Map.Entry<String, com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement<?>> enhancement : skyBlockTeams.getEnhancementList().entrySet()) { // TODO: Uncomment when getEnhancementList is available
+            // TeamEnhancement teamEnhancement = skyBlockTeams.getTeamManager().getTeamEnhancement(team, enhancement.getKey()); // TODO: Uncomment when TeamManager and TeamEnhancement are refactored
             // if (!teamEnhancement.isActive(enhancement.getValue().type)) continue;
             // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementData enhancementData = enhancement.getValue().levels.get(teamEnhancement.getLevel()); // TODO: Uncomment when EnhancementData is refactored
-            // if (enhancementData instanceof com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData) { // TODO: Uncomment when PotionEnhancementData is refactored
-                // com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData potionEnhancementData = (com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData) enhancementData;
-                // if (!canApply(iridiumTeams, team, potionEnhancementData.enhancementAffectsType)) continue;
+            // if (enhancementData instanceof PotionEnhancementData) { // TODO: Uncomment when PotionEnhancementData is refactored
+                // PotionEnhancementData potionEnhancementData = (PotionEnhancementData) enhancementData;
+                // if (!canApply(skyBlockTeams, team, potionEnhancementData.enhancementAffectsType)) continue;
                 // PotionEffectType potionEffectType = potionEnhancementData.potion.getPotionEffectType();
                 // if (!potionEffects.containsKey(potionEffectType)) {
                     // potionEffects.put(potionEffectType, potionEnhancementData.strength - 1);
@@ -138,10 +140,10 @@ public class IridiumUser<T extends com.knemis.skyblock.skyblockcoreproject.teams
         }
     }
 
-    public boolean canApply(IridiumTeams<T, ?> iridiumTeams, T team, List<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType> enhancementAffectsTypes) { // TODO: Update EnhancementAffectsType
+    public boolean canApply(SkyBlockTeams<T, ?> skyBlockTeams, T team, List<com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType> enhancementAffectsTypes) { // Changed IridiumTeams to SkyBlockTeams
         Player player = getPlayer();
         if (player == null) return false;
-        // int teamLocationID = iridiumTeams.getTeamManager().getTeamViaLocation(player.getLocation()).map(T::getId).orElse(0); // TODO: Uncomment when TeamManager and Team are refactored
+        // int teamLocationID = skyBlockTeams.getTeamManager().getTeamViaLocation(player.getLocation()).map(T::getId).orElse(0); // TODO: Uncomment when TeamManager and Team are refactored
         // for (com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType enhancementAffectsType : enhancementAffectsTypes) { // TODO: Update EnhancementAffectsType
             // if (enhancementAffectsType == com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.VISITORS && team.getId() == teamLocationID) { // TODO: Update EnhancementAffectsType
                 // return true;
@@ -151,8 +153,8 @@ public class IridiumUser<T extends com.knemis.skyblock.skyblockcoreproject.teams
             // }
             // if (enhancementAffectsType == com.knemis.skyblock.skyblockcoreproject.teams.enhancements.EnhancementAffectsType.MEMBERS_IN_TERRITORY && team.getId() == teamID && team.getId() == teamLocationID) { // TODO: Update EnhancementAffectsType
                 return true;
-            }
-        }
+            // } // This brace was missing, added it back.
+        // } // This brace was part of the original error, seems to be an extra one.
         return false;
     }
 

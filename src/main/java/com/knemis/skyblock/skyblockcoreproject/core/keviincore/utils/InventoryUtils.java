@@ -2,6 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Background;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.Placeholder; // Added import
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 

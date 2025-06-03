@@ -1,17 +1,17 @@
 package com.knemis.skyblock.skyblockcoreproject.teams;
 
-// import com.keviin.keviincore.KeviinCore;
-// import com.keviin.keviincore.utils.StringUtils;
+// import com.knemis.skyblock.skyblockcoreproject.core.KeviinCore; // Assuming KeviinCore is now SkyBlockSecondCore or similar
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils; // Assuming new path
 import com.knemis.skyblock.skyblockcoreproject.teams.bank.BankItem;
-// import com.keviin.keviinteams.configs.*;
-// import com.keviin.keviinteams.database.keviinUser;
-// import com.keviin.keviinteams.database.Team;
-// import com.keviin.keviinteams.enhancements.Enhancement;
-// import com.keviin.keviinteams.enhancements.PotionEnhancementData;
-// import com.keviin.keviinteams.listeners.*;
-// import com.keviin.keviinteams.managers.*;
-// import com.keviin.keviinteams.placeholders.ClipPlaceholderAPI;
-// import com.keviin.keviinteams.sorting.TeamSorting;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming this is the correct Team
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User; // Assuming this is the correct User (after IridiumUser rename)
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.Enhancement;
+import com.knemis.skyblock.skyblockcoreproject.teams.enhancements.PotionEnhancementData;
+// Commenting out listener and manager imports for now, they need individual verification
+// import com.knemis.skyblock.skyblockcoreproject.teams.listeners.*;
+// import com.knemis.skyblock.skyblockcoreproject.teams.managers.*;
+// import com.knemis.skyblock.skyblockcoreproject.teams.placeholders.ClipPlaceholderAPI; // Assuming new path
+import com.knemis.skyblock.skyblockcoreproject.teams.sorting.TeamSorting;
 import de.jeff_media.updatechecker.UpdateChecker;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -22,8 +22,9 @@ import org.bukkit.Bukkit;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
-import org.bukkit.plugin.PluginDescriptionFile;
-import org.bukkit.plugin.java.JavaPluginLoader;
+// import org.bukkit.plugin.PluginDescriptionFile; // Provided by JavaPlugin
+// import org.bukkit.plugin.java.JavaPluginLoader; // Provided by JavaPlugin
+import org.bukkit.plugin.java.JavaPlugin; // Import JavaPlugin
 
 import java.io.File;
 import java.util.*;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 
 @Getter
 @NoArgsConstructor
-public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* extends KeviinCore */ {
+public abstract class SkyBlockTeams<T extends Team, U extends User<T>> extends JavaPlugin {
 
     private final Map<Integer, UserRank> userRanks = new HashMap<>();
     private final Map<String, Permission> permissionList = new HashMap<>();
@@ -44,13 +45,11 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
     @Setter
     private boolean recalculating = false;
 
-    public IridiumTeams(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
-        // super(loader, description, dataFolder, file);
-    }
+    // Constructor removed, JavaPlugin provides necessary initialization
 
-    // @Override
+    @Override
     public void onEnable() {
-        // super.onEnable();
+        super.onEnable(); // Call super if extending JavaPlugin and it has onEnable logic you need
         initializePermissions();
         initializeSettings();
         initializeBankItem();
@@ -66,8 +65,9 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
         getLogger().info("-------------------------------");
     }
 
-    // @Override
+    @Override
     public void onDisable() {
+        super.onDisable(); // Call super if extending JavaPlugin and it has onDisable logic you need
         saveData();
         Bukkit.getOnlinePlayers().forEach(HumanEntity::closeInventory);
         getLogger().info("-------------------------------");
@@ -80,27 +80,14 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
     private void registerPlaceholderSupport() {
         Plugin PlaceholderAPI = getServer().getPluginManager().getPlugin("PlaceholderAPI");
         if (PlaceholderAPI != null && PlaceholderAPI.isEnabled()) {
-            // ClipPlaceholderAPI<T, U> clipPlaceholderAPI = new ClipPlaceholderAPI<>(this);
+            // ClipPlaceholderAPI<T, U> clipPlaceholderAPI = new ClipPlaceholderAPI<>(this); // Assuming new path
             // if (clipPlaceholderAPI.register()) {
             // getLogger().info("Successfully registered Placeholders for PlaceholderAPI.");
             // }
         }
     }
 
-    public org.bukkit.plugin.PluginDescriptionFile getDescription() {
-        //This is a placeholder, real implementation needed
-        return null;
-    }
-
-    public java.util.logging.Logger getLogger() {
-        //This is a placeholder, real implementation needed
-        return java.util.logging.Logger.getLogger(this.getClass().getName());
-    }
-
-    public org.bukkit.Server getServer() {
-        //This is a placeholder, real implementation needed
-        return Bukkit.getServer();
-    }
+    // getDescription(), getLogger(), getServer() are provided by JavaPlugin
 
     public abstract Economy getEconomy();
 
@@ -110,9 +97,10 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
 
     public abstract TeamChatPlaceholderBuilder getTeamChatPlaceholderBuilder();
 
+    // Ensuring these use the correct project paths, assuming managers are in .managers subpackage
     public abstract com.knemis.skyblock.skyblockcoreproject.teams.managers.TeamManager<T, U> getTeamManager();
 
-    public abstract com.knemis.skyblock.skyblockcoreproject.teams.managers.IridiumUserManager<T, U> getUserManager();
+    public abstract com.knemis.skyblock.skyblockcoreproject.teams.managers.UserManager<T, U> getUserManager(); // Changed IridiumUserManager to UserManager
 
     public abstract com.knemis.skyblock.skyblockcoreproject.teams.managers.CommandManager<T, U> getCommandManager();
 
@@ -122,6 +110,7 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
 
     public abstract com.knemis.skyblock.skyblockcoreproject.teams.managers.SupportManager<T, U> getSupportManager();
 
+    // Assuming configs are in .configs subpackage
     public abstract com.knemis.skyblock.skyblockcoreproject.teams.configs.Configuration getConfiguration();
 
     public abstract com.knemis.skyblock.skyblockcoreproject.teams.configs.Messages getMessages();
@@ -146,235 +135,49 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
 
     public abstract com.knemis.skyblock.skyblockcoreproject.teams.configs.Settings getSettings();
 
-    public void recalculateTeams() {
-        Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
-            ListIterator<Integer> teams = getTeamManager().getTeams().stream().map(T::getId).collect(Collectors.toList()).listIterator();
-            boolean locked = false;
-            int counter = 0;
+    // Removed duplicate abstract manager methods and the extra brace from addSortingType
+    // public abstract Economy getEconomy(); // Already declared above
 
-            @Override
-            public void run() {
-                counter++;
-                int interval = recalculating ? getConfiguration().forceRecalculateInterval : getConfiguration().recalculateInterval;
+    // public abstract PlaceholderBuilder<T> getTeamsPlaceholderBuilder(); // Already declared above
 
-                if (counter % interval == 0) {
-                    if (locked) return;
-                    if (!teams.hasNext()) {
-                        teams = getTeamManager().getTeams().stream().map(T::getId).collect(Collectors.toList()).listIterator();
-                        if (recalculating) {
-                            for (Player player : Bukkit.getServer().getOnlinePlayers()) {
-                                if (!player.hasPermission(getCommands().recalculateCommand.permission)) continue;
-                                // player.sendMessage(StringUtils.color(getMessages().calculatingFinished
-                                // .replace("%prefix%", getConfiguration().prefix)
-                                // ));
-                            }
-                        }
-                        recalculating = false;
-                    } else {
-                        getTeamManager().getTeamViaID(teams.next()).ifPresent(team -> {
-                            locked = true;
-                            getTeamManager().recalculateTeam(team).whenComplete((result, exception) -> locked = false);
-                        });
-                    }
-                }
-            }
-        }, 0, 0);
-    }
+    // public abstract PlaceholderBuilder<U> getUserPlaceholderBuilder(); // Already declared above
 
-    public void registerListeners() {
-        // Bukkit.getPluginManager().registerEvents(new BlockBreakListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockBurnListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockExplodeListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockFertilizeListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockFormListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockFromToListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockGrowListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockPistonListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockPlaceListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new BlockSpreadListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EnchantItemListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EntityChangeBlockListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EntityDeathListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EntityExplodeListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EntityInteractListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EntitySpawnListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new FurnaceSmeltListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new InventoryClickListener(), this);
-        // Bukkit.getPluginManager().registerEvents(new InventoryCloseListener(), this);
-        // Bukkit.getPluginManager().registerEvents(new LeavesDecayListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerChatListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerCraftListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerExpChangeListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerFishListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerJoinListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerMoveListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerTeleportListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerInteractListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PotionBrewListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new SpawnerSpawnListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new StructureGrowListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new TeamLevelUpListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new SettingUpdateListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new EntityDamageListener<>(this), this);
-        // Bukkit.getPluginManager().registerEvents(new PlayerBucketListener<>(this), this);
-    }
+    // public abstract TeamChatPlaceholderBuilder getTeamChatPlaceholderBuilder(); // Already declared above
 
-    public void saveData() {
+    // public abstract TeamManager<T, U> getTeamManager(); // Already declared above with correct path
 
-    }
+    // public abstract keviinUserManager<T, U> getUserManager(); // Corrected to UserManager with new path above
 
-    public void loadConfigs() {
-        userRanks.putAll(getConfiguration().userRanks);
-        userRanks.put(Rank.VISITOR.getId(), getConfiguration().visitor);
-        userRanks.put(Rank.OWNER.getId(), getConfiguration().owner);
-    }
+    // public abstract CommandManager<T, U> getCommandManager(); // Already declared above with correct path
 
-    public void saveConfigs() {
+    // public abstract MissionManager<T, U> getMissionManager(); // Already declared above with correct path
 
-    }
+    // public abstract ShopManager<T, U> getShopManager(); // Already declared above with correct path
+    // public abstract SupportManager<T, U> getSupportManager(); // Already declared above with correct path
 
-    public void initializePermissions() {
-        addPermission(PermissionType.BLOCK_BREAK.getPermissionKey(), getPermissions().blockBreak);
-        addPermission(PermissionType.BLOCK_PLACE.getPermissionKey(), getPermissions().blockPlace);
-        addPermission(PermissionType.BUCKET.getPermissionKey(), getPermissions().bucket);
-        addPermission(PermissionType.CHANGE_PERMISSIONS.getPermissionKey(), getPermissions().changePermissions);
-        addPermission(PermissionType.CLAIM.getPermissionKey(), getPermissions().claim);
-        addPermission(PermissionType.DEMOTE.getPermissionKey(), getPermissions().demote);
-        addPermission(PermissionType.DESCRIPTION.getPermissionKey(), getPermissions().description);
-        addPermission(PermissionType.DOORS.getPermissionKey(), getPermissions().doors);
-        addPermission(PermissionType.INVITE.getPermissionKey(), getPermissions().invite);
-        addPermission(PermissionType.TRUST.getPermissionKey(), getPermissions().trust);
-        addPermission(PermissionType.KICK.getPermissionKey(), getPermissions().kick);
-        addPermission(PermissionType.KILL_MOBS.getPermissionKey(), getPermissions().killMobs);
-        addPermission(PermissionType.OPEN_CONTAINERS.getPermissionKey(), getPermissions().openContainers);
-        addPermission(PermissionType.PROMOTE.getPermissionKey(), getPermissions().promote);
-        addPermission(PermissionType.REDSTONE.getPermissionKey(), getPermissions().redstone);
-        addPermission(PermissionType.RENAME.getPermissionKey(), getPermissions().rename);
-        addPermission(PermissionType.SETHOME.getPermissionKey(), getPermissions().setHome);
-        addPermission(PermissionType.SPAWNERS.getPermissionKey(), getPermissions().spawners);
-        addPermission(PermissionType.SETTINGS.getPermissionKey(), getPermissions().settings);
-        addPermission(PermissionType.MANAGE_WARPS.getPermissionKey(), getPermissions().manageWarps);
-        addPermission(PermissionType.INTERACT.getPermissionKey(), getPermissions().interact);
-    }
+    // public abstract Configuration getConfiguration(); // Already declared above with correct path
 
-    public void initializeSettings() {
-        addSetting(SettingType.TEAM_TYPE.getSettingKey(), getSettings().teamJoining, Arrays.asList("Private", "Public"));
-        addSetting(SettingType.VALUE_VISIBILITY.getSettingKey(), getSettings().teamValue, Arrays.asList("Private", "Public"));
-        addSetting(SettingType.MOB_SPAWNING.getSettingKey(), getSettings().mobSpawning, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.LEAF_DECAY.getSettingKey(), getSettings().leafDecay, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.ICE_FORM.getSettingKey(), getSettings().iceForm, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.FIRE_SPREAD.getSettingKey(), getSettings().fireSpread, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.CROP_TRAMPLE.getSettingKey(), getSettings().cropTrample, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.WEATHER.getSettingKey(), getSettings().weather, Arrays.asList("Server", "Sunny", "Raining"));
-        addSetting(SettingType.TIME.getSettingKey(), getSettings().time, Arrays.asList("Server", "Sunrise", "Day", "Morning", "Noon", "Sunset", "Night", "Midnight"));
-        addSetting(SettingType.ENTITY_GRIEF.getSettingKey(), getSettings().entityGrief, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.TNT_DAMAGE.getSettingKey(), getSettings().tntDamage, Arrays.asList("Enabled", "Disabled"));
-        addSetting(SettingType.TEAM_VISITING.getSettingKey(), getSettings().visiting, Arrays.asList("Enabled", "Disabled"));
+    // public abstract Messages getMessages(); // Already declared above with correct path
 
-    }
+    // public abstract Permissions getPermissions(); // Already declared above with correct path
 
-    public void initializeBankItem() {
-        addBankItem(getBankItems().experienceBankItem);
-        addBankItem(getBankItems().moneyBankItem);
-    }
+    // public abstract Inventories getInventories(); // Already declared above with correct path
 
-    public void initializeChatTypes() {
-        addChatType(new ChatType(getConfiguration().noneChatAlias, player -> null));
-        addChatType(new ChatType(getConfiguration().teamChatAlias, player ->
-                getTeamManager().getTeamViaID(getUserManager().getUser(player).getTeamID()).map(t ->
-                        getTeamManager().getTeamMembers(t).stream().map(U::getPlayer).collect(Collectors.toList())
-                ).orElse(null))
-        );
-    }
+    // public abstract Enhancements getEnhancements(); // Already declared above with correct path
 
-    public void initializeEnhancements() {
-        // for (Map.Entry<String, Enhancement<PotionEnhancementData>> enhancement : getEnhancements().potionEnhancements.entrySet()) {
-        // addEnhancement(enhancement.getKey(), enhancement.getValue());
-        // }
-        // addEnhancement("farming", getEnhancements().farmingEnhancement);
-        // addEnhancement("spawner", getEnhancements().spawnerEnhancement);
-        // addEnhancement("experience", getEnhancements().experienceEnhancement);
-        // addEnhancement("flight", getEnhancements().flightEnhancement);
-        // addEnhancement("members", getEnhancements().membersEnhancement);
-        // addEnhancement("warps", getEnhancements().warpsEnhancement);
-    }
+    // public abstract Commands<T, U> getCommands(); // Already declared above with correct path
 
-    public void initializeSortingTypes() {
-        // addSortingType(getTop().experienceTeamSort);
-        // addSortingType(getTop().valueTeamSort);
-    }
+    // public abstract BlockValues getBlockValues(); // Already declared above with correct path
 
-    public void addPermission(String key, Permission permission) {
-        permissionList.put(key, permission);
-    }
+    // public abstract Top<T> getTop(); // Already declared above with correct path
 
-    public void addSetting(String key, Setting setting, List<String> values) {
-        if (!setting.enabled) return;
-        setting.setValues(values);
-        settingsList.put(key, setting);
-    }
+    // public abstract BankItems getBankItems(); // Already declared above with correct path
 
-    public void addBankItem(BankItem bankItem) {
-        if (bankItem.isEnabled()) bankItemList.add(bankItem);
-    }
+    // public abstract Missions getMissions(); // Already declared above with correct path
 
-    public void addChatType(ChatType chatType) {
-        chatTypes.add(chatType);
-    }
+    // public abstract Shop getShop(); // Already declared above with correct path
 
-    public void addEnhancement(String key, Enhancement<?> enhancement) {
-        if (!enhancement.enabled) return;
-        enhancementList.put(key, enhancement);
-    }
-
-    public void addSortingType(TeamSorting<T> sortingType) {
-        sortingTypes.add(sortingType);
-            }
-        }
-    }
-
-    public abstract Economy getEconomy();
-
-    public abstract PlaceholderBuilder<T> getTeamsPlaceholderBuilder();
-
-    public abstract PlaceholderBuilder<U> getUserPlaceholderBuilder();
-
-    public abstract TeamChatPlaceholderBuilder getTeamChatPlaceholderBuilder();
-
-    public abstract TeamManager<T, U> getTeamManager();
-
-    public abstract keviinUserManager<T, U> getUserManager();
-
-    public abstract CommandManager<T, U> getCommandManager();
-
-    public abstract MissionManager<T, U> getMissionManager();
-
-    public abstract ShopManager<T, U> getShopManager();
-    public abstract SupportManager<T, U> getSupportManager();
-
-    public abstract Configuration getConfiguration();
-
-    public abstract Messages getMessages();
-
-    public abstract Permissions getPermissions();
-
-    public abstract Inventories getInventories();
-
-    public abstract Enhancements getEnhancements();
-
-    public abstract Commands<T, U> getCommands();
-
-    public abstract BlockValues getBlockValues();
-
-    public abstract Top<T> getTop();
-
-    public abstract BankItems getBankItems();
-
-    public abstract Missions getMissions();
-
-    public abstract Shop getShop();
-
-    public abstract Settings getSettings();
+    // public abstract Settings getSettings(); // Already declared above with correct path
 
     public void recalculateTeams() {
         Bukkit.getScheduler().runTaskTimer(this, new Runnable() {
@@ -412,41 +215,41 @@ public abstract class IridiumTeams<T extends Team, U extends keviinUser<T>> /* e
     }
 
     public void registerListeners() {
-        Bukkit.getPluginManager().registerEvents(new BlockBreakListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockBurnListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockExplodeListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockFertilizeListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockFormListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockFromToListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockGrowListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockPistonListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockPlaceListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockSpreadListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EnchantItemListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityChangeBlockListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityDeathListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityExplodeListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityInteractListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntitySpawnListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new FurnaceSmeltListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new InventoryClickListener(), this);
-        Bukkit.getPluginManager().registerEvents(new InventoryCloseListener(), this);
-        Bukkit.getPluginManager().registerEvents(new LeavesDecayListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerChatListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerCraftListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerExpChangeListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerFishListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerMoveListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerTeleportListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerInteractListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PotionBrewListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new SpawnerSpawnListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new StructureGrowListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new TeamLevelUpListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new SettingUpdateListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityDamageListener<>(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerBucketListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockBreakListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockBurnListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockExplodeListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockFertilizeListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockFormListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockFromToListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockGrowListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockPistonListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockPlaceListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new BlockSpreadListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new EnchantItemListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new EntityChangeBlockListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new EntityDeathListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new EntityExplodeListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new EntityInteractListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new EntitySpawnListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new FurnaceSmeltListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new InventoryClickListener(), this); // Assuming new path
+        // Bukkit.getPluginManager().registerEvents(new InventoryCloseListener(), this); // Assuming new path
+        // Bukkit.getPluginManager().registerEvents(new LeavesDecayListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerChatListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerCraftListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerExpChangeListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerFishListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerJoinListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerMoveListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerTeleportListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerInteractListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PotionBrewListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new SpawnerSpawnListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new StructureGrowListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new TeamLevelUpEvent<>(this), this); // This is an event, not a listener
+        // Bukkit.getPluginManager().registerEvents(new SettingUpdateEvent<>(this), this); // This is an event, not a listener
+        // Bukkit.getPluginManager().registerEvents(new EntityDamageListener<>(this), this);
+        // Bukkit.getPluginManager().registerEvents(new PlayerBucketListener<>(this), this);
     }
 
     public void saveData() {

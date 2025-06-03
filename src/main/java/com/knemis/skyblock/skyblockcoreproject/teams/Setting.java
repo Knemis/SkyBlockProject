@@ -1,7 +1,7 @@
 package com.knemis.skyblock.skyblockcoreproject.teams;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-// import com.keviin.keviincore.Item;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Item; // Added import
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,14 +13,14 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 public class Setting {
-    private com.knemis.skyblock.skyblockcoreproject.teams.Item item; // TODO: Replace with actual Item class
+    private Item item;
     private String displayName;
     private String defaultValue;
     public boolean enabled;
     @JsonIgnore
     private List<String> values;
 
-    public Setting(com.knemis.skyblock.skyblockcoreproject.teams.Item item, String displayName, String defaultValue) { // TODO: Replace with actual Item class
+    public Setting(Item item, String displayName, String defaultValue) {
         this.item = item;
         this.displayName = displayName;
         this.defaultValue = defaultValue;

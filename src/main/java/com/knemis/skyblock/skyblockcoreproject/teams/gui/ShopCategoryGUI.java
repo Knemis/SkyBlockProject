@@ -4,10 +4,11 @@ package com.knemis.skyblock.skyblockcoreproject.teams.gui;
 // import com.keviin.keviincore.utils.ItemStackUtils; // TODO: Replace ItemStackUtils
 // import com.keviin.keviincore.utils.Placeholder; // TODO: Replace Placeholder
 // import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
+// TODO: Address keviincore imports later, possibly replace with com.knemis.skyblock.skyblockcoreproject.utils.*
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.Shop;
 import com.knemis.skyblock.skyblockcoreproject.teams.configs.inventories.NoItemGUI;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
+// import com.knemis.skyblock.skyblockcoreproject.teams.database.User; // TODO: Update to actual User class
 // import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
 import lombok.Getter;
 import org.bukkit.Bukkit;
@@ -20,8 +21,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
-public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> /* extends com.keviin.keviincore.gui.BackGUI */ { // TODO: Update Team and IridiumUser to actual classes, resolve BackGUI
-    private final IridiumTeams<T, U> iridiumTeams;
+// TODO: Update Team and User to actual classes, resolve BackGUI
+public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.User<T>> /* extends com.keviin.keviincore.gui.BackGUI */ {
+    private final SkyBlockTeams<T, U> skyblockTeams;
     @Getter
     private final String categoryName;
     private final Shop.ShopCategory shopCategory;
@@ -29,19 +31,19 @@ public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
     private int page;
     private Player player; // Added player field
 
-    public ShopCategoryGUI(String categoryName, Player player, int page, IridiumTeams<T, U> iridiumTeams) {
-        // super(iridiumTeams.getInventories().shopCategoryGUI.background, player, iridiumTeams.getInventories().backButton); // TODO: Uncomment when BackGUI and inventories are refactored
+    public ShopCategoryGUI(String categoryName, Player player, int page, SkyBlockTeams<T, U> skyblockTeams) {
+        // super(skyblockTeams.getInventories().shopCategoryGUI.background, player, skyblockTeams.getInventories().backButton); // TODO: Uncomment when BackGUI and inventories are refactored
         this.player = player; // Added
-        this.iridiumTeams = iridiumTeams;
+        this.skyblockTeams = skyblockTeams;
         this.categoryName = categoryName;
-        this.shopCategory = iridiumTeams.getShop().categories.get(categoryName); // TODO: May need a null check or default if getShop() isn't ready
+        this.shopCategory = skyblockTeams.getShop().categories.get(categoryName); // TODO: May need a null check or default if getShop() isn't ready
         this.page = page;
     }
 
     // @NotNull //TODO: Uncomment if super class method has it
     // @Override //TODO: Uncomment if super class method has it
     public Inventory getInventory() { // TODO: This method likely needs to be @Override if BackGUI is a proper GUI base class
-        NoItemGUI noItemGUI = iridiumTeams.getInventories().shopOverviewGUI;
+        NoItemGUI noItemGUI = skyblockTeams.getInventories().shopOverviewGUI;
         // Inventory inventory = Bukkit.createInventory(this, shopCategory.inventorySize, StringUtils.color(noItemGUI.title.replace("%category_name%", categoryName))); // TODO: Replace StringUtils.color. 'this' might not be an InventoryHolder if BackGUI is not extended.
         Inventory inventory = Bukkit.createInventory(null, shopCategory.inventorySize, "ShopCategory GUI Title Placeholder"); // Placeholder
         addContent(inventory);
@@ -52,12 +54,12 @@ public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
     public void addContent(Inventory inventory) {
         // super.addContent(inventory); // TODO: Uncomment if BackGUI is extended and has this method
 
-        // if (!iridiumTeams.getShop().items.containsKey(categoryName)) { // TODO: Uncomment when getShop is available
-            // iridiumTeams.getLogger().warning("Shop Category " + categoryName + " Is not configured with any items!");
+        // if (!skyblockTeams.getShop().items.containsKey(categoryName)) { // TODO: Uncomment when getShop is available
+            // skyblockTeams.getLogger().warning("Shop Category " + categoryName + " Is not configured with any items!");
             // return;
         // }
 
-        // for (Shop.ShopItem shopItem : iridiumTeams.getShop().items.get(categoryName)) { // TODO: Uncomment when getShop is available
+        // for (Shop.ShopItem shopItem : skyblockTeams.getShop().items.get(categoryName)) { // TODO: Uncomment when getShop is available
             // if (shopItem.page != this.page) continue;
             // ItemStack itemStack = shopItem.type.parseItem();
             // ItemMeta itemMeta = itemStack.getItemMeta();
@@ -70,22 +72,22 @@ public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
             // inventory.setItem(shopItem.slot, itemStack);
         // }
 
-        // inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(this.iridiumTeams.getInventories().nextPage)); // TODO: Replace ItemStackUtils.makeItem
-        // inventory.setItem(inventory.getSize() - 7, ItemStackUtils.makeItem(this.iridiumTeams.getInventories().previousPage)); // TODO: Replace ItemStackUtils.makeItem
+        // inventory.setItem(inventory.getSize() - 3, ItemStackUtils.makeItem(this.skyblockTeams.getInventories().nextPage)); // TODO: Replace ItemStackUtils.makeItem
+        // inventory.setItem(inventory.getSize() - 7, ItemStackUtils.makeItem(this.skyblockTeams.getInventories().previousPage)); // TODO: Replace ItemStackUtils.makeItem
     }
 
     private List<com.knemis.skyblock.skyblockcoreproject.teams.Placeholder> getShopLorePlaceholders(Shop.ShopItem item) { // TODO: Replace Placeholder
         // List<com.knemis.skyblock.skyblockcoreproject.teams.Placeholder> placeholders = new ArrayList<>(Arrays.asList( // TODO: Replace Placeholder
-                // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("amount", iridiumTeams.getShopManager().formatPrice(item.defaultAmount)), // TODO: Replace Placeholder, uncomment when getShopManager is available
-                // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("vault_cost", iridiumTeams.getShopManager().formatPrice(item.buyCost.money)), // TODO: Replace Placeholder, uncomment when getShopManager is available
-                // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("vault_reward", iridiumTeams.getShopManager().formatPrice(item.sellCost.money)), // TODO: Replace Placeholder, uncomment when getShopManager is available
+                // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("amount", skyblockTeams.getShopManager().formatPrice(item.defaultAmount)), // TODO: Replace Placeholder, uncomment when getShopManager is available
+                // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("vault_cost", skyblockTeams.getShopManager().formatPrice(item.buyCost.money)), // TODO: Replace Placeholder, uncomment when getShopManager is available
+                // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("vault_reward", skyblockTeams.getShopManager().formatPrice(item.sellCost.money)), // TODO: Replace Placeholder, uncomment when getShopManager is available
                 // new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder("minLevel", String.valueOf(item.minLevel)) // TODO: Replace Placeholder
         // ));
         // for (Map.Entry<String, Double> bankItem : item.buyCost.bankItems.entrySet()) {
-            // placeholders.add(new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder(bankItem.getKey() + "_cost", iridiumTeams.getShopManager().formatPrice(bankItem.getValue()))); // TODO: Replace Placeholder, uncomment when getShopManager is available
+            // placeholders.add(new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder(bankItem.getKey() + "_cost", skyblockTeams.getShopManager().formatPrice(bankItem.getValue()))); // TODO: Replace Placeholder, uncomment when getShopManager is available
         // }
         // for (Map.Entry<String, Double> bankItem : item.sellCost.bankItems.entrySet()) {
-            // placeholders.add(new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder(bankItem.getKey() + "_reward", iridiumTeams.getShopManager().formatPrice(bankItem.getValue()))); // TODO: Replace Placeholder, uncomment when getShopManager is available
+            // placeholders.add(new com.knemis.skyblock.skyblockcoreproject.teams.Placeholder(bankItem.getKey() + "_reward", skyblockTeams.getShopManager().formatPrice(bankItem.getValue()))); // TODO: Replace Placeholder, uncomment when getShopManager is available
         // }
         // return placeholders;
         return Collections.emptyList(); // Placeholder
@@ -96,22 +98,22 @@ public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
         // List<com.knemis.skyblock.skyblockcoreproject.teams.Placeholder> placeholders = getShopLorePlaceholders(item); // TODO: Replace Placeholder
 
         // if (item.buyCost.canPurchase()) {
-            // lore.add(iridiumTeams.getShop().buyPriceLore); // TODO: Uncomment when getShop is available
+            // lore.add(skyblockTeams.getShop().buyPriceLore); // TODO: Uncomment when getShop is available
         // } else {
-            // lore.add(iridiumTeams.getShop().notPurchasableLore); // TODO: Uncomment when getShop is available
+            // lore.add(skyblockTeams.getShop().notPurchasableLore); // TODO: Uncomment when getShop is available
         // }
 
         // if(item.minLevel > 1) {
-            // lore.add(iridiumTeams.getShop().levelRequirementLore); // TODO: Uncomment when getShop is available
+            // lore.add(skyblockTeams.getShop().levelRequirementLore); // TODO: Uncomment when getShop is available
         // }
 
         // if (item.sellCost.canPurchase()) {
-            // lore.add(iridiumTeams.getShop().sellRewardLore); // TODO: Uncomment when getShop is available
+            // lore.add(skyblockTeams.getShop().sellRewardLore); // TODO: Uncomment when getShop is available
         // } else {
-            // lore.add(iridiumTeams.getShop().notSellableLore); // TODO: Uncomment when getShop is available
+            // lore.add(skyblockTeams.getShop().notSellableLore); // TODO: Uncomment when getShop is available
         // }
 
-        // lore.addAll(iridiumTeams.getShop().shopItemLore); // TODO: Uncomment when getShop is available
+        // lore.addAll(skyblockTeams.getShop().shopItemLore); // TODO: Uncomment when getShop is available
 
         // return StringUtils.color(StringUtils.processMultiplePlaceholders(lore, placeholders)); // TODO: Replace StringUtils methods
         return Collections.emptyList(); // Placeholder
@@ -133,7 +135,7 @@ public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
             // return;
         // }
 
-        // Optional<Shop.ShopItem> shopItem = iridiumTeams.getShop().items.get(categoryName).stream() // TODO: Uncomment when getShop is available
+        // Optional<Shop.ShopItem> shopItem = skyblockTeams.getShop().items.get(categoryName).stream() // TODO: Uncomment when getShop is available
                 // .filter(item -> item.slot == event.getSlot())
                 // .filter(item -> item.page == this.page)
                 // .findAny();
@@ -145,21 +147,21 @@ public class ShopCategoryGUI<T extends com.knemis.skyblock.skyblockcoreproject.t
         // Player player = (Player) event.getWhoClicked();
         // int amount = event.isShiftClick() ? shopItem.get().type.parseItem().getMaxStackSize() : shopItem.get().defaultAmount;
         // if (event.isLeftClick() && shopItem.get().buyCost.canPurchase()) {
-            // iridiumTeams.getShopManager().buy(player, shopItem.get(), amount); // TODO: Uncomment when getShopManager is available
+            // skyblockTeams.getShopManager().buy(player, shopItem.get(), amount); // TODO: Uncomment when getShopManager is available
         // } else if (event.isRightClick() && shopItem.get().sellCost.canPurchase()) {
-            // iridiumTeams.getShopManager().sell(player, shopItem.get(), amount); // TODO: Uncomment when getShopManager is available
+            // skyblockTeams.getShopManager().sell(player, shopItem.get(), amount); // TODO: Uncomment when getShopManager is available
         // } else {
-            // iridiumTeams.getShop().failSound.play(player); // TODO: Uncomment when getShop is available
+            // skyblockTeams.getShop().failSound.play(player); // TODO: Uncomment when getShop is available
         // }
     }
 
     private boolean doesNextPageExist() {
-        // return iridiumTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page + 1); // TODO: Uncomment when getShop is available
+        // return skyblockTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page + 1); // TODO: Uncomment when getShop is available
         return false; // Placeholder
     }
 
     private boolean doesPreviousPageExist() {
-        // return iridiumTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page - 1); // TODO: Uncomment when getShop is available
+        // return skyblockTeams.getShop().items.get(categoryName).stream().anyMatch(item -> item.page == this.page - 1); // TODO: Uncomment when getShop is available
         return false; // Placeholder
     }
 }

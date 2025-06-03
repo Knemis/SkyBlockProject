@@ -1,9 +1,9 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.commands;
 
-// import com.keviin.keviincore.utils.StringUtils; // TODO: Replace StringUtils.color
-import com.knemis.skyblock.skyblockcoreproject.teams.IridiumTeams;
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser; // TODO: Update to actual IridiumUser class
-// import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // TODO: Update to actual Team class
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils.StringUtils;
+import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockTeams;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.User;
+import com.knemis.skyblock.skyblockcoreproject.teams.database.Team; // Assuming Team is correct
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.bukkit.command.CommandSender;
@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 
 @NoArgsConstructor
-public class FlyCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.database.Team, U extends com.knemis.skyblock.skyblockcoreproject.teams.database.IridiumUser<T>> extends Command<T, U> { // TODO: Update Team and IridiumUser to actual classes
+public class FlyCommand<T extends Team, U extends User<T>> extends Command<T, U> {
 
     @Getter
     String flyAnywherePermission;
@@ -24,52 +24,52 @@ public class FlyCommand<T extends com.knemis.skyblock.skyblockcoreproject.teams.
     }
 
     @Override
-    public boolean execute(U user, T team, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public boolean execute(U user, T team, String[] args, SkyBlockTeams<T, U> skyblockTeams) {
         Player player = user.getPlayer();
 
         boolean flight = !user.isFlying();
         if (args.length == 1) {
             if (!args[0].equalsIgnoreCase("enable") && !args[0].equalsIgnoreCase("disable") && !args[0].equalsIgnoreCase("on") && !args[0].equalsIgnoreCase("off")) {
-                // player.sendMessage(StringUtils.color(syntax.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
-                player.sendMessage("Invalid syntax."); // Placeholder
+                player.sendMessage(StringUtils.color(syntax.replace("%prefix%", skyblockTeams.getConfiguration().prefix)));
+                // player.sendMessage("Invalid syntax."); // Placeholder
                 return false;
             }
 
             flight = args[0].equalsIgnoreCase("enable") || args[0].equalsIgnoreCase("on");
         }
 
-        // if (!canFly(player, iridiumTeams)) { // TODO: Uncomment when canFly is refactored
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().flightNotActive.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
-            // return false;
-        // }
+        if (!canFly(player, skyblockTeams)) {
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().flightNotActive.replace("%prefix%", skyblockTeams.getConfiguration().prefix)));
+            return false;
+        }
 
         user.setFlying(flight);
         player.setAllowFlight(flight);
         player.setFlying(flight);
 
         if (flight) {
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().flightEnabled.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
-            player.sendMessage("Flight enabled."); // Placeholder
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().flightEnabled.replace("%prefix%", skyblockTeams.getConfiguration().prefix)));
+            // player.sendMessage("Flight enabled."); // Placeholder
         } else {
-            // player.sendMessage(StringUtils.color(iridiumTeams.getMessages().flightDisabled.replace("%prefix%", iridiumTeams.getConfiguration().prefix))); // TODO: Replace StringUtils.color
-            player.sendMessage("Flight disabled."); // Placeholder
+            player.sendMessage(StringUtils.color(skyblockTeams.getMessages().flightDisabled.replace("%prefix%", skyblockTeams.getConfiguration().prefix)));
+            // player.sendMessage("Flight disabled."); // Placeholder
         }
         return true;
     }
 
     @Override
-    public boolean hasPermission(CommandSender commandSender, IridiumTeams<T, U> iridiumTeams) {
+    public boolean hasPermission(CommandSender commandSender, SkyBlockTeams<T, U> skyblockTeams) { // Changed IridiumTeams to SkyBlockTeams
         return true;
     }
 
-    public boolean canFly(Player player, IridiumTeams<T, U> iridiumTeams) {
-        // U user = iridiumTeams.getUserManager().getUser(player); // TODO: Uncomment when UserManager is refactored
-        // return user.canFly(iridiumTeams); // TODO: Uncomment when user is available
-        return false; // Placeholder
+    public boolean canFly(Player player, SkyBlockTeams<T, U> skyblockTeams) { // Changed IridiumTeams to SkyBlockTeams
+        U user = skyblockTeams.getUserManager().getUser(player); // TODO: Ensure UserManager is functional
+        return user.canFly(skyblockTeams);
+        // return false; // Placeholder
     }
 
     @Override
-    public List<String> onTabComplete(CommandSender commandSender, String[] args, IridiumTeams<T, U> iridiumTeams) {
+    public List<String> onTabComplete(CommandSender commandSender, String[] args, SkyBlockTeams<T, U> skyblockTeams) { // Changed IridiumTeams to SkyBlockTeams
         return Arrays.asList("enable", "disable", "on", "off");
     }
 }
