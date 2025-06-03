@@ -120,6 +120,9 @@ public class SkyBlockSecondCore extends JavaPlugin {
      * Saves islands, users and other data to the database.
      */
     public void saveData() {
+        getLogger().info("Attempting to save data in SkyBlockSecondCore...");
+        // Actual save logic would go here.
+        // For example, if (persist != null) persist.saveAllData();
     }
 
     /**
@@ -154,6 +157,9 @@ public class SkyBlockSecondCore extends JavaPlugin {
      * @see Persist
      */
     public void loadConfigs() {
+        getLogger().info("Attempting to load configs in SkyBlockSecondCore...");
+        // Actual config loading logic would go here.
+        // For example, if (persist != null) persist.loadAllConfigs();
     }
 
 
@@ -163,6 +169,9 @@ public class SkyBlockSecondCore extends JavaPlugin {
      * @see Persist
      */
     public void saveConfigs() {
+        getLogger().info("Attempting to save configs in SkyBlockSecondCore...");
+        // Actual config saving logic would go here.
+        // For example, if (persist != null) persist.saveAllConfigs();
     }
 
     public static SkyBlockSecondCore getInstance() {

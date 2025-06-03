@@ -153,17 +153,21 @@ public final class SkyBlockProject extends JavaPlugin {
         try {
             CustomFlags.VISITOR_SHOP_USE = new StateFlag("visitor-shop-use", true);
             registry.register(CustomFlags.VISITOR_SHOP_USE);
-            getLogger().info("Özel 'visitor-shop-use' flag'i başarıyla kaydedildi.");
+            getLogger().info("Custom flag 'visitor-shop-use' registered successfully.");
         } catch (FlagConflictException e) {
             Flag<?> existing = registry.get("visitor-shop-use");
             if (existing instanceof StateFlag) {
                 CustomFlags.VISITOR_SHOP_USE = (StateFlag) existing;
-                getLogger().info("Özel 'visitor-shop-use' flag'i zaten kayıtlıydı. Mevcut örnek kullanılıyor.");
+                getLogger().info("Custom flag 'visitor-shop-use' was already registered. Using existing instance.");
             } else {
-                getLogger().severe("'visitor-shop-use' flag'i kaydedilemedi veya alınamadı: " + e.getMessage());
+                // This case should ideally not happen if FlagConflictException is thrown for a non-StateFlag.
+                getLogger().severe("Could not register or retrieve 'visitor-shop-use' flag due to a conflict with a non-StateFlag: " + e.getMessage());
             }
-        } catch (Exception e) {
-            getLogger().log(Level.SEVERE, "Özel flag kayıt edilirken hata oluştu", e);
+        } catch (IllegalStateException e) {
+            // IllegalStateException can be thrown if the flag name is invalid or registry is not available.
+            getLogger().log(Level.SEVERE, "Could not register 'visitor-shop-use' flag due to an illegal state (e.g., invalid name, registry not ready):", e);
+        } catch (RuntimeException e) { // Catching a broader RuntimeException for other unexpected WG issues
+            getLogger().log(Level.SEVERE, "An unexpected runtime error occurred while registering custom flags:", e);
         }
 
         this.islandDataHandler = new IslandDataHandler(this);
@@ -209,9 +213,9 @@ public final class SkyBlockProject extends JavaPlugin {
         getLogger().info("Rank Manager GUI Listener kaydedildi.");
 
         if (!rankConfigManager.loadRankTemplates()) {
-            getLogger().severe("Rank Manager için rütbe şablonları yüklenemedi. Fonksiyonellik sınırlı olacak.");
+            getLogger().severe("Failed to load rank templates for Rank Manager. Functionality of Rank Manager will be limited. Please check 'rank_templates.yml'.");
         } else {
-            getLogger().info("Rank Manager için rütbe şablonları başarıyla yüklendi.");
+            getLogger().info("Rank templates for Rank Manager loaded successfully.");
         }
 
         if (this.luckPermsHelper != null) {
@@ -430,33 +434,34 @@ public final class SkyBlockProject extends JavaPlugin {
         }, 30 * 20L);
     }
 
-    public void confirmReload(String source) {
+    /**
+     * Checks if a reload is pending and notifies the source if not.
+     *
+     * @param commandSourceString The string indicating the source of the command (e.g., "GUI (PlayerName)", "Console (Admin)")
+     * @return true if there is no pending reload (caller should stop), false otherwise (caller can proceed).
+     */
+    private boolean checkAndNotifyReloadNotPending(String commandSourceString) {
         if (!this.reloadPending) {
-            String msg = PLUGIN_PREFIX + ChatColor.GREEN + "Bekleyen bir yeniden yükleme yoktu.";
+            String msg = PLUGIN_PREFIX + ChatColor.GREEN + "No pending reload found.";
             Bukkit.getConsoleSender().sendMessage(msg);
-            if (source.startsWith("GUI")) {
-                try {
-                    String playerName = source.substring(source.indexOf('(') + 1, source.indexOf(')')); // Get player name
-                    Player player = Bukkit.getPlayerExact(playerName); // Use getPlayerExact
-                    if (player != null) player.sendMessage(msg);
-                } catch (Exception ignored) {}
+            if (commandSourceString.startsWith("GUI")) {
+                Player player = getPlayerFromSourceString(commandSourceString);
+                if (player != null) player.sendMessage(msg);
             }
+            return true; // No pending reload, caller should stop
+        }
+        return false; // Reload is pending, caller can proceed
+    }
+
+    public void confirmReload(String source) {
+        if (checkAndNotifyReloadNotPending(source)) {
             return;
         }
         performLuckPermsReload(source);
     }
 
     public void cancelReload(String source) {
-        if (!this.reloadPending) {
-            String msg = PLUGIN_PREFIX + ChatColor.GREEN + "Bekleyen bir yeniden yükleme yoktu.";
-            Bukkit.getConsoleSender().sendMessage(msg);
-            if (source.startsWith("GUI")) {
-                 try {
-                    String playerName = source.substring(source.indexOf('(') + 1, source.indexOf(')'));
-                    Player player = Bukkit.getPlayerExact(playerName);
-                    if (player != null) player.sendMessage(msg);
-                } catch (Exception ignored) {}
-            }
+        if (checkAndNotifyReloadNotPending(source)) {
             return;
         }
         this.reloadPending = false;
@@ -494,22 +499,39 @@ public final class SkyBlockProject extends JavaPlugin {
                     getLogger().info("Rank Manager: Yeniden yüklemeden sonra rütbeler yeniden doğrulanıyor...");
                     this.luckPermsHelper.initializeAndValidateRanks(repairsMade -> {
                         if (repairsMade) {
-                            getLogger().severe(PLUGIN_PREFIX + ChatColor.RED + "KRİTİK: LuckPerms yeniden yüklemesi ve yeniden doğrulamadan SONRA bile tutarsızlıklar bulundu!");
-                            if (this.repairLogger != null) this.repairLogger.logSevere("KRİTİK: LP yeniden yüklemesi ve yeniden doğrulamadan sonra tutarsızlıklar bulundu.");
+                            getLogger().severe(PLUGIN_PREFIX + ChatColor.RED + "CRITICAL: Inconsistencies found EVEN AFTER LuckPerms reload and re-validation!");
+                            if (this.repairLogger != null) this.repairLogger.logSevere("CRITICAL: Inconsistencies found after LP reload and re-validation.");
                         } else {
-                            getLogger().info(PLUGIN_PREFIX + ChatColor.GREEN + "Yeniden doğrulama başarılı. Tüm rütbeler uyumlu.");
-                            if (this.repairLogger != null) this.repairLogger.logInfo("Yeniden yükleme sonrası yeniden doğrulama başarılı.");
+                            getLogger().info(PLUGIN_PREFIX + ChatColor.GREEN + "Re-validation successful. All ranks are consistent.");
+                            if (this.repairLogger != null) this.repairLogger.logInfo("Post-reload re-validation successful.");
                         }
                     });
                 }
             }, 40L);
         } else {
-            Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.RED + "LuckPerms yeniden yükleme komutu gönderilemedi veya düzgün çalıştırılamadı.");
-            if (this.repairLogger != null) this.repairLogger.logSevere("LuckPerms yeniden yükleme komutu başarısız oldu.");
-            getLogger().warning(PLUGIN_PREFIX + ChatColor.DARK_RED + "LuckPerms yeniden yüklemesi başarısız oldu. Sorunlar devam ederse sunucuyu yeniden başlatmayı düşünün!");
+            Bukkit.getConsoleSender().sendMessage(PLUGIN_PREFIX + ChatColor.RED + "LuckPerms reload command could not be dispatched or failed to execute properly.");
+            if (this.repairLogger != null) this.repairLogger.logSevere("LuckPerms reload command failed.");
+            getLogger().warning(PLUGIN_PREFIX + ChatColor.DARK_RED + "LuckPerms reload failed. Consider restarting the server if issues persist!");
         }
         releaseAllOwnersFromLockdown();
         if (this.ownerGuiManager != null) this.ownerGuiManager.closeAllGuis();
+    }
+
+    private Player getPlayerFromSourceString(String source) {
+        if (source == null || !source.startsWith("GUI") || !source.contains("(") || !source.contains(")")) {
+            return null;
+        }
+        try {
+            int startIndex = source.indexOf('(') + 1;
+            int endIndex = source.indexOf(')');
+            if (startIndex < endIndex) {
+                String playerName = source.substring(startIndex, endIndex);
+                return Bukkit.getPlayerExact(playerName);
+            }
+        } catch (Exception e) {
+            getLogger().warning("Failed to parse player name from source string: '" + source + "' - " + e.getMessage());
+        }
+        return null;
     }
 
     public void releaseOwnerFromLockdown(UUID playerUuid) {

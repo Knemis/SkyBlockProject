@@ -1,6 +1,5 @@
 package com.knemis.skyblock.skyblockcoreproject.teams.database;
 
-import com.cryptomorin.xseries.XEntityType;
 import com.j256.ormlite.field.DatabaseField;
 import com.j256.ormlite.table.DatabaseTable;
 import lombok.Getter;
@@ -17,14 +16,14 @@ public class TeamSpawners extends com.knemis.skyblock.skyblockcoreproject.teams.
     private int id;
 
     @DatabaseField(columnName = "spawner", uniqueCombo = true)
-    private XEntityType entityType;
+    private EntityType entityType;
 
     @DatabaseField(columnName = "amount", canBeNull = false)
     private int amount;
 
-    public TeamSpawners(@NotNull com.knemis.skyblock.skyblockcoreproject.teams.database.Team team, EntityType entityType, int amount) { // TODO: Update Team to actual class
+    public TeamSpawners(@NotNull Team team, EntityType entityType, int amount) {
         super(team);
-        this.entityType = XEntityType.of(entityType);
+        this.entityType = entityType;
         this.amount = amount;
     }
 
@@ -34,7 +33,6 @@ public class TeamSpawners extends com.knemis.skyblock.skyblockcoreproject.teams.
     }
 
     public EntityType getEntityType() {
-        if(entityType == null) return null;
-        return entityType.get();
+        return entityType;
     }
 }

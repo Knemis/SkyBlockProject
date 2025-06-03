@@ -20,7 +20,7 @@ public class StringUtils {
      * @return The new String with applied colors
      */
     public static String color(String string) {
-        return keviinColorAPI.process(string);
+        return SkyBlockProjectColorAPI.process(string);
     }
 
     /**
