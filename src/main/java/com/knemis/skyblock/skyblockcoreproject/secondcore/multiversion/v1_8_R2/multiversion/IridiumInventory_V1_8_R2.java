@@ -1,0 +1,12 @@
+package com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.v1_8_R2.multiversion;
+
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.common.multiversion.SkyBlockProjectInventory;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
+
+public class SkyBlockProjectInventory_V1_8_R2 extends SkyBlockProjectInventory {
+    @Override
+    public Inventory getTopInventory(Player player) {
+        return player.getOpenInventory().getTopInventory();
+    }
+}

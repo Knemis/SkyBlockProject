@@ -2,7 +2,7 @@ package com.knemis.skyblock.skyblockcoreproject.teams.utils;
 
 import com.cryptomorin.xseries.XMaterial;
 import com.knemis.skyblock.skyblockcoreproject.secondcore.SkyBlockProjectSecondCore;
-import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.common.src.main.java.com.iridium.iridiumcore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.secondcore.multiversion.common.multiversion.MultiVersion;
 import com.knemis.skyblock.skyblockcoreproject.teams.SkyBlockProjectTeams;
 import lombok.Setter;
 import org.bukkit.Location;
