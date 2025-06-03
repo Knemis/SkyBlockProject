@@ -1,4 +1,4 @@
-package com.keviin.keviincore;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore;
 
 public enum DefaultFontInfo {
 

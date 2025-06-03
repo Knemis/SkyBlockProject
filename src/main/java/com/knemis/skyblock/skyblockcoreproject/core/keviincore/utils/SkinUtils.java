@@ -1,4 +1,4 @@
-package com.keviin.keviincore.utils;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;

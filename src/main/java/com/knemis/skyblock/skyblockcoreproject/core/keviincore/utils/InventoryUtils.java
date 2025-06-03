@@ -1,7 +1,7 @@
-package com.keviin.keviincore.utils;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import com.cryptomorin.xseries.XMaterial;
-import com.keviin.keviincore.Background;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.Background;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 

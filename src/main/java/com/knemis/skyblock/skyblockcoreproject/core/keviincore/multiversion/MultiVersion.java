@@ -1,4 +1,4 @@
-package com.keviin.keviincore.multiversion;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion;
 
 import com.cryptomorin.xseries.XMaterial;
 import org.bukkit.Chunk;

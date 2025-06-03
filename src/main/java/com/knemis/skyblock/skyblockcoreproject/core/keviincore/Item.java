@@ -1,4 +1,4 @@
-package com.keviin.keviincore;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore;
 
 import com.cryptomorin.xseries.XMaterial;
 import lombok.NoArgsConstructor;
@@ -102,17 +102,17 @@ public class Item {
      */
     public void migrateData() {
         if (headOwner != null && !headOwner.isEmpty()) {
-            com.keviin.keviincore.KeviinCore.getInstance().getLogger().warning("\"headOwner\" is now deprecated, automatically mapping to \"skullData\"");
+            com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("\"headOwner\" is now deprecated, automatically mapping to \"skullData\"");
             skullData = headOwner;
             headOwner = null;
         }
         if (headOwnerUUID != null) {
-            com.keviin.keviincore.KeviinCore.getInstance().getLogger().warning("\"headOwnerUUID\" is now deprecated, automatically mapping to \"skullData\"");
+            com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("\"headOwnerUUID\" is now deprecated, automatically mapping to \"skullData\"");
             skullData = headOwnerUUID.toString();
             headOwnerUUID = null;
         }
         if (headData != null && !headData.isEmpty()) {
-            com.keviin.keviincore.KeviinCore.getInstance().getLogger().warning("\"headData\" is now deprecated, automatically mapping to \"skullData\"");
+            com.knemis.skyblock.skyblockcoreproject.core.keviincore.SkyBlockSecondCore.getInstance().getLogger().warning("\"headData\" is now deprecated, automatically mapping to \"skullData\"");
             skullData = headData;
             headData = null;
         }

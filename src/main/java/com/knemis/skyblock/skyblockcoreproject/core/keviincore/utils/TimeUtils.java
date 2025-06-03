@@ -1,4 +1,4 @@
-package com.keviin.keviincore.utils;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import java.time.Duration;
 

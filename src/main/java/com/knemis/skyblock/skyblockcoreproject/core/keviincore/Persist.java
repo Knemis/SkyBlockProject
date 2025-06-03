@@ -1,4 +1,4 @@
-package com.keviin.keviincore;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore;
 
 import com.cryptomorin.xseries.*;
 import com.fasterxml.jackson.core.JsonFactory;
@@ -40,18 +40,18 @@ public class Persist {
 
         // Registering the XSeries (de)serializers.
         SimpleModule xSeriesModule = new SimpleModule();
-        xSeriesModule.addSerializer(XMaterial.class, new com.keviin.keviincore.XSeriesSerialSupplier.XMaterialSerializer());
-        xSeriesModule.addDeserializer(XMaterial.class, new com.keviin.keviincore.XSeriesSerialSupplier.XMaterialDeserializer());
-        xSeriesModule.addSerializer(XPotion.class, new com.keviin.keviincore.XSeriesSerialSupplier.XPotionSerializer());
-        xSeriesModule.addDeserializer(XPotion.class, new com.keviin.keviincore.XSeriesSerialSupplier.XPotionDeserializer());
-        xSeriesModule.addSerializer(XEnchantment.class, new com.keviin.keviincore.XSeriesSerialSupplier.XEnchantmentSerializer());
-        xSeriesModule.addDeserializer(XEnchantment.class, new com.keviin.keviincore.XSeriesSerialSupplier.XEnchantmentDeserializer());
-        xSeriesModule.addSerializer(XBiome.class, new com.keviin.keviincore.XSeriesSerialSupplier.XBiomeSerializer());
-        xSeriesModule.addDeserializer(XBiome.class, new com.keviin.keviincore.XSeriesSerialSupplier.XBiomeDeserializer());
-        xSeriesModule.addSerializer(XSound.class, new com.keviin.keviincore.XSeriesSerialSupplier.XSoundSerializer());
-        xSeriesModule.addDeserializer(XSound.class, new com.keviin.keviincore.XSeriesSerialSupplier.XSoundDeserializer());
-        xSeriesModule.addSerializer(XEntityType.class, new com.keviin.keviincore.XSeriesSerialSupplier.XEntityTypeSerializer());
-        xSeriesModule.addDeserializer(XEntityType.class, new com.keviin.keviincore.XSeriesSerialSupplier.XEntityTypeDeserializer());
+        xSeriesModule.addSerializer(XMaterial.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XMaterialSerializer());
+        xSeriesModule.addDeserializer(XMaterial.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XMaterialDeserializer());
+        xSeriesModule.addSerializer(XPotion.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XPotionSerializer());
+        xSeriesModule.addDeserializer(XPotion.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XPotionDeserializer());
+        xSeriesModule.addSerializer(XEnchantment.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XEnchantmentSerializer());
+        xSeriesModule.addDeserializer(XEnchantment.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XEnchantmentDeserializer());
+        xSeriesModule.addSerializer(XBiome.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XBiomeSerializer());
+        xSeriesModule.addDeserializer(XBiome.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XBiomeDeserializer());
+        xSeriesModule.addSerializer(XSound.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XSoundSerializer());
+        xSeriesModule.addDeserializer(XSound.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XSoundDeserializer());
+        xSeriesModule.addSerializer(XEntityType.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XEntityTypeSerializer());
+        xSeriesModule.addDeserializer(XEntityType.class, new com.knemis.skyblock.skyblockcoreproject.core.keviincore.XSeriesSerialSupplier.XEntityTypeDeserializer());
         objectMapper.registerModule(xSeriesModule);
     }
 

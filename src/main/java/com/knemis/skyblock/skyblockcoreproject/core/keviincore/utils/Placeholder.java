@@ -1,4 +1,4 @@
-package com.keviin.keviincore.utils;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import java.util.function.Consumer;
 import java.util.function.Function;

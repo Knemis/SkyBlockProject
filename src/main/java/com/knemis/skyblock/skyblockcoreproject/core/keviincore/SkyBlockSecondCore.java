@@ -1,9 +1,9 @@
-package com.keviin.keviincore;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore;
 
-import com.keviin.keviincore.gui.GUI;
-import com.keviin.keviincore.multiversion.keviinInventory;
-import com.keviin.keviincore.multiversion.MultiVersion;
-import com.keviin.keviincore.nms.NMS;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui.GUI;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.keviinInventory;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.multiversion.MultiVersion;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.nms.NMS;
 import io.papermc.lib.PaperLib;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,23 +24,23 @@ import java.io.File;
  */
 @Getter
 @NoArgsConstructor
-public class keviinCore extends JavaPlugin {
+public class SkyBlockSecondCore extends JavaPlugin {
 
     private Persist persist;
     private NMS nms;
     private MultiVersion multiVersion;
-    private keviinInventory keviinInventory;
+    private SkyBlockInventory skyBlockInventory;
     @Setter
     @Getter
     private static boolean testing = false;
     private BukkitTask saveTask;
 
-    private static KeviinCore instance;
+    private static SkyBlockSecondCore instance;
 
     /**
      * Constructor used for UnitTests
      */
-    public KeviinCore(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
+    public SkyBlockSecondCore(JavaPluginLoader loader, PluginDescriptionFile description, File dataFolder, File file) {
         super(loader, description, dataFolder, file);
         setTesting(true);
         // Disable logging
@@ -130,7 +130,7 @@ public class keviinCore extends JavaPlugin {
         if (Bukkit.getVersion().contains("1.20.5") || Bukkit.getVersion().contains("1.20.6")) {
             this.nms = MinecraftVersion.V1_20_R4.getNms();
             this.multiVersion = MinecraftVersion.V1_20_R4.getMultiVersion(this);
-            this.keviinInventory = MinecraftVersion.V1_20_R4.getInventory();
+            this.skyBlockInventory = MinecraftVersion.V1_20_R4.getSkyBlockInventory();
             return;
         }
 
@@ -140,11 +140,11 @@ public class keviinCore extends JavaPlugin {
 
             this.nms = minecraftVersion.getNms();
             this.multiVersion = minecraftVersion.getMultiVersion(this);
-            this.keviinInventory = minecraftVersion.getInventory();
+            this.skyBlockInventory = minecraftVersion.getSkyBlockInventory();
         } catch (Exception exception) {
             this.nms = MinecraftVersion.DEFAULT.getNms();
             this.multiVersion = MinecraftVersion.DEFAULT.getMultiVersion(this);
-            this.keviinInventory = MinecraftVersion.DEFAULT.getInventory();
+            this.skyBlockInventory = MinecraftVersion.DEFAULT.getSkyBlockInventory();
         }
     }
 
@@ -165,7 +165,7 @@ public class keviinCore extends JavaPlugin {
     public void saveConfigs() {
     }
 
-    public static KeviinCore getInstance() {
+    public static SkyBlockSecondCore getInstance() {
         return instance;
     }
 }

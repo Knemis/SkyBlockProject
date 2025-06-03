@@ -1,7 +1,7 @@
-package com.keviin.keviincore.utils;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.utils;
 
 import com.keviin.keviincolorapi.keviinColorAPI;
-import com.keviin.keviincore.DefaultFontInfo;
+import com.knemis.skyblock.skyblockcoreproject.core.keviincore.DefaultFontInfo;
 
 import java.util.List;
 import java.util.stream.Collectors;

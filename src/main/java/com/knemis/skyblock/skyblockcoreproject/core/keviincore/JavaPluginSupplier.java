@@ -1,4 +1,4 @@
-package com.keviin.keviincore;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore;
 
 import org.bukkit.plugin.java.JavaPlugin;
 

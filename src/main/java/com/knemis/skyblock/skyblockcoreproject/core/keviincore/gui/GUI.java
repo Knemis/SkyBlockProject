@@ -1,4 +1,4 @@
-package com.keviin.keviincore.gui;
+package com.knemis.skyblock.skyblockcoreproject.core.keviincore.gui;
 
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
